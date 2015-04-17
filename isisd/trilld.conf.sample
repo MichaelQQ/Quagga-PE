@@ -1,0 +1,17 @@
+! -*- trill -*-
+!
+! ISISd sample configuration file
+!
+hostname host
+password foo
+enable password foo
+log file /var/log/trill.log
+log syslog warnings
+
+router isis DEAD
+        net 00.MAC.00
+trill instance BRIDGE
+trill nickname NICK
+trill nickname priority <0-127>
+interface IFACE
+        trill router trill DEAD
