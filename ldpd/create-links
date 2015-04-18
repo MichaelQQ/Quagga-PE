@@ -1,0 +1,99 @@
+#!/bin/sh
+
+DEFSRC=/usr/local/src/ldp-portable
+if [ "x${1}" = "x" ]; then
+    SRC=${DEFSRC}
+else
+    SRC=${1}
+fi
+
+[ -d "${SRC}" ] || {
+    echo $"$0: directory not found: ${1}" >&2
+    echo $"Usage: $0 [<direcory>] (default is ${DEFSRC})" >&2
+    exit 1
+}
+
+ln -s $SRC/ldp/ldp_addr.c
+ln -s $SRC/ldp/ldp_addr.h
+ln -s $SRC/ldp/ldp_adj.c
+ln -s $SRC/ldp/ldp_adj.h
+ln -s $SRC/ldp/ldp_attr.c
+ln -s $SRC/ldp/ldp_attr.h
+ln -s $SRC/ldp/ldp_buf.c
+ln -s $SRC/ldp/ldp_buf.h
+ln -s $SRC/ldp/ldp_cfg.c
+ln -s $SRC/ldp/ldp_cfg.h
+ln -s $SRC/ldp/ldp_defaults.h
+ln -s $SRC/ldp/ldp_entity.c
+ln -s $SRC/ldp/ldp_entity.h
+ln -s $SRC/ldp/ldp_fec.c
+ln -s $SRC/ldp/ldp_fec.h
+ln -s $SRC/ldp/ldp_global.c
+ln -s $SRC/ldp/ldp_global.h
+ln -s $SRC/ldp/ldp_hello.c
+ln -s $SRC/ldp/ldp_hello.h
+ln -s $SRC/ldp/ldp_hop.c
+ln -s $SRC/ldp/ldp_hop.h
+ln -s $SRC/ldp/ldp_hop_list.c
+ln -s $SRC/ldp/ldp_hop_list.h
+ln -s $SRC/ldp/ldp_if.c
+ln -s $SRC/ldp/ldp_if.h
+ln -s $SRC/ldp/ldp_inet_addr.c
+ln -s $SRC/ldp/ldp_inet_addr.h
+ln -s $SRC/ldp/ldp_init.c
+ln -s $SRC/ldp/ldp_init.h
+ln -s $SRC/ldp/ldp_inlabel.c
+ln -s $SRC/ldp/ldp_inlabel.h
+ln -s $SRC/ldp/ldp_keepalive.c
+ln -s $SRC/ldp/ldp_keepalive.h
+ln -s $SRC/ldp/ldp_label_abort.c
+ln -s $SRC/ldp/ldp_label_abort.h
+ln -s $SRC/ldp/ldp_label_mapping.c
+ln -s $SRC/ldp/ldp_label_mapping.h
+ln -s $SRC/ldp/ldp_label_rel_with.c
+ln -s $SRC/ldp/ldp_label_rel_with.h
+ln -s $SRC/ldp/ldp_label_request.c
+ln -s $SRC/ldp/ldp_label_request.h
+ln -s $SRC/ldp/ldp_mesg.c
+ln -s $SRC/ldp/ldp_mesg.h
+ln -s $SRC/ldp/ldp_nexthop.c
+ln -s $SRC/ldp/ldp_nexthop.h
+ln -s $SRC/ldp/ldp_nortel.c
+ln -s $SRC/ldp/ldp_nortel.h
+ln -s $SRC/ldp/ldp_notif.c
+ln -s $SRC/ldp/ldp_notif.h
+ln -s $SRC/ldp/ldp_outlabel.c
+ln -s $SRC/ldp/ldp_outlabel.h
+ln -s $SRC/ldp/ldp_pdu.h
+ln -s $SRC/ldp/ldp_pdu_setup.c
+ln -s $SRC/ldp/ldp_pdu_setup.h
+ln -s $SRC/ldp/ldp_peer.c
+ln -s $SRC/ldp/ldp_peer.h
+ln -s $SRC/ldp/ldp_resource.c
+ln -s $SRC/ldp/ldp_resource.h
+ln -s $SRC/ldp/ldp_session.c
+ln -s $SRC/ldp/ldp_session.h
+ln -s $SRC/ldp/ldp_state_funcs.c
+ln -s $SRC/ldp/ldp_state_machine.c
+ln -s $SRC/ldp/ldp_state_machine.h
+ln -s $SRC/ldp/ldp_struct.h
+ln -s $SRC/ldp/ldp_tunnel.c
+ln -s $SRC/ldp/ldp_tunnel.h
+
+ln -s $SRC/common/mpls_struct.h
+ln -s $SRC/common/mpls_assert.h
+ln -s $SRC/common/mpls_bitfield.h
+ln -s $SRC/common/mpls_fib_impl.h
+ln -s $SRC/common/mpls_ifmgr_impl.h
+ln -s $SRC/common/mpls_mm_impl.h
+ln -s $SRC/common/mpls_mpls_impl.h
+ln -s $SRC/common/mpls_policy_impl.h
+ln -s $SRC/common/mpls_refcnt.h
+ln -s $SRC/common/mpls_socket_impl.h
+ln -s $SRC/common/mpls_timer_impl.h
+ln -s $SRC/common/mpls_trace_impl.h
+ln -s $SRC/common/mpls_tree_impl.h
+ln -s $SRC/common/mpls_list.h
+ln -s $SRC/common/mpls_lock_impl.h
+ln -s $SRC/common/mpls_compare.h
+ln -s $SRC/common/mpls_compare.c
