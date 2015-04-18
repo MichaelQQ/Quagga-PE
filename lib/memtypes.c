@@ -269,7 +269,7 @@ struct memory_list memory_list_ldp[] =
 {
   { MTYPE_LDP,			"LDP"				},
   { -1, NULL },
-}
+};
 
 struct mlist mlists[] __attribute__ ((unused)) = {
   { memory_list_lib,	"LIB"	},
