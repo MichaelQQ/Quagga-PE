@@ -265,6 +265,12 @@ struct memory_list memory_list_vtysh[] =
   { -1, NULL },
 };
 
+struct memory_list memory_list_ldp[] =
+{
+  { MTYPE_LDP,			"LDP"				},
+  { -1, NULL },
+}
+
 struct mlist mlists[] __attribute__ ((unused)) = {
   { memory_list_lib,	"LIB"	},
   { memory_list_zebra,	"ZEBRA"	},
@@ -274,5 +280,6 @@ struct mlist mlists[] __attribute__ ((unused)) = {
   { memory_list_ospf6,	"OSPF6"	},
   { memory_list_isis,	"ISIS"	},
   { memory_list_bgp,	"BGP"	},
+  { memory_list_ldp,	"LDP"	},
   { NULL, NULL},
 };
