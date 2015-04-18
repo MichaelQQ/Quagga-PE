@@ -56,6 +56,7 @@ typedef enum
   ZLOG_LMD,
   ZLOG_LDPD,
   ZLOG_VPNMD,
+  ZLOG_RSVPD,
   ZLOG_MASC
 } zlog_proto_t;
 

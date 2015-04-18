@@ -225,10 +225,10 @@ switch(index){
 		&vtysh_client[VTYSH_INDEX_VPNMD], "router vpnmd", stdout);
 		printf("enter router vpnmd mode.\n");*/
 		break;
-	/*case VTYSH_INDEX_RSVPD:
+	case VTYSH_INDEX_RSVPD:
 		//printf("connect to label manager .\n");
 		vtysh_connect(
-		&vtysh_client[VTYSH_INDEX_RSVPD], RSVPD_VTYSH_PATH);
+		&vtysh_client[VTYSH_INDEX_RSVPD], RSVP_VTYSH_PATH);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_RSVPD], "enable", stdout);
 		vtysh_client_execute(
@@ -236,7 +236,7 @@ switch(index){
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_RSVPD], "router rsvpd", stdout);
 		break;
-	case VTYSH_INDEX_BRCTLD:
+	/*case VTYSH_INDEX_BRCTLD:
 		vtysh_connect(
 		&vtysh_client[VTYSH_INDEX_BRCTLD], BRCTLD_VTYSH_PATH);
 		vtysh_client_execute(

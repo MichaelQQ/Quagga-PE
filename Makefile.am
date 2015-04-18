@@ -2,11 +2,11 @@
 
 SUBDIRS = lib @ZEBRA@ @BGPD@ @RIPD@ @RIPNGD@ @OSPFD@ @OSPF6D@ @BABELD@ \
          @ISISD@ @WATCHQUAGGA@ @VTYSH@ @OSPFCLIENT@ @DOC@ m4 @pkgsrcdir@ \
-         redhat @SOLARIS@ @BUILD_TESTS@ @LMD@ @LDPD@ @VPNMD@
+         redhat @SOLARIS@ @BUILD_TESTS@ @LMD@ @LDPD@ @VPNMD@ @RSVPD@
 
 DIST_SUBDIRS = lib zebra bgpd ripd ripngd ospfd ospf6d babeld \
 	  isisd watchquagga vtysh ospfclient doc m4 pkgsrc redhat tests \
-	  solaris lmd ldpd vpnmd
+	  solaris lmd ldpd vpnmd rsvpd
 
 EXTRA_DIST = aclocal.m4 SERVICES TODO REPORTING-BUGS INSTALL.quagga.txt \
 	update-autotools \
