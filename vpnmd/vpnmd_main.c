@@ -3,28 +3,33 @@
 #include "thread.h"
 struct thread_master *master = NULL;	/* Master of threads. */
 
-#include "lmd_main.h"
-char config_default[] = SYSCONFDIR LMD_DEFAULT_CONFIG;
+#include "vpnmd_main.h"
+//vpn manager include header file
+#include "vpnm.h"
+#include <pthread.h>
+char config_default[] = SYSCONFDIR VPNMD_DEFAULT_CONFIG;
 char *config_file = NULL;
 
 char *vty_addr = NULL;
-int vty_port = LMD_VTY_PORT;
+int vty_port = VPNMD_VTY_PORT;
 
-char pid_file[] = PATH_LMD_PID;
+char pid_file[] = PATH_VPNMD_PID;
 
 #include "memory.h"
 #include "command.h"
 #include "vty.h"
 #include "log.h"
 
+
+//end vpn manager
 /* SIGHUP handler. */
 
 void sighup ()
 {
   zlog_info ("SIGHUP received");
-  zlog_info ("lmd restarting!");
+  zlog_info ("vpnmd restarting!");
   vty_read_config (config_file, config_default);
-  vty_serv_sock (vty_addr, vty_port, LM_VTYSH_PATH);
+  vty_serv_sock (vty_addr, vty_port, VPNM_VTYSH_PATH);
 }
 
 void sigint ()
@@ -39,7 +44,7 @@ void sigusr1 ()
 }
 
 #include "sigevent.h"
-struct quagga_signal_t lmd_signals[] = 
+struct quagga_signal_t vpnmd_signals[] = 
 {
  { .signal = SIGHUP,
    .handler = &sighup,
@@ -61,7 +66,7 @@ static void usage (char *progname, int status) /* Help information display. */ {
     fprintf (stderr, "Try `%s --help' for more information.\n", progname);
   else {
     printf ("Usage : %s [OPTION...]\n\n\
-Daemon which manages lmd related configuration.\n\n\
+Daemon which manages vpnmd related configuration.\n\n\
 -d, --daemon       Runs in daemon mode\n\
 -l, --log_mode     Set verbose log mode flag\n\
 -f, --config_file  Set configuration file name\n\
@@ -90,14 +95,14 @@ struct option longopts[] =
 };
 
 #include "privs.h"
-/* lmd privileges */
+/* vpnmd privileges */
 zebra_capabilities_t _caps_p [] =
 {
   ZCAP_NET_RAW,
   ZCAP_BIND
 };
 
-struct zebra_privs_t lmd_privs =
+struct zebra_privs_t vpnmd_privs =
 {
 #ifdef QUAGGA_USER
  .user = QUAGGA_USER,
@@ -126,7 +131,7 @@ int main (int argc, char **argv)
   /* preserve my name */
   progname = ((p = strrchr (argv[0], '/')) ? ++p : argv[0]); 
 
-  zlog_default = openzlog (progname, ZLOG_LMD,
+  zlog_default = openzlog (progname, ZLOG_VPNMD,
 			   LOG_CONS|LOG_NDELAY|LOG_PID, LOG_DAEMON);
 
 while (1) {
@@ -153,8 +158,8 @@ while (1) {
 	case 'P':
 	  vty_port = atoi (optarg);
 	  break;
-case 'u': lmd_privs.user = optarg; break;
-case 'g': lmd_privs.group = optarg; break;
+case 'u': vpnmd_privs.user = optarg; break;
+case 'g': vpnmd_privs.group = optarg; break;
 	case 'v':
 	  print_version (progname);
 	  exit (0);
@@ -171,16 +176,17 @@ case 'g': lmd_privs.group = optarg; break;
   master = thread_master_create();
 
  /* Library initialization. */
-  zprivs_init(&lmd_privs);
+  zprivs_init(&vpnmd_privs);
 //signal_init();
-  signal_init (master, array_size(lmd_signals), lmd_signals);
+signal_init (master, array_size(vpnmd_signals), vpnmd_signals);
   cmd_init(1);
   vty_init(master);
   memory_init();
 
-  /* LMD related initialization. */
-  lmd_init();
-  lmd_zclient_init();
+  /* VPNMD related initialization. */
+  vpnmd_init();
+  
+  vpnmd_zclient_init();
 
   /* Sort all installed commands. */
   sort_node ();
@@ -195,11 +201,11 @@ case 'g': lmd_privs.group = optarg; break;
   pid_output (pid_file);
 
   /* Create VTY socket */
-  vty_serv_sock (vty_addr, vty_port, LM_VTYSH_PATH);
+  vty_serv_sock (vty_addr, vty_port, VPNM_VTYSH_PATH);
 
   /* Print banner. */
-  zlog_notice ("LMD %s starting: vty@%d", QUAGGA_VERSION, vty_port);
-
+  zlog_notice ("VPNMD %s starting: vty@%d", QUAGGA_VERSION, vty_port);
+  
   /* Execute each thread. */
   while (thread_fetch (master, &thread))
     thread_call (&thread);

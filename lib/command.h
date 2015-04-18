@@ -81,6 +81,7 @@ enum node_type
   LMD_NODE,			/* LMD daemon mode */
   LDP_NODE,			/* LDP protocol mode */
   LDP_IF_NODE,			/* LDP interface mode */
+  VPNMD_NODE,                   /* VPNMD daemon mode */
   BABEL_NODE,			/* Babel protocol mode node. */
   BGP_NODE,			/* BGP protocol mode which includes BGP4+ */
   BGP_VPNV4_NODE,		/* BGP MPLS-VPN PE exchange. */

@@ -7,7 +7,7 @@
 struct zclient *zclient = NULL;
 
 /* Zebra route add and delete treatment. */
-int lmd_zebra_read_ipv4 (int command, struct zclient *zclient, zebra_size_t length)
+int vpnmd_zebra_read_ipv4 (int command, struct zclient *zclient, zebra_size_t length)
 {
   if (command == ZEBRA_IPV4_ROUTE_ADD)
     zlog_info ("ADD");
@@ -59,14 +59,14 @@ DEFUN (
   return CMD_SUCCESS;
 }
 
-void lmd_zclient_init(void)
+void vpnmd_zclient_init(void)
 {
   /* Set default value to the zebra client structure. */
   zclient = zclient_new ();
-  zclient_init (zclient, ZEBRA_ROUTE_LM);
+  zclient_init (zclient, ZEBRA_ROUTE_VPNM);
 
-  //zclient->ipv4_route_add = lmd_zebra_read_ipv4;
-  //zclient->ipv4_route_delete = lmd_zebra_read_ipv4;
+  //zclient->ipv4_route_add = hered_zebra_read_ipv4;
+  //zclient->ipv4_route_delete = hered_zebra_read_ipv4;
 
   /* Install zebra node. */
   install_node (&zebra_node, config_write_zebra);

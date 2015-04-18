@@ -20,14 +20,13 @@
 #define VPNMD_VTYSH_PATH 	"/var/run/vpnmd.vty"
 #define RSVPD_VTYSH_PATH 	"/var/run/rsvpd.vty"
 #define BRCTLD_VTYSH_PATH "/var/run/brctld.vty"
+*/
 
-
-#define BGP_VTYSH_PATH "/var/run/bgpd.vty"*/
+//#define BGP_VTYSH_PATH "/var/run/bgpd.vty"
 #define CMD_SUCCESS 0
 #define DEBUG 1
 //#define safe_strerror strerror
-#define LDP_POOL_ID 1
-#define LDP_PORT                 646
+
 
 
 /* VTY shell client structure. */
