@@ -239,6 +239,8 @@ AC_ARG_ENABLE(vpnmd,
 [  --disable-vpnmd,          do not build vpnmd])
 AC_ARG_ENABLE(rsvpd,
 [  --disable-rsvpd,          do not build rsvpd])
+AC_ARG_ENABLE(mplsadmd,
+[  --disable-mplsadmd,          do not build mplsadmd])
 AC_ARG_ENABLE(isisd,
 [  --enable-isisd          build isisd])
 AC_ARG_ENABLE(trilld,
@@ -1366,6 +1368,13 @@ if test "${enable_rsvpd}" = "no";then
 else
   RSVPD="rsvpd"
 fi
+AM_CONDITIONAL(MPLSADMD, test "x$MPLSADMD" = "xmplsadmd")
+
+if test "${enable_mplsadmd}" = "no";then
+  MPLSADMD=""
+else
+  MPLSADMD="mplsadmd"
+fi
 AM_CONDITIONAL(BABELD, test "x$BABELD" = "xbabeld")
 
 if test "${enable_watchquagga}" = "no";then
@@ -1443,6 +1452,7 @@ AC_SUBST(LMD)
 AC_SUBST(LDPD)
 AC_SUBST(VPNMD)
 AC_SUBST(RSVPD)
+AC_SUBST(MPLSADMD)
 AC_SUBST(ISISD)
 AC_SUBST(SOLARIS)
 AC_SUBST(VTYSH)
@@ -1726,6 +1736,7 @@ AC_DEFINE_UNQUOTED(PATH_LMD_PID, "$quagga_statedir/lmd.pid",lmd PID)
 AC_DEFINE_UNQUOTED(PATH_LDPD_PID, "$quagga_statedir/ldpd.pid",ldpd PID)
 AC_DEFINE_UNQUOTED(PATH_VPNMD_PID, "$quagga_statedir/vpnmd.pid",vpnmd PID)
 AC_DEFINE_UNQUOTED(PATH_RSVPD_PID, "$quagga_statedir/rsvpd.pid",rsvpd PID)
+AC_DEFINE_UNQUOTED(PATH_MPLSADMD_PID, "$quagga_statedir/mplsadmd.pid",mplsadmd PID)
 AC_DEFINE_UNQUOTED(PATH_ISISD_PID, "$quagga_statedir/isisd.pid",isisd PID)
 AC_DEFINE_UNQUOTED(PATH_TRILLD_PID, "$quagga_statedir/trilld.pid",trilld PID)
 AC_DEFINE_UNQUOTED(PATH_WATCHQUAGGA_PID, "$quagga_statedir/watchquagga.pid",watchquagga PID)
@@ -1741,6 +1752,7 @@ AC_DEFINE_UNQUOTED(LM_VTYSH_PATH, "$quagga_statedir/lmd.vty",lmd vty socket)
 AC_DEFINE_UNQUOTED(LDP_VTYSH_PATH, "$quagga_statedir/ldpd.vty",ldpd vty socket)
 AC_DEFINE_UNQUOTED(VPNM_VTYSH_PATH, "$quagga_statedir/vpnmd.vty",vpnmd vty socket)
 AC_DEFINE_UNQUOTED(RSVP_VTYSH_PATH, "$quagga_statedir/rsvpd.vty",rsvpd vty socket)
+AC_DEFINE_UNQUOTED(MPLSADM_VTYSH_PATH, "$quagga_statedir/mplsadmd.vty",mplsadmd vty socket)
 AC_DEFINE_UNQUOTED(ISIS_VTYSH_PATH, "$quagga_statedir/isisd.vty",isisd vty socket)
 AC_DEFINE_UNQUOTED(ISIS_VTYSH_PATH, "$quagga_statedir/trilld.vty",trilld vty socket)
 AC_DEFINE_UNQUOTED(DAEMON_VTY_DIR, "$quagga_statedir",daemon vty directory)
@@ -1769,7 +1781,7 @@ AC_CONFIG_FILES([Makefile lib/Makefile zebra/Makefile ripd/Makefile
 	  ospf6d/Makefile isisd/Makefile babeld/Makefile vtysh/Makefile
           doc/Makefile ospfclient/Makefile tests/Makefile m4/Makefile
           redhat/Makefile lmd/Makefile ldpd/Makefile vpnmd/Makefile
-	  pkgsrc/Makefile rsvpd/Makefile
+	  pkgsrc/Makefile rsvpd/Makefile mplsadmd/Makefile
 	  redhat/quagga.spec 
 	  lib/version.h
 	  doc/defines.texi

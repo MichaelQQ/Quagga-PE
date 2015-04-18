@@ -1,0 +1,27 @@
+#ifndef DS_MPLS_H
+#define DS_MPLS_H
+
+#include <stdlib.h>
+
+#define MAP_COS2EXP(x) (x%8)
+
+//EF, AF1, AF2, AF3, BE
+//#define DS2EXPMAP "0x38:0xa:1:0x12:2:0x1a:3:0x22:4:0x2e:5"
+//#define EXP2DSMAP "1:0x0a:2:0x12:3:0x1a:4:0x22:5:0x2e"
+//#define EXP2TCMAP "1:0x28:2:48:3:68:4:88:5:b8"
+
+
+//EF, AF11, AF12, AF21, AF22, AF31, AF32, BE
+#define DS2EXPMAP "0x3f:0:0:0x2e:1:0xa:2:0xc:3:0x12:4:0x14:5:0x1a:6:0x1c:7"
+#define EXP2DSMAP "0:0:1:0x2e:2:0xa:3:0xc:4:0x12:5:0x14:6:0x1a:7:0x1c"
+#define EXP2TCMAP "1:0xb8:2:0x28:3:0x30:4:0x48:5:0x50:6:0x68:7:0x70"
+#define TC2EXPMAP "0x3f:0xb8:1:0x28:2:0x30:3:0x48:4:0x50:5:0x68:6:0x70:7"
+
+int dscp_to_number(char* dscp);
+int dscp_to_number(char* dscp);
+char* number_to_dscp(int dscp);
+int phbid_to_number(char* phbid);
+char* number_to_phbid(u_int16_t phbid);
+int phbid2tcindex(u_int16_t phbid);
+
+#endif

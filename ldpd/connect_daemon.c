@@ -188,17 +188,17 @@ switch(index){
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_LDP], "configure terminal", stdout);
 		break;
-	/*case VTYSH_INDEX_MPLSADMD:
+	case VTYSH_INDEX_MPLSADMD:
 		//printf("connect to mplsadmd .\n");
 		vtysh_connect(
-		&vtysh_client[VTYSH_INDEX_MPLSADMD], MPLSADMD_VTYSH_PATH);
+		&vtysh_client[VTYSH_INDEX_MPLSADMD], MPLSADM_VTYSH_PATH);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_MPLSADMD], "enable", stdout);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_MPLSADMD], "configure terminal", stdout);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_MPLSADMD], "router mplsadmd", stdout);
-		break;*/
+		break;
 	case VTYSH_INDEX_LMD:
 		//printf("connect to lmd .\n");
 		vtysh_connect(
