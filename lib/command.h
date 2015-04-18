@@ -86,6 +86,7 @@ enum node_type
   MPLS_LABELSPACE_NODE,         /* MPLS Labelspace node. */
   MPLS_TUN_INTERFACE_NODE,      /* MPLS tunnel interface node. */
   MPLSADMD_NODE,                /* MPLSADMD daemon mode */
+  BRCTLD_NODE,                  /* VPNMD daemon mode */
   BABEL_NODE,			/* Babel protocol mode node. */
   BGP_NODE,			/* BGP protocol mode which includes BGP4+ */
   BGP_VPNV4_NODE,		/* BGP MPLS-VPN PE exchange. */

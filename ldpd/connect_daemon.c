@@ -236,16 +236,16 @@ switch(index){
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_RSVPD], "router rsvpd", stdout);
 		break;
-	/*case VTYSH_INDEX_BRCTLD:
+	case VTYSH_INDEX_BRCTLD:
 		vtysh_connect(
-		&vtysh_client[VTYSH_INDEX_BRCTLD], BRCTLD_VTYSH_PATH);
+		&vtysh_client[VTYSH_INDEX_BRCTLD], BRCTL_VTYSH_PATH);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_BRCTLD], "enable", stdout);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_BRCTLD], "configure terminal", stdout);
 		vtysh_client_execute(
 		&vtysh_client[VTYSH_INDEX_BRCTLD], "router brctld", stdout);
-		break;*/
+		break;
 	default:
 		printf("You connect to other daemon.(Those code isn't ready for use.).\n");
 		break;
@@ -309,12 +309,12 @@ vtysh_client_execute(
 &vtysh_client[VTYSH_INDEX_LMD], "exit", stdout);*/
 
 }
-/*
+
 // example : To talk with mplsadmd
 int test(void){
 //connect to mplsadmd deamen
 vtysh_connect(
-&vtysh_client[VTYSH_INDEX_MPLSADMD], MPLSADMD_VTYSH_PATH);
+&vtysh_client[VTYSH_INDEX_MPLSADMD], MPLSADM_VTYSH_PATH);
 vtysh_client_execute(
 &vtysh_client[VTYSH_INDEX_MPLSADMD], "enable", stdout);
 vtysh_client_execute(
@@ -330,4 +330,4 @@ vclient_close(
 &vtysh_client[VTYSH_INDEX_MPLSADMD] );
 
 return 0; 
-}*/
+}

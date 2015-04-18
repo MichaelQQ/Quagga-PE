@@ -239,8 +239,10 @@ AC_ARG_ENABLE(vpnmd,
 [  --disable-vpnmd,          do not build vpnmd])
 AC_ARG_ENABLE(rsvpd,
 [  --disable-rsvpd,          do not build rsvpd])
+AC_ARG_ENABLE(brctld,
+[  --enable-brctld,        build brctld])
 AC_ARG_ENABLE(mplsadmd,
-[  --disable-mplsadmd,          do not build mplsadmd])
+[  --enable-mplsadmd,      build mplsadmd])
 AC_ARG_ENABLE(isisd,
 [  --enable-isisd          build isisd])
 AC_ARG_ENABLE(trilld,
@@ -380,6 +382,10 @@ AC_SUBST(ISIS_TOPOLOGY_LIB)
 
 if test "${enable_trilld}" = "yes"; then
   AC_DEFINE(HAVE_TRILL,,Enable TRILL code)
+fi
+
+if test "${enable_mplsadmd}" = "yes"; then
+  AC_DEFINE(HAVE_MPLS,,Enable MPLS code)
 fi
 
 if test "${enable_user}" = "yes" || test x"${enable_user}" = x""; then
@@ -1368,14 +1374,6 @@ if test "${enable_rsvpd}" = "no";then
 else
   RSVPD="rsvpd"
 fi
-AM_CONDITIONAL(MPLSADMD, test "x$MPLSADMD" = "xmplsadmd")
-
-if test "${enable_mplsadmd}" = "no";then
-  MPLSADMD=""
-else
-  MPLSADMD="mplsadmd"
-fi
-AM_CONDITIONAL(BABELD, test "x$BABELD" = "xbabeld")
 
 if test "${enable_watchquagga}" = "no";then
   WATCHQUAGGA=""
@@ -1425,6 +1423,20 @@ case "${enable_trilld}" in
 esac
 AM_CONDITIONAL(TRILLD, test "x$TRILLD" = "xtrilld")
 
+case "${enable_mplsadmd}" in
+  "yes") MPLSADMD="mplsadmd";;
+  "no" ) MPLSADMD="";;
+  *    ) ;;
+esac
+AM_CONDITIONAL(MPLSADMD, test "x$MPLSADMD" = "xmplsadmd")
+
+case "${enable_brctld}" in
+  "yes") BRCTLD="brctld";;
+  "no" ) BRCTLD="";;
+  *    ) ;;
+esac
+AM_CONDITIONAL(BRCTLD, test "x$BRCTLD" = "xbrctld")
+
 # XXX Perhaps auto-enable on Solaris, but that's messy for cross builds.
 case "${enable_solaris}" in
   "yes") SOLARIS="solaris";;
@@ -1453,6 +1465,7 @@ AC_SUBST(LDPD)
 AC_SUBST(VPNMD)
 AC_SUBST(RSVPD)
 AC_SUBST(MPLSADMD)
+AC_SUBST(BRCTLD)
 AC_SUBST(ISISD)
 AC_SUBST(SOLARIS)
 AC_SUBST(VTYSH)
@@ -1737,6 +1750,7 @@ AC_DEFINE_UNQUOTED(PATH_LDPD_PID, "$quagga_statedir/ldpd.pid",ldpd PID)
 AC_DEFINE_UNQUOTED(PATH_VPNMD_PID, "$quagga_statedir/vpnmd.pid",vpnmd PID)
 AC_DEFINE_UNQUOTED(PATH_RSVPD_PID, "$quagga_statedir/rsvpd.pid",rsvpd PID)
 AC_DEFINE_UNQUOTED(PATH_MPLSADMD_PID, "$quagga_statedir/mplsadmd.pid",mplsadmd PID)
+AC_DEFINE_UNQUOTED(PATH_BRCTLD_PID, "$quagga_statedir/brctld.pid",brctld PID)
 AC_DEFINE_UNQUOTED(PATH_ISISD_PID, "$quagga_statedir/isisd.pid",isisd PID)
 AC_DEFINE_UNQUOTED(PATH_TRILLD_PID, "$quagga_statedir/trilld.pid",trilld PID)
 AC_DEFINE_UNQUOTED(PATH_WATCHQUAGGA_PID, "$quagga_statedir/watchquagga.pid",watchquagga PID)
@@ -1753,6 +1767,7 @@ AC_DEFINE_UNQUOTED(LDP_VTYSH_PATH, "$quagga_statedir/ldpd.vty",ldpd vty socket)
 AC_DEFINE_UNQUOTED(VPNM_VTYSH_PATH, "$quagga_statedir/vpnmd.vty",vpnmd vty socket)
 AC_DEFINE_UNQUOTED(RSVP_VTYSH_PATH, "$quagga_statedir/rsvpd.vty",rsvpd vty socket)
 AC_DEFINE_UNQUOTED(MPLSADM_VTYSH_PATH, "$quagga_statedir/mplsadmd.vty",mplsadmd vty socket)
+AC_DEFINE_UNQUOTED(BRCTL_VTYSH_PATH, "$quagga_statedir/brctld.vty",brctld vty socket)
 AC_DEFINE_UNQUOTED(ISIS_VTYSH_PATH, "$quagga_statedir/isisd.vty",isisd vty socket)
 AC_DEFINE_UNQUOTED(ISIS_VTYSH_PATH, "$quagga_statedir/trilld.vty",trilld vty socket)
 AC_DEFINE_UNQUOTED(DAEMON_VTY_DIR, "$quagga_statedir",daemon vty directory)
