@@ -742,6 +742,100 @@ zebra_interface_if_set_value (struct stream *s, struct interface *ifp)
 #endif /* HAVE_STRUCT_SOCKADDR_DL */
 }
 
+struct connected *
+zebra_interface_address_add_read (struct stream *s)
+{
+  unsigned int ifindex;
+  struct interface *ifp;
+  struct connected *ifc;
+  struct prefix *p;
+  int family;
+  int plen;
+
+  /* Get interface index. */
+  ifindex = stream_getl (s);
+
+  /* Lookup index. */
+  ifp = if_lookup_by_index (ifindex);
+  if (ifp == NULL)
+    {
+      zlog_warn ("zebra_interface_address_add_read: Can't find interface by ifindex: %d ", ifindex);
+      return NULL;
+    }
+
+  /* Allocate new connected address. */
+  ifc = connected_new ();
+  ifc->ifp = ifp;
+
+  /* Fetch flag. */
+  ifc->flags = stream_getc (s);
+
+  /* Fetch interface address. */
+  p = prefix_new ();
+  family = p->family = stream_getc (s);
+
+  plen = prefix_blen (p);
+  stream_get (&p->u.prefix, s, plen);
+  p->prefixlen = stream_getc (s);
+  ifc->address = p;
+
+  /* Fetch destination address. */
+  p = prefix_new ();
+  stream_get (&p->u.prefix, s, plen);
+  p->family = family;
+
+  ifc->destination = p;
+
+  p = ifc->address;
+
+  /* Add connected address to the interface. */
+  listnode_add (ifp->connected, ifc);
+
+  return ifc;
+}
+
+struct connected *
+zebra_interface_address_delete_read (struct stream *s)
+{
+  unsigned int ifindex;
+  struct interface *ifp;
+  struct connected *ifc;
+  struct prefix p;
+  struct prefix d;
+  int family;
+  int len;
+  u_char flags;
+
+  /* Get interface index. */
+  ifindex = stream_getl (s);
+ /* Lookup index. */
+  ifp = if_lookup_by_index (ifindex);
+  if (ifp == NULL)
+    {
+      zlog_warn ("zebra_interface_address_delete_read: Can't find interface by ifindex: %d ", ifindex);
+      return NULL;
+    }
+
+  /* Fetch flag. */
+  flags = stream_getc (s);
+
+  /* Fetch interface address. */
+  family = p.family = stream_getc (s);
+
+  len = prefix_blen (&p);
+  stream_get (&p.u.prefix, s, len);
+  p.prefixlen = stream_getc (s);
+
+  /* Fetch destination address. */
+  stream_get (&d.u.prefix, s, len);
+  d.family = family;
+
+  ifc = connected_delete_by_prefix (ifp, &p);
+
+  return ifc;
+}
+
+
 static int
 memconstant(const void *s, int c, size_t n)
 {

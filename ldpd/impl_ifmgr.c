@@ -36,12 +36,12 @@ mpls_return_enum mpls_ifmgr_getnext_address(mpls_ifmgr_handle ifmgr_handle,
   mpls_if_handle *handle, mpls_inet_addr *addr)
 {
   struct connected *ifc;
-  listnode node;
+  struct listnode *node;
   int next = 0;
 
   while ((*handle)) {
-    for (node = listhead((*handle)->connected); node; nextnode(node)) {
-      ifc = getdata(node);
+    for (node = listhead((*handle)->connected); node; listnextnode(node)) {
+      ifc = listgetdata(node);
       if (ifc->address->family == AF_INET &&
 	ifc->address->u.prefix4.s_addr != htonl(INADDR_LOOPBACK)) {
         if (next) {
@@ -63,12 +63,12 @@ mpls_return_enum mpls_ifmgr_getfirst_address(mpls_ifmgr_handle ifmgr_handle,
   mpls_if_handle *handle, mpls_inet_addr *addr)
 {
   struct connected *ifc;
-  listnode node;
+  struct listnode *node;
 
   (*handle) = if_getfirst();
   while ((*handle)) {
-    for (node = listhead((*handle)->connected); node; nextnode(node)) {
-      ifc = getdata(node);
+    for (node = listhead((*handle)->connected); node; listnextnode(node)) {
+      ifc = listgetdata(node);
       if (ifc->address->family == AF_INET &&
 	ifc->address->u.prefix4.s_addr != htonl(INADDR_LOOPBACK)) {
         addr->type = MPLS_FAMILY_IPV4;

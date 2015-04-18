@@ -145,6 +145,7 @@ extern void route_table_finish (struct route_table *);
 extern void route_unlock_node (struct route_node *node);
 extern struct route_node *route_top (struct route_table *);
 extern struct route_node *route_next (struct route_node *);
+extern struct route_node *route_next2 (struct route_node *);
 extern struct route_node *route_next_until (struct route_node *,
                                             struct route_node *);
 extern struct route_node *route_node_get (struct route_table *const,
@@ -152,6 +153,7 @@ extern struct route_node *route_node_get (struct route_table *const,
 extern struct route_node *route_node_lookup (const struct route_table *,
                                              struct prefix *);
 extern struct route_node *route_lock_node (struct route_node *node);
+extern struct route_node *route_node_lookup2 (struct route_table *, struct prefix *);
 extern struct route_node *route_node_match (const struct route_table *,
                                             const struct prefix *);
 extern struct route_node *route_node_match_ipv4 (const struct route_table *,

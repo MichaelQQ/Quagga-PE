@@ -8,18 +8,18 @@
 #include "ldp_remote_peer.h"
 
 struct ldp_remote_peer *ldp_remote_peer_find(struct ldp *ldp,
-  struct mpls_dest *dest) {
-  struct ldp_remote_peer *rp;
-  struct listnode *ln;
+	struct mpls_dest *dest) {
+  	struct ldp_remote_peer *rp;
+  	struct listnode *ln;
 
-  LIST_LOOP(ldp->peer_list,rp,ln) {
-    rp->peer.dest.if_handle = 0;
-    dest->if_handle = 0;
-    if (!mpls_dest_compare(&rp->peer.dest,dest)) {
-      return rp;
-    }
-  }
-  return NULL;
+  	for (ALL_LIST_ELEMENTS_RO (ldp->peer_list, ln, rp)) {
+    		rp->peer.dest.if_handle = 0;
+    		dest->if_handle = 0;
+    		if (!mpls_dest_compare(&rp->peer.dest,dest)) {
+      			return rp;
+    		}
+  	}
+  	return NULL;
 }
 
 struct ldp_remote_peer *ldp_remote_peer_new(struct ldp *ldp) {

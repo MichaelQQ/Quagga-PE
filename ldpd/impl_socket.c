@@ -319,7 +319,7 @@ mpls_return_enum mpls_socket_multicast_if_tx(mpls_socket_mgr_handle handle,
     ifindex = iff->handle->ifindex;
   }
 
-  if (setsockopt_multicast_ipv4(socket->fd,IP_MULTICAST_IF,addr,0,ifindex)<0) {
+  if (setsockopt_ipv4_multicast (socket->fd, IP_MULTICAST_IF, 0, ifindex)<0) {
     return MPLS_FAILURE;
   }
 
@@ -339,8 +339,8 @@ mpls_return_enum mpls_socket_multicast_if_join(mpls_socket_mgr_handle handle,
     ifindex = iff->handle->ifindex;
   }
 
-  if (setsockopt_multicast_ipv4(socket->fd,IP_ADD_MEMBERSHIP,addr,
-    htonl(mult->u.ipv4),ifindex)<0) {
+  if (setsockopt_ipv4_multicast (socket->fd, IP_ADD_MEMBERSHIP, 
+    htonl(mult->u.ipv4), ifindex)<0) {
     return MPLS_FAILURE;
   }
 
@@ -360,8 +360,8 @@ void mpls_socket_multicast_if_drop(mpls_socket_mgr_handle handle,
     ifindex = iff->handle->ifindex;
   }
 
-  if (setsockopt_multicast_ipv4(socket->fd,IP_DROP_MEMBERSHIP,addr,
-    htonl(mult->u.ipv4),ifindex)<0) {
+  if (setsockopt_ipv4_multicast(socket->fd, IP_DROP_MEMBERSHIP,
+    htonl(mult->u.ipv4), ifindex)<0) {
     return;
   }
 

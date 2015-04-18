@@ -285,6 +285,37 @@ route_node_lookup (const struct route_table *table, struct prefix *p)
   return NULL;
 }
 
+struct route_node *
+route_node_lookup2 (struct route_table *table, struct prefix *p)
+{
+  struct route_node *rn_in, *rn_tmp;
+
+  if (!(rn_in = route_node_lookup(table,p))) {
+	fprintf(stderr,"lookup2 is doing work\n");
+    /* walk as far down the tree as we can */
+    rn_in = table->top;
+    while (rn_in && rn_in->p.prefixlen <= p->prefixlen &&
+      prefix_match(&rn_in->p, p)) {
+      rn_tmp = rn_in->link[prefix_bit(&p->u.prefix, rn_in->p.prefixlen)];
+      if (!rn_tmp) {
+        break;
+      }
+      rn_in = rn_tmp;
+    }
+    route_lock_node(rn_in);
+
+    /* rn_in is either the actual node of the furthest node in the tree */
+    /* so get the 'next' one with 'info' */
+    rn_in = route_next2(rn_in);
+  }
+
+  if (rn_in && !rn_in->info) {
+    route_unlock_node(rn_in);
+    rn_in = NULL;
+  }
+  return rn_in;
+}
+
 /* Add node to routing table. */
 struct route_node *
 route_node_get (struct route_table *const table, struct prefix *p)
@@ -436,6 +467,22 @@ route_next (struct route_node *node)
       node = node->parent;
     }
   route_unlock_node (start);
+  return NULL;
+}
+
+struct route_node *
+route_next2 (struct route_node *rn_in)
+{
+  struct route_node *rn = rn_in;
+  struct route_node *rn2;
+  do {
+    rn2 = route_next(rn);
+    rn = rn2;
+  } while(rn && !rn->info);
+
+  if (rn && rn->info) {
+    return rn;
+  }
   return NULL;
 }
 

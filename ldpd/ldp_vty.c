@@ -2445,12 +2445,12 @@ DEFUN(ldp_label_space_range_vpnmd,
 
 
 static int interface_config_write(struct vty *vty) {
-  listnode node;
+  struct listnode *node;
   struct interface *ifp;
   struct ldp_interface *li;
 
-  for (node = listhead(iflist); node; nextnode(node)) {
-    ifp = getdata(node);
+  for (node = listhead(iflist); node; listnextnode(node)) {
+    ifp = listgetdata(node);
 
     vty_out(vty, "interface %s%s", ifp->name, VTY_NEWLINE);
 

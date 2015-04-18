@@ -770,6 +770,30 @@ if_nametoindex (const char *name)
 }
 #endif
 
+struct interface *if_getfirst()
+{
+  struct listnode *node = listhead(iflist);
+  return listgetdata(node);
+}
+
+struct interface *if_getnext(struct interface *old)
+{
+  struct interface *ifp;
+  struct listnode *node;
+  int flag = 0;
+
+  for (node = listhead(iflist); node; listnextnode(node)) {
+    ifp = listgetdata(node);
+    if (flag) {
+      return ifp;
+    }
+    if (ifp->ifindex == old->ifindex) {
+      flag = 1;
+    }
+  }
+  return NULL;
+}
+
 #ifndef HAVE_IF_INDEXTONAME
 char *
 if_indextoname (unsigned int ifindex, char *name)

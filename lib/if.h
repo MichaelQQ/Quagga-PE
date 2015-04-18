@@ -298,6 +298,9 @@ extern struct connected  *connected_delete_by_prefix (struct interface *,
 extern struct connected  *connected_lookup_address (struct interface *, 
                                              struct in_addr);
 
+struct interface *if_getfirst();
+struct interface *if_getnext(struct interface*);
+
 #ifndef HAVE_IF_NAMETOINDEX
 extern unsigned int if_nametoindex (const char *);
 #endif

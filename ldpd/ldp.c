@@ -80,7 +80,7 @@ struct ldp *ldp_new(void) {
 
     struct interface *ifp;
     struct connected *c;
-    listnode node, cnode;
+    struct listnode *node, *cnode;
     struct ldp_interface *li;
     struct ldp_addr addr;
     struct prefix *p;
@@ -103,15 +103,15 @@ struct ldp *ldp_new(void) {
     ldp_cfg_global_set(new->h,&g, LDP_GLOBAL_CFG_LSR_HANDLE|
 	LDP_GLOBAL_CFG_ADMIN_STATE);
 
-    for (node = listhead(iflist); node; nextnode(node)) {
-        ifp = getdata(node);
+    for (node = listhead(iflist); node; listnextnode(node)) {
+        ifp = listgetdata(node);
         MPLS_ASSERT(ifp->info);
 	li = ifp->info;
 
         ldp_interface_create(li);
 
-	for (cnode = listhead (ifp->connected); cnode; nextnode (cnode)) {
-	    c = getdata (cnode);
+	for (cnode = listhead (ifp->connected); cnode; listnextnode (cnode)) {
+	    c = listgetdata (cnode);
 	    p = c->address;
 	    if (p->family == AF_INET) {
 		prefix2mpls_inet_addr(p, &addr.address);
@@ -130,7 +130,7 @@ struct ldp *ldp_new(void) {
 
         zebra_prefix2mpls_fec(&rn->p, &fec);
         mn = rn->info;
-        LIST_LOOP(mn->list, nh, ln) {
+	for (ALL_LIST_ELEMENTS_RO (mn->list, ln, nh)) {
           mpls_nexthop nexthop;
           memcpy(&nexthop, &nh->info, sizeof(struct mpls_nexthop));
           ldp_add_ipv4(new, &fec, &nexthop);
@@ -151,7 +151,7 @@ struct ldp *ldp_get() {
 void ldp_finish(struct ldp *ldp) {
     struct ldp_interface *li;
     struct interface *ifp;
-    listnode node;
+    struct listnode *node;
 
     ldp_admin_state_start(ldp);
 
@@ -179,8 +179,8 @@ void ldp_finish(struct ldp *ldp) {
     /* it is key that ldp_interface_delete is called _after_ we
      * set ldp_top to NULL.  This is so the check for ldp fails
      * and we do not try and send config changes into ldp */
-    for (node = listhead(iflist); node; nextnode(node)) {
-        ifp = getdata(node);
+    for (node = listhead(iflist); node; listnextnode(node)) {
+        ifp = listgetdata(node);
         li = (struct ldp_interface*)ifp->info;
         if (li) {
             ldp_interface_delete(li);

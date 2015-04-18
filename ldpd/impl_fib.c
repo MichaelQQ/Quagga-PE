@@ -26,12 +26,12 @@ struct mpls_nexthop *lookup_fec_nexthop(mpls_fec *fec, mpls_nexthop *nexthop) {
 
     if ((rn = route_node_lookup(table,&p))) {
         mn = (struct mpls_node*)rn->info;
-        LIST_LOOP(mn->list, nh, ln) {
+        for (ALL_LIST_ELEMENTS_RO (mn->list, ln, nh)) {
             /* if they match, remove it */
             if (!mpls_nexthop_compare(&nh->info, nexthop)) {
-		result = &nh->info;
-		break;
-	    }
+		          result = &nh->info;
+		          break;
+	          }
         }
 	route_unlock_node(rn);
     }
@@ -54,25 +54,25 @@ void dump_mpls_node(struct vty *vty, struct route_node *node) {
     char buf[128];
 
     if (node->info) {
-	prefix2str(&node->p,buf,sizeof(buf));
-	vty_out(vty, "%s%s", buf, VTY_NEWLINE);
-	mn = (struct mpls_node*)node->info;
-	LIST_LOOP(mn->list,nh,ln) {
-	    vty_out(vty, "  [%d] %d %s ", nh->info.distance, nh->info.metric,
-		nh->info.attached == MPLS_BOOL_TRUE ? "attached":"");
-	    if (nh->info.type & MPLS_NH_IP) {
-		struct in_addr addr;
-		addr.s_addr = htonl(nh->info.ip.u.ipv4);
-		vty_out(vty, "%s ", inet_ntoa(addr));
-	    }
-	    if (nh->info.type & MPLS_NH_IF) {
-		vty_out(vty, "%s ", nh->info.if_handle->name);
-	    }
-	    if (nh->info.type & MPLS_NH_OUTSEGMENT) {
-		vty_out(vty, "%d ", nh->info.outsegment_handle);
-	    }
-	    vty_out(vty, "%s", VTY_NEWLINE);
-	}
+    	prefix2str(&node->p,buf,sizeof(buf));
+    	vty_out(vty, "%s%s", buf, VTY_NEWLINE);
+    	mn = (struct mpls_node*)node->info;
+      for (ALL_LIST_ELEMENTS_RO (mn->list, ln, nh)) {
+    	    vty_out(vty, "  [%d] %d %s ", nh->info.distance, nh->info.metric,
+    		nh->info.attached == MPLS_BOOL_TRUE ? "attached":"");
+    	    if (nh->info.type & MPLS_NH_IP) {
+    		struct in_addr addr;
+    		addr.s_addr = htonl(nh->info.ip.u.ipv4);
+    		vty_out(vty, "%s ", inet_ntoa(addr));
+    	    }
+    	    if (nh->info.type & MPLS_NH_IF) {
+    		vty_out(vty, "%s ", nh->info.if_handle->name);
+    	    }
+    	    if (nh->info.type & MPLS_NH_OUTSEGMENT) {
+    		vty_out(vty, "%d ", nh->info.outsegment_handle);
+    	    }
+    	    vty_out(vty, "%s", VTY_NEWLINE);
+    	}
     }
 }
 
@@ -182,14 +182,14 @@ void mpls_fib_ipv4_delete(struct prefix_ipv4* p, struct mpls_nexthop* nexthop) {
 
   if ((rn = route_node_lookup(table,(struct prefix*)p))) {
     mn = (struct mpls_node*)rn->info;
-    LIST_LOOP(mn->list, nh, ln) {
+    for (ALL_LIST_ELEMENTS_RO (mn->list, ln, nh)) {
       /* if they match, remove it */
       if (!mpls_nexthop_compare(&nh->info, nexthop)) {
-	zebra_prefix2mpls_fec((struct prefix*)p, &fec);
-	if (ldp)
-          ldp_delete_ipv4(ldp, &fec, nexthop);
-        list_delete_node(mn->list, ln);
-	mpls_nh_delete(nh);
+      	zebra_prefix2mpls_fec((struct prefix*)p, &fec);
+      	if (ldp)
+                ldp_delete_ipv4(ldp, &fec, nexthop);
+              list_delete_node(mn->list, ln);
+      	mpls_nh_delete(nh);
         break;
       }
     }
@@ -219,7 +219,7 @@ mpls_return_enum mpls_fib_getfirst_route(mpls_fib_handle handle,
 
       zebra_prefix2mpls_fec(&rn->p, fec);
       mn = rn->info;
-      nh = getdata(listhead(mn->list));
+      nh = listgetdata(listhead(mn->list));
       memcpy(nexthop, &nh->info, sizeof(mpls_nexthop));
       route_unlock_node(rn);
       return MPLS_SUCCESS;
@@ -245,7 +245,7 @@ mpls_return_enum mpls_fib_getnext_route(mpls_fib_handle handle,
   }
 
   mn = rn_in->info;
-  LIST_LOOP(mn->list, nh, ln) {
+  for (ALL_LIST_ELEMENTS_RO (mn->list, ln, nh)) {
     if (next) {
       memcpy(nexthop, &nh->info, sizeof(struct mpls_nexthop));
       route_unlock_node(rn_in);
@@ -259,7 +259,7 @@ mpls_return_enum mpls_fib_getnext_route(mpls_fib_handle handle,
   if ((rn_in = route_next2(rn_in))) {
     zebra_prefix2mpls_fec(&rn_in->p, fec);
     mn = rn_in->info;
-    nh = getdata(listhead(mn->list));
+    nh = listgetdata(listhead(mn->list));
     memcpy(nexthop, &nh->info, sizeof(mpls_nexthop));
     route_unlock_node(rn_in);
     return MPLS_SUCCESS;
