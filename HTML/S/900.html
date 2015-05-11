@@ -1,0 +1,572 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vpnmd/vpnmd_process.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1035.html'>vpnmd</a>/vpnmd_process.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L9'>[^]</a><a href='#L495'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L9' title='Defined at 9.'>search_vpn_node</a></li>
+<li><a href='#L28' title='Defined at 28.'>qurray_vpn_entry</a></li>
+<li><a href='#L50' title='Defined at 50.'>set_customer_facig_port</a></li>
+<li><a href='#L86' title='Defined at 86.'>delete_customer_facig_port</a></li>
+<li><a href='#L131' title='Defined at 131.'>add_port_info</a></li>
+<li><a href='#L158' title='Defined at 158.'>del_port</a></li>
+<li><a href='#L184' title='Defined at 184.'>del_vpn_info</a></li>
+<li><a href='#L204' title='Defined at 204.'>del_pw_info</a></li>
+<li><a href='#L248' title='Defined at 248.'>delete_pw</a></li>
+<li><a href='#L282' title='Defined at 282.'>setup_tunnel</a></li>
+<li><a href='#L328' title='Defined at 328.'>add_new_tunnel_entry</a></li>
+<li><a href='#L336' title='Defined at 336.'>qurray_tunnel_entry</a></li>
+<li><a href='#L360' title='Defined at 360.'>search_tunnel_node</a></li>
+<li><a href='#L379' title='Defined at 379.'>withdraw_pw</a></li>
+<li><a href='#L404' title='Defined at 404.'>quarry_pw_info</a></li>
+<li><a href='#L428' title='Defined at 428.'>search_vpn2pw_entry</a></li>
+<li><a href='#L450' title='Defined at 450.'>search_pw_info</a></li>
+<li><a href='#L471' title='Defined at 471.'>get_pw_entry</a></li>
+<li><a href='#L495' title='Defined at 495.'>setup_pw_info</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='910.html'>vpnmd_process.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='896.html'>vpnmd_rsvp_msg.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='../I/167.html'>connect_daemon.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='893.html'>vpnm_via_rsvp.h</a>"
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='904.html'>vpnm_via_brctl.h</a>"
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a><em class='comment'>//vpn_entry process function block</em>
+<a id='L8' name='L8'></a><em class='comment'>//serarch vpn_entry by vpn_id  return vpn_entry address pointer</em>
+<a id='L9' name='L9'></a><a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *<a href='../R/9702.html' title='Multiple referred from 13 places.'>search_vpn_node</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> * vpn,<strong class='reserved'>int</strong> vpn_id)<em class='brace'>{</em>
+<a id='L10' name='L10'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *this;
+<a id='L11' name='L11'></a>        this=vpn;
+<a id='L12' name='L12'></a>        <strong class='reserved'>if</strong>(this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L13' name='L13'></a>                <strong class='reserved'>do</strong><em class='brace'>{</em>
+<a id='L14' name='L14'></a>                <strong class='reserved'>if</strong>(this-&gt;vpn_id==vpn_id)
+<a id='L15' name='L15'></a>                        <strong class='reserved'>return</strong> this; 
+<a id='L16' name='L16'></a>                this=this-&gt;next;
+<a id='L17' name='L17'></a>                <em class='brace'>}</em><strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L18' name='L18'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L19' name='L19'></a>                <strong class='reserved'>if</strong>(this-&gt;vpn_id==vpn_id)
+<a id='L20' name='L20'></a>                        <strong class='reserved'>return</strong> this;
+<a id='L21' name='L21'></a>                <strong class='reserved'>else</strong>
+<a id='L22' name='L22'></a>                        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L23' name='L23'></a>        <em class='brace'>}</em>
+<a id='L24' name='L24'></a>        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L25' name='L25'></a><em class='brace'>}</em>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='comment'>//0 : sucesses -1 : fail</em>
+<a id='L28' name='L28'></a><strong class='reserved'>int</strong> <a href='../R/8935.html' title='Multiple referred from 2 places.'>qurray_vpn_entry</a>(<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> * vpn,<strong class='reserved'>int</strong> vpn_id)<em class='brace'>{</em>
+<a id='L29' name='L29'></a>        <strong class='reserved'>char</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>[50];
+<a id='L30' name='L30'></a>        sprintf(<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>,"The vpn id : %d is already exit, please set other vpn_id number\n",vpn_id);
+<a id='L31' name='L31'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *this;
+<a id='L32' name='L32'></a>        this=vpn;
+<a id='L33' name='L33'></a>        <strong class='reserved'>while</strong>(this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L34' name='L34'></a>                <strong class='reserved'>if</strong>(this-&gt;vpn_id==vpn_id)<em class='brace'>{</em>
+<a id='L35' name='L35'></a>                        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>);
+<a id='L36' name='L36'></a>                        <strong class='reserved'>return</strong> 0;
+<a id='L37' name='L37'></a>                <em class='brace'>}</em>
+<a id='L38' name='L38'></a>                this=this-&gt;next;        
+<a id='L39' name='L39'></a>        <em class='brace'>}</em>
+<a id='L40' name='L40'></a>        <strong class='reserved'>if</strong>(this-&gt;vpn_id==vpn_id)<em class='brace'>{</em>
+<a id='L41' name='L41'></a>                <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>);
+<a id='L42' name='L42'></a>                <strong class='reserved'>return</strong> 0;       
+<a id='L43' name='L43'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L44' name='L44'></a>                <strong class='reserved'>return</strong> -1 ;
+<a id='L45' name='L45'></a>        <em class='brace'>}</em>
+<a id='L46' name='L46'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L47' name='L47'></a><em class='brace'>}</em>
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><em class='comment'>//rewrite add_port_info to set customer-facing port informations</em>
+<a id='L50' name='L50'></a><strong class='reserved'>int</strong> <a href='../R/9739.html' title='Multiple referred from 2 places.'>set_customer_facig_port</a>(<strong class='reserved'>int</strong> vpn_id, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)<em class='brace'>{</em>
+<a id='L51' name='L51'></a>        <strong class='reserved'>char</strong> br_name[10]=<em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L52' name='L52'></a>        <a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a> *<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L53' name='L53'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L54' name='L54'></a>        <strong class='reserved'>if</strong> (!vpn)
+<a id='L55' name='L55'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L56' name='L56'></a>                
+<a id='L57' name='L57'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L58' name='L58'></a>        <strong class='reserved'>if</strong>(!vpn)
+<a id='L59' name='L59'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L60' name='L60'></a>        
+<a id='L61' name='L61'></a>        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a> = (<a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a> *) malloc(<strong class='reserved'>sizeof</strong>(<a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a>));
+<a id='L62' name='L62'></a>        
+<a id='L63' name='L63'></a>        <strong class='reserved'>if</strong> (!<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>)
+<a id='L64' name='L64'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L65' name='L65'></a>        <em class='comment'>//initial new_node</em>
+<a id='L66' name='L66'></a>        memset(<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>,0,<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a>));
+<a id='L67' name='L67'></a>        
+<a id='L68' name='L68'></a>        strcpy(<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;iface,ifname);
+<a id='L69' name='L69'></a>        sprintf(br_name,"br%d",vpn_id);
+<a id='L70' name='L70'></a>        <strong class='reserved'>if</strong>(<a href='../S/905.html#L87' title='Defined at 87 in vpnmd/vpnm_via_brctl.c.'>add_if</a>(br_name,ifname)!=0)
+<a id='L71' name='L71'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L72' name='L72'></a>        <strong class='reserved'>if</strong> (vpn-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>)<em class='brace'>{</em>
+<a id='L73' name='L73'></a>                <strong class='reserved'>if</strong>(vpn-&gt;port_id_ptr == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L74' name='L74'></a>                        vpn-&gt;port_id_ptr=<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L75' name='L75'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L76' name='L76'></a>                        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;next=vpn-&gt;port_id_ptr;
+<a id='L77' name='L77'></a>                        vpn-&gt;port_id_ptr=<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L78' name='L78'></a>                <em class='brace'>}</em>
+<a id='L79' name='L79'></a>                <a href='../S/898.html#L146' title='Defined at 146 in vpnmd/vpnmd_table.c.'>show_port_info</a>(vpn-&gt;port_id_ptr);<em class='comment'>//testing ;</em>
+<a id='L80' name='L80'></a>                <strong class='reserved'>return</strong> 0; <em class='comment'>//set port id info ok;</em>
+<a id='L81' name='L81'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong>
+<a id='L82' name='L82'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L83' name='L83'></a><em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><em class='comment'>//rewrite del_port to delete customer-facing port informations</em>
+<a id='L86' name='L86'></a><strong class='reserved'>int</strong> <a href='../R/5540.html' title='Multiple referred from 2 places.'>delete_customer_facig_port</a>(<strong class='reserved'>int</strong> vpn_id, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)<em class='brace'>{</em>
+<a id='L87' name='L87'></a>        <strong class='reserved'>char</strong> br_name[10]=<em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L88' name='L88'></a>        <a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a> *this, *prev;<em class='comment'>//, *free_node;</em>
+<a id='L89' name='L89'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L90' name='L90'></a>        <strong class='reserved'>if</strong> (!vpn)
+<a id='L91' name='L91'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L92' name='L92'></a>                
+<a id='L93' name='L93'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L94' name='L94'></a>        <strong class='reserved'>if</strong>(!vpn)
+<a id='L95' name='L95'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L96' name='L96'></a>                
+<a id='L97' name='L97'></a>        <strong class='reserved'>if</strong>(vpn-&gt;port_id_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L98' name='L98'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L99' name='L99'></a>        
+<a id='L100' name='L100'></a>        this=vpn-&gt;port_id_ptr;
+<a id='L101' name='L101'></a>        <strong class='reserved'>if</strong>(strcmp(this-&gt;iface,ifname))<em class='brace'>{</em>
+<a id='L102' name='L102'></a>                <em class='comment'>//free first vpn node</em>
+<a id='L103' name='L103'></a>                vpn-&gt;port_id_ptr=this-&gt;next;
+<a id='L104' name='L104'></a>                free(this);
+<a id='L105' name='L105'></a>                sprintf(br_name,"br%d",vpn_id);
+<a id='L106' name='L106'></a>                <strong class='reserved'>if</strong>(<a href='../S/905.html#L96' title='Defined at 96 in vpnmd/vpnm_via_brctl.c.'>del_if</a>(br_name,ifname)!=0)
+<a id='L107' name='L107'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L108' name='L108'></a>                <a href='../S/898.html#L146' title='Defined at 146 in vpnmd/vpnmd_table.c.'>show_port_info</a>(vpn-&gt;port_id_ptr);<em class='comment'>//testing ;</em>
+<a id='L109' name='L109'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L110' name='L110'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L111' name='L111'></a>                prev=this;
+<a id='L112' name='L112'></a>                this=this-&gt;next;
+<a id='L113' name='L113'></a>                <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L114' name='L114'></a>                        <strong class='reserved'>if</strong>(strcmp(this-&gt;iface,ifname))<em class='brace'>{</em>
+<a id='L115' name='L115'></a>                                prev-&gt;next=this-&gt;next;
+<a id='L116' name='L116'></a>                                free(this);
+<a id='L117' name='L117'></a>                                sprintf(br_name,"br%d",vpn_id);
+<a id='L118' name='L118'></a>                                <strong class='reserved'>if</strong>(<a href='../S/905.html#L96' title='Defined at 96 in vpnmd/vpnm_via_brctl.c.'>del_if</a>(br_name,ifname)!=0)
+<a id='L119' name='L119'></a>                                        <strong class='reserved'>return</strong> -1;
+<a id='L120' name='L120'></a>                                <a href='../S/898.html#L146' title='Defined at 146 in vpnmd/vpnmd_table.c.'>show_port_info</a>(vpn-&gt;port_id_ptr);<em class='comment'>//testing ;</em>
+<a id='L121' name='L121'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L122' name='L122'></a>                        <em class='brace'>}</em>
+<a id='L123' name='L123'></a>                        prev=this;
+<a id='L124' name='L124'></a>                        this=this-&gt;next;
+<a id='L125' name='L125'></a>                <em class='brace'>}</em>
+<a id='L126' name='L126'></a>        <em class='brace'>}</em>
+<a id='L127' name='L127'></a>        <strong class='reserved'>return</strong> -1;      
+<a id='L128' name='L128'></a><em class='brace'>}</em>
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><em class='comment'>//-1: malloc fail, 0: the vpn_entry is not in work, 1: success</em>
+<a id='L131' name='L131'></a><strong class='reserved'>int</strong> <a href='../R/4394.html' title='Multiple referred from 2 places.'>add_port_info</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> * vpn, <strong class='reserved'>int</strong> port_id)
+<a id='L132' name='L132'></a><em class='brace'>{</em>
+<a id='L133' name='L133'></a>        <a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a> *<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L134' name='L134'></a>
+<a id='L135' name='L135'></a>        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a> = (<a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a> *) malloc(<strong class='reserved'>sizeof</strong>(<a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a>));
+<a id='L136' name='L136'></a>        <strong class='reserved'>if</strong> (<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L137' name='L137'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L138' name='L138'></a>        <em class='brace'>}</em>
+<a id='L139' name='L139'></a>        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L140' name='L140'></a>        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;port_id=0;
+<a id='L141' name='L141'></a>        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;port_id = port_id;
+<a id='L142' name='L142'></a>        <strong class='reserved'>if</strong> (vpn-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>)<em class='brace'>{</em>
+<a id='L143' name='L143'></a>                <strong class='reserved'>if</strong>(vpn-&gt;port_id_ptr == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L144' name='L144'></a>                        vpn-&gt;port_id_ptr=<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L145' name='L145'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L146' name='L146'></a>                        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;next=vpn-&gt;port_id_ptr;
+<a id='L147' name='L147'></a>                        vpn-&gt;port_id_ptr=<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L148' name='L148'></a>                <em class='brace'>}</em>
+<a id='L149' name='L149'></a>                <strong class='reserved'>return</strong> 1; <em class='comment'>//set port id info ok;</em>
+<a id='L150' name='L150'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L151' name='L151'></a>                <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"Please add_vpls_id vpn_id xx cmd first.\n");
+<a id='L152' name='L152'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L153' name='L153'></a>        <em class='brace'>}</em>
+<a id='L154' name='L154'></a><em class='brace'>}</em>
+<a id='L155' name='L155'></a><em class='comment'>//No port_id-matching is not allowed in this function, so there is no returned value.</em>
+<a id='L156' name='L156'></a><em class='comment'>//In other words, you must make sure that the port_id will be found in this vpn_tab entry.</em>
+<a id='L157' name='L157'></a><em class='comment'>// 0: success; -1 : fail;</em>
+<a id='L158' name='L158'></a><strong class='reserved'>int</strong> <a href='../R/5533.html' title='Multiple referred from 3 places.'>del_port</a> (<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn, <strong class='reserved'>int</strong> port_id)
+<a id='L159' name='L159'></a><em class='brace'>{</em> 
+<a id='L160' name='L160'></a>        <strong class='reserved'>if</strong>(vpn-&gt;port_id_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L161' name='L161'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L162' name='L162'></a>        <a href='../D/9629.html' title='Multiple defined in 2 places.'>port_id_entry</a> *this, *prev;<em class='comment'>//, *free_node;</em>
+<a id='L163' name='L163'></a>        this=vpn-&gt;port_id_ptr;
+<a id='L164' name='L164'></a>        <strong class='reserved'>if</strong>(this-&gt;port_id==port_id)<em class='brace'>{</em>
+<a id='L165' name='L165'></a>                <em class='comment'>//free first vpn node</em>
+<a id='L166' name='L166'></a>                vpn-&gt;port_id_ptr=this-&gt;next;
+<a id='L167' name='L167'></a>                free(this);
+<a id='L168' name='L168'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L169' name='L169'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L170' name='L170'></a>                prev=this;
+<a id='L171' name='L171'></a>                this=this-&gt;next;
+<a id='L172' name='L172'></a>                <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L173' name='L173'></a>                        <strong class='reserved'>if</strong>(this-&gt;port_id==port_id)<em class='brace'>{</em>
+<a id='L174' name='L174'></a>                                prev-&gt;next=this-&gt;next;
+<a id='L175' name='L175'></a>                                free(this);
+<a id='L176' name='L176'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L177' name='L177'></a>                        <em class='brace'>}</em>
+<a id='L178' name='L178'></a>                        prev=this;
+<a id='L179' name='L179'></a>                        this=this-&gt;next;
+<a id='L180' name='L180'></a>                <em class='brace'>}</em>
+<a id='L181' name='L181'></a>        <em class='brace'>}</em>
+<a id='L182' name='L182'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L183' name='L183'></a><em class='brace'>}</em>
+<a id='L184' name='L184'></a><strong class='reserved'>int</strong> <a href='../R/5538.html' title='Multiple referred from 2 places.'>del_vpn_info</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>int</strong> vpn_id)<em class='brace'>{</em>
+<a id='L185' name='L185'></a>        <strong class='reserved'>if</strong>(vpn==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L186' name='L186'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L187' name='L187'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *this, *vpn_top;
+<a id='L188' name='L188'></a>        vpn_top=vpn;
+<a id='L189' name='L189'></a>        <em class='comment'>//port_id_entry *free_node;</em>
+<a id='L190' name='L190'></a>        this=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L191' name='L191'></a>        <strong class='reserved'>while</strong>(this-&gt;port_id_ptr!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L192' name='L192'></a>                printf("del port :%d\n",this-&gt;port_id_ptr-&gt;port_id);
+<a id='L193' name='L193'></a>                <a href='../S/900.html#L158' title='Defined at 158 in vpnmd/vpnmd_process.c.'>del_port</a>(this,this-&gt;port_id_ptr-&gt;port_id);
+<a id='L194' name='L194'></a>        <em class='brace'>}</em>
+<a id='L195' name='L195'></a>        printf("free vpn_id :%d\n",this-&gt;vpn_id);
+<a id='L196' name='L196'></a>        <strong class='reserved'>if</strong>(!<a href='../S/909.html#L40' title='Defined at 40 in vpnmd/vpnm.c.'>vpn_finish</a>(vpn_top,this-&gt;vpn_id))
+<a id='L197' name='L197'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L198' name='L198'></a>        <strong class='reserved'>else</strong>
+<a id='L199' name='L199'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L200' name='L200'></a>        
+<a id='L201' name='L201'></a><em class='brace'>}</em>
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a><em class='comment'>//not finish function </em>
+<a id='L204' name='L204'></a><strong class='reserved'>int</strong> <a href='../R/5535.html' title='Multiple referred from 8 places.'>del_pw_info</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip,<strong class='reserved'>int</strong> state)<em class='brace'>{</em>
+<a id='L205' name='L205'></a>
+<a id='L206' name='L206'></a>        <strong class='reserved'>if</strong>(vpn-&gt;pw_info_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L207' name='L207'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L208' name='L208'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *this,*prev;
+<a id='L209' name='L209'></a>        this=vpn-&gt;pw_info_ptr;
+<a id='L210' name='L210'></a>        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip &amp;&amp; (this-&gt;in_state==<a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a> &amp;&amp; state==<a href='../D/4540.html' title='Multiple defined in 2 places.'>WITHDRAW_IN</a>) ||(this-&gt;out_state==<a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a> &amp;&amp; state==<a href='../D/4541.html' title='Multiple defined in 2 places.'>WITHDRAW_OUT</a>) || (state==<a href='../D/4539.html' title='Multiple defined in 3 places.'>WITHDRAW_DOIT</a>) )<em class='brace'>{</em>
+<a id='L211' name='L211'></a>                <em class='comment'>//free first PW entry</em>
+<a id='L212' name='L212'></a>                vpn-&gt;pw_info_ptr=this-&gt;next;
+<a id='L213' name='L213'></a>                free(this);
+<a id='L214' name='L214'></a>                printf("Delete PW entry .\n");
+<a id='L215' name='L215'></a>                <strong class='reserved'>if</strong>(state==<a href='../D/4540.html' title='Multiple defined in 2 places.'>WITHDRAW_IN</a>)<em class='brace'>{</em>
+<a id='L216' name='L216'></a>                        printf("Delete vpn %d's incoming data plane forwarding information\n", vpn-&gt;vpn_id);
+<a id='L217' name='L217'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong> <strong class='reserved'>if</strong>(state==<a href='../D/4541.html' title='Multiple defined in 2 places.'>WITHDRAW_OUT</a>)<em class='brace'>{</em>
+<a id='L218' name='L218'></a>                        printf("Delete vpn %d's outgoing data plane forwarding information\n", vpn-&gt;vpn_id);
+<a id='L219' name='L219'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L220' name='L220'></a>                        printf("Delete data plane information.\n");
+<a id='L221' name='L221'></a>                <em class='brace'>}</em>
+<a id='L222' name='L222'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L223' name='L223'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L224' name='L224'></a>                prev=this;
+<a id='L225' name='L225'></a>                this=this-&gt;next;
+<a id='L226' name='L226'></a>                <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L227' name='L227'></a>                        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip &amp;&amp; (this-&gt;in_state==<a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a> &amp;&amp; state==<a href='../D/4540.html' title='Multiple defined in 2 places.'>WITHDRAW_IN</a>) ||(this-&gt;out_state==<a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a> &amp;&amp; state==<a href='../D/4541.html' title='Multiple defined in 2 places.'>WITHDRAW_OUT</a>)|| (state==<a href='../D/4539.html' title='Multiple defined in 3 places.'>WITHDRAW_DOIT</a>) )<em class='brace'>{</em>
+<a id='L228' name='L228'></a>                                prev-&gt;next=this-&gt;next;
+<a id='L229' name='L229'></a>                                free(this);
+<a id='L230' name='L230'></a>                                printf("Delete PW entry .\n");
+<a id='L231' name='L231'></a>                                <strong class='reserved'>if</strong>(state==<a href='../D/4540.html' title='Multiple defined in 2 places.'>WITHDRAW_IN</a>)<em class='brace'>{</em>
+<a id='L232' name='L232'></a>                                        printf("Delete vpn %d's incoming data plane forwarding information\n", vpn-&gt;vpn_id);
+<a id='L233' name='L233'></a>                                <em class='brace'>}</em><strong class='reserved'>else</strong> <strong class='reserved'>if</strong>(state==<a href='../D/4541.html' title='Multiple defined in 2 places.'>WITHDRAW_OUT</a>)<em class='brace'>{</em>
+<a id='L234' name='L234'></a>                                        printf("Delete vpn %d's outgoing data plane forwarding information\n", vpn-&gt;vpn_id);
+<a id='L235' name='L235'></a>                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L236' name='L236'></a>                                        printf("Delete data plane information.\n");
+<a id='L237' name='L237'></a>                                <em class='brace'>}</em>
+<a id='L238' name='L238'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L239' name='L239'></a>                        <em class='brace'>}</em><em class='comment'>//end if</em>
+<a id='L240' name='L240'></a>                        prev=this;
+<a id='L241' name='L241'></a>                        this=this-&gt;next;
+<a id='L242' name='L242'></a>                <em class='brace'>}</em><em class='comment'>//end while</em>
+<a id='L243' name='L243'></a>        <em class='brace'>}</em>
+<a id='L244' name='L244'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L245' name='L245'></a><em class='brace'>}</em>
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a><em class='comment'>//like del_pw_info function  ; success : 1  fail : 0; no record this pw_entry : -1</em>
+<a id='L248' name='L248'></a><strong class='reserved'>int</strong> <a href='../R/5541.html' title='Multiple referred from 2 places.'>delete_pw</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip)<em class='brace'>{</em>
+<a id='L249' name='L249'></a>        printf("delete_pw function start\n");
+<a id='L250' name='L250'></a>        <strong class='reserved'>if</strong>(vpn-&gt;pw_info_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L251' name='L251'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L252' name='L252'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *this,*prev;
+<a id='L253' name='L253'></a>        this=vpn-&gt;pw_info_ptr;
+<a id='L254' name='L254'></a>        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip)<em class='brace'>{</em>
+<a id='L255' name='L255'></a>                printf("free first PW entry\n");
+<a id='L256' name='L256'></a>                <em class='comment'>//free first PW entry</em>
+<a id='L257' name='L257'></a>                vpn-&gt;pw_info_ptr=this-&gt;next;
+<a id='L258' name='L258'></a>                free(this);
+<a id='L259' name='L259'></a>                printf("Delete PW entry .\n");
+<a id='L260' name='L260'></a>                <strong class='reserved'>return</strong> 1;
+<a id='L261' name='L261'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L262' name='L262'></a>                printf("free next PW entry\n");
+<a id='L263' name='L263'></a>                prev=this;
+<a id='L264' name='L264'></a>                this=this-&gt;next;
+<a id='L265' name='L265'></a>                <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L266' name='L266'></a>                        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip)<em class='brace'>{</em>
+<a id='L267' name='L267'></a>                                prev-&gt;next=this-&gt;next;
+<a id='L268' name='L268'></a>                                free(this);
+<a id='L269' name='L269'></a>                                printf("Delete PW entry .\n");
+<a id='L270' name='L270'></a>                                <strong class='reserved'>return</strong> 1;
+<a id='L271' name='L271'></a>                        <em class='brace'>}</em><em class='comment'>//end if</em>
+<a id='L272' name='L272'></a>                        prev=this;
+<a id='L273' name='L273'></a>                        this=this-&gt;next;
+<a id='L274' name='L274'></a>                <em class='brace'>}</em><em class='comment'>//end while</em>
+<a id='L275' name='L275'></a>        <em class='brace'>}</em>
+<a id='L276' name='L276'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L277' name='L277'></a><em class='brace'>}</em>
+<a id='L278' name='L278'></a><em class='comment'>//end vpn_entry process function block</em>
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a><em class='comment'>//tunnel process function block&lt;input type="checkbox" n&lt;input type="checkbox" name="" value=""&gt;ame="" value=""&gt;</em>
+<a id='L281' name='L281'></a><em class='comment'>//success :1 ; fail :0;</em>
+<a id='L282' name='L282'></a><strong class='reserved'>int</strong> <a href='../R/9811.html' title='Multiple referred from 4 places.'>setup_tunnel</a>(<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<strong class='reserved'>char</strong> *src_ip,<strong class='reserved'>char</strong> *dst_ip,<strong class='reserved'>int</strong> lsp_id)<em class='brace'>{</em>
+<a id='L283' name='L283'></a>        printf("Debug msg(setup_tunnel): src_ip :%s\t dst_ip:%s\t lsp_id :%d\n",src_ip,dst_ip,lsp_id);
+<a id='L284' name='L284'></a>        <strong class='reserved'>char</strong> buf[255];
+<a id='L285' name='L285'></a>        <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *tunnel=<a href='../S/909.html#L116' title='Defined at 116 in vpnmd/vpnm.c.'>tunnel_get</a>();
+<a id='L286' name='L286'></a>        <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em><em class='comment'>//no tunnel entry to add first new tunnel_entry</em>
+<a id='L287' name='L287'></a>                tunnel=<a href='../S/909.html#L68' title='Defined at 68 in vpnmd/vpnm.c.'>tunnel_new</a>();    
+<a id='L288' name='L288'></a>                <strong class='reserved'>if</strong>(<a href='../S/900.html#L328' title='Defined at 328 in vpnmd/vpnmd_process.c.'>add_new_tunnel_entry</a>(inet_addr(dst_ip),tunnel))<em class='brace'>{</em>     
+<a id='L289' name='L289'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"Create a new tunnel fail. %s",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L290' name='L290'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L291' name='L291'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em><em class='comment'>//create new tunnel       </em>
+<a id='L292' name='L292'></a>                                        <a href='../D/6208.html' title='Multiple defined in 2 places.'>connect_daemon</a>(<a href='../D/4497.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_RSVPD</a>);      
+<a id='L293' name='L293'></a>                                        <a href='../S/893.html#L15' title='Defined at 15 in vpnmd/vpnm_via_rsvp.h.'>RSVP_New_Command</a> cmd;
+<a id='L294' name='L294'></a>                                        cmd=<a href='../D/4062.html' title='Multiple defined in 2 places.'>SEND_PATH_MSG</a>;
+<a id='L295' name='L295'></a>                                        sprintf(buf,"rsvp_cmd_type %d arg0 %s arg1 %s arg2 %d arg3 %s\n",cmd,src_ip,dst_ip,lsp_id,"NULL");
+<a id='L296' name='L296'></a>                                        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4497.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_RSVPD</a>], buf, stdout);
+<a id='L297' name='L297'></a>                                        <a href='../D/6464.html' title='Multiple defined in 2 places.'>exit_daemon</a>(<a href='../D/4497.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_RSVPD</a>);
+<a id='L298' name='L298'></a>                                        <strong class='reserved'>return</strong> 1;
+<a id='L299' name='L299'></a>        <em class='brace'>}</em>
+<a id='L300' name='L300'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em><em class='comment'>//have one or more tunnel_entry to check remote_ip address is used or unused;</em>
+<a id='L301' name='L301'></a>                 <em class='comment'>//need to check remote_ip is used or unused</em>
+<a id='L302' name='L302'></a>                  printf("Tunnel is exit then create new tunnel entry.\n");
+<a id='L303' name='L303'></a>                <strong class='reserved'>if</strong>(<a href='../S/900.html#L336' title='Defined at 336 in vpnmd/vpnmd_process.c.'>qurray_tunnel_entry</a>(inet_addr(dst_ip),tunnel))<em class='brace'>{</em>
+<a id='L304' name='L304'></a>                tunnel=<a href='../S/909.html#L76' title='Defined at 76 in vpnmd/vpnm.c.'>tunnel_new_more</a>(tunnel);
+<a id='L305' name='L305'></a>                <strong class='reserved'>if</strong>(<a href='../S/900.html#L328' title='Defined at 328 in vpnmd/vpnmd_process.c.'>add_new_tunnel_entry</a>(inet_addr(dst_ip),tunnel))<em class='brace'>{</em>
+<a id='L306' name='L306'></a>                        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"Create a new tunnel fail. %s",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L307' name='L307'></a>                        <strong class='reserved'>return</strong> 0;
+<a id='L308' name='L308'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L309' name='L309'></a>                                <em class='comment'>//need to check rsvp daemon is setup tunnel or not; those codes doesn't ready.</em>
+<a id='L310' name='L310'></a>                                        <a href='../S/893.html#L15' title='Defined at 15 in vpnmd/vpnm_via_rsvp.h.'>RSVP_New_Command</a> cmd;
+<a id='L311' name='L311'></a>                                        cmd=<a href='../D/4062.html' title='Multiple defined in 2 places.'>SEND_PATH_MSG</a>;
+<a id='L312' name='L312'></a>                                        <a href='../D/6208.html' title='Multiple defined in 2 places.'>connect_daemon</a>(<a href='../D/4497.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_RSVPD</a>);
+<a id='L313' name='L313'></a>                                        sprintf(buf,"rsvp_cmd_type %d arg0 %s arg1 %s arg2 %d arg3 %s\n",cmd,src_ip,dst_ip,lsp_id,"NULL");
+<a id='L314' name='L314'></a>                                        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4497.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_RSVPD</a>], buf, stdout);
+<a id='L315' name='L315'></a>                                        <a href='../D/6464.html' title='Multiple defined in 2 places.'>exit_daemon</a>(<a href='../D/4497.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_RSVPD</a>);
+<a id='L316' name='L316'></a>                                        <strong class='reserved'>return</strong> 1;
+<a id='L317' name='L317'></a>                                <em class='brace'>}</em>
+<a id='L318' name='L318'></a>                                <em class='comment'>//tunnel-&gt;out_state = PROCESSING;</em>
+<a id='L319' name='L319'></a>                                <em class='comment'>//return CMD_WARNING;</em>
+<a id='L320' name='L320'></a>                 <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L321' name='L321'></a>                                <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"The remote_ip is already exit.\n");
+<a id='L322' name='L322'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L323' name='L323'></a>                        <em class='brace'>}</em>
+<a id='L324' name='L324'></a>        <em class='brace'>}</em>
+<a id='L325' name='L325'></a><em class='brace'>}</em>
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a><em class='comment'>//0 :sucess to enable tunnel state ; -1 : fail or used</em>
+<a id='L328' name='L328'></a><strong class='reserved'>int</strong> <a href='../R/4386.html' title='Multiple referred from 5 places.'>add_new_tunnel_entry</a> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip,<a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *tunnel)
+<a id='L329' name='L329'></a><em class='brace'>{</em>
+<a id='L330' name='L330'></a>         tunnel-&gt;remote_ip.s_addr=dst_ip;
+<a id='L331' name='L331'></a>         tunnel-&gt;in_use=<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>;
+<a id='L332' name='L332'></a>         <strong class='reserved'>return</strong> 0;
+<a id='L333' name='L333'></a><em class='brace'>}</em>
+<a id='L334' name='L334'></a>
+<a id='L335' name='L335'></a><em class='comment'>//0 :sucess remote ip already in tunnel entry -1: not found </em>
+<a id='L336' name='L336'></a><strong class='reserved'>int</strong> <a href='../R/8934.html' title='Multiple referred from 2 places.'>qurray_tunnel_entry</a>(<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip,<a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> * tunnel)<em class='brace'>{</em>
+<a id='L337' name='L337'></a>        <strong class='reserved'>char</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>[100];
+<a id='L338' name='L338'></a>        sprintf(<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>,"The remote_ip add_new_tunnel_entry : %s is already exit, please set other remote_ip address\n",inet_ntoa(tunnel-&gt;remote_ip));
+<a id='L339' name='L339'></a>        <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *this;
+<a id='L340' name='L340'></a>        this=tunnel;
+<a id='L341' name='L341'></a>        <strong class='reserved'>while</strong>(this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L342' name='L342'></a>                <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==dst_ip)<em class='brace'>{</em>
+<a id='L343' name='L343'></a>                        printf("%s",<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>);
+<a id='L344' name='L344'></a>                        <em class='comment'>//vty_out(vty,message);</em>
+<a id='L345' name='L345'></a>                        <strong class='reserved'>return</strong> 0;
+<a id='L346' name='L346'></a>                <em class='brace'>}</em>
+<a id='L347' name='L347'></a>                this=this-&gt;next;        
+<a id='L348' name='L348'></a>        <em class='brace'>}</em>
+<a id='L349' name='L349'></a>        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==dst_ip)<em class='brace'>{</em>
+<a id='L350' name='L350'></a>                printf("%s",<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>);
+<a id='L351' name='L351'></a>                <em class='comment'>//vty_out(vty,message);</em>
+<a id='L352' name='L352'></a>                <strong class='reserved'>return</strong> 0;       
+<a id='L353' name='L353'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L354' name='L354'></a>                <strong class='reserved'>return</strong> -1 ;
+<a id='L355' name='L355'></a>        <em class='brace'>}</em>
+<a id='L356' name='L356'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L357' name='L357'></a><em class='brace'>}</em>
+<a id='L358' name='L358'></a>
+<a id='L359' name='L359'></a><em class='comment'>//serarch vpn_entry by vpn_id  return vpn_entry address pointer</em>
+<a id='L360' name='L360'></a><a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *<a href='../R/9700.html' title='Multiple referred from 13 places.'>search_tunnel_node</a>(<a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> * tunnel,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip)<em class='brace'>{</em>
+<a id='L361' name='L361'></a>        <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *this;
+<a id='L362' name='L362'></a>        this=tunnel;
+<a id='L363' name='L363'></a>        <strong class='reserved'>if</strong>(this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L364' name='L364'></a>                <strong class='reserved'>do</strong><em class='brace'>{</em>
+<a id='L365' name='L365'></a>                <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==dst_ip)
+<a id='L366' name='L366'></a>                        <strong class='reserved'>return</strong> this; 
+<a id='L367' name='L367'></a>                this=this-&gt;next;
+<a id='L368' name='L368'></a>                <em class='brace'>}</em><strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L369' name='L369'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L370' name='L370'></a>                <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==dst_ip)
+<a id='L371' name='L371'></a>                        <strong class='reserved'>return</strong> this;
+<a id='L372' name='L372'></a>                <strong class='reserved'>else</strong>
+<a id='L373' name='L373'></a>                        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L374' name='L374'></a>        <em class='brace'>}</em>
+<a id='L375' name='L375'></a>        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L376' name='L376'></a><em class='brace'>}</em>
+<a id='L377' name='L377'></a>
+<a id='L378' name='L378'></a>
+<a id='L379' name='L379'></a><strong class='reserved'>int</strong> <a href='../S/910.html#L29' title='Referred from 29 in vpnmd/vpnmd_process.h.'>withdraw_pw</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip,<strong class='reserved'>int</strong> state)<em class='brace'>{</em>
+<a id='L380' name='L380'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn_this;
+<a id='L381' name='L381'></a>        <em class='comment'>//pw_info_entry *pw_this;</em>
+<a id='L382' name='L382'></a>        <strong class='reserved'>if</strong>(vpn!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L383' name='L383'></a>                vpn_this=vpn;
+<a id='L384' name='L384'></a>                <strong class='reserved'>while</strong>(vpn_this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L385' name='L385'></a>                        <strong class='reserved'>if</strong>(<a href='../S/900.html#L204' title='Defined at 204 in vpnmd/vpnmd_process.c.'>del_pw_info</a>(vpn_this,ip,state))<em class='brace'>{</em>
+<a id='L386' name='L386'></a>                                printf("delete PW fail.\n");
+<a id='L387' name='L387'></a>                                <strong class='reserved'>return</strong> -1;
+<a id='L388' name='L388'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L389' name='L389'></a>                                <em class='comment'>//delete sucess</em>
+<a id='L390' name='L390'></a>                                printf("delete sucess.\n");
+<a id='L391' name='L391'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L392' name='L392'></a>                        <em class='brace'>}</em>
+<a id='L393' name='L393'></a>                        vpn_this=vpn_this-&gt;next;
+<a id='L394' name='L394'></a>                <em class='brace'>}</em><em class='comment'>//end while()</em>
+<a id='L395' name='L395'></a>                <em class='comment'>//have only one vpn_entry not to check</em>
+<a id='L396' name='L396'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L397' name='L397'></a>   printf("NO vpn_entry .\n");
+<a id='L398' name='L398'></a>   <strong class='reserved'>return</strong> -1;
+<a id='L399' name='L399'></a>        <em class='brace'>}</em>
+<a id='L400' name='L400'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L401' name='L401'></a><em class='brace'>}</em>
+<a id='L402' name='L402'></a>
+<a id='L403' name='L403'></a><em class='comment'>//0 :find the PW entry ; -1 : not find PW entry</em>
+<a id='L404' name='L404'></a><strong class='reserved'>int</strong> <a href='../R/8933.html' title='Multiple referred from 2 places.'>quarry_pw_info</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip,<strong class='reserved'>int</strong> vpn_id)<em class='brace'>{</em>
+<a id='L405' name='L405'></a>        <strong class='reserved'>if</strong>(vpn-&gt;pw_info_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L406' name='L406'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L407' name='L407'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *this,*prev;
+<a id='L408' name='L408'></a>        this=vpn-&gt;pw_info_ptr;
+<a id='L409' name='L409'></a>        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip &amp;&amp; this-&gt;in_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a> &amp;&amp; vpn-&gt;vpn_id ==vpn_id)<em class='brace'>{</em>
+<a id='L410' name='L410'></a>                printf("Find the PW entry in vpn_id :%d.\n",vpn-&gt;vpn_id);
+<a id='L411' name='L411'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L412' name='L412'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L413' name='L413'></a>                this=this-&gt;next;
+<a id='L414' name='L414'></a>                <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L415' name='L415'></a>                        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip &amp;&amp; this-&gt;in_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a> &amp;&amp; vpn-&gt;vpn_id ==vpn_id)<em class='brace'>{</em>
+<a id='L416' name='L416'></a>                                printf("Find the PW entry in vpn_id :%d.\n",vpn-&gt;vpn_id);
+<a id='L417' name='L417'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L418' name='L418'></a>                        <em class='brace'>}</em><em class='comment'>//end if </em>
+<a id='L419' name='L419'></a>                        this=this-&gt;next;
+<a id='L420' name='L420'></a>                <em class='brace'>}</em><em class='comment'>//end while</em>
+<a id='L421' name='L421'></a>        <em class='brace'>}</em>
+<a id='L422' name='L422'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L423' name='L423'></a><em class='brace'>}</em>
+<a id='L424' name='L424'></a><em class='comment'>////end tunnel process</em>
+<a id='L425' name='L425'></a>
+<a id='L426' name='L426'></a>
+<a id='L427' name='L427'></a><em class='comment'>//need to rewrite search - quarry PW information function code</em>
+<a id='L428' name='L428'></a><strong class='reserved'>int</strong> <a href='../S/910.html#L40' title='Referred from 40 in vpnmd/vpnmd_process.h.'>search_vpn2pw_entry</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip)<em class='brace'>{</em>
+<a id='L429' name='L429'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn_this;
+<a id='L430' name='L430'></a>        <strong class='reserved'>if</strong>(vpn!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L431' name='L431'></a>                vpn_this=vpn;
+<a id='L432' name='L432'></a>                <strong class='reserved'>while</strong>(vpn_this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L433' name='L433'></a>                        <strong class='reserved'>if</strong>(<a href='../S/900.html#L450' title='Defined at 450 in vpnmd/vpnmd_process.c.'>search_pw_info</a>(vpn_this,ip))<em class='brace'>{</em>
+<a id='L434' name='L434'></a>                                printf("quarry PW fail.\n");
+<a id='L435' name='L435'></a>                                <strong class='reserved'>return</strong> -1;
+<a id='L436' name='L436'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L437' name='L437'></a>                                <em class='comment'>//quarry sucess</em>
+<a id='L438' name='L438'></a>                                printf("Find PW entry in vpn_id : %d.\n",vpn_this-&gt;vpn_id);
+<a id='L439' name='L439'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L440' name='L440'></a>                        <em class='brace'>}</em>
+<a id='L441' name='L441'></a>                        vpn_this=vpn_this-&gt;next;
+<a id='L442' name='L442'></a>                <em class='brace'>}</em><em class='comment'>//end while()</em>
+<a id='L443' name='L443'></a>                <em class='comment'>//have only one vpn_entry not to check</em>
+<a id='L444' name='L444'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L445' name='L445'></a>   printf("NO vpn_entry .\n");
+<a id='L446' name='L446'></a>   <strong class='reserved'>return</strong> -1;
+<a id='L447' name='L447'></a>        <em class='brace'>}</em>
+<a id='L448' name='L448'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L449' name='L449'></a><em class='brace'>}</em>
+<a id='L450' name='L450'></a><strong class='reserved'>int</strong> <a href='../R/9699.html' title='Multiple referred from 2 places.'>search_pw_info</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip)<em class='brace'>{</em>
+<a id='L451' name='L451'></a>        <strong class='reserved'>if</strong>(vpn-&gt;pw_info_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L452' name='L452'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L453' name='L453'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *this;<em class='comment'>//,*prev;</em>
+<a id='L454' name='L454'></a>        this=vpn-&gt;pw_info_ptr;
+<a id='L455' name='L455'></a>        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip )<em class='brace'>{</em>
+<a id='L456' name='L456'></a>                printf("Find the PW entry in vpn_id :%d.\n",vpn-&gt;vpn_id);
+<a id='L457' name='L457'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L458' name='L458'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L459' name='L459'></a>                this=this-&gt;next;
+<a id='L460' name='L460'></a>                <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L461' name='L461'></a>                        <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip )<em class='brace'>{</em>
+<a id='L462' name='L462'></a>                                printf("Find the PW entry in vpn_id :%d.\n",vpn-&gt;vpn_id);
+<a id='L463' name='L463'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L464' name='L464'></a>                        <em class='brace'>}</em><em class='comment'>//end if </em>
+<a id='L465' name='L465'></a>                        this=this-&gt;next;
+<a id='L466' name='L466'></a>                <em class='brace'>}</em><em class='comment'>//end while</em>
+<a id='L467' name='L467'></a>        <em class='brace'>}</em>
+<a id='L468' name='L468'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L469' name='L469'></a><em class='brace'>}</em>
+<a id='L470' name='L470'></a>
+<a id='L471' name='L471'></a><a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *<a href='../R/5833.html' title='Multiple referred from 17 places.'>get_pw_entry</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip)<em class='brace'>{</em>
+<a id='L472' name='L472'></a>        <strong class='reserved'>if</strong>(vpn-&gt;pw_info_ptr==<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L473' name='L473'></a>                <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L474' name='L474'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *this;
+<a id='L475' name='L475'></a>        this=vpn-&gt;pw_info_ptr;
+<a id='L476' name='L476'></a>                <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip )<em class='brace'>{</em>
+<a id='L477' name='L477'></a>                        printf("Find the PW entry in vpn_id :%d.\n",vpn-&gt;vpn_id);
+<a id='L478' name='L478'></a>                        <strong class='reserved'>return</strong> this;
+<a id='L479' name='L479'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L480' name='L480'></a>                        this=this-&gt;next;
+<a id='L481' name='L481'></a>                        <strong class='reserved'>while</strong>(this!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L482' name='L482'></a>                                <strong class='reserved'>if</strong>(this-&gt;remote_ip.s_addr==ip )<em class='brace'>{</em>
+<a id='L483' name='L483'></a>                                        printf("Find the PW entry in vpn_id :%d.\n",vpn-&gt;vpn_id);
+<a id='L484' name='L484'></a>                                        <strong class='reserved'>return</strong> this;
+<a id='L485' name='L485'></a>                                <em class='brace'>}</em><em class='comment'>//end if </em>
+<a id='L486' name='L486'></a>                                this=this-&gt;next;
+<a id='L487' name='L487'></a>                        <em class='brace'>}</em><em class='comment'>//end while</em>
+<a id='L488' name='L488'></a>                <em class='brace'>}</em><em class='comment'>//end (this-&gt;remote_ip.s_addr==ip )</em>
+<a id='L489' name='L489'></a>        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>; 
+<a id='L490' name='L490'></a><em class='brace'>}</em>
+<a id='L491' name='L491'></a>
+<a id='L492' name='L492'></a><em class='comment'>//end need to rewrite search - quarry PW information function code</em>
+<a id='L493' name='L493'></a><em class='comment'>//link add_pw_by_ip</em>
+<a id='L494' name='L494'></a><em class='comment'>//set_state==0 --&gt;set in_pw info ; set_state==2 --&gt; set out_pw info</em>
+<a id='L495' name='L495'></a><strong class='reserved'>int</strong> <a href='../R/9808.html' title='Multiple referred from 4 places.'>setup_pw_info</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip,<strong class='reserved'>int</strong> set_state)<em class='brace'>{</em>
+<a id='L496' name='L496'></a>        <em class='comment'>//printf("setup_pw_info start .\n");</em>
+<a id='L497' name='L497'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw,*<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L498' name='L498'></a>        
+<a id='L499' name='L499'></a>        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,ip);
+<a id='L500' name='L500'></a>        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L501' name='L501'></a>                <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a> = (<a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *) malloc(<strong class='reserved'>sizeof</strong>(<a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a>));
+<a id='L502' name='L502'></a>                <strong class='reserved'>if</strong> (<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L503' name='L503'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L504' name='L504'></a>                <em class='brace'>}</em>
+<a id='L505' name='L505'></a>                <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L506' name='L506'></a>                <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;remote_ip.s_addr = ip;
+<a id='L507' name='L507'></a>                <strong class='reserved'>if</strong>(set_state==0)
+<a id='L508' name='L508'></a>                        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;in_state=<a href='../S/908.html#L12' title='Defined at 12 in vpnmd/vpnmd_table.h.'>PROCESSING</a>;
+<a id='L509' name='L509'></a>                <strong class='reserved'>else</strong> 
+<a id='L510' name='L510'></a>                        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;out_state=<a href='../S/908.html#L12' title='Defined at 12 in vpnmd/vpnmd_table.h.'>PROCESSING</a>;
+<a id='L511' name='L511'></a>                <em class='comment'>//vpn-&gt;pw_info_ptr=new_node;</em>
+<a id='L512' name='L512'></a>                <strong class='reserved'>if</strong>(vpn-&gt;pw_info_ptr == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L513' name='L513'></a>                        vpn-&gt;pw_info_ptr=<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L514' name='L514'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L515' name='L515'></a>                        <a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>-&gt;next=vpn-&gt;pw_info_ptr;
+<a id='L516' name='L516'></a>                        vpn-&gt;pw_info_ptr=<a href='../S/513.html#L1277' title='Defined at 1277 in isisd/dict.c.'>new_node</a>;
+<a id='L517' name='L517'></a>                <em class='brace'>}</em>
+<a id='L518' name='L518'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L519' name='L519'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L520' name='L520'></a>                <strong class='reserved'>if</strong>(set_state==0)
+<a id='L521' name='L521'></a>                        pw-&gt;in_state = <a href='../S/908.html#L12' title='Defined at 12 in vpnmd/vpnmd_table.h.'>PROCESSING</a>;
+<a id='L522' name='L522'></a>                <strong class='reserved'>else</strong>
+<a id='L523' name='L523'></a>                        pw-&gt;out_state = <a href='../S/908.html#L12' title='Defined at 12 in vpnmd/vpnmd_table.h.'>PROCESSING</a>;
+<a id='L524' name='L524'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L525' name='L525'></a>        <em class='brace'>}</em>
+<a id='L526' name='L526'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L527' name='L527'></a>        
+<a id='L528' name='L528'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L9'>[^]</a><a href='#L495'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

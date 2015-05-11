@@ -1,0 +1,1560 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/smux.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/smux.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L119'>[^]</a><a href='#L1494'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L119' title='Defined at 119.'>oid_compare_part</a></li>
+<li><a href='#L137' title='Defined at 137.'>smux_oid_dump</a></li>
+<li><a href='#L154' title='Defined at 154.'>smux_socket</a></li>
+<li><a href='#L247' title='Defined at 247.'>smux_getresp_send</a></li>
+<li><a href='#L309' title='Defined at 309.'>smux_var</a></li>
+<li><a href='#L410' title='Defined at 410.'>smux_set</a></li>
+<li><a href='#L478' title='Defined at 478.'>smux_get</a></li>
+<li><a href='#L544' title='Defined at 544.'>smux_getnext</a></li>
+<li><a href='#L630' title='Defined at 630.'>smux_parse_get_header</a></li>
+<li><a href='#L658' title='Defined at 658.'>smux_parse_set</a></li>
+<li><a href='#L689' title='Defined at 689.'>smux_parse_get</a></li>
+<li><a href='#L723' title='Defined at 723.'>smux_parse_close</a></li>
+<li><a href='#L737' title='Defined at 737.'>smux_parse_rrsp</a></li>
+<li><a href='#L750' title='Defined at 750.'>smux_parse</a></li>
+<li><a href='#L863' title='Defined at 863.'>smux_read</a></li>
+<li><a href='#L919' title='Defined at 919.'>smux_open</a></li>
+<li><a href='#L977' title='Defined at 977.'>smux_trap</a></li>
+<li><a href='#L1105' title='Defined at 1105.'>smux_register</a></li>
+<li><a href='#L1162' title='Defined at 1162.'>smux_connect</a></li>
+<li><a href='#L1213' title='Defined at 1213.'>smux_stop</a></li>
+<li><a href='#L1237' title='Defined at 1237.'>smux_event</a></li>
+<li><a href='#L1256' title='Defined at 1256.'>smux_str2oid</a></li>
+<li><a href='#L1299' title='Defined at 1299.'>smux_oid_dup</a></li>
+<li><a href='#L1310' title='Defined at 1310.'>smux_peer_oid</a></li>
+<li><a href='#L1348' title='Defined at 1348.'>smux_peer_default</a></li>
+<li><a href='#L1366' title='Defined at 1366.'>DEFUN</a></li>
+<li><a href='#L1382' title='Defined at 1382.'>DEFUN</a></li>
+<li><a href='#L1399' title='Defined at 1399.'>DEFUN</a></li>
+<li><a href='#L1410' title='Defined at 1410.'>ALIAS</a></li>
+<li><a href='#L1448' title='Defined at 1448.'>smux_register_mib</a></li>
+<li><a href='#L1466' title='Defined at 1466.'>smux_tree_cmp</a></li>
+<li><a href='#L1474' title='Defined at 1474.'>smux_init</a></li>
+<li><a href='#L1494' title='Defined at 1494.'>smux_start</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* SNMP support</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 1999 Kunihiro Ishiguro &lt;kunihiro@zebra.org&gt;</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong> HAVE_SNMP &amp;&amp; <strong class='reserved'>defined</strong> SNMP_SMUX
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;net-snmp/net-snmp-config.h&gt;
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;net-snmp/net-snmp-includes.h&gt;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> &lt;<a href='237.html'>lib/version.h</a>&gt;
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='293.html'>sockunion.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='206.html'>smux.h</a>"
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/3489.html' title='Multiple referred from 2 places.'>SMUX_PORT_DEFAULT</a> 199
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='sharp'>#define</em> <a href='../R/3481.html' title='Multiple referred from 3 places.'>SMUXMAXPKTSIZE</a>    1500
+<a id='L40' name='L40'></a><em class='sharp'>#define</em> SMUXMAXSTRLEN      256
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><em class='sharp'>#define</em> <a href='../R/3488.html' title='Multiple referred from 3 places.'>SMUX_OPEN</a>       (ASN_APPLICATION | ASN_CONSTRUCTOR | 0)
+<a id='L43' name='L43'></a><em class='sharp'>#define</em> <a href='../S/182.html#L819' title='Referred from 819 in lib/smux.c.'>SMUX_CLOSE</a>      (ASN_APPLICATION | ASN_PRIMITIVE | 1)
+<a id='L44' name='L44'></a><em class='sharp'>#define</em> <a href='../R/3491.html' title='Multiple referred from 3 places.'>SMUX_RREQ</a>       (ASN_APPLICATION | ASN_CONSTRUCTOR | 2)
+<a id='L45' name='L45'></a><em class='sharp'>#define</em> <a href='../S/182.html#L826' title='Referred from 826 in lib/smux.c.'>SMUX_RRSP</a>       (ASN_APPLICATION | ASN_PRIMITIVE | 3)
+<a id='L46' name='L46'></a><em class='sharp'>#define</em> <a href='../S/182.html#L784' title='Referred from 784 in lib/smux.c.'>SMUX_SOUT</a>       (ASN_APPLICATION | ASN_PRIMITIVE | 4)
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><em class='sharp'>#define</em> <a href='../S/182.html#L832' title='Referred from 832 in lib/smux.c.'>SMUX_GET</a>        (ASN_CONTEXT | ASN_CONSTRUCTOR | 0)
+<a id='L49' name='L49'></a><em class='sharp'>#define</em> <a href='../S/182.html#L838' title='Referred from 838 in lib/smux.c.'>SMUX_GETNEXT</a>    (ASN_CONTEXT | ASN_CONSTRUCTOR | 1)
+<a id='L50' name='L50'></a><em class='sharp'>#define</em> <a href='../R/3486.html' title='Multiple referred from 3 places.'>SMUX_GETRSP</a>     (ASN_CONTEXT | ASN_CONSTRUCTOR | 2)
+<a id='L51' name='L51'></a><em class='sharp'>#define</em> <a href='../S/182.html#L844' title='Referred from 844 in lib/smux.c.'>SMUX_SET</a>        (ASN_CONTEXT | ASN_CONSTRUCTOR | 3)
+<a id='L52' name='L52'></a><em class='sharp'>#define</em> <a href='../R/3496.html' title='Multiple referred from 2 places.'>SMUX_TRAP</a>       (ASN_CONTEXT | ASN_CONSTRUCTOR | 4)
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a><em class='sharp'>#define</em> <a href='../R/3487.html' title='Multiple referred from 3 places.'>SMUX_MAX_FAILURE</a> 3
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><em class='comment'>/* SNMP tree. */</em>
+<a id='L57' name='L57'></a><strong class='reserved'>struct</strong> <a href='../R/10070.html' title='Multiple referred from 31 places.'>subtree</a>
+<a id='L58' name='L58'></a><em class='brace'>{</em>
+<a id='L59' name='L59'></a>  <em class='comment'>/* Tree's oid. */</em>
+<a id='L60' name='L60'></a>  oid <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>[MAX_OID_LEN];
+<a id='L61' name='L61'></a>  u_char name_len;
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a>  <em class='comment'>/* List of the variables. */</em>
+<a id='L64' name='L64'></a>  <strong class='reserved'>struct</strong> variable *variables;
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>  <em class='comment'>/* Length of the variables list. */</em>
+<a id='L67' name='L67'></a>  <strong class='reserved'>int</strong> variables_num;
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a>  <em class='comment'>/* Width of the variables list. */</em>
+<a id='L70' name='L70'></a>  <strong class='reserved'>int</strong> variables_width;
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>  <em class='comment'>/* Registered flag. */</em>
+<a id='L73' name='L73'></a>  <strong class='reserved'>int</strong> registered;
+<a id='L74' name='L74'></a><em class='brace'>}</em>;
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><em class='sharp'>#define</em> <a href='../R/6931.html' title='Multiple referred from 68 places.'>min</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>,<a href='../D/84.html' title='Multiple defined in 2 places.'>B</a>) ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>) &lt; (<a href='../D/84.html' title='Multiple defined in 2 places.'>B</a>) ? (<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>) : (<a href='../D/84.html' title='Multiple defined in 2 places.'>B</a>))
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a><strong class='reserved'>enum</strong> <a href='../R/9897.html' title='Multiple referred from 11 places.'>smux_event</a> <em class='brace'>{</em><a href='../R/3493.html' title='Multiple referred from 2 places.'>SMUX_SCHEDULE</a>, <a href='../R/3483.html' title='Multiple referred from 7 places.'>SMUX_CONNECT</a>, <a href='../R/3490.html' title='Multiple referred from 3 places.'>SMUX_READ</a><em class='brace'>}</em>;
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a><strong class='reserved'>void</strong> <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<strong class='reserved'>enum</strong> <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a>, <strong class='reserved'>int</strong>);
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='comment'>/* SMUX socket. */</em>
+<a id='L84' name='L84'></a><strong class='reserved'>int</strong> smux_sock = -1;
+<a id='L85' name='L85'></a>
+<a id='L86' name='L86'></a><em class='comment'>/* SMUX subtree list. */</em>
+<a id='L87' name='L87'></a><strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *treelist;
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a><em class='comment'>/* SMUX oid. */</em>
+<a id='L90' name='L90'></a>oid *smux_oid = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L91' name='L91'></a>size_t smux_oid_len;
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a><em class='comment'>/* SMUX password. */</em>
+<a id='L94' name='L94'></a><strong class='reserved'>char</strong> *smux_passwd = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a><em class='comment'>/* SMUX read threads. */</em>
+<a id='L97' name='L97'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *smux_read_thread;
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><em class='comment'>/* SMUX connect thrads. */</em>
+<a id='L100' name='L100'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *smux_connect_thread;
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><em class='comment'>/* SMUX debug flag. */</em>
+<a id='L103' name='L103'></a><strong class='reserved'>int</strong> debug_smux = 0;
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a><em class='comment'>/* SMUX failure count. */</em>
+<a id='L106' name='L106'></a><strong class='reserved'>int</strong> fail = 0;
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a><em class='comment'>/* SMUX node. */</em>
+<a id='L109' name='L109'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> smux_node =
+<a id='L110' name='L110'></a><em class='brace'>{</em>
+<a id='L111' name='L111'></a>  SMUX_NODE,
+<a id='L112' name='L112'></a>  ""                            <em class='comment'>/* SMUX has no interface. */</em>
+<a id='L113' name='L113'></a><em class='brace'>}</em>;
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><em class='comment'>/* thread master */</em>
+<a id='L116' name='L116'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L117' name='L117'></a>
+<a id='L118' name='L118'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L119' name='L119'></a><a href='../R/7427.html' title='Multiple referred from 6 places.'>oid_compare_part</a> (oid *o1, <strong class='reserved'>int</strong> o1_len, oid *o2, <strong class='reserved'>int</strong> o2_len)
+<a id='L120' name='L120'></a><em class='brace'>{</em>
+<a id='L121' name='L121'></a>  <strong class='reserved'>int</strong> i;
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../D/7719.html' title='Multiple defined in 4 places.'>min</a> (o1_len, o2_len); i++)
+<a id='L124' name='L124'></a>    <em class='brace'>{</em>
+<a id='L125' name='L125'></a>      <strong class='reserved'>if</strong> (o1[i] &lt; o2[i])
+<a id='L126' name='L126'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L127' name='L127'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (o1[i] &gt; o2[i])
+<a id='L128' name='L128'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L129' name='L129'></a>    <em class='brace'>}</em>
+<a id='L130' name='L130'></a>  <strong class='reserved'>if</strong> (o1_len &lt; o2_len)
+<a id='L131' name='L131'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L134' name='L134'></a><em class='brace'>}</em>
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L137' name='L137'></a><a href='../R/9904.html' title='Multiple referred from 8 places.'>smux_oid_dump</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, <strong class='reserved'>const</strong> oid *oid, size_t oid_len)
+<a id='L138' name='L138'></a><em class='brace'>{</em>
+<a id='L139' name='L139'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L140' name='L140'></a>  <strong class='reserved'>int</strong> first = 1;
+<a id='L141' name='L141'></a>  <strong class='reserved'>char</strong> buf[MAX_OID_LEN * 3];
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a>  buf[0] = '\0';
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; oid_len; i++)
+<a id='L146' name='L146'></a>    <em class='brace'>{</em>
+<a id='L147' name='L147'></a>      sprintf (buf + strlen (buf), "%s%d", first ? "" : ".", (<strong class='reserved'>int</strong>) oid[i]);
+<a id='L148' name='L148'></a>      first = 0;
+<a id='L149' name='L149'></a>    <em class='brace'>}</em>
+<a id='L150' name='L150'></a>  zlog_debug ("%s: %s", <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, buf);
+<a id='L151' name='L151'></a><em class='brace'>}</em>
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L154' name='L154'></a><a href='../S/182.html#L1173' title='Referred from 1173 in lib/smux.c.'>smux_socket</a> (<strong class='reserved'>void</strong>)
+<a id='L155' name='L155'></a><em class='brace'>{</em>
+<a id='L156' name='L156'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L157' name='L157'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L158' name='L158'></a>  <strong class='reserved'>struct</strong> addrinfo hints, *res0, *res;
+<a id='L159' name='L159'></a>  <strong class='reserved'>int</strong> gai;
+<a id='L160' name='L160'></a><em class='sharp'>#else</em>
+<a id='L161' name='L161'></a>  <strong class='reserved'>struct</strong> sockaddr_in serv;
+<a id='L162' name='L162'></a>  <strong class='reserved'>struct</strong> servent *sp;
+<a id='L163' name='L163'></a><em class='sharp'>#endif</em>
+<a id='L164' name='L164'></a>  <strong class='reserved'>int</strong> sock = 0;
+<a id='L165' name='L165'></a>
+<a id='L166' name='L166'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L167' name='L167'></a>  memset(&amp;hints, 0, <strong class='reserved'>sizeof</strong>(hints));
+<a id='L168' name='L168'></a>  hints.ai_family = PF_UNSPEC;
+<a id='L169' name='L169'></a>  hints.ai_socktype = SOCK_STREAM;
+<a id='L170' name='L170'></a>  gai = getaddrinfo(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, "smux", &amp;hints, &amp;res0);
+<a id='L171' name='L171'></a>  <strong class='reserved'>if</strong> (gai == EAI_SERVICE)
+<a id='L172' name='L172'></a>    <em class='brace'>{</em>
+<a id='L173' name='L173'></a>      <strong class='reserved'>char</strong> servbuf[NI_MAXSERV];
+<a id='L174' name='L174'></a>      sprintf(servbuf,"%d",<a href='../S/182.html#L37' title='Defined at 37 in lib/smux.c.'>SMUX_PORT_DEFAULT</a>);
+<a id='L175' name='L175'></a>      servbuf[<strong class='reserved'>sizeof</strong> (servbuf) - 1] = '\0';
+<a id='L176' name='L176'></a>      gai = getaddrinfo(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, servbuf, &amp;hints, &amp;res0);
+<a id='L177' name='L177'></a>    <em class='brace'>}</em>
+<a id='L178' name='L178'></a>  <strong class='reserved'>if</strong> (gai)
+<a id='L179' name='L179'></a>    <em class='brace'>{</em>
+<a id='L180' name='L180'></a>      zlog_warn("Cannot locate loopback service smux");
+<a id='L181' name='L181'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L182' name='L182'></a>    <em class='brace'>}</em>
+<a id='L183' name='L183'></a>  <strong class='reserved'>for</strong>(res=res0; res; res=res-&gt;ai_next)
+<a id='L184' name='L184'></a>    <em class='brace'>{</em>
+<a id='L185' name='L185'></a>      <strong class='reserved'>if</strong> (res-&gt;ai_family != AF_INET 
+<a id='L186' name='L186'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L187' name='L187'></a>          &amp;&amp; res-&gt;ai_family != AF_INET6
+<a id='L188' name='L188'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L189' name='L189'></a>          )
+<a id='L190' name='L190'></a>        <strong class='reserved'>continue</strong>;
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>      sock = socket(res-&gt;ai_family, res-&gt;ai_socktype, res-&gt;ai_protocol);
+<a id='L193' name='L193'></a>      <strong class='reserved'>if</strong> (sock &lt; 0)
+<a id='L194' name='L194'></a>        <strong class='reserved'>continue</strong>;
+<a id='L195' name='L195'></a>      <a href='../S/213.html#L415' title='Defined at 415 in lib/sockunion.c.'>sockopt_reuseaddr</a> (sock);
+<a id='L196' name='L196'></a>      <a href='../D/10848.html' title='Multiple defined in 2 places.'>sockopt_reuseport</a> (sock);
+<a id='L197' name='L197'></a>      ret = connect (sock, res-&gt;ai_addr, res-&gt;ai_addrlen);
+<a id='L198' name='L198'></a>      <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L199' name='L199'></a>        <em class='brace'>{</em>
+<a id='L200' name='L200'></a>          close(sock);
+<a id='L201' name='L201'></a>          sock = -1;
+<a id='L202' name='L202'></a>          <strong class='reserved'>continue</strong>;
+<a id='L203' name='L203'></a>        <em class='brace'>}</em>
+<a id='L204' name='L204'></a>      <strong class='reserved'>break</strong>;
+<a id='L205' name='L205'></a>    <em class='brace'>}</em>
+<a id='L206' name='L206'></a>  freeaddrinfo(res0);
+<a id='L207' name='L207'></a>  <strong class='reserved'>if</strong> (sock &lt; 0)
+<a id='L208' name='L208'></a>    zlog_warn ("Can't connect to SNMP agent with SMUX");
+<a id='L209' name='L209'></a><em class='sharp'>#else</em>
+<a id='L210' name='L210'></a>  sock = socket (AF_INET, SOCK_STREAM, 0);
+<a id='L211' name='L211'></a>  <strong class='reserved'>if</strong> (sock &lt; 0)
+<a id='L212' name='L212'></a>    <em class='brace'>{</em>
+<a id='L213' name='L213'></a>      zlog_warn ("Can't make socket for SNMP");
+<a id='L214' name='L214'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L215' name='L215'></a>    <em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  memset (&amp;serv, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L218' name='L218'></a>  serv.sin_family = AF_INET;
+<a id='L219' name='L219'></a><em class='sharp'>#ifdef</em> HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
+<a id='L220' name='L220'></a>  serv.sin_len = <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in);
+<a id='L221' name='L221'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_STRUCT_SOCKADDR_IN_SIN_LEN */</em>
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  sp = getservbyname ("smux", "tcp");
+<a id='L224' name='L224'></a>  <strong class='reserved'>if</strong> (sp != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) 
+<a id='L225' name='L225'></a>    serv.sin_port = sp-&gt;s_port;
+<a id='L226' name='L226'></a>  <strong class='reserved'>else</strong>
+<a id='L227' name='L227'></a>    serv.sin_port = htons (<a href='../S/182.html#L37' title='Defined at 37 in lib/smux.c.'>SMUX_PORT_DEFAULT</a>);
+<a id='L228' name='L228'></a>
+<a id='L229' name='L229'></a>  serv.sin_addr.s_addr = htonl (<a href='../S/191.html#L493' title='Defined at 493 in lib/zebra.h.'>INADDR_LOOPBACK</a>);
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a>  <a href='../S/213.html#L415' title='Defined at 415 in lib/sockunion.c.'>sockopt_reuseaddr</a> (sock);
+<a id='L232' name='L232'></a>  <a href='../D/10848.html' title='Multiple defined in 2 places.'>sockopt_reuseport</a> (sock);
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a>  ret = connect (sock, (<strong class='reserved'>struct</strong> sockaddr *) &amp;serv, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L235' name='L235'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L236' name='L236'></a>    <em class='brace'>{</em>
+<a id='L237' name='L237'></a>      close (sock);
+<a id='L238' name='L238'></a>      smux_sock = -1;
+<a id='L239' name='L239'></a>      zlog_warn ("Can't connect to SNMP agent with SMUX");
+<a id='L240' name='L240'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L241' name='L241'></a>    <em class='brace'>}</em>
+<a id='L242' name='L242'></a><em class='sharp'>#endif</em>
+<a id='L243' name='L243'></a>  <strong class='reserved'>return</strong> sock;
+<a id='L244' name='L244'></a><em class='brace'>}</em>
+<a id='L245' name='L245'></a>
+<a id='L246' name='L246'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L247' name='L247'></a><a href='../R/9900.html' title='Multiple referred from 3 places.'>smux_getresp_send</a> (oid objid[], size_t objid_len, <strong class='reserved'>long</strong> reqid, <strong class='reserved'>long</strong> errstat,
+<a id='L248' name='L248'></a>                   <strong class='reserved'>long</strong> errindex, u_char val_type, <strong class='reserved'>void</strong> *arg, size_t arg_len)
+<a id='L249' name='L249'></a><em class='brace'>{</em>
+<a id='L250' name='L250'></a>  u_char buf[BUFSIZ];
+<a id='L251' name='L251'></a>  u_char *ptr, *h1, *h1e, *h2, *h2e;
+<a id='L252' name='L252'></a>  size_t len, length;
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a>  ptr = buf;
+<a id='L255' name='L255'></a>  len = BUFSIZ;
+<a id='L256' name='L256'></a>  length = len;
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L259' name='L259'></a>    <em class='brace'>{</em>
+<a id='L260' name='L260'></a>      zlog_debug ("SMUX GETRSP send");
+<a id='L261' name='L261'></a>      zlog_debug ("SMUX GETRSP reqid: %ld", reqid);
+<a id='L262' name='L262'></a>    <em class='brace'>}</em>
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a>  h1 = ptr;
+<a id='L265' name='L265'></a>  <em class='comment'>/* Place holder h1 for complete sequence */</em>
+<a id='L266' name='L266'></a>  ptr = asn_build_sequence (ptr, &amp;len, (u_char) <a href='../S/182.html#L50' title='Defined at 50 in lib/smux.c.'>SMUX_GETRSP</a>, 0);
+<a id='L267' name='L267'></a>  h1e = ptr;
+<a id='L268' name='L268'></a> 
+<a id='L269' name='L269'></a>  ptr = asn_build_int (ptr, &amp;len,
+<a id='L270' name='L270'></a>                       (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L271' name='L271'></a>                       &amp;reqid, <strong class='reserved'>sizeof</strong> (reqid));
+<a id='L272' name='L272'></a>
+<a id='L273' name='L273'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L274' name='L274'></a>    zlog_debug ("SMUX GETRSP errstat: %ld", errstat);
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>  ptr = asn_build_int (ptr, &amp;len,
+<a id='L277' name='L277'></a>                       (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L278' name='L278'></a>                       &amp;errstat, <strong class='reserved'>sizeof</strong> (errstat));
+<a id='L279' name='L279'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L280' name='L280'></a>    zlog_debug ("SMUX GETRSP errindex: %ld", errindex);
+<a id='L281' name='L281'></a>
+<a id='L282' name='L282'></a>  ptr = asn_build_int (ptr, &amp;len,
+<a id='L283' name='L283'></a>                       (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L284' name='L284'></a>                       &amp;errindex, <strong class='reserved'>sizeof</strong> (errindex));
+<a id='L285' name='L285'></a>
+<a id='L286' name='L286'></a>  h2 = ptr;
+<a id='L287' name='L287'></a>  <em class='comment'>/* Place holder h2 for one variable */</em>
+<a id='L288' name='L288'></a>  ptr = asn_build_sequence (ptr, &amp;len, 
+<a id='L289' name='L289'></a>                           (u_char)(ASN_SEQUENCE | ASN_CONSTRUCTOR),
+<a id='L290' name='L290'></a>                           0);
+<a id='L291' name='L291'></a>  h2e = ptr;
+<a id='L292' name='L292'></a>
+<a id='L293' name='L293'></a>  ptr = snmp_build_var_op (ptr, objid, &amp;objid_len, 
+<a id='L294' name='L294'></a>                           val_type, arg_len, arg, &amp;len);
+<a id='L295' name='L295'></a>
+<a id='L296' name='L296'></a>  <em class='comment'>/* Now variable size is known, fill in size */</em>
+<a id='L297' name='L297'></a>  asn_build_sequence(h2,&amp;length,(u_char)(ASN_SEQUENCE|ASN_CONSTRUCTOR),ptr-h2e);
+<a id='L298' name='L298'></a>
+<a id='L299' name='L299'></a>  <em class='comment'>/* Fill in size of whole sequence */</em>
+<a id='L300' name='L300'></a>  asn_build_sequence(h1,&amp;length,(u_char)<a href='../S/182.html#L50' title='Defined at 50 in lib/smux.c.'>SMUX_GETRSP</a>,ptr-h1e);
+<a id='L301' name='L301'></a>
+<a id='L302' name='L302'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L303' name='L303'></a>    zlog_debug ("SMUX getresp send: %td", (ptr - buf));
+<a id='L304' name='L304'></a>  
+<a id='L305' name='L305'></a>  send (smux_sock, buf, (ptr - buf), 0);
+<a id='L306' name='L306'></a><em class='brace'>}</em>
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a><strong class='reserved'>static</strong> u_char *
+<a id='L309' name='L309'></a><a href='../R/9925.html' title='Multiple referred from 2 places.'>smux_var</a> (u_char *ptr, size_t len, oid objid[], size_t *objid_len,
+<a id='L310' name='L310'></a>          size_t *var_val_len,
+<a id='L311' name='L311'></a>          u_char *var_val_type,
+<a id='L312' name='L312'></a>          <strong class='reserved'>void</strong> **var_value)
+<a id='L313' name='L313'></a><em class='brace'>{</em>
+<a id='L314' name='L314'></a>  u_char type;
+<a id='L315' name='L315'></a>  u_char val_type;
+<a id='L316' name='L316'></a>  size_t val_len;
+<a id='L317' name='L317'></a>  u_char *val;
+<a id='L318' name='L318'></a>
+<a id='L319' name='L319'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L320' name='L320'></a>    zlog_debug ("SMUX var parse: len %zd", len);
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a>  <em class='comment'>/* Parse header. */</em>
+<a id='L323' name='L323'></a>  ptr = asn_parse_header (ptr, &amp;len, &amp;type);
+<a id='L324' name='L324'></a>  
+<a id='L325' name='L325'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L326' name='L326'></a>    <em class='brace'>{</em>
+<a id='L327' name='L327'></a>      zlog_debug ("SMUX var parse: type %d len %zd", type, len);
+<a id='L328' name='L328'></a>      zlog_debug ("SMUX var parse: type must be %d", 
+<a id='L329' name='L329'></a>                 (ASN_SEQUENCE | ASN_CONSTRUCTOR));
+<a id='L330' name='L330'></a>    <em class='brace'>}</em>
+<a id='L331' name='L331'></a>
+<a id='L332' name='L332'></a>  <em class='comment'>/* Parse var option. */</em>
+<a id='L333' name='L333'></a>  *objid_len = MAX_OID_LEN;
+<a id='L334' name='L334'></a>  ptr = snmp_parse_var_op(ptr, objid, objid_len, &amp;val_type, 
+<a id='L335' name='L335'></a>                          &amp;val_len, &amp;val, &amp;len);
+<a id='L336' name='L336'></a>
+<a id='L337' name='L337'></a>  <strong class='reserved'>if</strong> (var_val_len)
+<a id='L338' name='L338'></a>    *var_val_len = val_len;
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a>  <strong class='reserved'>if</strong> (var_value)
+<a id='L341' name='L341'></a>    *var_value = (<strong class='reserved'>void</strong>*) val;
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a>  <strong class='reserved'>if</strong> (var_val_type)
+<a id='L344' name='L344'></a>    *var_val_type = val_type;
+<a id='L345' name='L345'></a>
+<a id='L346' name='L346'></a>  <em class='comment'>/* Requested object id length is objid_len. */</em>
+<a id='L347' name='L347'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L348' name='L348'></a>    <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("Request OID", objid, *objid_len);
+<a id='L349' name='L349'></a>
+<a id='L350' name='L350'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L351' name='L351'></a>    zlog_debug ("SMUX val_type: %d", val_type);
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a>  <em class='comment'>/* Check request value type. */</em>
+<a id='L354' name='L354'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L355' name='L355'></a>  <strong class='reserved'>switch</strong> (val_type)
+<a id='L356' name='L356'></a>    <em class='brace'>{</em>
+<a id='L357' name='L357'></a>    <strong class='reserved'>case</strong> ASN_NULL:
+<a id='L358' name='L358'></a>      <em class='comment'>/* In case of SMUX_GET or SMUX_GET_NEXT val_type is set to</em>
+<a id='L359' name='L359'></a><em class='comment'>         ASN_NULL. */</em>
+<a id='L360' name='L360'></a>      zlog_debug ("ASN_NULL");
+<a id='L361' name='L361'></a>      <strong class='reserved'>break</strong>;
+<a id='L362' name='L362'></a>
+<a id='L363' name='L363'></a>    <strong class='reserved'>case</strong> ASN_INTEGER:
+<a id='L364' name='L364'></a>      zlog_debug ("ASN_INTEGER");
+<a id='L365' name='L365'></a>      <strong class='reserved'>break</strong>;
+<a id='L366' name='L366'></a>    <strong class='reserved'>case</strong> ASN_COUNTER:
+<a id='L367' name='L367'></a>    <strong class='reserved'>case</strong> ASN_GAUGE:
+<a id='L368' name='L368'></a>    <strong class='reserved'>case</strong> ASN_TIMETICKS:
+<a id='L369' name='L369'></a>    <strong class='reserved'>case</strong> ASN_UINTEGER:
+<a id='L370' name='L370'></a>      zlog_debug ("ASN_COUNTER");
+<a id='L371' name='L371'></a>      <strong class='reserved'>break</strong>;
+<a id='L372' name='L372'></a>    <strong class='reserved'>case</strong> ASN_COUNTER64:
+<a id='L373' name='L373'></a>      zlog_debug ("ASN_COUNTER64");
+<a id='L374' name='L374'></a>      <strong class='reserved'>break</strong>;
+<a id='L375' name='L375'></a>    <strong class='reserved'>case</strong> ASN_IPADDRESS:
+<a id='L376' name='L376'></a>      zlog_debug ("ASN_IPADDRESS");
+<a id='L377' name='L377'></a>      <strong class='reserved'>break</strong>;
+<a id='L378' name='L378'></a>    <strong class='reserved'>case</strong> ASN_OCTET_STR:
+<a id='L379' name='L379'></a>      zlog_debug ("ASN_OCTET_STR");
+<a id='L380' name='L380'></a>      <strong class='reserved'>break</strong>;
+<a id='L381' name='L381'></a>    <strong class='reserved'>case</strong> ASN_OPAQUE:
+<a id='L382' name='L382'></a>    <strong class='reserved'>case</strong> ASN_NSAP:
+<a id='L383' name='L383'></a>    <strong class='reserved'>case</strong> ASN_OBJECT_ID:
+<a id='L384' name='L384'></a>      zlog_debug ("ASN_OPAQUE");
+<a id='L385' name='L385'></a>      <strong class='reserved'>break</strong>;
+<a id='L386' name='L386'></a>    <strong class='reserved'>case</strong> SNMP_NOSUCHOBJECT:
+<a id='L387' name='L387'></a>      zlog_debug ("SNMP_NOSUCHOBJECT");
+<a id='L388' name='L388'></a>      <strong class='reserved'>break</strong>;
+<a id='L389' name='L389'></a>    <strong class='reserved'>case</strong> SNMP_NOSUCHINSTANCE:
+<a id='L390' name='L390'></a>      zlog_debug ("SNMP_NOSUCHINSTANCE");
+<a id='L391' name='L391'></a>      <strong class='reserved'>break</strong>;
+<a id='L392' name='L392'></a>    <strong class='reserved'>case</strong> SNMP_ENDOFMIBVIEW:
+<a id='L393' name='L393'></a>      zlog_debug ("SNMP_ENDOFMIBVIEW");
+<a id='L394' name='L394'></a>      <strong class='reserved'>break</strong>;
+<a id='L395' name='L395'></a>    <strong class='reserved'>case</strong> ASN_BIT_STR:
+<a id='L396' name='L396'></a>      zlog_debug ("ASN_BIT_STR");
+<a id='L397' name='L397'></a>      <strong class='reserved'>break</strong>;
+<a id='L398' name='L398'></a>    <strong class='reserved'>default</strong>:
+<a id='L399' name='L399'></a>      zlog_debug ("Unknown type");
+<a id='L400' name='L400'></a>      <strong class='reserved'>break</strong>;
+<a id='L401' name='L401'></a>    <em class='brace'>}</em>
+<a id='L402' name='L402'></a>  <strong class='reserved'>return</strong> ptr;
+<a id='L403' name='L403'></a><em class='brace'>}</em>
+<a id='L404' name='L404'></a>
+<a id='L405' name='L405'></a><em class='comment'>/* NOTE: all 3 functions (smux_set, smux_get &amp; smux_getnext) are based on</em>
+<a id='L406' name='L406'></a><em class='comment'>   ucd-snmp smux and as such suppose, that the peer receives in the message</em>
+<a id='L407' name='L407'></a><em class='comment'>   only one variable. Fortunately, IBM seems to do the same in AIX. */</em>
+<a id='L408' name='L408'></a>
+<a id='L409' name='L409'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L410' name='L410'></a><a href='../S/182.html#L679' title='Referred from 679 in lib/smux.c.'>smux_set</a> (oid *reqid, size_t *reqid_len,
+<a id='L411' name='L411'></a>          u_char val_type, <strong class='reserved'>void</strong> *val, size_t val_len, <strong class='reserved'>int</strong> action)
+<a id='L412' name='L412'></a><em class='brace'>{</em>
+<a id='L413' name='L413'></a>  <strong class='reserved'>int</strong> j;
+<a id='L414' name='L414'></a>  <strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>;
+<a id='L415' name='L415'></a>  <strong class='reserved'>struct</strong> variable *v;
+<a id='L416' name='L416'></a>  <strong class='reserved'>int</strong> subresult;
+<a id='L417' name='L417'></a>  oid *suffix;
+<a id='L418' name='L418'></a>  size_t suffix_len;
+<a id='L419' name='L419'></a>  <strong class='reserved'>int</strong> result;
+<a id='L420' name='L420'></a>  u_char *statP = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L421' name='L421'></a>  WriteMethod *write_method = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L422' name='L422'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L423' name='L423'></a>
+<a id='L424' name='L424'></a>  <em class='comment'>/* Check */</em>
+<a id='L425' name='L425'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (treelist, node, nnode, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>))
+<a id='L426' name='L426'></a>    <em class='brace'>{</em>
+<a id='L427' name='L427'></a>      subresult = <a href='../S/182.html#L119' title='Defined at 119 in lib/smux.c.'>oid_compare_part</a> (reqid, *reqid_len,
+<a id='L428' name='L428'></a>                                    <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len);
+<a id='L429' name='L429'></a>
+<a id='L430' name='L430'></a>      <em class='comment'>/* Subtree matched. */</em>
+<a id='L431' name='L431'></a>      <strong class='reserved'>if</strong> (subresult == 0)
+<a id='L432' name='L432'></a>        <em class='brace'>{</em>
+<a id='L433' name='L433'></a>          <em class='comment'>/* Prepare suffix. */</em>
+<a id='L434' name='L434'></a>          suffix = reqid + <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L435' name='L435'></a>          suffix_len = *reqid_len - <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L436' name='L436'></a>          result = subresult;
+<a id='L437' name='L437'></a>
+<a id='L438' name='L438'></a>          <em class='comment'>/* Check variables. */</em>
+<a id='L439' name='L439'></a>          <strong class='reserved'>for</strong> (j = 0; j &lt; <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;variables_num; j++)
+<a id='L440' name='L440'></a>            <em class='brace'>{</em>
+<a id='L441' name='L441'></a>              v = &amp;<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;variables[j];
+<a id='L442' name='L442'></a>
+<a id='L443' name='L443'></a>              <em class='comment'>/* Always check suffix */</em>
+<a id='L444' name='L444'></a>              result = <a href='../S/182.html#L119' title='Defined at 119 in lib/smux.c.'>oid_compare_part</a> (suffix, suffix_len,
+<a id='L445' name='L445'></a>                                         v-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, v-&gt;namelen);
+<a id='L446' name='L446'></a>
+<a id='L447' name='L447'></a>              <em class='comment'>/* This is exact match so result must be zero. */</em>
+<a id='L448' name='L448'></a>              <strong class='reserved'>if</strong> (result == 0)
+<a id='L449' name='L449'></a>                <em class='brace'>{</em>
+<a id='L450' name='L450'></a>                  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L451' name='L451'></a>                    zlog_debug ("SMUX function call index is %d", v-&gt;magic);
+<a id='L452' name='L452'></a>                  
+<a id='L453' name='L453'></a>                  statP = (*v-&gt;findVar) (v, suffix, &amp;suffix_len, 1,
+<a id='L454' name='L454'></a>                                         &amp;val_len, &amp;write_method);
+<a id='L455' name='L455'></a>
+<a id='L456' name='L456'></a>                  <strong class='reserved'>if</strong> (write_method)
+<a id='L457' name='L457'></a>                    <em class='brace'>{</em>
+<a id='L458' name='L458'></a>                      <strong class='reserved'>return</strong> (*write_method)(action, val, val_type, val_len,
+<a id='L459' name='L459'></a>                                             statP, suffix, suffix_len);
+<a id='L460' name='L460'></a>                    <em class='brace'>}</em>
+<a id='L461' name='L461'></a>                  <strong class='reserved'>else</strong>
+<a id='L462' name='L462'></a>                    <em class='brace'>{</em>
+<a id='L463' name='L463'></a>                      <strong class='reserved'>return</strong> SNMP_ERR_READONLY;
+<a id='L464' name='L464'></a>                    <em class='brace'>}</em>
+<a id='L465' name='L465'></a>                <em class='brace'>}</em>
+<a id='L466' name='L466'></a>
+<a id='L467' name='L467'></a>              <em class='comment'>/* If above execution is failed or oid is small (so</em>
+<a id='L468' name='L468'></a><em class='comment'>                 there is no further match). */</em>
+<a id='L469' name='L469'></a>              <strong class='reserved'>if</strong> (result &lt; 0)
+<a id='L470' name='L470'></a>                <strong class='reserved'>return</strong> SNMP_ERR_NOSUCHNAME;
+<a id='L471' name='L471'></a>            <em class='brace'>}</em>
+<a id='L472' name='L472'></a>        <em class='brace'>}</em>
+<a id='L473' name='L473'></a>    <em class='brace'>}</em>
+<a id='L474' name='L474'></a>  <strong class='reserved'>return</strong> SNMP_ERR_NOSUCHNAME;
+<a id='L475' name='L475'></a><em class='brace'>}</em>
+<a id='L476' name='L476'></a>
+<a id='L477' name='L477'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L478' name='L478'></a><a href='../R/9898.html' title='Multiple referred from 2 places.'>smux_get</a> (oid *reqid, size_t *reqid_len, <strong class='reserved'>int</strong> exact, 
+<a id='L479' name='L479'></a>          u_char *val_type,<strong class='reserved'>void</strong> **val, size_t *val_len)
+<a id='L480' name='L480'></a><em class='brace'>{</em>
+<a id='L481' name='L481'></a>  <strong class='reserved'>int</strong> j;
+<a id='L482' name='L482'></a>  <strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>;
+<a id='L483' name='L483'></a>  <strong class='reserved'>struct</strong> variable *v;
+<a id='L484' name='L484'></a>  <strong class='reserved'>int</strong> subresult;
+<a id='L485' name='L485'></a>  oid *suffix;
+<a id='L486' name='L486'></a>  size_t suffix_len;
+<a id='L487' name='L487'></a>  <strong class='reserved'>int</strong> result;
+<a id='L488' name='L488'></a>  WriteMethod *write_method=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L489' name='L489'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L490' name='L490'></a>
+<a id='L491' name='L491'></a>  <em class='comment'>/* Check */</em>
+<a id='L492' name='L492'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (treelist, node, nnode,<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>))
+<a id='L493' name='L493'></a>    <em class='brace'>{</em>
+<a id='L494' name='L494'></a>      subresult = <a href='../S/182.html#L119' title='Defined at 119 in lib/smux.c.'>oid_compare_part</a> (reqid, *reqid_len, 
+<a id='L495' name='L495'></a>                                    <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len);
+<a id='L496' name='L496'></a>
+<a id='L497' name='L497'></a>      <em class='comment'>/* Subtree matched. */</em>
+<a id='L498' name='L498'></a>      <strong class='reserved'>if</strong> (subresult == 0)
+<a id='L499' name='L499'></a>        <em class='brace'>{</em>
+<a id='L500' name='L500'></a>          <em class='comment'>/* Prepare suffix. */</em>
+<a id='L501' name='L501'></a>          suffix = reqid + <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L502' name='L502'></a>          suffix_len = *reqid_len - <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L503' name='L503'></a>          result = subresult;
+<a id='L504' name='L504'></a>
+<a id='L505' name='L505'></a>          <em class='comment'>/* Check variables. */</em>
+<a id='L506' name='L506'></a>          <strong class='reserved'>for</strong> (j = 0; j &lt; <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;variables_num; j++)
+<a id='L507' name='L507'></a>            <em class='brace'>{</em>
+<a id='L508' name='L508'></a>              v = &amp;<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;variables[j];
+<a id='L509' name='L509'></a>
+<a id='L510' name='L510'></a>              <em class='comment'>/* Always check suffix */</em>
+<a id='L511' name='L511'></a>              result = <a href='../S/182.html#L119' title='Defined at 119 in lib/smux.c.'>oid_compare_part</a> (suffix, suffix_len,
+<a id='L512' name='L512'></a>                                         v-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, v-&gt;namelen);
+<a id='L513' name='L513'></a>
+<a id='L514' name='L514'></a>              <em class='comment'>/* This is exact match so result must be zero. */</em>
+<a id='L515' name='L515'></a>              <strong class='reserved'>if</strong> (result == 0)
+<a id='L516' name='L516'></a>                <em class='brace'>{</em>
+<a id='L517' name='L517'></a>                  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L518' name='L518'></a>                    zlog_debug ("SMUX function call index is %d", v-&gt;magic);
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a>                  *val = (*v-&gt;findVar) (v, suffix, &amp;suffix_len, exact,
+<a id='L521' name='L521'></a>                                        val_len, &amp;write_method);
+<a id='L522' name='L522'></a>
+<a id='L523' name='L523'></a>                  <em class='comment'>/* There is no instance. */</em>
+<a id='L524' name='L524'></a>                  <strong class='reserved'>if</strong> (*val == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L525' name='L525'></a>                    <strong class='reserved'>return</strong> SNMP_NOSUCHINSTANCE;
+<a id='L526' name='L526'></a>
+<a id='L527' name='L527'></a>                  <em class='comment'>/* Call is suceed. */</em>
+<a id='L528' name='L528'></a>                  *val_type = v-&gt;type;
+<a id='L529' name='L529'></a>
+<a id='L530' name='L530'></a>                  <strong class='reserved'>return</strong> 0;
+<a id='L531' name='L531'></a>                <em class='brace'>}</em>
+<a id='L532' name='L532'></a>
+<a id='L533' name='L533'></a>              <em class='comment'>/* If above execution is failed or oid is small (so</em>
+<a id='L534' name='L534'></a><em class='comment'>                 there is no further match). */</em>
+<a id='L535' name='L535'></a>              <strong class='reserved'>if</strong> (result &lt; 0)
+<a id='L536' name='L536'></a>                <strong class='reserved'>return</strong> SNMP_ERR_NOSUCHNAME;
+<a id='L537' name='L537'></a>            <em class='brace'>}</em>
+<a id='L538' name='L538'></a>        <em class='brace'>}</em>
+<a id='L539' name='L539'></a>    <em class='brace'>}</em>
+<a id='L540' name='L540'></a>  <strong class='reserved'>return</strong> SNMP_ERR_NOSUCHNAME;
+<a id='L541' name='L541'></a><em class='brace'>}</em>
+<a id='L542' name='L542'></a>
+<a id='L543' name='L543'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L544' name='L544'></a><a href='../S/182.html#L712' title='Referred from 712 in lib/smux.c.'>smux_getnext</a> (oid *reqid, size_t *reqid_len, <strong class='reserved'>int</strong> exact, 
+<a id='L545' name='L545'></a>              u_char *val_type,<strong class='reserved'>void</strong> **val, size_t *val_len)
+<a id='L546' name='L546'></a><em class='brace'>{</em>
+<a id='L547' name='L547'></a>  <strong class='reserved'>int</strong> j;
+<a id='L548' name='L548'></a>  oid save[MAX_OID_LEN];
+<a id='L549' name='L549'></a>  <strong class='reserved'>int</strong> savelen = 0;
+<a id='L550' name='L550'></a>  <strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>;
+<a id='L551' name='L551'></a>  <strong class='reserved'>struct</strong> variable *v;
+<a id='L552' name='L552'></a>  <strong class='reserved'>int</strong> subresult;
+<a id='L553' name='L553'></a>  oid *suffix;
+<a id='L554' name='L554'></a>  size_t suffix_len;
+<a id='L555' name='L555'></a>  <strong class='reserved'>int</strong> result;
+<a id='L556' name='L556'></a>  WriteMethod *write_method=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L557' name='L557'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L558' name='L558'></a>
+<a id='L559' name='L559'></a>
+<a id='L560' name='L560'></a>  <em class='comment'>/* Save incoming request. */</em>
+<a id='L561' name='L561'></a>  <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (save, reqid, *reqid_len);
+<a id='L562' name='L562'></a>  savelen = *reqid_len;
+<a id='L563' name='L563'></a>
+<a id='L564' name='L564'></a>  <em class='comment'>/* Check */</em>
+<a id='L565' name='L565'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (treelist, node, nnode, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>))
+<a id='L566' name='L566'></a>    <em class='brace'>{</em>
+<a id='L567' name='L567'></a>      subresult = <a href='../S/182.html#L119' title='Defined at 119 in lib/smux.c.'>oid_compare_part</a> (reqid, *reqid_len, 
+<a id='L568' name='L568'></a>                                    <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len);
+<a id='L569' name='L569'></a>
+<a id='L570' name='L570'></a>      <em class='comment'>/* If request is in the tree. The agent has to make sure we</em>
+<a id='L571' name='L571'></a><em class='comment'>         only receive requests we have registered for. */</em>
+<a id='L572' name='L572'></a>      <em class='comment'>/* Unfortunately, that's not true. In fact, a SMUX subagent has to</em>
+<a id='L573' name='L573'></a><em class='comment'>         behave as if it manages the whole SNMP MIB tree itself. It's the</em>
+<a id='L574' name='L574'></a><em class='comment'>         duty of the master agent to collect the best answer and return it</em>
+<a id='L575' name='L575'></a><em class='comment'>         to the manager. See RFC 1227 chapter 3.1.6 for the glory details</em>
+<a id='L576' name='L576'></a><em class='comment'>         :-). ucd-snmp really behaves bad here as it actually might ask</em>
+<a id='L577' name='L577'></a><em class='comment'>         multiple times for the same GETNEXT request as it throws away the</em>
+<a id='L578' name='L578'></a><em class='comment'>         answer when it expects it in a different subtree and might come</em>
+<a id='L579' name='L579'></a><em class='comment'>         back later with the very same request. --jochen */</em>
+<a id='L580' name='L580'></a>
+<a id='L581' name='L581'></a>      <strong class='reserved'>if</strong> (subresult &lt;= 0)
+<a id='L582' name='L582'></a>        <em class='brace'>{</em>
+<a id='L583' name='L583'></a>          <em class='comment'>/* Prepare suffix. */</em>
+<a id='L584' name='L584'></a>          suffix = reqid + <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L585' name='L585'></a>          suffix_len = *reqid_len - <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L586' name='L586'></a>          <strong class='reserved'>if</strong> (subresult &lt; 0)
+<a id='L587' name='L587'></a>            <em class='brace'>{</em>
+<a id='L588' name='L588'></a>              <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a>(reqid, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len);
+<a id='L589' name='L589'></a>              *reqid_len = <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L590' name='L590'></a>            <em class='brace'>}</em>
+<a id='L591' name='L591'></a>          <strong class='reserved'>for</strong> (j = 0; j &lt; <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;variables_num; j++)
+<a id='L592' name='L592'></a>            <em class='brace'>{</em>
+<a id='L593' name='L593'></a>              result = subresult;
+<a id='L594' name='L594'></a>              v = &amp;<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;variables[j];
+<a id='L595' name='L595'></a>
+<a id='L596' name='L596'></a>              <em class='comment'>/* Next then check result &gt;= 0. */</em>
+<a id='L597' name='L597'></a>              <strong class='reserved'>if</strong> (result == 0)
+<a id='L598' name='L598'></a>                result = <a href='../S/182.html#L119' title='Defined at 119 in lib/smux.c.'>oid_compare_part</a> (suffix, suffix_len,
+<a id='L599' name='L599'></a>                                           v-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, v-&gt;namelen);
+<a id='L600' name='L600'></a>
+<a id='L601' name='L601'></a>              <strong class='reserved'>if</strong> (result &lt;= 0)
+<a id='L602' name='L602'></a>                <em class='brace'>{</em>
+<a id='L603' name='L603'></a>                  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L604' name='L604'></a>                    zlog_debug ("SMUX function call index is %d", v-&gt;magic);
+<a id='L605' name='L605'></a>                  <strong class='reserved'>if</strong>(result&lt;0)
+<a id='L606' name='L606'></a>                    <em class='brace'>{</em>
+<a id='L607' name='L607'></a>                      <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a>(suffix, v-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, v-&gt;namelen);
+<a id='L608' name='L608'></a>                      suffix_len = v-&gt;namelen;
+<a id='L609' name='L609'></a>                    <em class='brace'>}</em>
+<a id='L610' name='L610'></a>                  *val = (*v-&gt;findVar) (v, suffix, &amp;suffix_len, exact,
+<a id='L611' name='L611'></a>                                        val_len, &amp;write_method);
+<a id='L612' name='L612'></a>                  *reqid_len = suffix_len + <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len;
+<a id='L613' name='L613'></a>                  <strong class='reserved'>if</strong> (*val)
+<a id='L614' name='L614'></a>                    <em class='brace'>{</em>
+<a id='L615' name='L615'></a>                      *val_type = v-&gt;type;
+<a id='L616' name='L616'></a>                      <strong class='reserved'>return</strong> 0;
+<a id='L617' name='L617'></a>                    <em class='brace'>}</em>
+<a id='L618' name='L618'></a>                <em class='brace'>}</em>
+<a id='L619' name='L619'></a>            <em class='brace'>}</em>
+<a id='L620' name='L620'></a>        <em class='brace'>}</em>
+<a id='L621' name='L621'></a>    <em class='brace'>}</em>
+<a id='L622' name='L622'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (reqid, save, savelen * <strong class='reserved'>sizeof</strong>(oid));
+<a id='L623' name='L623'></a>  *reqid_len = savelen;
+<a id='L624' name='L624'></a>
+<a id='L625' name='L625'></a>  <strong class='reserved'>return</strong> SNMP_ERR_NOSUCHNAME;
+<a id='L626' name='L626'></a><em class='brace'>}</em>
+<a id='L627' name='L627'></a>
+<a id='L628' name='L628'></a><em class='comment'>/* GET message header. */</em>
+<a id='L629' name='L629'></a><strong class='reserved'>static</strong> u_char *
+<a id='L630' name='L630'></a><a href='../R/9910.html' title='Multiple referred from 2 places.'>smux_parse_get_header</a> (u_char *ptr, size_t *len, <strong class='reserved'>long</strong> *reqid)
+<a id='L631' name='L631'></a><em class='brace'>{</em>
+<a id='L632' name='L632'></a>  u_char type;
+<a id='L633' name='L633'></a>  <strong class='reserved'>long</strong> errstat;
+<a id='L634' name='L634'></a>  <strong class='reserved'>long</strong> errindex;
+<a id='L635' name='L635'></a>
+<a id='L636' name='L636'></a>  <em class='comment'>/* Request ID. */</em>
+<a id='L637' name='L637'></a>  ptr = asn_parse_int (ptr, len, &amp;type, reqid, <strong class='reserved'>sizeof</strong> (*reqid));
+<a id='L638' name='L638'></a>
+<a id='L639' name='L639'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L640' name='L640'></a>    zlog_debug ("SMUX GET reqid: %d len: %d", (<strong class='reserved'>int</strong>) *reqid, (<strong class='reserved'>int</strong>) *len);
+<a id='L641' name='L641'></a>
+<a id='L642' name='L642'></a>  <em class='comment'>/* Error status. */</em>
+<a id='L643' name='L643'></a>  ptr = asn_parse_int (ptr, len, &amp;type, &amp;errstat, <strong class='reserved'>sizeof</strong> (errstat));
+<a id='L644' name='L644'></a>
+<a id='L645' name='L645'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L646' name='L646'></a>    zlog_debug ("SMUX GET errstat %ld len: %zd", errstat, *len);
+<a id='L647' name='L647'></a>
+<a id='L648' name='L648'></a>  <em class='comment'>/* Error index. */</em>
+<a id='L649' name='L649'></a>  ptr = asn_parse_int (ptr, len, &amp;type, &amp;errindex, <strong class='reserved'>sizeof</strong> (errindex));
+<a id='L650' name='L650'></a>
+<a id='L651' name='L651'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L652' name='L652'></a>    zlog_debug ("SMUX GET errindex %ld len: %zd", errindex, *len);
+<a id='L653' name='L653'></a>
+<a id='L654' name='L654'></a>  <strong class='reserved'>return</strong> ptr;
+<a id='L655' name='L655'></a><em class='brace'>}</em>
+<a id='L656' name='L656'></a>
+<a id='L657' name='L657'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L658' name='L658'></a><a href='../R/9912.html' title='Multiple referred from 2 places.'>smux_parse_set</a> (u_char *ptr, size_t len, <strong class='reserved'>int</strong> action)
+<a id='L659' name='L659'></a><em class='brace'>{</em>
+<a id='L660' name='L660'></a>  <strong class='reserved'>long</strong> reqid;
+<a id='L661' name='L661'></a>  oid oid[MAX_OID_LEN];
+<a id='L662' name='L662'></a>  size_t oid_len;
+<a id='L663' name='L663'></a>  u_char val_type;
+<a id='L664' name='L664'></a>  <strong class='reserved'>void</strong> *val;
+<a id='L665' name='L665'></a>  size_t val_len;
+<a id='L666' name='L666'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L667' name='L667'></a>
+<a id='L668' name='L668'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L669' name='L669'></a>    zlog_debug ("SMUX SET(%s) message parse: len %zd",
+<a id='L670' name='L670'></a>               (RESERVE1 == action) ? "RESERVE1" : ((FREE == action) ? "FREE" : "COMMIT"),
+<a id='L671' name='L671'></a>               len);
+<a id='L672' name='L672'></a>
+<a id='L673' name='L673'></a>  <em class='comment'>/* Parse SET message header. */</em>
+<a id='L674' name='L674'></a>  ptr = <a href='../S/182.html#L630' title='Defined at 630 in lib/smux.c.'>smux_parse_get_header</a> (ptr, &amp;len, &amp;reqid);
+<a id='L675' name='L675'></a>
+<a id='L676' name='L676'></a>  <em class='comment'>/* Parse SET message object ID. */</em>
+<a id='L677' name='L677'></a>  ptr = <a href='../S/182.html#L309' title='Defined at 309 in lib/smux.c.'>smux_var</a> (ptr, len, oid, &amp;oid_len, &amp;val_len, &amp;val_type, &amp;val);
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a>  ret = <a href='../S/182.html#L410' title='Defined at 410 in lib/smux.c.'>smux_set</a> (oid, &amp;oid_len, val_type, val, val_len, action);
+<a id='L680' name='L680'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L681' name='L681'></a>    zlog_debug ("SMUX SET ret %d", ret);
+<a id='L682' name='L682'></a>
+<a id='L683' name='L683'></a>  <em class='comment'>/* Return result. */</em>
+<a id='L684' name='L684'></a>  <strong class='reserved'>if</strong> (RESERVE1 == action)
+<a id='L685' name='L685'></a>    <a href='../S/182.html#L247' title='Defined at 247 in lib/smux.c.'>smux_getresp_send</a> (oid, oid_len, reqid, ret, 3, ASN_NULL, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L686' name='L686'></a><em class='brace'>}</em>
+<a id='L687' name='L687'></a>
+<a id='L688' name='L688'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L689' name='L689'></a><a href='../R/9909.html' title='Multiple referred from 2 places.'>smux_parse_get</a> (u_char *ptr, size_t len, <strong class='reserved'>int</strong> exact)
+<a id='L690' name='L690'></a><em class='brace'>{</em>
+<a id='L691' name='L691'></a>  <strong class='reserved'>long</strong> reqid;
+<a id='L692' name='L692'></a>  oid oid[MAX_OID_LEN];
+<a id='L693' name='L693'></a>  size_t oid_len;
+<a id='L694' name='L694'></a>  u_char val_type;
+<a id='L695' name='L695'></a>  <strong class='reserved'>void</strong> *val;
+<a id='L696' name='L696'></a>  size_t val_len;
+<a id='L697' name='L697'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L698' name='L698'></a>
+<a id='L699' name='L699'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L700' name='L700'></a>    zlog_debug ("SMUX GET message parse: len %zd", len);
+<a id='L701' name='L701'></a>  
+<a id='L702' name='L702'></a>  <em class='comment'>/* Parse GET message header. */</em>
+<a id='L703' name='L703'></a>  ptr = <a href='../S/182.html#L630' title='Defined at 630 in lib/smux.c.'>smux_parse_get_header</a> (ptr, &amp;len, &amp;reqid);
+<a id='L704' name='L704'></a>  
+<a id='L705' name='L705'></a>  <em class='comment'>/* Parse GET message object ID. We needn't the value come */</em>
+<a id='L706' name='L706'></a>  ptr = <a href='../S/182.html#L309' title='Defined at 309 in lib/smux.c.'>smux_var</a> (ptr, len, oid, &amp;oid_len, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L707' name='L707'></a>
+<a id='L708' name='L708'></a>  <em class='comment'>/* Traditional getstatptr. */</em>
+<a id='L709' name='L709'></a>  <strong class='reserved'>if</strong> (exact)
+<a id='L710' name='L710'></a>    ret = <a href='../S/182.html#L478' title='Defined at 478 in lib/smux.c.'>smux_get</a> (oid, &amp;oid_len, exact, &amp;val_type, &amp;val, &amp;val_len);
+<a id='L711' name='L711'></a>  <strong class='reserved'>else</strong>
+<a id='L712' name='L712'></a>    ret = <a href='../S/182.html#L544' title='Defined at 544 in lib/smux.c.'>smux_getnext</a> (oid, &amp;oid_len, exact, &amp;val_type, &amp;val, &amp;val_len);
+<a id='L713' name='L713'></a>
+<a id='L714' name='L714'></a>  <em class='comment'>/* Return result. */</em>
+<a id='L715' name='L715'></a>  <strong class='reserved'>if</strong> (ret == 0)
+<a id='L716' name='L716'></a>    <a href='../S/182.html#L247' title='Defined at 247 in lib/smux.c.'>smux_getresp_send</a> (oid, oid_len, reqid, 0, 0, val_type, val, val_len);
+<a id='L717' name='L717'></a>  <strong class='reserved'>else</strong>
+<a id='L718' name='L718'></a>    <a href='../S/182.html#L247' title='Defined at 247 in lib/smux.c.'>smux_getresp_send</a> (oid, oid_len, reqid, ret, 3, ASN_NULL, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L719' name='L719'></a><em class='brace'>}</em>
+<a id='L720' name='L720'></a>
+<a id='L721' name='L721'></a><em class='comment'>/* Parse SMUX_CLOSE message. */</em>
+<a id='L722' name='L722'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L723' name='L723'></a><a href='../S/182.html#L823' title='Referred from 823 in lib/smux.c.'>smux_parse_close</a> (u_char *ptr, <strong class='reserved'>int</strong> len)
+<a id='L724' name='L724'></a><em class='brace'>{</em>
+<a id='L725' name='L725'></a>  <strong class='reserved'>long</strong> reason = 0;
+<a id='L726' name='L726'></a>
+<a id='L727' name='L727'></a>  <strong class='reserved'>while</strong> (len--)
+<a id='L728' name='L728'></a>    <em class='brace'>{</em>
+<a id='L729' name='L729'></a>      reason = (reason &lt;&lt; 8) | (<strong class='reserved'>long</strong>) *ptr;
+<a id='L730' name='L730'></a>      ptr++;
+<a id='L731' name='L731'></a>    <em class='brace'>}</em>
+<a id='L732' name='L732'></a>  zlog_info ("SMUX_CLOSE with reason: %ld", reason);
+<a id='L733' name='L733'></a><em class='brace'>}</em>
+<a id='L734' name='L734'></a>
+<a id='L735' name='L735'></a><em class='comment'>/* SMUX_RRSP message. */</em>
+<a id='L736' name='L736'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L737' name='L737'></a><a href='../S/182.html#L830' title='Referred from 830 in lib/smux.c.'>smux_parse_rrsp</a> (u_char *ptr, size_t len)
+<a id='L738' name='L738'></a><em class='brace'>{</em>
+<a id='L739' name='L739'></a>  u_char val;
+<a id='L740' name='L740'></a>  <strong class='reserved'>long</strong> errstat;
+<a id='L741' name='L741'></a>  
+<a id='L742' name='L742'></a>  ptr = asn_parse_int (ptr, &amp;len, &amp;val, &amp;errstat, <strong class='reserved'>sizeof</strong> (errstat));
+<a id='L743' name='L743'></a>
+<a id='L744' name='L744'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L745' name='L745'></a>    zlog_debug ("SMUX_RRSP value: %d errstat: %ld", val, errstat);
+<a id='L746' name='L746'></a><em class='brace'>}</em>
+<a id='L747' name='L747'></a>
+<a id='L748' name='L748'></a><em class='comment'>/* Parse SMUX message. */</em>
+<a id='L749' name='L749'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L750' name='L750'></a><a href='../S/182.html#L902' title='Referred from 902 in lib/smux.c.'>smux_parse</a> (u_char *ptr, size_t len)
+<a id='L751' name='L751'></a><em class='brace'>{</em>
+<a id='L752' name='L752'></a>  <em class='comment'>/* This buffer we'll use for SOUT message. We could allocate it with</em>
+<a id='L753' name='L753'></a><em class='comment'>     malloc and save only static pointer/lenght, but IMHO static</em>
+<a id='L754' name='L754'></a><em class='comment'>     buffer is a faster solusion. */</em>
+<a id='L755' name='L755'></a>  <strong class='reserved'>static</strong> u_char sout_save_buff[<a href='../S/182.html#L39' title='Defined at 39 in lib/smux.c.'>SMUXMAXPKTSIZE</a>];
+<a id='L756' name='L756'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>int</strong> sout_save_len = 0;
+<a id='L757' name='L757'></a>
+<a id='L758' name='L758'></a>  <strong class='reserved'>int</strong> len_income = len; <em class='comment'>/* see note below: YYY */</em>
+<a id='L759' name='L759'></a>  u_char type;
+<a id='L760' name='L760'></a>  u_char rollback;
+<a id='L761' name='L761'></a>
+<a id='L762' name='L762'></a>  rollback = ptr[2]; <em class='comment'>/* important only for SMUX_SOUT */</em>
+<a id='L763' name='L763'></a>
+<a id='L764' name='L764'></a>process_rest: <em class='comment'>/* see note below: YYY */</em>
+<a id='L765' name='L765'></a>
+<a id='L766' name='L766'></a>  <em class='comment'>/* Parse SMUX message type and subsequent length. */</em>
+<a id='L767' name='L767'></a>  ptr = asn_parse_header (ptr, &amp;len, &amp;type);
+<a id='L768' name='L768'></a>
+<a id='L769' name='L769'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L770' name='L770'></a>    zlog_debug ("SMUX message received type: %d rest len: %zd", type, len);
+<a id='L771' name='L771'></a>
+<a id='L772' name='L772'></a>  <strong class='reserved'>switch</strong> (type)
+<a id='L773' name='L773'></a>    <em class='brace'>{</em>
+<a id='L774' name='L774'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L42' title='Defined at 42 in lib/smux.c.'>SMUX_OPEN</a>:
+<a id='L775' name='L775'></a>      <em class='comment'>/* Open must be not send from SNMP agent. */</em>
+<a id='L776' name='L776'></a>      zlog_warn ("SMUX_OPEN received: resetting connection.");
+<a id='L777' name='L777'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L778' name='L778'></a>      <strong class='reserved'>break</strong>;
+<a id='L779' name='L779'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L44' title='Defined at 44 in lib/smux.c.'>SMUX_RREQ</a>:
+<a id='L780' name='L780'></a>      <em class='comment'>/* SMUX_RREQ message is invalid for us. */</em>
+<a id='L781' name='L781'></a>      zlog_warn ("SMUX_RREQ received: resetting connection.");
+<a id='L782' name='L782'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L783' name='L783'></a>      <strong class='reserved'>break</strong>;
+<a id='L784' name='L784'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L46' title='Defined at 46 in lib/smux.c.'>SMUX_SOUT</a>:
+<a id='L785' name='L785'></a>      <em class='comment'>/* SMUX_SOUT message is now valied for us. */</em>
+<a id='L786' name='L786'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L787' name='L787'></a>        zlog_debug ("SMUX_SOUT(%s)", rollback ? "rollback" : "commit");
+<a id='L788' name='L788'></a>
+<a id='L789' name='L789'></a>      <strong class='reserved'>if</strong> (sout_save_len &gt; 0)
+<a id='L790' name='L790'></a>        <em class='brace'>{</em>
+<a id='L791' name='L791'></a>          <a href='../S/182.html#L658' title='Defined at 658 in lib/smux.c.'>smux_parse_set</a> (sout_save_buff, sout_save_len, rollback ? FREE : COMMIT);
+<a id='L792' name='L792'></a>          sout_save_len = 0;
+<a id='L793' name='L793'></a>        <em class='brace'>}</em>
+<a id='L794' name='L794'></a>      <strong class='reserved'>else</strong>
+<a id='L795' name='L795'></a>        zlog_warn ("SMUX_SOUT sout_save_len=%d - invalid", (<strong class='reserved'>int</strong>) sout_save_len);
+<a id='L796' name='L796'></a>
+<a id='L797' name='L797'></a>      <strong class='reserved'>if</strong> (len_income &gt; 3) 
+<a id='L798' name='L798'></a>        <em class='brace'>{</em>
+<a id='L799' name='L799'></a>          <em class='comment'>/* YYY: this strange code has to solve the "slow peer"</em>
+<a id='L800' name='L800'></a><em class='comment'>             problem: When agent sends SMUX_SOUT message it doesn't</em>
+<a id='L801' name='L801'></a><em class='comment'>             wait any responce and may send some next message to</em>
+<a id='L802' name='L802'></a><em class='comment'>             subagent. Then the peer in 'smux_read()' will recieve</em>
+<a id='L803' name='L803'></a><em class='comment'>             from socket the 'concatenated' buffer, contaning both</em>
+<a id='L804' name='L804'></a><em class='comment'>             SMUX_SOUT message and the next one</em>
+<a id='L805' name='L805'></a><em class='comment'>             (SMUX_GET/SMUX_GETNEXT/SMUX_GET). So we should check: if</em>
+<a id='L806' name='L806'></a><em class='comment'>             the buffer is longer than 3 ( length of SMUX_SOUT ), we</em>
+<a id='L807' name='L807'></a><em class='comment'>             must process the rest of it.  This effect may be observed</em>
+<a id='L808' name='L808'></a><em class='comment'>             if 'debug_smux' is set to '1' */</em>
+<a id='L809' name='L809'></a>          ptr++;
+<a id='L810' name='L810'></a>          len = len_income - 3;
+<a id='L811' name='L811'></a>          <strong class='reserved'>goto</strong> process_rest;
+<a id='L812' name='L812'></a>        <em class='brace'>}</em>
+<a id='L813' name='L813'></a>      <strong class='reserved'>break</strong>;
+<a id='L814' name='L814'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L50' title='Defined at 50 in lib/smux.c.'>SMUX_GETRSP</a>:
+<a id='L815' name='L815'></a>      <em class='comment'>/* SMUX_GETRSP message is invalid for us. */</em>
+<a id='L816' name='L816'></a>      zlog_warn ("SMUX_GETRSP received: resetting connection.");
+<a id='L817' name='L817'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L818' name='L818'></a>      <strong class='reserved'>break</strong>;
+<a id='L819' name='L819'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L43' title='Defined at 43 in lib/smux.c.'>SMUX_CLOSE</a>:
+<a id='L820' name='L820'></a>      <em class='comment'>/* Close SMUX connection. */</em>
+<a id='L821' name='L821'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L822' name='L822'></a>        zlog_debug ("SMUX_CLOSE");
+<a id='L823' name='L823'></a>      <a href='../S/182.html#L723' title='Defined at 723 in lib/smux.c.'>smux_parse_close</a> (ptr, len);
+<a id='L824' name='L824'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L825' name='L825'></a>      <strong class='reserved'>break</strong>;
+<a id='L826' name='L826'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L45' title='Defined at 45 in lib/smux.c.'>SMUX_RRSP</a>:
+<a id='L827' name='L827'></a>      <em class='comment'>/* This is response for register message. */</em>
+<a id='L828' name='L828'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L829' name='L829'></a>        zlog_debug ("SMUX_RRSP");
+<a id='L830' name='L830'></a>      <a href='../S/182.html#L737' title='Defined at 737 in lib/smux.c.'>smux_parse_rrsp</a> (ptr, len);
+<a id='L831' name='L831'></a>      <strong class='reserved'>break</strong>;
+<a id='L832' name='L832'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L48' title='Defined at 48 in lib/smux.c.'>SMUX_GET</a>:
+<a id='L833' name='L833'></a>      <em class='comment'>/* Exact request for object id. */</em>
+<a id='L834' name='L834'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L835' name='L835'></a>        zlog_debug ("SMUX_GET");
+<a id='L836' name='L836'></a>      <a href='../S/182.html#L689' title='Defined at 689 in lib/smux.c.'>smux_parse_get</a> (ptr, len, 1);
+<a id='L837' name='L837'></a>      <strong class='reserved'>break</strong>;
+<a id='L838' name='L838'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L49' title='Defined at 49 in lib/smux.c.'>SMUX_GETNEXT</a>:
+<a id='L839' name='L839'></a>      <em class='comment'>/* Next request for object id. */</em>
+<a id='L840' name='L840'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L841' name='L841'></a>        zlog_debug ("SMUX_GETNEXT");
+<a id='L842' name='L842'></a>      <a href='../S/182.html#L689' title='Defined at 689 in lib/smux.c.'>smux_parse_get</a> (ptr, len, 0);
+<a id='L843' name='L843'></a>      <strong class='reserved'>break</strong>;
+<a id='L844' name='L844'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L51' title='Defined at 51 in lib/smux.c.'>SMUX_SET</a>:
+<a id='L845' name='L845'></a>      <em class='comment'>/* SMUX_SET is supported with some limitations. */</em>
+<a id='L846' name='L846'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L847' name='L847'></a>        zlog_debug ("SMUX_SET");
+<a id='L848' name='L848'></a>
+<a id='L849' name='L849'></a>      <em class='comment'>/* save the data for future SMUX_SOUT */</em>
+<a id='L850' name='L850'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (sout_save_buff, ptr, len);
+<a id='L851' name='L851'></a>      sout_save_len = len;
+<a id='L852' name='L852'></a>      <a href='../S/182.html#L658' title='Defined at 658 in lib/smux.c.'>smux_parse_set</a> (ptr, len, RESERVE1);
+<a id='L853' name='L853'></a>      <strong class='reserved'>break</strong>;
+<a id='L854' name='L854'></a>    <strong class='reserved'>default</strong>:
+<a id='L855' name='L855'></a>      zlog_info ("Unknown type: %d", type);
+<a id='L856' name='L856'></a>      <strong class='reserved'>break</strong>;
+<a id='L857' name='L857'></a>    <em class='brace'>}</em>
+<a id='L858' name='L858'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L859' name='L859'></a><em class='brace'>}</em>
+<a id='L860' name='L860'></a>
+<a id='L861' name='L861'></a><em class='comment'>/* SMUX message read function. */</em>
+<a id='L862' name='L862'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L863' name='L863'></a><a href='../S/182.html#L1248' title='Referred from 1248 in lib/smux.c.'>smux_read</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t)
+<a id='L864' name='L864'></a><em class='brace'>{</em>
+<a id='L865' name='L865'></a>  <strong class='reserved'>int</strong> sock;
+<a id='L866' name='L866'></a>  <strong class='reserved'>int</strong> len;
+<a id='L867' name='L867'></a>  u_char buf[<a href='../S/182.html#L39' title='Defined at 39 in lib/smux.c.'>SMUXMAXPKTSIZE</a>];
+<a id='L868' name='L868'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L869' name='L869'></a>
+<a id='L870' name='L870'></a>  <em class='comment'>/* Clear thread. */</em>
+<a id='L871' name='L871'></a>  sock = <a href='../S/279.html#L125' title='Defined at 125 in lib/thread.h.'>THREAD_FD</a> (t);
+<a id='L872' name='L872'></a>  smux_read_thread = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L873' name='L873'></a>
+<a id='L874' name='L874'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L875' name='L875'></a>    zlog_debug ("SMUX read start");
+<a id='L876' name='L876'></a>
+<a id='L877' name='L877'></a>  <em class='comment'>/* Read message from SMUX socket. */</em>
+<a id='L878' name='L878'></a>  len = recv (sock, buf, <a href='../S/182.html#L39' title='Defined at 39 in lib/smux.c.'>SMUXMAXPKTSIZE</a>, 0);
+<a id='L879' name='L879'></a>
+<a id='L880' name='L880'></a>  <strong class='reserved'>if</strong> (len &lt; 0)
+<a id='L881' name='L881'></a>    <em class='brace'>{</em>
+<a id='L882' name='L882'></a>      zlog_warn ("Can't read all SMUX packet: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L883' name='L883'></a>      close (sock);
+<a id='L884' name='L884'></a>      smux_sock = -1;
+<a id='L885' name='L885'></a>      <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>, 0);
+<a id='L886' name='L886'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L887' name='L887'></a>    <em class='brace'>}</em>
+<a id='L888' name='L888'></a>
+<a id='L889' name='L889'></a>  <strong class='reserved'>if</strong> (len == 0)
+<a id='L890' name='L890'></a>    <em class='brace'>{</em>
+<a id='L891' name='L891'></a>      zlog_warn ("SMUX connection closed: %d", sock);
+<a id='L892' name='L892'></a>      close (sock);
+<a id='L893' name='L893'></a>      smux_sock = -1;
+<a id='L894' name='L894'></a>      <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>, 0);
+<a id='L895' name='L895'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L896' name='L896'></a>    <em class='brace'>}</em>
+<a id='L897' name='L897'></a>
+<a id='L898' name='L898'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L899' name='L899'></a>    zlog_debug ("SMUX read len: %d", len);
+<a id='L900' name='L900'></a>
+<a id='L901' name='L901'></a>  <em class='comment'>/* Parse the message. */</em>
+<a id='L902' name='L902'></a>  ret = <a href='../S/182.html#L750' title='Defined at 750 in lib/smux.c.'>smux_parse</a> (buf, len);
+<a id='L903' name='L903'></a>
+<a id='L904' name='L904'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L905' name='L905'></a>    <em class='brace'>{</em>
+<a id='L906' name='L906'></a>      close (sock);
+<a id='L907' name='L907'></a>      smux_sock = -1;
+<a id='L908' name='L908'></a>      <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>, 0);
+<a id='L909' name='L909'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L910' name='L910'></a>    <em class='brace'>}</em>
+<a id='L911' name='L911'></a>
+<a id='L912' name='L912'></a>  <em class='comment'>/* Regiser read thread. */</em>
+<a id='L913' name='L913'></a>  <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_READ</a>, sock);
+<a id='L914' name='L914'></a>
+<a id='L915' name='L915'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L916' name='L916'></a><em class='brace'>}</em>
+<a id='L917' name='L917'></a>
+<a id='L918' name='L918'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L919' name='L919'></a><a href='../S/182.html#L1182' title='Referred from 1182 in lib/smux.c.'>smux_open</a> (<strong class='reserved'>int</strong> sock)
+<a id='L920' name='L920'></a><em class='brace'>{</em>
+<a id='L921' name='L921'></a>  u_char buf[BUFSIZ];
+<a id='L922' name='L922'></a>  u_char *ptr;
+<a id='L923' name='L923'></a>  size_t len;
+<a id='L924' name='L924'></a>  <strong class='reserved'>long</strong> version;
+<a id='L925' name='L925'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> progname[] = <a href='../S/237.html#L38' title='Defined at 38 in lib/version.h.'>QUAGGA_PROGNAME</a> "-" <a href='../S/237.html#L40' title='Defined at 40 in lib/version.h.'>QUAGGA_VERSION</a>;
+<a id='L926' name='L926'></a>
+<a id='L927' name='L927'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L928' name='L928'></a>    <em class='brace'>{</em>
+<a id='L929' name='L929'></a>      <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("SMUX open oid", smux_oid, smux_oid_len);
+<a id='L930' name='L930'></a>      zlog_debug ("SMUX open progname: %s", progname);
+<a id='L931' name='L931'></a>      zlog_debug ("SMUX open password: %s", smux_passwd);
+<a id='L932' name='L932'></a>    <em class='brace'>}</em>
+<a id='L933' name='L933'></a>
+<a id='L934' name='L934'></a>  ptr = buf;
+<a id='L935' name='L935'></a>  len = BUFSIZ;
+<a id='L936' name='L936'></a>
+<a id='L937' name='L937'></a>  <em class='comment'>/* SMUX Header.  As placeholder. */</em>
+<a id='L938' name='L938'></a>  ptr = asn_build_header (ptr, &amp;len, (u_char) <a href='../S/182.html#L42' title='Defined at 42 in lib/smux.c.'>SMUX_OPEN</a>, 0);
+<a id='L939' name='L939'></a>
+<a id='L940' name='L940'></a>  <em class='comment'>/* SMUX Open. */</em>
+<a id='L941' name='L941'></a>  version = 0;
+<a id='L942' name='L942'></a>  ptr = asn_build_int (ptr, &amp;len, 
+<a id='L943' name='L943'></a>                       (u_char)(ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L944' name='L944'></a>                       &amp;version, <strong class='reserved'>sizeof</strong> (version));
+<a id='L945' name='L945'></a>
+<a id='L946' name='L946'></a>  <em class='comment'>/* SMUX connection oid. */</em>
+<a id='L947' name='L947'></a>  ptr = asn_build_objid (ptr, &amp;len,
+<a id='L948' name='L948'></a>                         (u_char) 
+<a id='L949' name='L949'></a>                         (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OBJECT_ID),
+<a id='L950' name='L950'></a>                         smux_oid, smux_oid_len);
+<a id='L951' name='L951'></a>
+<a id='L952' name='L952'></a>  <em class='comment'>/* SMUX connection description. */</em>
+<a id='L953' name='L953'></a>  ptr = asn_build_string (ptr, &amp;len, 
+<a id='L954' name='L954'></a>                          (u_char)
+<a id='L955' name='L955'></a>                          (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OCTET_STR),
+<a id='L956' name='L956'></a>                          (<strong class='reserved'>const</strong> u_char *) progname, strlen (progname));
+<a id='L957' name='L957'></a>
+<a id='L958' name='L958'></a>  <em class='comment'>/* SMUX connection password. */</em>
+<a id='L959' name='L959'></a>  ptr = asn_build_string (ptr, &amp;len, 
+<a id='L960' name='L960'></a>                          (u_char)
+<a id='L961' name='L961'></a>                          (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OCTET_STR),
+<a id='L962' name='L962'></a>                          (u_char *)smux_passwd, strlen (smux_passwd));
+<a id='L963' name='L963'></a>
+<a id='L964' name='L964'></a>  <em class='comment'>/* Fill in real SMUX header.  We exclude ASN header size (2). */</em>
+<a id='L965' name='L965'></a>  len = BUFSIZ;
+<a id='L966' name='L966'></a>  asn_build_header (buf, &amp;len, (u_char) <a href='../S/182.html#L42' title='Defined at 42 in lib/smux.c.'>SMUX_OPEN</a>, (ptr - buf) - 2);
+<a id='L967' name='L967'></a>
+<a id='L968' name='L968'></a>  <strong class='reserved'>return</strong> send (sock, buf, (ptr - buf), 0);
+<a id='L969' name='L969'></a><em class='brace'>}</em>
+<a id='L970' name='L970'></a>
+<a id='L971' name='L971'></a><em class='comment'>/* `ename` is ignored. Instead of using the provided enterprise OID,</em>
+<a id='L972' name='L972'></a><em class='comment'>   the SMUX peer is used. This keep compatibility with the previous</em>
+<a id='L973' name='L973'></a><em class='comment'>   versions of Quagga.</em>
+<a id='L974' name='L974'></a><em class='comment'></em>
+<a id='L975' name='L975'></a><em class='comment'>   All other fields are used as they are intended. */</em>
+<a id='L976' name='L976'></a><strong class='reserved'>int</strong>
+<a id='L977' name='L977'></a><a href='../R/9923.html' title='Multiple referred from 9 places.'>smux_trap</a> (<strong class='reserved'>struct</strong> variable *vp, size_t vp_len,
+<a id='L978' name='L978'></a>           <strong class='reserved'>const</strong> oid *ename, size_t enamelen,
+<a id='L979' name='L979'></a>           <strong class='reserved'>const</strong> oid *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, size_t namelen,
+<a id='L980' name='L980'></a>           <strong class='reserved'>const</strong> oid *iname, size_t inamelen,
+<a id='L981' name='L981'></a>           <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/206.html#L48' title='Defined at 48 in lib/smux.h.'>trap_object</a> *trapobj, size_t trapobjlen,
+<a id='L982' name='L982'></a>           u_char sptrap)
+<a id='L983' name='L983'></a><em class='brace'>{</em>
+<a id='L984' name='L984'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L985' name='L985'></a>  u_char buf[BUFSIZ];
+<a id='L986' name='L986'></a>  u_char *ptr;
+<a id='L987' name='L987'></a>  size_t len, length;
+<a id='L988' name='L988'></a>  <strong class='reserved'>struct</strong> in_addr addr;
+<a id='L989' name='L989'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> val;
+<a id='L990' name='L990'></a>  u_char *h1, *h1e;
+<a id='L991' name='L991'></a>
+<a id='L992' name='L992'></a>  ptr = buf;
+<a id='L993' name='L993'></a>  len = BUFSIZ;
+<a id='L994' name='L994'></a>  length = len;
+<a id='L995' name='L995'></a>
+<a id='L996' name='L996'></a>  <em class='comment'>/* When SMUX connection is not established. */</em>
+<a id='L997' name='L997'></a>  <strong class='reserved'>if</strong> (smux_sock &lt; 0)
+<a id='L998' name='L998'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L999' name='L999'></a>
+<a id='L1000' name='L1000'></a>  <em class='comment'>/* SMUX header. */</em>
+<a id='L1001' name='L1001'></a>  ptr = asn_build_header (ptr, &amp;len, (u_char) <a href='../S/182.html#L52' title='Defined at 52 in lib/smux.c.'>SMUX_TRAP</a>, 0);
+<a id='L1002' name='L1002'></a>
+<a id='L1003' name='L1003'></a>  <em class='comment'>/* Sub agent enterprise oid. */</em>
+<a id='L1004' name='L1004'></a>  ptr = asn_build_objid (ptr, &amp;len,
+<a id='L1005' name='L1005'></a>                         (u_char) 
+<a id='L1006' name='L1006'></a>                         (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OBJECT_ID),
+<a id='L1007' name='L1007'></a>                         smux_oid, smux_oid_len);
+<a id='L1008' name='L1008'></a>
+<a id='L1009' name='L1009'></a>  <em class='comment'>/* IP address. */</em>
+<a id='L1010' name='L1010'></a>  addr.s_addr = 0;
+<a id='L1011' name='L1011'></a>  ptr = asn_build_string (ptr, &amp;len, 
+<a id='L1012' name='L1012'></a>                          (u_char)
+<a id='L1013' name='L1013'></a>                          (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_IPADDRESS),
+<a id='L1014' name='L1014'></a>                          (u_char *)&amp;addr, <strong class='reserved'>sizeof</strong> (addr));
+<a id='L1015' name='L1015'></a>
+<a id='L1016' name='L1016'></a>  <em class='comment'>/* Generic trap integer. */</em>
+<a id='L1017' name='L1017'></a>  val = SNMP_TRAP_ENTERPRISESPECIFIC;
+<a id='L1018' name='L1018'></a>  ptr = asn_build_int (ptr, &amp;len, 
+<a id='L1019' name='L1019'></a>                       (u_char)(ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L1020' name='L1020'></a>                       (<strong class='reserved'>long</strong> *)&amp;val, <strong class='reserved'>sizeof</strong> (val));
+<a id='L1021' name='L1021'></a>
+<a id='L1022' name='L1022'></a>  <em class='comment'>/* Specific trap integer. */</em>
+<a id='L1023' name='L1023'></a>  val = sptrap;
+<a id='L1024' name='L1024'></a>  ptr = asn_build_int (ptr, &amp;len, 
+<a id='L1025' name='L1025'></a>                       (u_char)(ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L1026' name='L1026'></a>                       (<strong class='reserved'>long</strong> *)&amp;val, <strong class='reserved'>sizeof</strong> (val));
+<a id='L1027' name='L1027'></a>
+<a id='L1028' name='L1028'></a>  <em class='comment'>/* Timeticks timestamp. */</em>
+<a id='L1029' name='L1029'></a>  val = 0;
+<a id='L1030' name='L1030'></a>  ptr = asn_build_unsigned_int (ptr, &amp;len, 
+<a id='L1031' name='L1031'></a>                                (u_char)(ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_TIMETICKS),
+<a id='L1032' name='L1032'></a>                                &amp;val, <strong class='reserved'>sizeof</strong> (val));
+<a id='L1033' name='L1033'></a>  
+<a id='L1034' name='L1034'></a>  <em class='comment'>/* Variables. */</em>
+<a id='L1035' name='L1035'></a>  h1 = ptr;
+<a id='L1036' name='L1036'></a>  ptr = asn_build_sequence (ptr, &amp;len, 
+<a id='L1037' name='L1037'></a>                            (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR),
+<a id='L1038' name='L1038'></a>                            0);
+<a id='L1039' name='L1039'></a>
+<a id='L1040' name='L1040'></a>
+<a id='L1041' name='L1041'></a>  <em class='comment'>/* Iteration for each objects. */</em>
+<a id='L1042' name='L1042'></a>  h1e = ptr;
+<a id='L1043' name='L1043'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; trapobjlen; i++)
+<a id='L1044' name='L1044'></a>    <em class='brace'>{</em>
+<a id='L1045' name='L1045'></a>      <strong class='reserved'>int</strong> ret;
+<a id='L1046' name='L1046'></a>      oid oid[MAX_OID_LEN];
+<a id='L1047' name='L1047'></a>      size_t oid_len;
+<a id='L1048' name='L1048'></a>      <strong class='reserved'>void</strong> *val;
+<a id='L1049' name='L1049'></a>      size_t val_len;
+<a id='L1050' name='L1050'></a>      u_char val_type;
+<a id='L1051' name='L1051'></a>
+<a id='L1052' name='L1052'></a>      <em class='comment'>/* Make OID. */</em>
+<a id='L1053' name='L1053'></a>      <strong class='reserved'>if</strong> (trapobj[i].namelen &gt; 0) 
+<a id='L1054' name='L1054'></a>        <em class='brace'>{</em>
+<a id='L1055' name='L1055'></a>          <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (oid, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, namelen);
+<a id='L1056' name='L1056'></a>          <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (oid + namelen, trapobj[i].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, trapobj[i].namelen);
+<a id='L1057' name='L1057'></a>          <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (oid + namelen + trapobj[i].namelen, iname, inamelen);
+<a id='L1058' name='L1058'></a>          oid_len = namelen + trapobj[i].namelen + inamelen;
+<a id='L1059' name='L1059'></a>        <em class='brace'>}</em>
+<a id='L1060' name='L1060'></a>      <strong class='reserved'>else</strong> 
+<a id='L1061' name='L1061'></a>        <em class='brace'>{</em>
+<a id='L1062' name='L1062'></a>          <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (oid, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, namelen);
+<a id='L1063' name='L1063'></a>          <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (oid + namelen, trapobj[i].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, trapobj[i].namelen * (-1));
+<a id='L1064' name='L1064'></a>          oid_len = namelen + trapobj[i].namelen * (-1) ;
+<a id='L1065' name='L1065'></a>        <em class='brace'>}</em>
+<a id='L1066' name='L1066'></a>
+<a id='L1067' name='L1067'></a>      <strong class='reserved'>if</strong> (debug_smux) 
+<a id='L1068' name='L1068'></a>        <em class='brace'>{</em>
+<a id='L1069' name='L1069'></a>          <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("Trap", <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, namelen);
+<a id='L1070' name='L1070'></a>          <strong class='reserved'>if</strong> (trapobj[i].namelen &lt; 0)
+<a id='L1071' name='L1071'></a>            <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("Trap", 
+<a id='L1072' name='L1072'></a>                           trapobj[i].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, (- 1) * (trapobj[i].namelen));
+<a id='L1073' name='L1073'></a>          <strong class='reserved'>else</strong> 
+<a id='L1074' name='L1074'></a>            <em class='brace'>{</em>
+<a id='L1075' name='L1075'></a>              <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("Trap", trapobj[i].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, (trapobj[i].namelen));
+<a id='L1076' name='L1076'></a>              <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("Trap", iname, inamelen);
+<a id='L1077' name='L1077'></a>            <em class='brace'>}</em>
+<a id='L1078' name='L1078'></a>          <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("Trap", oid, oid_len);
+<a id='L1079' name='L1079'></a>          zlog_info ("BUFSIZ: %d // oid_len: %lu", BUFSIZ, (u_long)oid_len);
+<a id='L1080' name='L1080'></a>      <em class='brace'>}</em>
+<a id='L1081' name='L1081'></a>
+<a id='L1082' name='L1082'></a>      ret = <a href='../S/182.html#L478' title='Defined at 478 in lib/smux.c.'>smux_get</a> (oid, &amp;oid_len, 1, &amp;val_type, &amp;val, &amp;val_len);
+<a id='L1083' name='L1083'></a>
+<a id='L1084' name='L1084'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L1085' name='L1085'></a>        zlog_debug ("smux_get result %d", ret);
+<a id='L1086' name='L1086'></a>
+<a id='L1087' name='L1087'></a>      <strong class='reserved'>if</strong> (ret == 0)
+<a id='L1088' name='L1088'></a>        ptr = snmp_build_var_op (ptr, oid, &amp;oid_len,
+<a id='L1089' name='L1089'></a>                                 val_type, val_len, val, &amp;len);
+<a id='L1090' name='L1090'></a>    <em class='brace'>}</em>
+<a id='L1091' name='L1091'></a>
+<a id='L1092' name='L1092'></a>  <em class='comment'>/* Now variable size is known, fill in size */</em>
+<a id='L1093' name='L1093'></a>  asn_build_sequence(h1, &amp;length,
+<a id='L1094' name='L1094'></a>                     (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR),
+<a id='L1095' name='L1095'></a>                     ptr - h1e);
+<a id='L1096' name='L1096'></a>
+<a id='L1097' name='L1097'></a>  <em class='comment'>/* Fill in size of whole sequence */</em>
+<a id='L1098' name='L1098'></a>  len = BUFSIZ;
+<a id='L1099' name='L1099'></a>  asn_build_header (buf, &amp;len, (u_char) <a href='../S/182.html#L52' title='Defined at 52 in lib/smux.c.'>SMUX_TRAP</a>, (ptr - buf) - 2);
+<a id='L1100' name='L1100'></a>
+<a id='L1101' name='L1101'></a>  <strong class='reserved'>return</strong> send (smux_sock, buf, (ptr - buf), 0);
+<a id='L1102' name='L1102'></a><em class='brace'>}</em>
+<a id='L1103' name='L1103'></a>
+<a id='L1104' name='L1104'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1105' name='L1105'></a><a href='../S/182.html#L1194' title='Referred from 1194 in lib/smux.c.'>smux_register</a> (<strong class='reserved'>int</strong> sock)
+<a id='L1106' name='L1106'></a><em class='brace'>{</em>
+<a id='L1107' name='L1107'></a>  u_char buf[BUFSIZ];
+<a id='L1108' name='L1108'></a>  u_char *ptr;
+<a id='L1109' name='L1109'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L1110' name='L1110'></a>  size_t len;
+<a id='L1111' name='L1111'></a>  <strong class='reserved'>long</strong> priority;
+<a id='L1112' name='L1112'></a>  <strong class='reserved'>long</strong> operation;
+<a id='L1113' name='L1113'></a>  <strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *<a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>;
+<a id='L1114' name='L1114'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L1115' name='L1115'></a>
+<a id='L1116' name='L1116'></a>  ret = 0;
+<a id='L1117' name='L1117'></a>
+<a id='L1118' name='L1118'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (treelist, node, nnode, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>))
+<a id='L1119' name='L1119'></a>    <em class='brace'>{</em>
+<a id='L1120' name='L1120'></a>      ptr = buf;
+<a id='L1121' name='L1121'></a>      len = BUFSIZ;
+<a id='L1122' name='L1122'></a>
+<a id='L1123' name='L1123'></a>      <em class='comment'>/* SMUX RReq Header. */</em>
+<a id='L1124' name='L1124'></a>      ptr = asn_build_header (ptr, &amp;len, (u_char) <a href='../S/182.html#L44' title='Defined at 44 in lib/smux.c.'>SMUX_RREQ</a>, 0);
+<a id='L1125' name='L1125'></a>
+<a id='L1126' name='L1126'></a>      <em class='comment'>/* Register MIB tree. */</em>
+<a id='L1127' name='L1127'></a>      ptr = asn_build_objid (ptr, &amp;len,
+<a id='L1128' name='L1128'></a>                            (u_char)
+<a id='L1129' name='L1129'></a>                            (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OBJECT_ID),
+<a id='L1130' name='L1130'></a>                            <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len);
+<a id='L1131' name='L1131'></a>
+<a id='L1132' name='L1132'></a>      <em class='comment'>/* Priority. */</em>
+<a id='L1133' name='L1133'></a>      priority = -1;
+<a id='L1134' name='L1134'></a>      ptr = asn_build_int (ptr, &amp;len, 
+<a id='L1135' name='L1135'></a>                          (u_char)(ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L1136' name='L1136'></a>                          &amp;priority, <strong class='reserved'>sizeof</strong> (priority));
+<a id='L1137' name='L1137'></a>
+<a id='L1138' name='L1138'></a>      <em class='comment'>/* Operation. */</em>
+<a id='L1139' name='L1139'></a>      operation = 2; <em class='comment'>/* Register R/W */</em>
+<a id='L1140' name='L1140'></a>      ptr = asn_build_int (ptr, &amp;len, 
+<a id='L1141' name='L1141'></a>                          (u_char)(ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+<a id='L1142' name='L1142'></a>                          &amp;operation, <strong class='reserved'>sizeof</strong> (operation));
+<a id='L1143' name='L1143'></a>
+<a id='L1144' name='L1144'></a>      <strong class='reserved'>if</strong> (debug_smux)
+<a id='L1145' name='L1145'></a>        <em class='brace'>{</em>
+<a id='L1146' name='L1146'></a>          <a href='../S/182.html#L137' title='Defined at 137 in lib/smux.c.'>smux_oid_dump</a> ("SMUX register oid", <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>-&gt;name_len);
+<a id='L1147' name='L1147'></a>          zlog_debug ("SMUX register priority: %ld", priority);
+<a id='L1148' name='L1148'></a>          zlog_debug ("SMUX register operation: %ld", operation);
+<a id='L1149' name='L1149'></a>        <em class='brace'>}</em>
+<a id='L1150' name='L1150'></a>
+<a id='L1151' name='L1151'></a>      len = BUFSIZ;
+<a id='L1152' name='L1152'></a>      asn_build_header (buf, &amp;len, (u_char) <a href='../S/182.html#L44' title='Defined at 44 in lib/smux.c.'>SMUX_RREQ</a>, (ptr - buf) - 2);
+<a id='L1153' name='L1153'></a>      ret = send (sock, buf, (ptr - buf), 0);
+<a id='L1154' name='L1154'></a>      <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L1155' name='L1155'></a>        <strong class='reserved'>return</strong> ret;
+<a id='L1156' name='L1156'></a>    <em class='brace'>}</em>
+<a id='L1157' name='L1157'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L1158' name='L1158'></a><em class='brace'>}</em>
+<a id='L1159' name='L1159'></a>
+<a id='L1160' name='L1160'></a><em class='comment'>/* Try to connect to SNMP agent. */</em>
+<a id='L1161' name='L1161'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1162' name='L1162'></a><a href='../R/9896.html' title='Multiple referred from 2 places.'>smux_connect</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t)
+<a id='L1163' name='L1163'></a><em class='brace'>{</em>
+<a id='L1164' name='L1164'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L1165' name='L1165'></a>
+<a id='L1166' name='L1166'></a>  <strong class='reserved'>if</strong> (debug_smux)
+<a id='L1167' name='L1167'></a>    zlog_debug ("SMUX connect try %d", fail + 1);
+<a id='L1168' name='L1168'></a>
+<a id='L1169' name='L1169'></a>  <em class='comment'>/* Clear thread poner of myself. */</em>
+<a id='L1170' name='L1170'></a>  smux_connect_thread = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1171' name='L1171'></a>
+<a id='L1172' name='L1172'></a>  <em class='comment'>/* Make socket.  Try to connect. */</em>
+<a id='L1173' name='L1173'></a>  smux_sock = <a href='../S/182.html#L154' title='Defined at 154 in lib/smux.c.'>smux_socket</a> ();
+<a id='L1174' name='L1174'></a>  <strong class='reserved'>if</strong> (smux_sock &lt; 0)
+<a id='L1175' name='L1175'></a>    <em class='brace'>{</em>
+<a id='L1176' name='L1176'></a>      <strong class='reserved'>if</strong> (++fail &lt; <a href='../S/182.html#L54' title='Defined at 54 in lib/smux.c.'>SMUX_MAX_FAILURE</a>)
+<a id='L1177' name='L1177'></a>        <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>, 0);
+<a id='L1178' name='L1178'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L1179' name='L1179'></a>    <em class='brace'>}</em>
+<a id='L1180' name='L1180'></a>
+<a id='L1181' name='L1181'></a>  <em class='comment'>/* Send OPEN PDU. */</em>
+<a id='L1182' name='L1182'></a>  ret = <a href='../S/182.html#L919' title='Defined at 919 in lib/smux.c.'>smux_open</a> (smux_sock);
+<a id='L1183' name='L1183'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L1184' name='L1184'></a>    <em class='brace'>{</em>
+<a id='L1185' name='L1185'></a>      zlog_warn ("SMUX open message send failed: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L1186' name='L1186'></a>      close (smux_sock);
+<a id='L1187' name='L1187'></a>      smux_sock = -1;
+<a id='L1188' name='L1188'></a>      <strong class='reserved'>if</strong> (++fail &lt; <a href='../S/182.html#L54' title='Defined at 54 in lib/smux.c.'>SMUX_MAX_FAILURE</a>)
+<a id='L1189' name='L1189'></a>        <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>, 0);
+<a id='L1190' name='L1190'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L1191' name='L1191'></a>    <em class='brace'>}</em>
+<a id='L1192' name='L1192'></a>
+<a id='L1193' name='L1193'></a>  <em class='comment'>/* Send any outstanding register PDUs. */</em>
+<a id='L1194' name='L1194'></a>  ret = <a href='../S/182.html#L1105' title='Defined at 1105 in lib/smux.c.'>smux_register</a> (smux_sock);
+<a id='L1195' name='L1195'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L1196' name='L1196'></a>    <em class='brace'>{</em>
+<a id='L1197' name='L1197'></a>      zlog_warn ("SMUX register message send failed: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L1198' name='L1198'></a>      close (smux_sock);
+<a id='L1199' name='L1199'></a>      smux_sock = -1;
+<a id='L1200' name='L1200'></a>      <strong class='reserved'>if</strong> (++fail &lt; <a href='../S/182.html#L54' title='Defined at 54 in lib/smux.c.'>SMUX_MAX_FAILURE</a>)
+<a id='L1201' name='L1201'></a>        <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>, 0);
+<a id='L1202' name='L1202'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L1203' name='L1203'></a>    <em class='brace'>}</em>
+<a id='L1204' name='L1204'></a>
+<a id='L1205' name='L1205'></a>  <em class='comment'>/* Everything goes fine. */</em>
+<a id='L1206' name='L1206'></a>  <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_READ</a>, smux_sock);
+<a id='L1207' name='L1207'></a>
+<a id='L1208' name='L1208'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1209' name='L1209'></a><em class='brace'>}</em>
+<a id='L1210' name='L1210'></a>
+<a id='L1211' name='L1211'></a><em class='comment'>/* Clear all SMUX related resources. */</em>
+<a id='L1212' name='L1212'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L1213' name='L1213'></a><a href='../R/9921.html' title='Multiple referred from 2 places.'>smux_stop</a> (<strong class='reserved'>void</strong>)
+<a id='L1214' name='L1214'></a><em class='brace'>{</em>
+<a id='L1215' name='L1215'></a>  <strong class='reserved'>if</strong> (smux_read_thread)
+<a id='L1216' name='L1216'></a>    <em class='brace'>{</em>
+<a id='L1217' name='L1217'></a>      <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a> (smux_read_thread);
+<a id='L1218' name='L1218'></a>      smux_read_thread = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1219' name='L1219'></a>    <em class='brace'>}</em>
+<a id='L1220' name='L1220'></a>
+<a id='L1221' name='L1221'></a>  <strong class='reserved'>if</strong> (smux_connect_thread)
+<a id='L1222' name='L1222'></a>    <em class='brace'>{</em>
+<a id='L1223' name='L1223'></a>      <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a> (smux_connect_thread);
+<a id='L1224' name='L1224'></a>      smux_connect_thread = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1225' name='L1225'></a>    <em class='brace'>}</em>
+<a id='L1226' name='L1226'></a>
+<a id='L1227' name='L1227'></a>  <strong class='reserved'>if</strong> (smux_sock &gt;= 0)
+<a id='L1228' name='L1228'></a>    <em class='brace'>{</em>
+<a id='L1229' name='L1229'></a>      close (smux_sock);
+<a id='L1230' name='L1230'></a>      smux_sock = -1;
+<a id='L1231' name='L1231'></a>    <em class='brace'>}</em>
+<a id='L1232' name='L1232'></a><em class='brace'>}</em>
+<a id='L1233' name='L1233'></a>
+<a id='L1234' name='L1234'></a>
+<a id='L1235' name='L1235'></a>
+<a id='L1236' name='L1236'></a><strong class='reserved'>void</strong>
+<a id='L1237' name='L1237'></a><a href='../R/9897.html' title='Multiple referred from 11 places.'>smux_event</a> (<strong class='reserved'>enum</strong> <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> <a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a>, <strong class='reserved'>int</strong> sock)
+<a id='L1238' name='L1238'></a><em class='brace'>{</em>
+<a id='L1239' name='L1239'></a>  <strong class='reserved'>switch</strong> (<a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a>)
+<a id='L1240' name='L1240'></a>    <em class='brace'>{</em>
+<a id='L1241' name='L1241'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_SCHEDULE</a>:
+<a id='L1242' name='L1242'></a>      smux_connect_thread = <a href='../S/279.html#L169' title='Defined at 169 in lib/thread.h.'>thread_add_event</a> (master, <a href='../S/182.html#L1162' title='Defined at 1162 in lib/smux.c.'>smux_connect</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L1243' name='L1243'></a>      <strong class='reserved'>break</strong>;
+<a id='L1244' name='L1244'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_CONNECT</a>:
+<a id='L1245' name='L1245'></a>      smux_connect_thread = <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/182.html#L1162' title='Defined at 1162 in lib/smux.c.'>smux_connect</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 10);
+<a id='L1246' name='L1246'></a>      <strong class='reserved'>break</strong>;
+<a id='L1247' name='L1247'></a>    <strong class='reserved'>case</strong> <a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_READ</a>:
+<a id='L1248' name='L1248'></a>      smux_read_thread = <a href='../S/279.html#L165' title='Defined at 165 in lib/thread.h.'>thread_add_read</a> (master, <a href='../S/182.html#L863' title='Defined at 863 in lib/smux.c.'>smux_read</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, sock);
+<a id='L1249' name='L1249'></a>      <strong class='reserved'>break</strong>;
+<a id='L1250' name='L1250'></a>    <strong class='reserved'>default</strong>:
+<a id='L1251' name='L1251'></a>      <strong class='reserved'>break</strong>;
+<a id='L1252' name='L1252'></a>    <em class='brace'>}</em>
+<a id='L1253' name='L1253'></a><em class='brace'>}</em>
+<a id='L1254' name='L1254'></a>
+<a id='L1255' name='L1255'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1256' name='L1256'></a><a href='../S/182.html#L1316' title='Referred from 1316 in lib/smux.c.'>smux_str2oid</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, oid *oid, size_t *oid_len)
+<a id='L1257' name='L1257'></a><em class='brace'>{</em>
+<a id='L1258' name='L1258'></a>  <strong class='reserved'>int</strong> len;
+<a id='L1259' name='L1259'></a>  <strong class='reserved'>int</strong> val;
+<a id='L1260' name='L1260'></a>
+<a id='L1261' name='L1261'></a>  len = 0;
+<a id='L1262' name='L1262'></a>  val = 0;
+<a id='L1263' name='L1263'></a>  *oid_len = 0;
+<a id='L1264' name='L1264'></a>
+<a id='L1265' name='L1265'></a>  <strong class='reserved'>if</strong> (*str == '.')
+<a id='L1266' name='L1266'></a>    str++;
+<a id='L1267' name='L1267'></a>  <strong class='reserved'>if</strong> (*str == '\0')
+<a id='L1268' name='L1268'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L1269' name='L1269'></a>
+<a id='L1270' name='L1270'></a>  <strong class='reserved'>while</strong> (1)
+<a id='L1271' name='L1271'></a>    <em class='brace'>{</em>
+<a id='L1272' name='L1272'></a>      <strong class='reserved'>if</strong> (! isdigit (*str))
+<a id='L1273' name='L1273'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L1274' name='L1274'></a>
+<a id='L1275' name='L1275'></a>      <strong class='reserved'>while</strong> (isdigit (*str))
+<a id='L1276' name='L1276'></a>        <em class='brace'>{</em>
+<a id='L1277' name='L1277'></a>          val *= 10;
+<a id='L1278' name='L1278'></a>          val += (*str - '0');
+<a id='L1279' name='L1279'></a>          str++;
+<a id='L1280' name='L1280'></a>        <em class='brace'>}</em>
+<a id='L1281' name='L1281'></a>
+<a id='L1282' name='L1282'></a>      <strong class='reserved'>if</strong> (*str == '\0')
+<a id='L1283' name='L1283'></a>        <strong class='reserved'>break</strong>;
+<a id='L1284' name='L1284'></a>      <strong class='reserved'>if</strong> (*str != '.')
+<a id='L1285' name='L1285'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L1286' name='L1286'></a>
+<a id='L1287' name='L1287'></a>      oid[len++] = val;
+<a id='L1288' name='L1288'></a>      val = 0;
+<a id='L1289' name='L1289'></a>      str++;
+<a id='L1290' name='L1290'></a>    <em class='brace'>}</em>
+<a id='L1291' name='L1291'></a>
+<a id='L1292' name='L1292'></a>  oid[len++] = val;
+<a id='L1293' name='L1293'></a>  *oid_len = len;
+<a id='L1294' name='L1294'></a>
+<a id='L1295' name='L1295'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1296' name='L1296'></a><em class='brace'>}</em>
+<a id='L1297' name='L1297'></a>
+<a id='L1298' name='L1298'></a><strong class='reserved'>static</strong> oid *
+<a id='L1299' name='L1299'></a><a href='../S/182.html#L1336' title='Referred from 1336 in lib/smux.c.'>smux_oid_dup</a> (oid *objid, size_t objid_len)
+<a id='L1300' name='L1300'></a><em class='brace'>{</em>
+<a id='L1301' name='L1301'></a>  oid *new;
+<a id='L1302' name='L1302'></a>
+<a id='L1303' name='L1303'></a>  new = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_TMP, <strong class='reserved'>sizeof</strong> (oid) * objid_len);
+<a id='L1304' name='L1304'></a>  <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (new, objid, objid_len);
+<a id='L1305' name='L1305'></a>
+<a id='L1306' name='L1306'></a>  <strong class='reserved'>return</strong> new;
+<a id='L1307' name='L1307'></a><em class='brace'>}</em>
+<a id='L1308' name='L1308'></a>
+<a id='L1309' name='L1309'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1310' name='L1310'></a><a href='../R/9914.html' title='Multiple referred from 2 places.'>smux_peer_oid</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *oid_str, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *passwd_str)
+<a id='L1311' name='L1311'></a><em class='brace'>{</em>
+<a id='L1312' name='L1312'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L1313' name='L1313'></a>  oid oid[MAX_OID_LEN];
+<a id='L1314' name='L1314'></a>  size_t oid_len;
+<a id='L1315' name='L1315'></a>
+<a id='L1316' name='L1316'></a>  ret = <a href='../S/182.html#L1256' title='Defined at 1256 in lib/smux.c.'>smux_str2oid</a> (oid_str, oid, &amp;oid_len);
+<a id='L1317' name='L1317'></a>  <strong class='reserved'>if</strong> (ret != 0)
+<a id='L1318' name='L1318'></a>    <em class='brace'>{</em>
+<a id='L1319' name='L1319'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "object ID malformed%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1320' name='L1320'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1321' name='L1321'></a>    <em class='brace'>}</em>
+<a id='L1322' name='L1322'></a>
+<a id='L1323' name='L1323'></a>  <strong class='reserved'>if</strong> (smux_oid)
+<a id='L1324' name='L1324'></a>    <em class='brace'>{</em>
+<a id='L1325' name='L1325'></a>      free (smux_oid);
+<a id='L1326' name='L1326'></a>      smux_oid = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1327' name='L1327'></a>    <em class='brace'>}</em>
+<a id='L1328' name='L1328'></a>
+<a id='L1329' name='L1329'></a>  <em class='comment'>/* careful, smux_passwd might point to string constant */</em>
+<a id='L1330' name='L1330'></a>  <strong class='reserved'>if</strong> (smux_passwd)
+<a id='L1331' name='L1331'></a>    <em class='brace'>{</em>
+<a id='L1332' name='L1332'></a>      free (smux_passwd);
+<a id='L1333' name='L1333'></a>      smux_passwd = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1334' name='L1334'></a>    <em class='brace'>}</em>
+<a id='L1335' name='L1335'></a>
+<a id='L1336' name='L1336'></a>  smux_oid = <a href='../S/182.html#L1299' title='Defined at 1299 in lib/smux.c.'>smux_oid_dup</a> (oid, oid_len);
+<a id='L1337' name='L1337'></a>  smux_oid_len = oid_len;
+<a id='L1338' name='L1338'></a>
+<a id='L1339' name='L1339'></a>  <strong class='reserved'>if</strong> (passwd_str)
+<a id='L1340' name='L1340'></a>    smux_passwd = strdup (passwd_str);
+<a id='L1341' name='L1341'></a>  <strong class='reserved'>else</strong>
+<a id='L1342' name='L1342'></a>    smux_passwd = strdup ("");
+<a id='L1343' name='L1343'></a>
+<a id='L1344' name='L1344'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1345' name='L1345'></a><em class='brace'>}</em>
+<a id='L1346' name='L1346'></a>
+<a id='L1347' name='L1347'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1348' name='L1348'></a><a href='../S/182.html#L1407' title='Referred from 1407 in lib/smux.c.'>smux_peer_default</a> (<strong class='reserved'>void</strong>)
+<a id='L1349' name='L1349'></a><em class='brace'>{</em>
+<a id='L1350' name='L1350'></a>  <strong class='reserved'>if</strong> (smux_oid)
+<a id='L1351' name='L1351'></a>    <em class='brace'>{</em>
+<a id='L1352' name='L1352'></a>      free (smux_oid);
+<a id='L1353' name='L1353'></a>      smux_oid = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1354' name='L1354'></a>    <em class='brace'>}</em>
+<a id='L1355' name='L1355'></a>  
+<a id='L1356' name='L1356'></a>  <em class='comment'>/* careful, smux_passwd might be pointing at string constant */</em>
+<a id='L1357' name='L1357'></a>  <strong class='reserved'>if</strong> (smux_passwd)
+<a id='L1358' name='L1358'></a>    <em class='brace'>{</em>
+<a id='L1359' name='L1359'></a>      free (smux_passwd);
+<a id='L1360' name='L1360'></a>      smux_passwd = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1361' name='L1361'></a>    <em class='brace'>}</em>
+<a id='L1362' name='L1362'></a>
+<a id='L1363' name='L1363'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1364' name='L1364'></a><em class='brace'>}</em>
+<a id='L1365' name='L1365'></a>
+<a id='L1366' name='L1366'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (smux_peer,
+<a id='L1367' name='L1367'></a>       smux_peer_cmd,
+<a id='L1368' name='L1368'></a>       "smux peer OID",
+<a id='L1369' name='L1369'></a>       "SNMP MUX protocol settings\n"
+<a id='L1370' name='L1370'></a>       "SNMP MUX peer settings\n"
+<a id='L1371' name='L1371'></a>       "Object ID used in SMUX peering\n")
+<a id='L1372' name='L1372'></a><em class='brace'>{</em>
+<a id='L1373' name='L1373'></a>  <strong class='reserved'>if</strong> (<a href='../S/182.html#L1310' title='Defined at 1310 in lib/smux.c.'>smux_peer_oid</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) == 0)
+<a id='L1374' name='L1374'></a>    <em class='brace'>{</em>
+<a id='L1375' name='L1375'></a>      <a href='../S/182.html#L1494' title='Defined at 1494 in lib/smux.c.'>smux_start</a>();
+<a id='L1376' name='L1376'></a>      <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1377' name='L1377'></a>    <em class='brace'>}</em>
+<a id='L1378' name='L1378'></a>  <strong class='reserved'>else</strong>
+<a id='L1379' name='L1379'></a>    <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1380' name='L1380'></a><em class='brace'>}</em>
+<a id='L1381' name='L1381'></a>
+<a id='L1382' name='L1382'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (smux_peer_password,
+<a id='L1383' name='L1383'></a>       smux_peer_password_cmd,
+<a id='L1384' name='L1384'></a>       "smux peer OID PASSWORD",
+<a id='L1385' name='L1385'></a>       "SNMP MUX protocol settings\n"
+<a id='L1386' name='L1386'></a>       "SNMP MUX peer settings\n"
+<a id='L1387' name='L1387'></a>       "SMUX peering object ID\n"
+<a id='L1388' name='L1388'></a>       "SMUX peering password\n")
+<a id='L1389' name='L1389'></a><em class='brace'>{</em>
+<a id='L1390' name='L1390'></a>  <strong class='reserved'>if</strong> (<a href='../S/182.html#L1310' title='Defined at 1310 in lib/smux.c.'>smux_peer_oid</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1]) == 0)
+<a id='L1391' name='L1391'></a>    <em class='brace'>{</em>
+<a id='L1392' name='L1392'></a>      <a href='../S/182.html#L1494' title='Defined at 1494 in lib/smux.c.'>smux_start</a>();
+<a id='L1393' name='L1393'></a>      <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1394' name='L1394'></a>    <em class='brace'>}</em>
+<a id='L1395' name='L1395'></a>  <strong class='reserved'>else</strong>
+<a id='L1396' name='L1396'></a>    <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1397' name='L1397'></a><em class='brace'>}</em>
+<a id='L1398' name='L1398'></a>
+<a id='L1399' name='L1399'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_smux_peer,
+<a id='L1400' name='L1400'></a>       no_smux_peer_cmd,
+<a id='L1401' name='L1401'></a>       "no smux peer",
+<a id='L1402' name='L1402'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1403' name='L1403'></a>       "SNMP MUX protocol settings\n"
+<a id='L1404' name='L1404'></a>       "SNMP MUX peer settings\n")
+<a id='L1405' name='L1405'></a><em class='brace'>{</em>
+<a id='L1406' name='L1406'></a>  <a href='../S/182.html#L1213' title='Defined at 1213 in lib/smux.c.'>smux_stop</a>();
+<a id='L1407' name='L1407'></a>  <strong class='reserved'>return</strong> <a href='../S/182.html#L1348' title='Defined at 1348 in lib/smux.c.'>smux_peer_default</a> ();
+<a id='L1408' name='L1408'></a><em class='brace'>}</em>
+<a id='L1409' name='L1409'></a>
+<a id='L1410' name='L1410'></a><a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a> (no_smux_peer,
+<a id='L1411' name='L1411'></a>       no_smux_peer_oid_cmd,
+<a id='L1412' name='L1412'></a>       "no smux peer OID",
+<a id='L1413' name='L1413'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1414' name='L1414'></a>       "SNMP MUX protocol settings\n"
+<a id='L1415' name='L1415'></a>       "SNMP MUX peer settings\n"
+<a id='L1416' name='L1416'></a>       "SMUX peering object ID\n")
+<a id='L1417' name='L1417'></a>
+<a id='L1418' name='L1418'></a><a href='../D/25.html' title='Multiple defined in 427 places.'>ALIAS</a> (no_smux_peer,
+<a id='L1419' name='L1419'></a>       no_smux_peer_oid_password_cmd,
+<a id='L1420' name='L1420'></a>       "no smux peer OID PASSWORD",
+<a id='L1421' name='L1421'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1422' name='L1422'></a>       "SNMP MUX protocol settings\n"
+<a id='L1423' name='L1423'></a>       "SNMP MUX peer settings\n"
+<a id='L1424' name='L1424'></a>       "SMUX peering object ID\n"
+<a id='L1425' name='L1425'></a>       "SMUX peering password\n")
+<a id='L1426' name='L1426'></a>
+<a id='L1427' name='L1427'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1428' name='L1428'></a>config_write_smux (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L1429' name='L1429'></a><em class='brace'>{</em>
+<a id='L1430' name='L1430'></a>  <strong class='reserved'>int</strong> first = 1;
+<a id='L1431' name='L1431'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L1432' name='L1432'></a>
+<a id='L1433' name='L1433'></a>  <strong class='reserved'>if</strong> (smux_oid)
+<a id='L1434' name='L1434'></a>    <em class='brace'>{</em>
+<a id='L1435' name='L1435'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "smux peer ");
+<a id='L1436' name='L1436'></a>      <strong class='reserved'>for</strong> (i = 0; i &lt; smux_oid_len; i++)
+<a id='L1437' name='L1437'></a>        <em class='brace'>{</em>
+<a id='L1438' name='L1438'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s%d", first ? "" : ".", (<strong class='reserved'>int</strong>) smux_oid[i]);
+<a id='L1439' name='L1439'></a>          first = 0;
+<a id='L1440' name='L1440'></a>        <em class='brace'>}</em>
+<a id='L1441' name='L1441'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " %s%s", smux_passwd, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1442' name='L1442'></a>    <em class='brace'>}</em>
+<a id='L1443' name='L1443'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1444' name='L1444'></a><em class='brace'>}</em>
+<a id='L1445' name='L1445'></a>
+<a id='L1446' name='L1446'></a><em class='comment'>/* Register subtree to smux master tree. */</em>
+<a id='L1447' name='L1447'></a><strong class='reserved'>void</strong>
+<a id='L1448' name='L1448'></a><a href='../R/9917.html' title='Multiple referred from 2 places.'>smux_register_mib</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *descr, <strong class='reserved'>struct</strong> variable *var, 
+<a id='L1449' name='L1449'></a>                   size_t width, <strong class='reserved'>int</strong> num, 
+<a id='L1450' name='L1450'></a>                   oid <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>[], size_t namelen)
+<a id='L1451' name='L1451'></a><em class='brace'>{</em>
+<a id='L1452' name='L1452'></a>  <strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *tree;
+<a id='L1453' name='L1453'></a>
+<a id='L1454' name='L1454'></a>  tree = (<strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *)malloc(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a>));
+<a id='L1455' name='L1455'></a>  <a href='../S/183.html#L53' title='Defined at 53 in lib/snmp.c.'>oid_copy</a> (tree-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, namelen);
+<a id='L1456' name='L1456'></a>  tree-&gt;name_len = namelen;
+<a id='L1457' name='L1457'></a>  tree-&gt;variables = var;
+<a id='L1458' name='L1458'></a>  tree-&gt;variables_num = num;
+<a id='L1459' name='L1459'></a>  tree-&gt;variables_width = width;
+<a id='L1460' name='L1460'></a>  tree-&gt;registered = 0;
+<a id='L1461' name='L1461'></a>  <a href='../S/243.html#L84' title='Defined at 84 in lib/linklist.c.'>listnode_add_sort</a>(treelist, tree);
+<a id='L1462' name='L1462'></a><em class='brace'>}</em>
+<a id='L1463' name='L1463'></a>
+<a id='L1464' name='L1464'></a><em class='comment'>/* Compare function to keep treelist sorted */</em>
+<a id='L1465' name='L1465'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1466' name='L1466'></a><a href='../S/182.html#L1481' title='Referred from 1481 in lib/smux.c.'>smux_tree_cmp</a>(<strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *tree1, <strong class='reserved'>struct</strong> <a href='../S/182.html#L57' title='Defined at 57 in lib/smux.c.'>subtree</a> *tree2)
+<a id='L1467' name='L1467'></a><em class='brace'>{</em>
+<a id='L1468' name='L1468'></a>  <strong class='reserved'>return</strong> <a href='../S/183.html#L33' title='Defined at 33 in lib/snmp.c.'>oid_compare</a>(tree1-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, tree1-&gt;name_len, 
+<a id='L1469' name='L1469'></a>                     tree2-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, tree2-&gt;name_len);
+<a id='L1470' name='L1470'></a><em class='brace'>}</em>
+<a id='L1471' name='L1471'></a>
+<a id='L1472' name='L1472'></a><em class='comment'>/* Initialize some values then schedule first SMUX connection. */</em>
+<a id='L1473' name='L1473'></a><strong class='reserved'>void</strong>
+<a id='L1474' name='L1474'></a><a href='../R/9903.html' title='Multiple referred from 6 places.'>smux_init</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *tm)
+<a id='L1475' name='L1475'></a><em class='brace'>{</em>
+<a id='L1476' name='L1476'></a>  <em class='comment'>/* copy callers thread master */</em>
+<a id='L1477' name='L1477'></a>  master = tm;
+<a id='L1478' name='L1478'></a>  
+<a id='L1479' name='L1479'></a>  <em class='comment'>/* Make MIB tree. */</em>
+<a id='L1480' name='L1480'></a>  treelist = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a>();
+<a id='L1481' name='L1481'></a>  treelist-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = (<strong class='reserved'>int</strong> (*)(<strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *))<a href='../S/182.html#L1466' title='Defined at 1466 in lib/smux.c.'>smux_tree_cmp</a>;
+<a id='L1482' name='L1482'></a>
+<a id='L1483' name='L1483'></a>  <em class='comment'>/* Install commands. */</em>
+<a id='L1484' name='L1484'></a>  <a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a> (&amp;smux_node, config_write_smux);
+<a id='L1485' name='L1485'></a>
+<a id='L1486' name='L1486'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;smux_peer_cmd);
+<a id='L1487' name='L1487'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;smux_peer_password_cmd);
+<a id='L1488' name='L1488'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_smux_peer_cmd);
+<a id='L1489' name='L1489'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_smux_peer_oid_cmd);
+<a id='L1490' name='L1490'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_smux_peer_oid_password_cmd);
+<a id='L1491' name='L1491'></a><em class='brace'>}</em>
+<a id='L1492' name='L1492'></a>
+<a id='L1493' name='L1493'></a><strong class='reserved'>void</strong>
+<a id='L1494' name='L1494'></a><a href='../R/9920.html' title='Multiple referred from 2 places.'>smux_start</a>(<strong class='reserved'>void</strong>)
+<a id='L1495' name='L1495'></a><em class='brace'>{</em>
+<a id='L1496' name='L1496'></a>  <em class='comment'>/* Close any existing connections. */</em>
+<a id='L1497' name='L1497'></a>  <a href='../S/182.html#L1213' title='Defined at 1213 in lib/smux.c.'>smux_stop</a>();
+<a id='L1498' name='L1498'></a>
+<a id='L1499' name='L1499'></a>  <em class='comment'>/* Schedule first connection. */</em>
+<a id='L1500' name='L1500'></a>  <a href='../D/10807.html' title='Multiple defined in 2 places.'>smux_event</a> (<a href='../S/182.html#L78' title='Defined at 78 in lib/smux.c.'>SMUX_SCHEDULE</a>, 0);
+<a id='L1501' name='L1501'></a><em class='brace'>}</em>
+<a id='L1502' name='L1502'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L119'>[^]</a><a href='#L1494'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

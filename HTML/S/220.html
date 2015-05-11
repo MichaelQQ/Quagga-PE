@@ -1,0 +1,686 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/memory.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/memory.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L48'>[^]</a><a href='#L626'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L48' title='Defined at 48.'>zerror</a></li>
+<li><a href='#L67' title='Defined at 67.'>zmalloc</a></li>
+<li><a href='#L85' title='Defined at 85.'>zcalloc</a></li>
+<li><a href='#L107' title='Defined at 107.'>zrealloc</a></li>
+<li><a href='#L127' title='Defined at 127.'>zfree</a></li>
+<li><a href='#L143' title='Defined at 143.'>zstrdup</a></li>
+<li><a href='#L169' title='Defined at 169.'>mtype_log</a></li>
+<li><a href='#L175' title='Defined at 175.'>mtype_zmalloc</a></li>
+<li><a href='#L189' title='Defined at 189.'>mtype_zcalloc</a></li>
+<li><a href='#L203' title='Defined at 203.'>mtype_zrealloc</a></li>
+<li><a href='#L219' title='Defined at 219.'>mtype_zfree</a></li>
+<li><a href='#L229' title='Defined at 229.'>mtype_zstrdup</a></li>
+<li><a href='#L251' title='Defined at 251.'>alloc_inc</a></li>
+<li><a href='#L258' title='Defined at 258.'>alloc_dec</a></li>
+<li><a href='#L269' title='Defined at 269.'>log_memstats</a></li>
+<li><a href='#L285' title='Defined at 285.'>log_memstats_stderr</a></li>
+<li><a href='#L326' title='Defined at 326.'>show_separator</a></li>
+<li><a href='#L332' title='Defined at 332.'>show_memory_vty</a></li>
+<li><a href='#L356' title='Defined at 356.'>show_memory_mallinfo</a></li>
+<li><a href='#L395' title='Defined at 395.'>DEFUN</a></li>
+<li><a href='#L419' title='Defined at 419.'>ALIAS</a></li>
+<li><a href='#L436' title='Defined at 436.'>DEFUN</a></li>
+<li><a href='#L447' title='Defined at 447.'>DEFUN</a></li>
+<li><a href='#L458' title='Defined at 458.'>DEFUN</a></li>
+<li><a href='#L469' title='Defined at 469.'>DEFUN</a></li>
+<li><a href='#L480' title='Defined at 480.'>DEFUN</a></li>
+<li><a href='#L491' title='Defined at 491.'>DEFUN</a></li>
+<li><a href='#L502' title='Defined at 502.'>DEFUN</a></li>
+<li><a href='#L513' title='Defined at 513.'>DEFUN</a></li>
+<li><a href='#L525' title='Defined at 525.'>memory_init</a></li>
+<li><a href='#L571' title='Defined at 571.'>mtype_memstr</a></li>
+<li><a href='#L626' title='Defined at 626.'>mtype_stats_alloc</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Memory management routine</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1998 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a><em class='comment'>/* malloc.h is generally obsolete, however GNU Libc mallinfo wants it. */</em>
+<a id='L25' name='L25'></a><em class='sharp'>#if</em> !<strong class='reserved'>defined</strong>(<a href='../S/665.html#L343' title='Defined at 343 in config.h.'>HAVE_STDLIB_H</a>) || (<strong class='reserved'>defined</strong>(<a href='../S/665.html#L35' title='Defined at 35 in config.h.'>GNU_LINUX</a>) &amp;&amp; <strong class='reserved'>defined</strong>(<a href='../S/665.html#L198' title='Defined at 198 in config.h.'>HAVE_MALLINFO</a>))
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;malloc.h&gt;
+<a id='L27' name='L27'></a><em class='sharp'>#endif</em> <em class='comment'>/* !HAVE_STDLIB_H || HAVE_MALLINFO */</em>
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/220.html#L251' title='Defined at 251 in lib/memory.c.'>alloc_inc</a> (<strong class='reserved'>int</strong>);
+<a id='L33' name='L33'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/220.html#L258' title='Defined at 258 in lib/memory.c.'>alloc_dec</a> (<strong class='reserved'>int</strong>);
+<a id='L34' name='L34'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/220.html#L269' title='Defined at 269 in lib/memory.c.'>log_memstats</a>(<strong class='reserved'>int</strong> log_priority);
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> mstr [] =
+<a id='L37' name='L37'></a><em class='brace'>{</em>
+<a id='L38' name='L38'></a>  <em class='brace'>{</em> MTYPE_THREAD, "thread" <em class='brace'>}</em>,
+<a id='L39' name='L39'></a>  <em class='brace'>{</em> MTYPE_THREAD_MASTER, "thread_master" <em class='brace'>}</em>,
+<a id='L40' name='L40'></a>  <em class='brace'>{</em> MTYPE_VECTOR, "vector" <em class='brace'>}</em>,
+<a id='L41' name='L41'></a>  <em class='brace'>{</em> MTYPE_VECTOR_INDEX, "vector_index" <em class='brace'>}</em>,
+<a id='L42' name='L42'></a>  <em class='brace'>{</em> MTYPE_IF, "interface" <em class='brace'>}</em>,
+<a id='L43' name='L43'></a>  <em class='brace'>{</em> 0, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> <em class='brace'>}</em>,
+<a id='L44' name='L44'></a><em class='brace'>}</em>;
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a><em class='comment'>/* Fatal memory allocation error occured. */</em>
+<a id='L47' name='L47'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <strong class='reserved'>__attribute__</strong> ((noreturn))
+<a id='L48' name='L48'></a><a href='../R/10635.html' title='Multiple referred from 4 places.'>zerror</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *fname, <strong class='reserved'>int</strong> type, size_t size)
+<a id='L49' name='L49'></a><em class='brace'>{</em>
+<a id='L50' name='L50'></a>  zlog_err ("%s : can't allocate memory for `%s' size %d: %s\n", 
+<a id='L51' name='L51'></a>            fname, <a href='../S/205.html#L762' title='Defined at 762 in lib/log.c.'>lookup</a> (mstr, type), (<strong class='reserved'>int</strong>) size, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L52' name='L52'></a>  <a href='../S/220.html#L269' title='Defined at 269 in lib/memory.c.'>log_memstats</a>(LOG_WARNING);
+<a id='L53' name='L53'></a>  <em class='comment'>/* N.B. It might be preferable to call zlog_backtrace_sigsafe here, since</em>
+<a id='L54' name='L54'></a><em class='comment'>     that function should definitely be safe in an OOM condition.  But</em>
+<a id='L55' name='L55'></a><em class='comment'>     unfortunately zlog_backtrace_sigsafe does not support syslog logging at</em>
+<a id='L56' name='L56'></a><em class='comment'>     this time... */</em>
+<a id='L57' name='L57'></a>  <a href='../S/205.html#L520' title='Defined at 520 in lib/log.c.'>zlog_backtrace</a>(LOG_WARNING);
+<a id='L58' name='L58'></a>  abort();
+<a id='L59' name='L59'></a><em class='brace'>}</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='comment'>/*</em>
+<a id='L62' name='L62'></a><em class='comment'> * Allocate memory of a given size, to be tracked by a given type.</em>
+<a id='L63' name='L63'></a><em class='comment'> * Effects: Returns a pointer to usable memory.  If memory cannot</em>
+<a id='L64' name='L64'></a><em class='comment'> * be allocated, aborts execution.</em>
+<a id='L65' name='L65'></a><em class='comment'> */</em>
+<a id='L66' name='L66'></a><strong class='reserved'>void</strong> *
+<a id='L67' name='L67'></a><a href='../R/10701.html' title='Multiple referred from 3 places.'>zmalloc</a> (<strong class='reserved'>int</strong> type, size_t size)
+<a id='L68' name='L68'></a><em class='brace'>{</em>
+<a id='L69' name='L69'></a>  <strong class='reserved'>void</strong> *memory;
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a>  memory = malloc (size);
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a>  <strong class='reserved'>if</strong> (memory == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L74' name='L74'></a>    <a href='../S/220.html#L48' title='Defined at 48 in lib/memory.c.'>zerror</a> ("malloc", type, size);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>  <a href='../S/220.html#L251' title='Defined at 251 in lib/memory.c.'>alloc_inc</a> (type);
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L79' name='L79'></a><em class='brace'>}</em>
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a><em class='comment'>/*</em>
+<a id='L82' name='L82'></a><em class='comment'> * Allocate memory as in zmalloc, and also clear the memory.</em>
+<a id='L83' name='L83'></a><em class='comment'> */</em>
+<a id='L84' name='L84'></a><strong class='reserved'>void</strong> *
+<a id='L85' name='L85'></a><a href='../R/10550.html' title='Multiple referred from 3 places.'>zcalloc</a> (<strong class='reserved'>int</strong> type, size_t size)
+<a id='L86' name='L86'></a><em class='brace'>{</em>
+<a id='L87' name='L87'></a>  <strong class='reserved'>void</strong> *memory;
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>  memory = calloc (1, size);
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a>  <strong class='reserved'>if</strong> (memory == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L92' name='L92'></a>    <a href='../S/220.html#L48' title='Defined at 48 in lib/memory.c.'>zerror</a> ("calloc", type, size);
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <a href='../S/220.html#L251' title='Defined at 251 in lib/memory.c.'>alloc_inc</a> (type);
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L97' name='L97'></a><em class='brace'>}</em>
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><em class='comment'>/* </em>
+<a id='L100' name='L100'></a><em class='comment'> * Given a pointer returned by zmalloc or zcalloc, free it and</em>
+<a id='L101' name='L101'></a><em class='comment'> * return a pointer to a new size, basically acting like realloc().</em>
+<a id='L102' name='L102'></a><em class='comment'> * Requires: ptr was returned by zmalloc, zcalloc, or zrealloc with the</em>
+<a id='L103' name='L103'></a><em class='comment'> * same type.</em>
+<a id='L104' name='L104'></a><em class='comment'> * Effects: Returns a pointer to the new memory, or aborts.</em>
+<a id='L105' name='L105'></a><em class='comment'> */</em>
+<a id='L106' name='L106'></a><strong class='reserved'>void</strong> *
+<a id='L107' name='L107'></a><a href='../R/10726.html' title='Multiple referred from 3 places.'>zrealloc</a> (<strong class='reserved'>int</strong> type, <strong class='reserved'>void</strong> *ptr, size_t size)
+<a id='L108' name='L108'></a><em class='brace'>{</em>
+<a id='L109' name='L109'></a>  <strong class='reserved'>void</strong> *memory;
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>  memory = realloc (ptr, size);
+<a id='L112' name='L112'></a>  <strong class='reserved'>if</strong> (memory == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L113' name='L113'></a>    <a href='../S/220.html#L48' title='Defined at 48 in lib/memory.c.'>zerror</a> ("realloc", type, size);
+<a id='L114' name='L114'></a>  <strong class='reserved'>if</strong> (ptr == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L115' name='L115'></a>    <a href='../S/220.html#L251' title='Defined at 251 in lib/memory.c.'>alloc_inc</a> (type);
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L118' name='L118'></a><em class='brace'>}</em>
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a><em class='comment'>/*</em>
+<a id='L121' name='L121'></a><em class='comment'> * Free memory allocated by z*alloc or zstrdup.</em>
+<a id='L122' name='L122'></a><em class='comment'> * Requires: ptr was returned by zmalloc, zcalloc, or zrealloc with the</em>
+<a id='L123' name='L123'></a><em class='comment'> * same type.</em>
+<a id='L124' name='L124'></a><em class='comment'> * Effects: The memory is freed and may no longer be referenced.</em>
+<a id='L125' name='L125'></a><em class='comment'> */</em>
+<a id='L126' name='L126'></a><strong class='reserved'>void</strong>
+<a id='L127' name='L127'></a><a href='../R/10684.html' title='Multiple referred from 3 places.'>zfree</a> (<strong class='reserved'>int</strong> type, <strong class='reserved'>void</strong> *ptr)
+<a id='L128' name='L128'></a><em class='brace'>{</em>
+<a id='L129' name='L129'></a>  <strong class='reserved'>if</strong> (ptr != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L130' name='L130'></a>    <em class='brace'>{</em>
+<a id='L131' name='L131'></a>      <a href='../S/220.html#L258' title='Defined at 258 in lib/memory.c.'>alloc_dec</a> (type);
+<a id='L132' name='L132'></a>      free (ptr);
+<a id='L133' name='L133'></a>    <em class='brace'>}</em>
+<a id='L134' name='L134'></a><em class='brace'>}</em>
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><em class='comment'>/*</em>
+<a id='L137' name='L137'></a><em class='comment'> * Duplicate a string, counting memory usage by type.</em>
+<a id='L138' name='L138'></a><em class='comment'> * Effects: The string is duplicated, and the return value must</em>
+<a id='L139' name='L139'></a><em class='comment'> * eventually be passed to zfree with the same type.  The function will</em>
+<a id='L140' name='L140'></a><em class='comment'> * succeed or abort.</em>
+<a id='L141' name='L141'></a><em class='comment'> */</em>
+<a id='L142' name='L142'></a><strong class='reserved'>char</strong> *
+<a id='L143' name='L143'></a><a href='../R/10743.html' title='Multiple referred from 3 places.'>zstrdup</a> (<strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str)
+<a id='L144' name='L144'></a><em class='brace'>{</em>
+<a id='L145' name='L145'></a>  <strong class='reserved'>void</strong> *dup;
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a>  dup = strdup (str);
+<a id='L148' name='L148'></a>  <strong class='reserved'>if</strong> (dup == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L149' name='L149'></a>    <a href='../S/220.html#L48' title='Defined at 48 in lib/memory.c.'>zerror</a> ("strdup", type, strlen (str));
+<a id='L150' name='L150'></a>  <a href='../S/220.html#L251' title='Defined at 251 in lib/memory.c.'>alloc_inc</a> (type);
+<a id='L151' name='L151'></a>  <strong class='reserved'>return</strong> dup;
+<a id='L152' name='L152'></a><em class='brace'>}</em>
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a><em class='sharp'>#ifdef</em> MEMORY_LOG
+<a id='L155' name='L155'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> 
+<a id='L156' name='L156'></a><em class='brace'>{</em>
+<a id='L157' name='L157'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L158' name='L158'></a>  <strong class='reserved'>long</strong> alloc;
+<a id='L159' name='L159'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> t_malloc;
+<a id='L160' name='L160'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> c_malloc;
+<a id='L161' name='L161'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> t_calloc;
+<a id='L162' name='L162'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> c_calloc;
+<a id='L163' name='L163'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> t_realloc;
+<a id='L164' name='L164'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> t_free;
+<a id='L165' name='L165'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> c_strdup;
+<a id='L166' name='L166'></a><em class='brace'>}</em> mstat [MTYPE_MAX];
+<a id='L167' name='L167'></a>
+<a id='L168' name='L168'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L169' name='L169'></a><a href='../R/7280.html' title='Multiple referred from 5 places.'>mtype_log</a> (<strong class='reserved'>char</strong> *func, <strong class='reserved'>void</strong> *memory, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file, <strong class='reserved'>int</strong> line, <strong class='reserved'>int</strong> type)
+<a id='L170' name='L170'></a><em class='brace'>{</em>
+<a id='L171' name='L171'></a>  zlog_debug ("%s: %s %p %s %d", func, <a href='../S/205.html#L762' title='Defined at 762 in lib/log.c.'>lookup</a> (mstr, type), memory, file, line);
+<a id='L172' name='L172'></a><em class='brace'>}</em>
+<a id='L173' name='L173'></a>
+<a id='L174' name='L174'></a><strong class='reserved'>void</strong> *
+<a id='L175' name='L175'></a><a href='../R/7285.html' title='Multiple referred from 2 places.'>mtype_zmalloc</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file, <strong class='reserved'>int</strong> line, <strong class='reserved'>int</strong> type, size_t size)
+<a id='L176' name='L176'></a><em class='brace'>{</em>
+<a id='L177' name='L177'></a>  <strong class='reserved'>void</strong> *memory;
+<a id='L178' name='L178'></a>
+<a id='L179' name='L179'></a>  mstat[type].c_malloc++;
+<a id='L180' name='L180'></a>  mstat[type].t_malloc++;
+<a id='L181' name='L181'></a>
+<a id='L182' name='L182'></a>  memory = <a href='../S/220.html#L67' title='Defined at 67 in lib/memory.c.'>zmalloc</a> (type, size);
+<a id='L183' name='L183'></a>  <a href='../S/220.html#L169' title='Defined at 169 in lib/memory.c.'>mtype_log</a> ("zmalloc", memory, file, line, type);
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L186' name='L186'></a><em class='brace'>}</em>
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a><strong class='reserved'>void</strong> *
+<a id='L189' name='L189'></a><a href='../R/7283.html' title='Multiple referred from 2 places.'>mtype_zcalloc</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file, <strong class='reserved'>int</strong> line, <strong class='reserved'>int</strong> type, size_t size)
+<a id='L190' name='L190'></a><em class='brace'>{</em>
+<a id='L191' name='L191'></a>  <strong class='reserved'>void</strong> *memory;
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a>  mstat[type].c_calloc++;
+<a id='L194' name='L194'></a>  mstat[type].t_calloc++;
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>  memory = <a href='../S/220.html#L85' title='Defined at 85 in lib/memory.c.'>zcalloc</a> (type, size);
+<a id='L197' name='L197'></a>  <a href='../S/220.html#L169' title='Defined at 169 in lib/memory.c.'>mtype_log</a> ("xcalloc", memory, file, line, type);
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L200' name='L200'></a><em class='brace'>}</em>
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a><strong class='reserved'>void</strong> *
+<a id='L203' name='L203'></a><a href='../R/7286.html' title='Multiple referred from 2 places.'>mtype_zrealloc</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file, <strong class='reserved'>int</strong> line, <strong class='reserved'>int</strong> type, <strong class='reserved'>void</strong> *ptr, size_t size)
+<a id='L204' name='L204'></a><em class='brace'>{</em>
+<a id='L205' name='L205'></a>  <strong class='reserved'>void</strong> *memory;
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a>  <em class='comment'>/* Realloc need before allocated pointer. */</em>
+<a id='L208' name='L208'></a>  mstat[type].t_realloc++;
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a>  memory = <a href='../S/220.html#L107' title='Defined at 107 in lib/memory.c.'>zrealloc</a> (type, ptr, size);
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  <a href='../S/220.html#L169' title='Defined at 169 in lib/memory.c.'>mtype_log</a> ("xrealloc", memory, file, line, type);
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L215' name='L215'></a><em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a><em class='comment'>/* Important function. */</em>
+<a id='L218' name='L218'></a><strong class='reserved'>void</strong> 
+<a id='L219' name='L219'></a><a href='../R/7284.html' title='Multiple referred from 2 places.'>mtype_zfree</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file, <strong class='reserved'>int</strong> line, <strong class='reserved'>int</strong> type, <strong class='reserved'>void</strong> *ptr)
+<a id='L220' name='L220'></a><em class='brace'>{</em>
+<a id='L221' name='L221'></a>  mstat[type].t_free++;
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  <a href='../S/220.html#L169' title='Defined at 169 in lib/memory.c.'>mtype_log</a> ("xfree", ptr, file, line, type);
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a>  <a href='../S/220.html#L127' title='Defined at 127 in lib/memory.c.'>zfree</a> (type, ptr);
+<a id='L226' name='L226'></a><em class='brace'>}</em>
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a><strong class='reserved'>char</strong> *
+<a id='L229' name='L229'></a><a href='../R/7287.html' title='Multiple referred from 2 places.'>mtype_zstrdup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file, <strong class='reserved'>int</strong> line, <strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str)
+<a id='L230' name='L230'></a><em class='brace'>{</em>
+<a id='L231' name='L231'></a>  <strong class='reserved'>char</strong> *memory;
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>  mstat[type].c_strdup++;
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a>  memory = <a href='../S/220.html#L143' title='Defined at 143 in lib/memory.c.'>zstrdup</a> (type, str);
+<a id='L236' name='L236'></a>  
+<a id='L237' name='L237'></a>  <a href='../S/220.html#L169' title='Defined at 169 in lib/memory.c.'>mtype_log</a> ("xstrdup", memory, file, line, type);
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a>  <strong class='reserved'>return</strong> memory;
+<a id='L240' name='L240'></a><em class='brace'>}</em>
+<a id='L241' name='L241'></a><em class='sharp'>#else</em>
+<a id='L242' name='L242'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> 
+<a id='L243' name='L243'></a><em class='brace'>{</em>
+<a id='L244' name='L244'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L245' name='L245'></a>  <strong class='reserved'>long</strong> alloc;
+<a id='L246' name='L246'></a><em class='brace'>}</em> mstat [MTYPE_MAX];
+<a id='L247' name='L247'></a><em class='sharp'>#endif</em> <em class='comment'>/* MEMORY_LOG */</em>
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a><em class='comment'>/* Increment allocation counter. */</em>
+<a id='L250' name='L250'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L251' name='L251'></a><a href='../R/4425.html' title='Multiple referred from 5 places.'>alloc_inc</a> (<strong class='reserved'>int</strong> type)
+<a id='L252' name='L252'></a><em class='brace'>{</em>
+<a id='L253' name='L253'></a>  mstat[type].alloc++;
+<a id='L254' name='L254'></a><em class='brace'>}</em>
+<a id='L255' name='L255'></a>
+<a id='L256' name='L256'></a><em class='comment'>/* Decrement allocation counter. */</em>
+<a id='L257' name='L257'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L258' name='L258'></a><a href='../R/4424.html' title='Multiple referred from 2 places.'>alloc_dec</a> (<strong class='reserved'>int</strong> type)
+<a id='L259' name='L259'></a><em class='brace'>{</em>
+<a id='L260' name='L260'></a>  mstat[type].alloc--;
+<a id='L261' name='L261'></a><em class='brace'>}</em>
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a><em class='comment'>/* Looking up memory status from vty interface. */</em>
+<a id='L264' name='L264'></a><em class='sharp'>#include</em> "<a href='253.html'>vector.h</a>"
+<a id='L265' name='L265'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L266' name='L266'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L267' name='L267'></a>
+<a id='L268' name='L268'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L269' name='L269'></a><a href='../R/6815.html' title='Multiple referred from 2 places.'>log_memstats</a>(<strong class='reserved'>int</strong> pri)
+<a id='L270' name='L270'></a><em class='brace'>{</em>
+<a id='L271' name='L271'></a>  <strong class='reserved'>struct</strong> <a href='../S/194.html#L33' title='Defined at 33 in lib/memory.h.'>mlist</a> *ml;
+<a id='L272' name='L272'></a>
+<a id='L273' name='L273'></a>  <strong class='reserved'>for</strong> (ml = mlists; ml-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>; ml++)
+<a id='L274' name='L274'></a>    <em class='brace'>{</em>
+<a id='L275' name='L275'></a>      <strong class='reserved'>struct</strong> <a href='../S/194.html#L27' title='Defined at 27 in lib/memory.h.'>memory_list</a> *m;
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a>      <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, pri, "Memory utilization in module %s:", ml-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L278' name='L278'></a>      <strong class='reserved'>for</strong> (m = ml-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>; m-&gt;index &gt;= 0; m++)
+<a id='L279' name='L279'></a>        <strong class='reserved'>if</strong> (m-&gt;index &amp;&amp; mstat[m-&gt;index].alloc)
+<a id='L280' name='L280'></a>          <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, pri, "  %-30s: %10ld", m-&gt;format, mstat[m-&gt;index].alloc);
+<a id='L281' name='L281'></a>    <em class='brace'>}</em>
+<a id='L282' name='L282'></a><em class='brace'>}</em>
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a><strong class='reserved'>void</strong>
+<a id='L285' name='L285'></a><a href='../R/6816.html' title='Multiple referred from 2 places.'>log_memstats_stderr</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)
+<a id='L286' name='L286'></a><em class='brace'>{</em>
+<a id='L287' name='L287'></a>  <strong class='reserved'>struct</strong> <a href='../S/194.html#L33' title='Defined at 33 in lib/memory.h.'>mlist</a> *ml;
+<a id='L288' name='L288'></a>  <strong class='reserved'>struct</strong> <a href='../S/194.html#L27' title='Defined at 27 in lib/memory.h.'>memory_list</a> *m;
+<a id='L289' name='L289'></a>  <strong class='reserved'>int</strong> i;
+<a id='L290' name='L290'></a>  <strong class='reserved'>int</strong> j = 0;
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a>  <strong class='reserved'>for</strong> (ml = mlists; ml-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>; ml++)
+<a id='L293' name='L293'></a>    <em class='brace'>{</em>
+<a id='L294' name='L294'></a>      i = 0;
+<a id='L295' name='L295'></a>
+<a id='L296' name='L296'></a>      <strong class='reserved'>for</strong> (m = ml-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>; m-&gt;index &gt;= 0; m++)
+<a id='L297' name='L297'></a>        <strong class='reserved'>if</strong> (m-&gt;index &amp;&amp; mstat[m-&gt;index].alloc)
+<a id='L298' name='L298'></a>          <em class='brace'>{</em>
+<a id='L299' name='L299'></a>            <strong class='reserved'>if</strong> (!i)
+<a id='L300' name='L300'></a>              fprintf (stderr,
+<a id='L301' name='L301'></a>                       "%s: memstats: Current memory utilization in module %s:\n",
+<a id='L302' name='L302'></a>                       <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L303' name='L303'></a>                       ml-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L304' name='L304'></a>            fprintf (stderr,
+<a id='L305' name='L305'></a>                     "%s: memstats:  %-30s: %10ld%s\n",
+<a id='L306' name='L306'></a>                     <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L307' name='L307'></a>                     m-&gt;format,
+<a id='L308' name='L308'></a>                     mstat[m-&gt;index].alloc,
+<a id='L309' name='L309'></a>                     mstat[m-&gt;index].alloc &lt; 0 ? " (REPORT THIS BUG!)" : "");
+<a id='L310' name='L310'></a>            i = j = 1;
+<a id='L311' name='L311'></a>          <em class='brace'>}</em>
+<a id='L312' name='L312'></a>    <em class='brace'>}</em>
+<a id='L313' name='L313'></a>
+<a id='L314' name='L314'></a>  <strong class='reserved'>if</strong> (j)
+<a id='L315' name='L315'></a>    fprintf (stderr,
+<a id='L316' name='L316'></a>             "%s: memstats: NOTE: If configuration exists, utilization may be "
+<a id='L317' name='L317'></a>             "expected.\n",
+<a id='L318' name='L318'></a>             <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L319' name='L319'></a>  <strong class='reserved'>else</strong>
+<a id='L320' name='L320'></a>    fprintf (stderr,
+<a id='L321' name='L321'></a>             "%s: memstats: No remaining tracked memory utilization.\n",
+<a id='L322' name='L322'></a>             <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L323' name='L323'></a><em class='brace'>}</em>
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L326' name='L326'></a><a href='../R/9859.html' title='Multiple referred from 2 places.'>show_separator</a>(<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L327' name='L327'></a><em class='brace'>{</em>
+<a id='L328' name='L328'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "-----------------------------\r\n");
+<a id='L329' name='L329'></a><em class='brace'>}</em>
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L332' name='L332'></a><a href='../R/9847.html' title='Multiple referred from 10 places.'>show_memory_vty</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/194.html#L27' title='Defined at 27 in lib/memory.h.'>memory_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>)
+<a id='L333' name='L333'></a><em class='brace'>{</em>
+<a id='L334' name='L334'></a>  <strong class='reserved'>struct</strong> <a href='../S/194.html#L27' title='Defined at 27 in lib/memory.h.'>memory_list</a> *m;
+<a id='L335' name='L335'></a>  <strong class='reserved'>int</strong> needsep = 0;
+<a id='L336' name='L336'></a>
+<a id='L337' name='L337'></a>  <strong class='reserved'>for</strong> (m = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>; m-&gt;index &gt;= 0; m++)
+<a id='L338' name='L338'></a>    <strong class='reserved'>if</strong> (m-&gt;index == 0)
+<a id='L339' name='L339'></a>      <em class='brace'>{</em>
+<a id='L340' name='L340'></a>        <strong class='reserved'>if</strong> (needsep)
+<a id='L341' name='L341'></a>          <em class='brace'>{</em>
+<a id='L342' name='L342'></a>            <a href='../S/220.html#L326' title='Defined at 326 in lib/memory.c.'>show_separator</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+<a id='L343' name='L343'></a>            needsep = 0;
+<a id='L344' name='L344'></a>          <em class='brace'>}</em>
+<a id='L345' name='L345'></a>      <em class='brace'>}</em>
+<a id='L346' name='L346'></a>    <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (mstat[m-&gt;index].alloc)
+<a id='L347' name='L347'></a>      <em class='brace'>{</em>
+<a id='L348' name='L348'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%-30s: %10ld\r\n", m-&gt;format, mstat[m-&gt;index].alloc);
+<a id='L349' name='L349'></a>        needsep = 1;
+<a id='L350' name='L350'></a>      <em class='brace'>}</em>
+<a id='L351' name='L351'></a>  <strong class='reserved'>return</strong> needsep;
+<a id='L352' name='L352'></a><em class='brace'>}</em>
+<a id='L353' name='L353'></a>
+<a id='L354' name='L354'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L198' title='Defined at 198 in config.h.'>HAVE_MALLINFO</a>
+<a id='L355' name='L355'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L356' name='L356'></a><a href='../S/220.html#L406' title='Referred from 406 in lib/memory.c.'>show_memory_mallinfo</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L357' name='L357'></a><em class='brace'>{</em>
+<a id='L358' name='L358'></a>  <strong class='reserved'>struct</strong> mallinfo minfo = mallinfo();
+<a id='L359' name='L359'></a>  <strong class='reserved'>char</strong> buf[<a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>];
+<a id='L360' name='L360'></a>  
+<a id='L361' name='L361'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "System allocator statistics:%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L362' name='L362'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Total heap allocated:  %s%s",
+<a id='L363' name='L363'></a>           <a href='../S/220.html#L571' title='Defined at 571 in lib/memory.c.'>mtype_memstr</a> (buf, <a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>, minfo.arena),
+<a id='L364' name='L364'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L365' name='L365'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Holding block headers: %s%s",
+<a id='L366' name='L366'></a>           <a href='../S/220.html#L571' title='Defined at 571 in lib/memory.c.'>mtype_memstr</a> (buf, <a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>, minfo.hblkhd),
+<a id='L367' name='L367'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L368' name='L368'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Used small blocks:     %s%s",
+<a id='L369' name='L369'></a>           <a href='../S/220.html#L571' title='Defined at 571 in lib/memory.c.'>mtype_memstr</a> (buf, <a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>, minfo.usmblks),
+<a id='L370' name='L370'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L371' name='L371'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Used ordinary blocks:  %s%s",
+<a id='L372' name='L372'></a>           <a href='../S/220.html#L571' title='Defined at 571 in lib/memory.c.'>mtype_memstr</a> (buf, <a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>, minfo.uordblks),
+<a id='L373' name='L373'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L374' name='L374'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Free small blocks:     %s%s",
+<a id='L375' name='L375'></a>           <a href='../S/220.html#L571' title='Defined at 571 in lib/memory.c.'>mtype_memstr</a> (buf, <a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>, minfo.fsmblks),
+<a id='L376' name='L376'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L377' name='L377'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Free ordinary blocks:  %s%s",
+<a id='L378' name='L378'></a>           <a href='../S/220.html#L571' title='Defined at 571 in lib/memory.c.'>mtype_memstr</a> (buf, <a href='../S/194.html#L94' title='Defined at 94 in lib/memory.h.'>MTYPE_MEMSTR_LEN</a>, minfo.fordblks),
+<a id='L379' name='L379'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L380' name='L380'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Ordinary blocks:       %ld%s",
+<a id='L381' name='L381'></a>           (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>)minfo.ordblks,
+<a id='L382' name='L382'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L383' name='L383'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Small blocks:          %ld%s",
+<a id='L384' name='L384'></a>           (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>)minfo.smblks,
+<a id='L385' name='L385'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L386' name='L386'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Holding blocks:        %ld%s",
+<a id='L387' name='L387'></a>           (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>)minfo.hblks,
+<a id='L388' name='L388'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L389' name='L389'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "(see system documentation for 'mallinfo' for meaning)%s",
+<a id='L390' name='L390'></a>           <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L391' name='L391'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L392' name='L392'></a><em class='brace'>}</em>
+<a id='L393' name='L393'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_MALLINFO */</em>
+<a id='L394' name='L394'></a>
+<a id='L395' name='L395'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_all,
+<a id='L396' name='L396'></a>       show_memory_all_cmd,
+<a id='L397' name='L397'></a>       "show memory all",
+<a id='L398' name='L398'></a>       "Show running system information\n"
+<a id='L399' name='L399'></a>       "Memory statistics\n"
+<a id='L400' name='L400'></a>       "All memory statistics\n")
+<a id='L401' name='L401'></a><em class='brace'>{</em>
+<a id='L402' name='L402'></a>  <strong class='reserved'>struct</strong> <a href='../S/194.html#L33' title='Defined at 33 in lib/memory.h.'>mlist</a> *ml;
+<a id='L403' name='L403'></a>  <strong class='reserved'>int</strong> needsep = 0;
+<a id='L404' name='L404'></a>  
+<a id='L405' name='L405'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L198' title='Defined at 198 in config.h.'>HAVE_MALLINFO</a>
+<a id='L406' name='L406'></a>  needsep = <a href='../S/220.html#L356' title='Defined at 356 in lib/memory.c.'>show_memory_mallinfo</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+<a id='L407' name='L407'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_MALLINFO */</em>
+<a id='L408' name='L408'></a>  
+<a id='L409' name='L409'></a>  <strong class='reserved'>for</strong> (ml = mlists; ml-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>; ml++)
+<a id='L410' name='L410'></a>    <em class='brace'>{</em>
+<a id='L411' name='L411'></a>      <strong class='reserved'>if</strong> (needsep)
+<a id='L412' name='L412'></a>        <a href='../S/220.html#L326' title='Defined at 326 in lib/memory.c.'>show_separator</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+<a id='L413' name='L413'></a>      needsep = <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, ml-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L414' name='L414'></a>    <em class='brace'>}</em>
+<a id='L415' name='L415'></a>
+<a id='L416' name='L416'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L417' name='L417'></a><em class='brace'>}</em>
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a><a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a> (show_memory_all,
+<a id='L420' name='L420'></a>       show_memory_cmd,
+<a id='L421' name='L421'></a>       "show memory",
+<a id='L422' name='L422'></a>       "Show running system information\n"
+<a id='L423' name='L423'></a>       "Memory statistics\n")
+<a id='L424' name='L424'></a>
+<a id='L425' name='L425'></a><a href='../D/726.html' title='Multiple defined in 1524 places.'>DEFUN</a> (show_memory_lib,
+<a id='L426' name='L426'></a>       show_memory_lib_cmd,
+<a id='L427' name='L427'></a>       "show memory lib",
+<a id='L428' name='L428'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L429' name='L429'></a>       "Memory statistics\n"
+<a id='L430' name='L430'></a>       "Library memory\n")
+<a id='L431' name='L431'></a><em class='brace'>{</em>
+<a id='L432' name='L432'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_lib);
+<a id='L433' name='L433'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L434' name='L434'></a><em class='brace'>}</em>
+<a id='L435' name='L435'></a>
+<a id='L436' name='L436'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_zebra,
+<a id='L437' name='L437'></a>       show_memory_zebra_cmd,
+<a id='L438' name='L438'></a>       "show memory zebra",
+<a id='L439' name='L439'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L440' name='L440'></a>       "Memory statistics\n"
+<a id='L441' name='L441'></a>       "Zebra memory\n")
+<a id='L442' name='L442'></a><em class='brace'>{</em>
+<a id='L443' name='L443'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_zebra);
+<a id='L444' name='L444'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L445' name='L445'></a><em class='brace'>}</em>
+<a id='L446' name='L446'></a>
+<a id='L447' name='L447'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_rip,
+<a id='L448' name='L448'></a>       show_memory_rip_cmd,
+<a id='L449' name='L449'></a>       "show memory rip",
+<a id='L450' name='L450'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L451' name='L451'></a>       "Memory statistics\n"
+<a id='L452' name='L452'></a>       "RIP memory\n")
+<a id='L453' name='L453'></a><em class='brace'>{</em>
+<a id='L454' name='L454'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_rip);
+<a id='L455' name='L455'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L456' name='L456'></a><em class='brace'>}</em>
+<a id='L457' name='L457'></a>
+<a id='L458' name='L458'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_ripng,
+<a id='L459' name='L459'></a>       show_memory_ripng_cmd,
+<a id='L460' name='L460'></a>       "show memory ripng",
+<a id='L461' name='L461'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L462' name='L462'></a>       "Memory statistics\n"
+<a id='L463' name='L463'></a>       "RIPng memory\n")
+<a id='L464' name='L464'></a><em class='brace'>{</em>
+<a id='L465' name='L465'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_ripng);
+<a id='L466' name='L466'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L467' name='L467'></a><em class='brace'>}</em>
+<a id='L468' name='L468'></a>
+<a id='L469' name='L469'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_babel,
+<a id='L470' name='L470'></a>       show_memory_babel_cmd,
+<a id='L471' name='L471'></a>       "show memory babel",
+<a id='L472' name='L472'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L473' name='L473'></a>       "Memory statistics\n"
+<a id='L474' name='L474'></a>       "Babel memory\n")
+<a id='L475' name='L475'></a><em class='brace'>{</em>
+<a id='L476' name='L476'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_babel);
+<a id='L477' name='L477'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L478' name='L478'></a><em class='brace'>}</em>
+<a id='L479' name='L479'></a>
+<a id='L480' name='L480'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_bgp,
+<a id='L481' name='L481'></a>       show_memory_bgp_cmd,
+<a id='L482' name='L482'></a>       "show memory bgp",
+<a id='L483' name='L483'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L484' name='L484'></a>       "Memory statistics\n"
+<a id='L485' name='L485'></a>       "BGP memory\n")
+<a id='L486' name='L486'></a><em class='brace'>{</em>
+<a id='L487' name='L487'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_bgp);
+<a id='L488' name='L488'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L489' name='L489'></a><em class='brace'>}</em>
+<a id='L490' name='L490'></a>
+<a id='L491' name='L491'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_ospf,
+<a id='L492' name='L492'></a>       show_memory_ospf_cmd,
+<a id='L493' name='L493'></a>       "show memory ospf",
+<a id='L494' name='L494'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L495' name='L495'></a>       "Memory statistics\n"
+<a id='L496' name='L496'></a>       "OSPF memory\n")
+<a id='L497' name='L497'></a><em class='brace'>{</em>
+<a id='L498' name='L498'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_ospf);
+<a id='L499' name='L499'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L500' name='L500'></a><em class='brace'>}</em>
+<a id='L501' name='L501'></a>
+<a id='L502' name='L502'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_ospf6,
+<a id='L503' name='L503'></a>       show_memory_ospf6_cmd,
+<a id='L504' name='L504'></a>       "show memory ospf6",
+<a id='L505' name='L505'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L506' name='L506'></a>       "Memory statistics\n"
+<a id='L507' name='L507'></a>       "OSPF6 memory\n")
+<a id='L508' name='L508'></a><em class='brace'>{</em>
+<a id='L509' name='L509'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_ospf6);
+<a id='L510' name='L510'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L511' name='L511'></a><em class='brace'>}</em>
+<a id='L512' name='L512'></a>
+<a id='L513' name='L513'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_memory_isis,
+<a id='L514' name='L514'></a>       show_memory_isis_cmd,
+<a id='L515' name='L515'></a>       "show memory isis",
+<a id='L516' name='L516'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L517' name='L517'></a>       "Memory statistics\n"
+<a id='L518' name='L518'></a>       "ISIS memory\n")
+<a id='L519' name='L519'></a><em class='brace'>{</em>
+<a id='L520' name='L520'></a>  <a href='../S/220.html#L332' title='Defined at 332 in lib/memory.c.'>show_memory_vty</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, memory_list_isis);
+<a id='L521' name='L521'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L522' name='L522'></a><em class='brace'>}</em>
+<a id='L523' name='L523'></a>
+<a id='L524' name='L524'></a><strong class='reserved'>void</strong>
+<a id='L525' name='L525'></a><a href='../R/6920.html' title='Multiple referred from 24 places.'>memory_init</a> (<strong class='reserved'>void</strong>)
+<a id='L526' name='L526'></a><em class='brace'>{</em>
+<a id='L527' name='L527'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_cmd);
+<a id='L528' name='L528'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_all_cmd);
+<a id='L529' name='L529'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_lib_cmd);
+<a id='L530' name='L530'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_rip_cmd);
+<a id='L531' name='L531'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_ripng_cmd);
+<a id='L532' name='L532'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_babel_cmd);
+<a id='L533' name='L533'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_bgp_cmd);
+<a id='L534' name='L534'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_ospf_cmd);
+<a id='L535' name='L535'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_ospf6_cmd);
+<a id='L536' name='L536'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RESTRICTED_NODE, &amp;show_memory_isis_cmd);
+<a id='L537' name='L537'></a>
+<a id='L538' name='L538'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_cmd);
+<a id='L539' name='L539'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_all_cmd);
+<a id='L540' name='L540'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_lib_cmd);
+<a id='L541' name='L541'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_rip_cmd);
+<a id='L542' name='L542'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_ripng_cmd);
+<a id='L543' name='L543'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_babel_cmd);
+<a id='L544' name='L544'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_bgp_cmd);
+<a id='L545' name='L545'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_ospf_cmd);
+<a id='L546' name='L546'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_ospf6_cmd);
+<a id='L547' name='L547'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_memory_isis_cmd);
+<a id='L548' name='L548'></a>
+<a id='L549' name='L549'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_cmd);
+<a id='L550' name='L550'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_all_cmd);
+<a id='L551' name='L551'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_lib_cmd);
+<a id='L552' name='L552'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_zebra_cmd);
+<a id='L553' name='L553'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_rip_cmd);
+<a id='L554' name='L554'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_ripng_cmd);
+<a id='L555' name='L555'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_babel_cmd);
+<a id='L556' name='L556'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_bgp_cmd);
+<a id='L557' name='L557'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_ospf_cmd);
+<a id='L558' name='L558'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_ospf6_cmd);
+<a id='L559' name='L559'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_memory_isis_cmd);
+<a id='L560' name='L560'></a><em class='brace'>}</em>
+<a id='L561' name='L561'></a>
+<a id='L562' name='L562'></a><em class='comment'>/* Stats querying from users */</em>
+<a id='L563' name='L563'></a><em class='comment'>/* Return a pointer to a human friendly string describing</em>
+<a id='L564' name='L564'></a><em class='comment'> * the byte count passed in. E.g:</em>
+<a id='L565' name='L565'></a><em class='comment'> * "0 bytes", "2048 bytes", "110kB", "500MiB", "11GiB", etc.</em>
+<a id='L566' name='L566'></a><em class='comment'> * Up to 4 significant figures will be given.</em>
+<a id='L567' name='L567'></a><em class='comment'> * The pointer returned may be NULL (indicating an error)</em>
+<a id='L568' name='L568'></a><em class='comment'> * or point to the given buffer, or point to static storage.</em>
+<a id='L569' name='L569'></a><em class='comment'> */</em>
+<a id='L570' name='L570'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L571' name='L571'></a><a href='../R/7281.html' title='Multiple referred from 31 places.'>mtype_memstr</a> (<strong class='reserved'>char</strong> *buf, size_t len, <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> bytes)
+<a id='L572' name='L572'></a><em class='brace'>{</em>
+<a id='L573' name='L573'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> t, g, m, k;
+<a id='L574' name='L574'></a>  
+<a id='L575' name='L575'></a>  <em class='comment'>/* easy cases */</em>
+<a id='L576' name='L576'></a>  <strong class='reserved'>if</strong> (!bytes)
+<a id='L577' name='L577'></a>    <strong class='reserved'>return</strong> "0 bytes";
+<a id='L578' name='L578'></a>  <strong class='reserved'>if</strong> (bytes == 1)
+<a id='L579' name='L579'></a>    <strong class='reserved'>return</strong> "1 byte";
+<a id='L580' name='L580'></a>    
+<a id='L581' name='L581'></a>  <strong class='reserved'>if</strong> (<strong class='reserved'>sizeof</strong> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) &gt;= 8)
+<a id='L582' name='L582'></a>    <em class='comment'>/* Hacked to make it not warn on ILP32 machines</em>
+<a id='L583' name='L583'></a><em class='comment'>     * Shift will always be 40 at runtime. See below too */</em>
+<a id='L584' name='L584'></a>    t = bytes &gt;&gt; (<strong class='reserved'>sizeof</strong> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) &gt;= 8 ? 40 : 0);
+<a id='L585' name='L585'></a>  <strong class='reserved'>else</strong>
+<a id='L586' name='L586'></a>    t = 0;
+<a id='L587' name='L587'></a>  g = bytes &gt;&gt; 30;
+<a id='L588' name='L588'></a>  m = bytes &gt;&gt; 20;
+<a id='L589' name='L589'></a>  k = bytes &gt;&gt; 10;
+<a id='L590' name='L590'></a>  
+<a id='L591' name='L591'></a>  <strong class='reserved'>if</strong> (t &gt; 10)
+<a id='L592' name='L592'></a>    <em class='brace'>{</em>
+<a id='L593' name='L593'></a>      <em class='comment'>/* The shift will always be 39 at runtime.</em>
+<a id='L594' name='L594'></a><em class='comment'>       * Just hacked to make it not warn on 'smaller' machines. </em>
+<a id='L595' name='L595'></a><em class='comment'>       * Static compiler analysis should mean no extra code</em>
+<a id='L596' name='L596'></a><em class='comment'>       */</em>
+<a id='L597' name='L597'></a>      <strong class='reserved'>if</strong> (bytes &amp; (1UL &lt;&lt; (<strong class='reserved'>sizeof</strong> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) &gt;= 8 ? 39 : 0)))
+<a id='L598' name='L598'></a>        t++;
+<a id='L599' name='L599'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%4d TiB", t);
+<a id='L600' name='L600'></a>    <em class='brace'>}</em>
+<a id='L601' name='L601'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (g &gt; 10)
+<a id='L602' name='L602'></a>    <em class='brace'>{</em>
+<a id='L603' name='L603'></a>      <strong class='reserved'>if</strong> (bytes &amp; (1 &lt;&lt; 29))
+<a id='L604' name='L604'></a>        g++;
+<a id='L605' name='L605'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%d GiB", g);
+<a id='L606' name='L606'></a>    <em class='brace'>}</em>
+<a id='L607' name='L607'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (m &gt; 10)
+<a id='L608' name='L608'></a>    <em class='brace'>{</em>
+<a id='L609' name='L609'></a>      <strong class='reserved'>if</strong> (bytes &amp; (1 &lt;&lt; 19))
+<a id='L610' name='L610'></a>        m++;
+<a id='L611' name='L611'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%d MiB", m);
+<a id='L612' name='L612'></a>    <em class='brace'>}</em>
+<a id='L613' name='L613'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (k &gt; 10)
+<a id='L614' name='L614'></a>    <em class='brace'>{</em>
+<a id='L615' name='L615'></a>      <strong class='reserved'>if</strong> (bytes &amp; (1 &lt;&lt; 9))
+<a id='L616' name='L616'></a>        k++;
+<a id='L617' name='L617'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%d KiB", k);
+<a id='L618' name='L618'></a>    <em class='brace'>}</em>
+<a id='L619' name='L619'></a>  <strong class='reserved'>else</strong>
+<a id='L620' name='L620'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%ld bytes", bytes);
+<a id='L621' name='L621'></a>  
+<a id='L622' name='L622'></a>  <strong class='reserved'>return</strong> buf;
+<a id='L623' name='L623'></a><em class='brace'>}</em>
+<a id='L624' name='L624'></a>
+<a id='L625' name='L625'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>
+<a id='L626' name='L626'></a><a href='../R/7282.html' title='Multiple referred from 19 places.'>mtype_stats_alloc</a> (<strong class='reserved'>int</strong> type)
+<a id='L627' name='L627'></a><em class='brace'>{</em>
+<a id='L628' name='L628'></a>  <strong class='reserved'>return</strong> mstat[type].alloc;
+<a id='L629' name='L629'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L48'>[^]</a><a href='#L626'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

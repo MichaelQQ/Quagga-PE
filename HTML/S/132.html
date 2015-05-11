@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>brctld/libbridge.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1014.html'>brctld</a>/libbridge.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/91.html' title='Multiple included from 10 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2000 Lennert Buytenhek</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This program is free software; you can redistribute it and/or</em>
+<a id='L5' name='L5'></a><em class='comment'> * modify it under the terms of the GNU General Public License as</em>
+<a id='L6' name='L6'></a><em class='comment'> * published by the Free Software Foundation; either version 2 of the</em>
+<a id='L7' name='L7'></a><em class='comment'> * License, or (at your option) any later version.</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is distributed in the hope that it will be useful, but</em>
+<a id='L10' name='L10'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L11' name='L11'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L12' name='L12'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L15' name='L15'></a><em class='comment'> * along with this program; if not, write to the Free Software</em>
+<a id='L16' name='L16'></a><em class='comment'> * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</em>
+<a id='L17' name='L17'></a><em class='comment'> */</em>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><em class='sharp'>#ifndef</em> <a href='../D/4783.html' title='Multiple defined in 2 places.'>_LIBBRIDGE_H</a>
+<a id='L20' name='L20'></a><em class='sharp'>#define</em> <a href='../R/4057.html' title='Multiple referred from 2 places.'>_LIBBRIDGE_H</a>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;<a href='252.html'>net/if.h</a>&gt;
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;linux/if_bridge.h&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><strong class='reserved'>struct</strong> <a href='../R/5194.html' title='Multiple referred from 9 places.'>bridge_id</a>
+<a id='L26' name='L26'></a><em class='brace'>{</em>
+<a id='L27' name='L27'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> prio[2];
+<a id='L28' name='L28'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> addr[6];
+<a id='L29' name='L29'></a><em class='brace'>}</em>;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><strong class='reserved'>struct</strong> <a href='../R/5195.html' title='Multiple referred from 7 places.'>bridge_info</a>
+<a id='L32' name='L32'></a><em class='brace'>{</em>
+<a id='L33' name='L33'></a>        <strong class='reserved'>struct</strong> <a href='../S/132.html#L25' title='Defined at 25 in brctld/libbridge.h.'>bridge_id</a> designated_root;
+<a id='L34' name='L34'></a>        <strong class='reserved'>struct</strong> <a href='../S/132.html#L25' title='Defined at 25 in brctld/libbridge.h.'>bridge_id</a> <a href='../S/132.html#L25' title='Defined at 25 in brctld/libbridge.h.'>bridge_id</a>;
+<a id='L35' name='L35'></a>        <strong class='reserved'>unsigned</strong> root_path_cost;
+<a id='L36' name='L36'></a>        <strong class='reserved'>struct</strong> timeval max_age;
+<a id='L37' name='L37'></a>        <strong class='reserved'>struct</strong> timeval hello_time;
+<a id='L38' name='L38'></a>        <strong class='reserved'>struct</strong> timeval forward_delay;
+<a id='L39' name='L39'></a>        <strong class='reserved'>struct</strong> timeval bridge_max_age;
+<a id='L40' name='L40'></a>        <strong class='reserved'>struct</strong> timeval bridge_hello_time;
+<a id='L41' name='L41'></a>        <strong class='reserved'>struct</strong> timeval bridge_forward_delay;
+<a id='L42' name='L42'></a>        <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> root_port;
+<a id='L43' name='L43'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> stp_enabled;
+<a id='L44' name='L44'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> topology_change;
+<a id='L45' name='L45'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> topology_change_detected;
+<a id='L46' name='L46'></a>        <strong class='reserved'>struct</strong> timeval ageing_time;
+<a id='L47' name='L47'></a>        <strong class='reserved'>struct</strong> timeval hello_timer_value;
+<a id='L48' name='L48'></a>        <strong class='reserved'>struct</strong> timeval tcn_timer_value;
+<a id='L49' name='L49'></a>        <strong class='reserved'>struct</strong> timeval topology_change_timer_value;
+<a id='L50' name='L50'></a>        <strong class='reserved'>struct</strong> timeval gc_timer_value;
+<a id='L51' name='L51'></a><em class='brace'>}</em>;
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><strong class='reserved'>struct</strong> <a href='../R/5725.html' title='Multiple referred from 9 places.'>fdb_entry</a>
+<a id='L54' name='L54'></a><em class='brace'>{</em>
+<a id='L55' name='L55'></a>        <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> mac_addr[6];
+<a id='L56' name='L56'></a>        <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> port_no;
+<a id='L57' name='L57'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> is_local;
+<a id='L58' name='L58'></a>        <strong class='reserved'>struct</strong> timeval ageing_timer_value;
+<a id='L59' name='L59'></a><em class='brace'>}</em>;
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><strong class='reserved'>struct</strong> <a href='../R/8746.html' title='Multiple referred from 4 places.'>port_info</a>
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>        <strong class='reserved'>unsigned</strong> port_no;
+<a id='L64' name='L64'></a>        <strong class='reserved'>struct</strong> <a href='../S/132.html#L25' title='Defined at 25 in brctld/libbridge.h.'>bridge_id</a> designated_root;
+<a id='L65' name='L65'></a>        <strong class='reserved'>struct</strong> <a href='../S/132.html#L25' title='Defined at 25 in brctld/libbridge.h.'>bridge_id</a> designated_bridge;
+<a id='L66' name='L66'></a>        <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> port_id;
+<a id='L67' name='L67'></a>        <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> designated_port;
+<a id='L68' name='L68'></a>        <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> priority;
+<a id='L69' name='L69'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> top_change_ack;
+<a id='L70' name='L70'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> config_pending;
+<a id='L71' name='L71'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> state;
+<a id='L72' name='L72'></a>        <strong class='reserved'>unsigned</strong> path_cost;
+<a id='L73' name='L73'></a>        <strong class='reserved'>unsigned</strong> designated_cost;
+<a id='L74' name='L74'></a>        <strong class='reserved'>struct</strong> timeval message_age_timer_value;
+<a id='L75' name='L75'></a>        <strong class='reserved'>struct</strong> timeval forward_delay_timer_value;
+<a id='L76' name='L76'></a>        <strong class='reserved'>struct</strong> timeval hold_timer_value;
+<a id='L77' name='L77'></a><em class='brace'>}</em>;
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/5925.html' title='Multiple defined in 2 places.'>br_init</a>(<strong class='reserved'>void</strong>);
+<a id='L80' name='L80'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L41' title='Defined at 41 in brctld/libbridge_init.c.'>br_refresh</a>(<strong class='reserved'>void</strong>);
+<a id='L81' name='L81'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/120.html#L51' title='Defined at 51 in brctld/libbridge_init.c.'>br_shutdown</a>(<strong class='reserved'>void</strong>);
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L142' title='Defined at 142 in brctld/libbridge_init.c.'>br_foreach_bridge</a>(<strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname, <strong class='reserved'>void</strong> *),
+<a id='L84' name='L84'></a>                             <strong class='reserved'>void</strong> *arg);
+<a id='L85' name='L85'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L204' title='Defined at 204 in brctld/libbridge_init.c.'>br_foreach_port</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname,
+<a id='L86' name='L86'></a>                           <strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *port,
+<a id='L87' name='L87'></a>                                           <strong class='reserved'>void</strong> *arg ),
+<a id='L88' name='L88'></a>                           <strong class='reserved'>void</strong> *arg);
+<a id='L89' name='L89'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/142.html#L36' title='Defined at 36 in brctld/libbridge_misc.c.'>br_get_state_name</a>(<strong class='reserved'>int</strong> state);
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L173' title='Defined at 173 in brctld/libbridge_devif.c.'>br_get_bridge_info</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>struct</strong> <a href='../S/132.html#L31' title='Defined at 31 in brctld/libbridge.h.'>bridge_info</a> *info);
+<a id='L92' name='L92'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L274' title='Defined at 274 in brctld/libbridge_devif.c.'>br_get_port_info</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *port, 
+<a id='L93' name='L93'></a>                            <strong class='reserved'>struct</strong> <a href='../S/132.html#L61' title='Defined at 61 in brctld/libbridge.h.'>port_info</a> *info);
+<a id='L94' name='L94'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/119.html#L31' title='Defined at 31 in brctld/libbridge_if.c.'>br_add_bridge</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname);
+<a id='L95' name='L95'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/119.html#L52' title='Defined at 52 in brctld/libbridge_if.c.'>br_del_bridge</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname);
+<a id='L96' name='L96'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/119.html#L71' title='Defined at 71 in brctld/libbridge_if.c.'>br_add_interface</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *dev);
+<a id='L97' name='L97'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/119.html#L96' title='Defined at 96 in brctld/libbridge_if.c.'>br_del_interface</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *dev);
+<a id='L98' name='L98'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L357' title='Defined at 357 in brctld/libbridge_devif.c.'>br_set_bridge_forward_delay</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>struct</strong> timeval *tv);
+<a id='L99' name='L99'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L363' title='Defined at 363 in brctld/libbridge_devif.c.'>br_set_bridge_hello_time</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>struct</strong> timeval *tv);
+<a id='L100' name='L100'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L369' title='Defined at 369 in brctld/libbridge_devif.c.'>br_set_bridge_max_age</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>struct</strong> timeval *tv);
+<a id='L101' name='L101'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L375' title='Defined at 375 in brctld/libbridge_devif.c.'>br_set_ageing_time</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>struct</strong> timeval *tv);
+<a id='L102' name='L102'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L381' title='Defined at 381 in brctld/libbridge_devif.c.'>br_set_stp_state</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>int</strong> stp_state);
+<a id='L103' name='L103'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L386' title='Defined at 386 in brctld/libbridge_devif.c.'>br_set_bridge_priority</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>int</strong> bridge_priority);
+<a id='L104' name='L104'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L435' title='Defined at 435 in brctld/libbridge_devif.c.'>br_set_port_priority</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *p, 
+<a id='L105' name='L105'></a>                                <strong class='reserved'>int</strong> port_priority);
+<a id='L106' name='L106'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L440' title='Defined at 440 in brctld/libbridge_devif.c.'>br_set_path_cost</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *p, 
+<a id='L107' name='L107'></a>                            <strong class='reserved'>int</strong> path_cost);
+<a id='L108' name='L108'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/133.html#L454' title='Defined at 454 in brctld/libbridge_devif.c.'>br_read_fdb</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>struct</strong> <a href='../S/132.html#L53' title='Defined at 53 in brctld/libbridge.h.'>fdb_entry</a> *fdbs, 
+<a id='L109' name='L109'></a>                       <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> skip, <strong class='reserved'>int</strong> num);
+<a id='L110' name='L110'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,567 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/include-netbsd/clnp.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/<a href='../files/1019.html'>include-netbsd</a>/clnp.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*      $NetBSD: clnp.h,v 1.13 2001/08/20 12:00:54 wiz Exp $    */</em>
+<a id='L2' name='L2'></a>
+<a id='L3' name='L3'></a><em class='comment'>/*-</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (c) 1991, 1993, 1994</em>
+<a id='L5' name='L5'></a><em class='comment'> *      The Regents of the University of California.  All rights reserved.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * Redistribution and use in source and binary forms, with or without</em>
+<a id='L8' name='L8'></a><em class='comment'> * modification, are permitted provided that the following conditions</em>
+<a id='L9' name='L9'></a><em class='comment'> * are met:</em>
+<a id='L10' name='L10'></a><em class='comment'> * 1. Redistributions of source code must retain the above copyright</em>
+<a id='L11' name='L11'></a><em class='comment'> *    notice, this list of conditions and the following disclaimer.</em>
+<a id='L12' name='L12'></a><em class='comment'> * 2. Redistributions in binary form must reproduce the above copyright</em>
+<a id='L13' name='L13'></a><em class='comment'> *    notice, this list of conditions and the following disclaimer in the</em>
+<a id='L14' name='L14'></a><em class='comment'> *    documentation and/or other materials provided with the distribution.</em>
+<a id='L15' name='L15'></a><em class='comment'> * 3. All advertising materials mentioning features or use of this software</em>
+<a id='L16' name='L16'></a><em class='comment'> *    must display the following acknowledgement:</em>
+<a id='L17' name='L17'></a><em class='comment'> *      This product includes software developed by the University of</em>
+<a id='L18' name='L18'></a><em class='comment'> *      California, Berkeley and its contributors.</em>
+<a id='L19' name='L19'></a><em class='comment'> * 4. Neither the name of the University nor the names of its contributors</em>
+<a id='L20' name='L20'></a><em class='comment'> *    may be used to endorse or promote products derived from this software</em>
+<a id='L21' name='L21'></a><em class='comment'> *    without specific prior written permission.</em>
+<a id='L22' name='L22'></a><em class='comment'> *</em>
+<a id='L23' name='L23'></a><em class='comment'> * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND</em>
+<a id='L24' name='L24'></a><em class='comment'> * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</em>
+<a id='L25' name='L25'></a><em class='comment'> * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</em>
+<a id='L26' name='L26'></a><em class='comment'> * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE</em>
+<a id='L27' name='L27'></a><em class='comment'> * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</em>
+<a id='L28' name='L28'></a><em class='comment'> * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS</em>
+<a id='L29' name='L29'></a><em class='comment'> * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</em>
+<a id='L30' name='L30'></a><em class='comment'> * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</em>
+<a id='L31' name='L31'></a><em class='comment'> * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY</em>
+<a id='L32' name='L32'></a><em class='comment'> * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF</em>
+<a id='L33' name='L33'></a><em class='comment'> * SUCH DAMAGE.</em>
+<a id='L34' name='L34'></a><em class='comment'> *</em>
+<a id='L35' name='L35'></a><em class='comment'> *      @(#)clnp.h      8.2 (Berkeley) 4/16/94</em>
+<a id='L36' name='L36'></a><em class='comment'> */</em>
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><em class='comment'>/***********************************************************</em>
+<a id='L39' name='L39'></a><em class='comment'>                Copyright IBM Corporation 1987</em>
+<a id='L40' name='L40'></a><em class='comment'></em>
+<a id='L41' name='L41'></a><em class='comment'>                      All Rights Reserved</em>
+<a id='L42' name='L42'></a><em class='comment'></em>
+<a id='L43' name='L43'></a><em class='comment'>Permission to use, copy, modify, and distribute this software and its</em>
+<a id='L44' name='L44'></a><em class='comment'>documentation for any purpose and without fee is hereby granted,</em>
+<a id='L45' name='L45'></a><em class='comment'>provided that the above copyright notice appear in all copies and that</em>
+<a id='L46' name='L46'></a><em class='comment'>both that copyright notice and this permission notice appear in</em>
+<a id='L47' name='L47'></a><em class='comment'>supporting documentation, and that the name of IBM not be</em>
+<a id='L48' name='L48'></a><em class='comment'>used in advertising or publicity pertaining to distribution of the</em>
+<a id='L49' name='L49'></a><em class='comment'>software without specific, written prior permission.</em>
+<a id='L50' name='L50'></a><em class='comment'></em>
+<a id='L51' name='L51'></a><em class='comment'>IBM DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING</em>
+<a id='L52' name='L52'></a><em class='comment'>ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL</em>
+<a id='L53' name='L53'></a><em class='comment'>IBM BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR</em>
+<a id='L54' name='L54'></a><em class='comment'>ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,</em>
+<a id='L55' name='L55'></a><em class='comment'>WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,</em>
+<a id='L56' name='L56'></a><em class='comment'>ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS</em>
+<a id='L57' name='L57'></a><em class='comment'>SOFTWARE.</em>
+<a id='L58' name='L58'></a><em class='comment'></em>
+<a id='L59' name='L59'></a><em class='comment'>******************************************************************/</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='comment'>/*</em>
+<a id='L62' name='L62'></a><em class='comment'> * ARGO Project, Computer Sciences Dept., University of Wisconsin - Madison</em>
+<a id='L63' name='L63'></a><em class='comment'> */</em>
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a><em class='comment'>/* should be config option but cpp breaks with too many #defines */</em>
+<a id='L66' name='L66'></a><em class='sharp'>#define</em> DECBIT
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><em class='comment'>/*</em>
+<a id='L69' name='L69'></a><em class='comment'> *      Return true if the mbuf is a cluster mbuf</em>
+<a id='L70' name='L70'></a><em class='comment'> */</em>
+<a id='L71' name='L71'></a><em class='sharp'>#define</em> IS_CLUSTER(m)   ((m)-&gt;m_flags &amp; M_EXT)
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a><em class='comment'>/*</em>
+<a id='L74' name='L74'></a><em class='comment'> *      Move the halfword into the two characters</em>
+<a id='L75' name='L75'></a><em class='comment'> */</em>
+<a id='L76' name='L76'></a><em class='sharp'>#define</em> HTOC(msb, lsb, hword)\
+<a id='L77' name='L77'></a>        (msb) = (u_char)((hword) &gt;&gt; 8);\
+<a id='L78' name='L78'></a>        (lsb) = (u_char)((hword) &amp; 0xff)
+<a id='L79' name='L79'></a><em class='comment'>/*</em>
+<a id='L80' name='L80'></a><em class='comment'> *      Move the two charcters into the halfword</em>
+<a id='L81' name='L81'></a><em class='comment'> */</em>
+<a id='L82' name='L82'></a><em class='sharp'>#define</em> CTOH(msb, lsb, hword)\
+<a id='L83' name='L83'></a>        (hword) = ((msb) &lt;&lt; 8) | (lsb)
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><em class='comment'>/*</em>
+<a id='L86' name='L86'></a><em class='comment'> *      Return true if the checksum has been set - ie. the checksum is</em>
+<a id='L87' name='L87'></a><em class='comment'> *      not zero</em>
+<a id='L88' name='L88'></a><em class='comment'> */</em>
+<a id='L89' name='L89'></a><em class='sharp'>#define</em> CKSUM_REQUIRED(clnp)\
+<a id='L90' name='L90'></a>        (((clnp)-&gt;cnf_cksum_msb != 0) || ((clnp)-&gt;cnf_cksum_lsb != 0))
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><em class='comment'>/*</em>
+<a id='L93' name='L93'></a><em class='comment'> *      Fixed part of clnp header</em>
+<a id='L94' name='L94'></a><em class='comment'> */</em>
+<a id='L95' name='L95'></a><strong class='reserved'>struct</strong> <a href='../R/5267.html' title='Multiple referred from 2 places.'>clnp_fixed</a> <em class='brace'>{</em>
+<a id='L96' name='L96'></a>        u_char          cnf_proto_id;   <em class='comment'>/* network layer protocol identifier */</em>
+<a id='L97' name='L97'></a>        u_char          cnf_hdr_len;    <em class='comment'>/* length indicator (octets) */</em>
+<a id='L98' name='L98'></a>        u_char          cnf_vers;       <em class='comment'>/* version/protocol identifier</em>
+<a id='L99' name='L99'></a><em class='comment'>                                         * extension */</em>
+<a id='L100' name='L100'></a>        u_char          cnf_ttl;<em class='comment'>/* lifetime (500 milliseconds) */</em>
+<a id='L101' name='L101'></a>        u_char          cnf_type;       <em class='comment'>/* type code */</em>
+<a id='L102' name='L102'></a>        <em class='comment'>/* Includes err_ok, more_segs, and seg_ok */</em>
+<a id='L103' name='L103'></a>        u_char          cnf_seglen_msb; <em class='comment'>/* pdu segment length (octets) high</em>
+<a id='L104' name='L104'></a><em class='comment'>                                         * byte */</em>
+<a id='L105' name='L105'></a>        u_char          cnf_seglen_lsb; <em class='comment'>/* pdu segment length (octets) low</em>
+<a id='L106' name='L106'></a><em class='comment'>                                         * byte */</em>
+<a id='L107' name='L107'></a>        u_char          cnf_cksum_msb;  <em class='comment'>/* checksum high byte */</em>
+<a id='L108' name='L108'></a>        u_char          cnf_cksum_lsb;  <em class='comment'>/* checksum low byte */</em>
+<a id='L109' name='L109'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong>((packed));
+<a id='L110' name='L110'></a><em class='sharp'>#define</em> CNF_TYPE        0x1f
+<a id='L111' name='L111'></a><em class='sharp'>#define</em> CNF_ERR_OK      0x20
+<a id='L112' name='L112'></a><em class='sharp'>#define</em> CNF_MORE_SEGS   0x40
+<a id='L113' name='L113'></a><em class='sharp'>#define</em> CNF_SEG_OK      0x80
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><em class='sharp'>#define</em> CLNP_CKSUM_OFF  0x07    <em class='comment'>/* offset of checksum */</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> clnl_fixed      <a href='../S/503.html#L95' title='Defined at 95 in isisd/include-netbsd/clnp.h.'>clnp_fixed</a>
+<a id='L118' name='L118'></a>
+<a id='L119' name='L119'></a><em class='comment'>/*</em>
+<a id='L120' name='L120'></a><em class='comment'> *      Segmentation part of clnp header</em>
+<a id='L121' name='L121'></a><em class='comment'> */</em>
+<a id='L122' name='L122'></a><strong class='reserved'>struct</strong> <a href='../R/5271.html' title='Multiple referred from 4 places.'>clnp_segment</a> <em class='brace'>{</em>
+<a id='L123' name='L123'></a>        u_short         cng_id; <em class='comment'>/* data unit identifier */</em>
+<a id='L124' name='L124'></a>        u_short         cng_off;<em class='comment'>/* segment offset */</em>
+<a id='L125' name='L125'></a>        u_short         cng_tot_len;    <em class='comment'>/* total length */</em>
+<a id='L126' name='L126'></a><em class='brace'>}</em>;
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a><em class='comment'>/*</em>
+<a id='L129' name='L129'></a><em class='comment'> *      Clnp fragment reassembly structures:</em>
+<a id='L130' name='L130'></a><em class='comment'> *</em>
+<a id='L131' name='L131'></a><em class='comment'> *      All packets undergoing reassembly are linked together in</em>
+<a id='L132' name='L132'></a><em class='comment'> *      clnp_fragl structures. Each clnp_fragl structure contains a</em>
+<a id='L133' name='L133'></a><em class='comment'> *      pointer to the original clnp packet header, as well as a</em>
+<a id='L134' name='L134'></a><em class='comment'> *      list of packet fragments. Each packet fragment</em>
+<a id='L135' name='L135'></a><em class='comment'> *      is headed by a clnp_frag structure. This structure contains the</em>
+<a id='L136' name='L136'></a><em class='comment'> *      offset of the first and last byte of the fragment, as well as</em>
+<a id='L137' name='L137'></a><em class='comment'> *      a pointer to the data (an mbuf chain) of the fragment.</em>
+<a id='L138' name='L138'></a><em class='comment'> */</em>
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a><em class='comment'>/*</em>
+<a id='L141' name='L141'></a><em class='comment'> *      NOTE:</em>
+<a id='L142' name='L142'></a><em class='comment'> *              The clnp_frag structure is stored in an mbuf immedately</em>
+<a id='L143' name='L143'></a><em class='comment'> *              preceding the fragment data. Since there are words in</em>
+<a id='L144' name='L144'></a><em class='comment'> *              this struct, it must be word aligned.</em>
+<a id='L145' name='L145'></a><em class='comment'> *</em>
+<a id='L146' name='L146'></a><em class='comment'> *      NOTE:</em>
+<a id='L147' name='L147'></a><em class='comment'> *              All the fragment code assumes that the entire clnp header is</em>
+<a id='L148' name='L148'></a><em class='comment'> *              contained in the first mbuf.</em>
+<a id='L149' name='L149'></a><em class='comment'> */</em>
+<a id='L150' name='L150'></a><strong class='reserved'>struct</strong> <a href='../R/5268.html' title='Multiple referred from 2 places.'>clnp_frag</a> <em class='brace'>{</em>
+<a id='L151' name='L151'></a>        u_int           cfr_first;      <em class='comment'>/* offset of first byte of this frag */</em>
+<a id='L152' name='L152'></a>        u_int           cfr_last;       <em class='comment'>/* offset of last byte of this frag */</em>
+<a id='L153' name='L153'></a>        u_int           cfr_bytes;      <em class='comment'>/* bytes to shave to get to data */</em>
+<a id='L154' name='L154'></a>        <strong class='reserved'>struct</strong> mbuf    *cfr_data;       <em class='comment'>/* ptr to data for this frag */</em>
+<a id='L155' name='L155'></a>        <strong class='reserved'>struct</strong> <a href='../S/503.html#L150' title='Defined at 150 in isisd/include-netbsd/clnp.h.'>clnp_frag</a> *cfr_next;     <em class='comment'>/* next fragment in list */</em>
+<a id='L156' name='L156'></a><em class='brace'>}</em>;
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a><strong class='reserved'>struct</strong> <a href='../R/5269.html' title='Multiple referred from 5 places.'>clnp_fragl</a> <em class='brace'>{</em>
+<a id='L159' name='L159'></a>        <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> cfl_src;<em class='comment'>/* source of the pkt */</em>
+<a id='L160' name='L160'></a>        <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> cfl_dst;<em class='comment'>/* destination of the pkt */</em>
+<a id='L161' name='L161'></a>        u_short         cfl_id; <em class='comment'>/* id of the pkt */</em>
+<a id='L162' name='L162'></a>        u_char          cfl_ttl;<em class='comment'>/* current ttl of pkt */</em>
+<a id='L163' name='L163'></a>        u_short         cfl_last;       <em class='comment'>/* offset of last byte of packet */</em>
+<a id='L164' name='L164'></a>        <strong class='reserved'>struct</strong> mbuf    *cfl_orighdr;    <em class='comment'>/* ptr to original header */</em>
+<a id='L165' name='L165'></a>        <strong class='reserved'>struct</strong> <a href='../S/503.html#L150' title='Defined at 150 in isisd/include-netbsd/clnp.h.'>clnp_frag</a> *cfl_frags;    <em class='comment'>/* linked list of fragments for pkt */</em>
+<a id='L166' name='L166'></a>        <strong class='reserved'>struct</strong> <a href='../S/503.html#L158' title='Defined at 158 in isisd/include-netbsd/clnp.h.'>clnp_fragl</a> *cfl_next;    <em class='comment'>/* next pkt being reassembled */</em>
+<a id='L167' name='L167'></a><em class='brace'>}</em>;
+<a id='L168' name='L168'></a>
+<a id='L169' name='L169'></a><em class='comment'>/*</em>
+<a id='L170' name='L170'></a><em class='comment'> *      The following structure is used to index into an options section</em>
+<a id='L171' name='L171'></a><em class='comment'> *      of a clnp datagram. These values can be used without worry that</em>
+<a id='L172' name='L172'></a><em class='comment'> *      offset or length fields are invalid or too big, etc. That is,</em>
+<a id='L173' name='L173'></a><em class='comment'> *      the consistancy of the options will be guaranteed before this</em>
+<a id='L174' name='L174'></a><em class='comment'> *      structure is filled in. Any pointer (field ending in p) is</em>
+<a id='L175' name='L175'></a><em class='comment'> *      actually the offset from the beginning of the mbuf the option</em>
+<a id='L176' name='L176'></a><em class='comment'> *      is contained in.  A value of NULL for any pointer</em>
+<a id='L177' name='L177'></a><em class='comment'> *      means that the option is not present. The length any option</em>
+<a id='L178' name='L178'></a><em class='comment'> *      does not include the option code or option length fields.</em>
+<a id='L179' name='L179'></a><em class='comment'> */</em>
+<a id='L180' name='L180'></a><strong class='reserved'>struct</strong> <a href='../R/5270.html' title='Multiple referred from 9 places.'>clnp_optidx</a> <em class='brace'>{</em>
+<a id='L181' name='L181'></a>        u_short         cni_securep;    <em class='comment'>/* ptr to start of security option */</em>
+<a id='L182' name='L182'></a>        <strong class='reserved'>char</strong>            cni_secure_len; <em class='comment'>/* length of entire security option */</em>
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>        u_short         cni_srcrt_s;    <em class='comment'>/* offset of start of src rt option */</em>
+<a id='L185' name='L185'></a>        u_short         cni_srcrt_len;  <em class='comment'>/* length of entire src rt option */</em>
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a>        u_short         cni_recrtp;     <em class='comment'>/* ptr to beginning of recrt option */</em>
+<a id='L188' name='L188'></a>        <strong class='reserved'>char</strong>            cni_recrt_len;  <em class='comment'>/* length of entire recrt option */</em>
+<a id='L189' name='L189'></a>
+<a id='L190' name='L190'></a>        <strong class='reserved'>char</strong>            cni_priorp;     <em class='comment'>/* ptr to priority option */</em>
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>        u_short         cni_qos_formatp;        <em class='comment'>/* ptr to format of qos</em>
+<a id='L193' name='L193'></a><em class='comment'>                                                 * option */</em>
+<a id='L194' name='L194'></a>        <strong class='reserved'>char</strong>            cni_qos_len;    <em class='comment'>/* length of entire qos option */</em>
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>        u_char          cni_er_reason;  <em class='comment'>/* reason from ER pdu option */</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>        <em class='comment'>/* ESIS options */</em>
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a>        u_short         cni_esct;       <em class='comment'>/* value from ISH ESCT option */</em>
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a>        u_short         cni_netmaskp;   <em class='comment'>/* ptr to beginning of netmask option */</em>
+<a id='L203' name='L203'></a>        <strong class='reserved'>char</strong>            cni_netmask_len;        <em class='comment'>/* length of entire netmask</em>
+<a id='L204' name='L204'></a><em class='comment'>                                                 * option */</em>
+<a id='L205' name='L205'></a>
+<a id='L206' name='L206'></a>        u_short         cni_snpamaskp;  <em class='comment'>/* ptr to start of snpamask option */</em>
+<a id='L207' name='L207'></a>        <strong class='reserved'>char</strong>            cni_snpamask_len;       <em class='comment'>/* length of entire snpamask</em>
+<a id='L208' name='L208'></a><em class='comment'>                                                 * option */</em>
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a><em class='brace'>}</em>;
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a><em class='sharp'>#define</em> ER_INVALREAS    0xff    <em class='comment'>/* code for invalid ER pdu discard reason */</em>
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a><em class='comment'>/* given an mbuf and addr of option, return offset from data of mbuf */</em>
+<a id='L215' name='L215'></a><em class='sharp'>#define</em> CLNP_OPTTOOFF(m, opt) ((u_short) (opt - mtod(m, caddr_t)))
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a><em class='comment'>/* given an mbuf and offset of option, return address of option */</em>
+<a id='L218' name='L218'></a><em class='sharp'>#define</em> <a href='../R/480.html' title='Multiple referred from 4 places.'>CLNP_OFFTOOPT</a>(m, off) ((caddr_t) (mtod(m, caddr_t) + off))
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a><em class='comment'>/* return true iff src route is valid */</em>
+<a id='L221' name='L221'></a><em class='sharp'>#define</em> CLNPSRCRT_VALID(oidx) ((oidx) &amp;&amp; (oidx-&gt;cni_srcrt_s))
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a><em class='comment'>/* return the offset field of the src rt */</em>
+<a id='L224' name='L224'></a><em class='sharp'>#define</em> <a href='../R/472.html' title='Multiple referred from 3 places.'>CLNPSRCRT_OFF</a>(oidx, options)\
+<a id='L225' name='L225'></a>        (*((u_char *)(<a href='../S/503.html#L218' title='Defined at 218 in isisd/include-netbsd/clnp.h.'>CLNP_OFFTOOPT</a>(options, oidx-&gt;cni_srcrt_s) + 1)))
+<a id='L226' name='L226'></a>
+<a id='L227' name='L227'></a><em class='comment'>/* return the type field of the src rt */</em>
+<a id='L228' name='L228'></a><em class='sharp'>#define</em> CLNPSRCRT_TYPE(oidx, options)\
+<a id='L229' name='L229'></a>        ((u_char)(*(<a href='../S/503.html#L218' title='Defined at 218 in isisd/include-netbsd/clnp.h.'>CLNP_OFFTOOPT</a>(options, oidx-&gt;cni_srcrt_s))))
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a><em class='comment'>/* return the length of the current address */</em>
+<a id='L232' name='L232'></a><em class='sharp'>#define</em> CLNPSRCRT_CLEN(oidx, options)\
+<a id='L233' name='L233'></a>        ((u_char)(*(<a href='../S/503.html#L218' title='Defined at 218 in isisd/include-netbsd/clnp.h.'>CLNP_OFFTOOPT</a>(options, oidx-&gt;cni_srcrt_s) + <a href='../S/503.html#L224' title='Defined at 224 in isisd/include-netbsd/clnp.h.'>CLNPSRCRT_OFF</a>(oidx, options) - 1)))
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a><em class='comment'>/* return the address of the current address */</em>
+<a id='L236' name='L236'></a><em class='sharp'>#define</em> CLNPSRCRT_CADDR(oidx, options)\
+<a id='L237' name='L237'></a>        ((caddr_t)(<a href='../S/503.html#L218' title='Defined at 218 in isisd/include-netbsd/clnp.h.'>CLNP_OFFTOOPT</a>(options, oidx-&gt;cni_srcrt_s) + <a href='../S/503.html#L224' title='Defined at 224 in isisd/include-netbsd/clnp.h.'>CLNPSRCRT_OFF</a>(oidx, options)))
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a><em class='comment'>/*</em>
+<a id='L240' name='L240'></a><em class='comment'> * return true if the src route has run out of routes this is true if the</em>
+<a id='L241' name='L241'></a><em class='comment'> * offset of next route is greater than the end of the rt</em>
+<a id='L242' name='L242'></a><em class='comment'> */</em>
+<a id='L243' name='L243'></a><em class='sharp'>#define</em> CLNPSRCRT_TERM(oidx, options)\
+<a id='L244' name='L244'></a>        (<a href='../S/503.html#L224' title='Defined at 224 in isisd/include-netbsd/clnp.h.'>CLNPSRCRT_OFF</a>(oidx, options) &gt; oidx-&gt;cni_srcrt_len)
+<a id='L245' name='L245'></a>
+<a id='L246' name='L246'></a><em class='comment'>/*</em>
+<a id='L247' name='L247'></a><em class='comment'> *      Options a user can set/get</em>
+<a id='L248' name='L248'></a><em class='comment'> */</em>
+<a id='L249' name='L249'></a><em class='sharp'>#define</em> CLNPOPT_FLAGS   0x01    <em class='comment'>/* flags: seg permitted, no er xmit, etc  */</em>
+<a id='L250' name='L250'></a><em class='sharp'>#define</em> CLNPOPT_OPTS    0x02    <em class='comment'>/* datagram options */</em>
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a><em class='comment'>/*</em>
+<a id='L253' name='L253'></a><em class='comment'> *      Values for particular datagram options</em>
+<a id='L254' name='L254'></a><em class='comment'> */</em>
+<a id='L255' name='L255'></a><em class='sharp'>#define</em> CLNPOVAL_PAD            0xcc    <em class='comment'>/* padding */</em>
+<a id='L256' name='L256'></a><em class='sharp'>#define</em> CLNPOVAL_SECURE         0xc5    <em class='comment'>/* security */</em>
+<a id='L257' name='L257'></a><em class='sharp'>#define</em> CLNPOVAL_SRCRT          0xc8    <em class='comment'>/* source routing */</em>
+<a id='L258' name='L258'></a><em class='sharp'>#define</em> CLNPOVAL_RECRT          0xcb    <em class='comment'>/* record route */</em>
+<a id='L259' name='L259'></a><em class='sharp'>#define</em> CLNPOVAL_QOS            0xc3    <em class='comment'>/* quality of service */</em>
+<a id='L260' name='L260'></a><em class='sharp'>#define</em> CLNPOVAL_PRIOR          0xcd    <em class='comment'>/* priority */</em>
+<a id='L261' name='L261'></a><em class='sharp'>#define</em> CLNPOVAL_ERREAS         0xc1    <em class='comment'>/* ER PDU ONLY: reason for discard */</em>
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a><em class='sharp'>#define</em> CLNPOVAL_SRCSPEC        0x40    <em class='comment'>/* source address specific */</em>
+<a id='L264' name='L264'></a><em class='sharp'>#define</em> CLNPOVAL_DSTSPEC        0x80    <em class='comment'>/* destination address specific */</em>
+<a id='L265' name='L265'></a><em class='sharp'>#define</em> CLNPOVAL_GLOBAL         0xc0    <em class='comment'>/* globally unique */</em>
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a><em class='comment'>/* Globally Unique QOS */</em>
+<a id='L268' name='L268'></a><em class='sharp'>#define</em> CLNPOVAL_SEQUENCING     0x10    <em class='comment'>/* sequencing preferred */</em>
+<a id='L269' name='L269'></a><em class='sharp'>#define</em> CLNPOVAL_CONGESTED      0x08    <em class='comment'>/* congestion experienced */</em>
+<a id='L270' name='L270'></a><em class='sharp'>#define</em> CLNPOVAL_LOWDELAY       0x04    <em class='comment'>/* low transit delay */</em>
+<a id='L271' name='L271'></a>
+<a id='L272' name='L272'></a><em class='sharp'>#define</em> CLNPOVAL_PARTRT         0x00    <em class='comment'>/* partial source routing */</em>
+<a id='L273' name='L273'></a><em class='sharp'>#define</em> CLNPOVAL_COMPRT         0x01    <em class='comment'>/* complete source routing */</em>
+<a id='L274' name='L274'></a>
+<a id='L275' name='L275'></a><em class='comment'>/*</em>
+<a id='L276' name='L276'></a><em class='comment'> *      Clnp flags used in a control block flags field.</em>
+<a id='L277' name='L277'></a><em class='comment'> *      NOTE: these must be out of the range of bits defined in ../net/raw_cb.h</em>
+<a id='L278' name='L278'></a><em class='comment'> */</em>
+<a id='L279' name='L279'></a><em class='sharp'>#define</em> <a href='../S/503.html#L289' title='Referred from 289 in isisd/include-netbsd/clnp.h.'>CLNP_NO_SEG</a>             0x010   <em class='comment'>/* segmentation not permitted */</em>
+<a id='L280' name='L280'></a><em class='sharp'>#define</em> <a href='../S/503.html#L289' title='Referred from 289 in isisd/include-netbsd/clnp.h.'>CLNP_NO_ER</a>              0x020   <em class='comment'>/* do not generate ERs */</em>
+<a id='L281' name='L281'></a><em class='sharp'>#define</em> <a href='../S/503.html#L289' title='Referred from 289 in isisd/include-netbsd/clnp.h.'>CLNP_SEND_RAW</a>           0x080   <em class='comment'>/* send pkt as RAW DT not TP DT */</em>
+<a id='L282' name='L282'></a><em class='sharp'>#define</em> <a href='../S/503.html#L289' title='Referred from 289 in isisd/include-netbsd/clnp.h.'>CLNP_NO_CKSUM</a>           0x100   <em class='comment'>/* don't use clnp checksum */</em>
+<a id='L283' name='L283'></a><em class='sharp'>#define</em> <a href='../S/503.html#L290' title='Referred from 290 in isisd/include-netbsd/clnp.h.'>CLNP_ECHO</a>               0x200   <em class='comment'>/* send echo request */</em>
+<a id='L284' name='L284'></a><em class='sharp'>#define</em> <a href='../S/503.html#L290' title='Referred from 290 in isisd/include-netbsd/clnp.h.'>CLNP_NOCACHE</a>            0x400   <em class='comment'>/* don't store cache information */</em>
+<a id='L285' name='L285'></a><em class='sharp'>#define</em> <a href='../S/503.html#L290' title='Referred from 290 in isisd/include-netbsd/clnp.h.'>CLNP_ECHOR</a>              0x800   <em class='comment'>/* send echo reply */</em>
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a><em class='comment'>/* valid clnp flags */</em>
+<a id='L288' name='L288'></a><em class='sharp'>#define</em> CLNP_VFLAGS \
+<a id='L289' name='L289'></a>        (<a href='../S/503.html#L281' title='Defined at 281 in isisd/include-netbsd/clnp.h.'>CLNP_SEND_RAW</a>|<a href='../S/503.html#L279' title='Defined at 279 in isisd/include-netbsd/clnp.h.'>CLNP_NO_SEG</a>|<a href='../S/503.html#L280' title='Defined at 280 in isisd/include-netbsd/clnp.h.'>CLNP_NO_ER</a>|<a href='../S/503.html#L282' title='Defined at 282 in isisd/include-netbsd/clnp.h.'>CLNP_NO_CKSUM</a>|\
+<a id='L290' name='L290'></a>         <a href='../S/503.html#L283' title='Defined at 283 in isisd/include-netbsd/clnp.h.'>CLNP_ECHO</a>|<a href='../S/503.html#L284' title='Defined at 284 in isisd/include-netbsd/clnp.h.'>CLNP_NOCACHE</a>|<a href='../S/503.html#L285' title='Defined at 285 in isisd/include-netbsd/clnp.h.'>CLNP_ECHOR</a>)
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a><em class='comment'>/*</em>
+<a id='L293' name='L293'></a><em class='comment'> * Constants used by clnp</em>
+<a id='L294' name='L294'></a><em class='comment'> */</em>
+<a id='L295' name='L295'></a><em class='sharp'>#define</em> CLNP_HDR_MIN    (<strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/503.html#L95' title='Defined at 95 in isisd/include-netbsd/clnp.h.'>clnp_fixed</a>))
+<a id='L296' name='L296'></a><em class='sharp'>#define</em> CLNP_HDR_MAX    (254)
+<a id='L297' name='L297'></a><em class='sharp'>#define</em> <a href='../S/503.html#L298' title='Referred from 298 in isisd/include-netbsd/clnp.h.'>CLNP_TTL_UNITS</a>  2       <em class='comment'>/* 500 milliseconds */</em>
+<a id='L298' name='L298'></a><em class='sharp'>#define</em> CLNP_TTL        15*<a href='../S/503.html#L297' title='Defined at 297 in isisd/include-netbsd/clnp.h.'>CLNP_TTL_UNITS</a>       <em class='comment'>/* time to live (seconds) */</em>
+<a id='L299' name='L299'></a><em class='sharp'>#define</em> ISO8473_V1      0x01
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a><em class='comment'>/*</em>
+<a id='L302' name='L302'></a><em class='comment'> *      Clnp packet types</em>
+<a id='L303' name='L303'></a><em class='comment'> *      In order to test raw clnp and tp/clnp simultaneously, a third type of</em>
+<a id='L304' name='L304'></a><em class='comment'> *      packet has been defined: CLNP_RAW. This is done so that the input</em>
+<a id='L305' name='L305'></a><em class='comment'> *      routine can switch to the correct input routine (rclnp_input or</em>
+<a id='L306' name='L306'></a><em class='comment'> *      tpclnp_input) based on the type field. If clnp had a higher level</em>
+<a id='L307' name='L307'></a><em class='comment'> *      protocol field, this would not be necessary.</em>
+<a id='L308' name='L308'></a><em class='comment'> */</em>
+<a id='L309' name='L309'></a><em class='sharp'>#define</em> CLNP_DT                 0x1C    <em class='comment'>/* normal data */</em>
+<a id='L310' name='L310'></a><em class='sharp'>#define</em> CLNP_ER                 0x01    <em class='comment'>/* error report */</em>
+<a id='L311' name='L311'></a><em class='sharp'>#define</em> CLNP_RAW                0x1D    <em class='comment'>/* debug only */</em>
+<a id='L312' name='L312'></a><em class='sharp'>#define</em> CLNP_EC                 0x1E    <em class='comment'>/* echo packet */</em>
+<a id='L313' name='L313'></a><em class='sharp'>#define</em> CLNP_ECR                0x1F    <em class='comment'>/* echo reply */</em>
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a><em class='comment'>/*</em>
+<a id='L316' name='L316'></a><em class='comment'> *      ER pdu error codes</em>
+<a id='L317' name='L317'></a><em class='comment'> */</em>
+<a id='L318' name='L318'></a><em class='sharp'>#define</em> <a href='../S/503.html#L355' title='Referred from 355 in isisd/include-netbsd/clnp.h.'>GEN_NOREAS</a>              0x00    <em class='comment'>/* reason not specified */</em>
+<a id='L319' name='L319'></a><em class='sharp'>#define</em> <a href='../S/503.html#L355' title='Referred from 355 in isisd/include-netbsd/clnp.h.'>GEN_PROTOERR</a>            0x01    <em class='comment'>/* protocol procedure error */</em>
+<a id='L320' name='L320'></a><em class='sharp'>#define</em> <a href='../S/503.html#L355' title='Referred from 355 in isisd/include-netbsd/clnp.h.'>GEN_BADCSUM</a>             0x02    <em class='comment'>/* incorrect checksum */</em>
+<a id='L321' name='L321'></a><em class='sharp'>#define</em> <a href='../S/503.html#L355' title='Referred from 355 in isisd/include-netbsd/clnp.h.'>GEN_CONGEST</a>             0x03    <em class='comment'>/* pdu discarded due to congestion */</em>
+<a id='L322' name='L322'></a><em class='sharp'>#define</em> <a href='../S/503.html#L356' title='Referred from 356 in isisd/include-netbsd/clnp.h.'>GEN_HDRSYNTAX</a>           0x04    <em class='comment'>/* header syntax error */</em>
+<a id='L323' name='L323'></a><em class='sharp'>#define</em> <a href='../S/503.html#L356' title='Referred from 356 in isisd/include-netbsd/clnp.h.'>GEN_SEGNEEDED</a>           0x05    <em class='comment'>/* need segmentation but not allowed */</em>
+<a id='L324' name='L324'></a><em class='sharp'>#define</em> <a href='../S/503.html#L356' title='Referred from 356 in isisd/include-netbsd/clnp.h.'>GEN_INCOMPLETE</a>          0x06    <em class='comment'>/* incomplete pdu received */</em>
+<a id='L325' name='L325'></a><em class='sharp'>#define</em> <a href='../S/503.html#L356' title='Referred from 356 in isisd/include-netbsd/clnp.h.'>GEN_DUPOPT</a>              0x07    <em class='comment'>/* duplicate option */</em>
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a><em class='comment'>/* address errors */</em>
+<a id='L328' name='L328'></a><em class='sharp'>#define</em> <a href='../S/503.html#L357' title='Referred from 357 in isisd/include-netbsd/clnp.h.'>ADDR_DESTUNREACH</a>        0x80    <em class='comment'>/* destination address unreachable */</em>
+<a id='L329' name='L329'></a><em class='sharp'>#define</em> <a href='../S/503.html#L357' title='Referred from 357 in isisd/include-netbsd/clnp.h.'>ADDR_DESTUNKNOWN</a>        0x81    <em class='comment'>/* destination address unknown */</em>
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a><em class='comment'>/* source routing */</em>
+<a id='L332' name='L332'></a><em class='sharp'>#define</em> <a href='../S/503.html#L358' title='Referred from 358 in isisd/include-netbsd/clnp.h.'>SRCRT_UNSPECERR</a>         0x90    <em class='comment'>/* unspecified src rt error */</em>
+<a id='L333' name='L333'></a><em class='sharp'>#define</em> <a href='../S/503.html#L358' title='Referred from 358 in isisd/include-netbsd/clnp.h.'>SRCRT_SYNTAX</a>            0x91    <em class='comment'>/* syntax error in src rt field */</em>
+<a id='L334' name='L334'></a><em class='sharp'>#define</em> <a href='../S/503.html#L358' title='Referred from 358 in isisd/include-netbsd/clnp.h.'>SRCRT_UNKNOWNADDR</a>       0x92    <em class='comment'>/* unknown addr in src rt field */</em>
+<a id='L335' name='L335'></a><em class='sharp'>#define</em> <a href='../S/503.html#L358' title='Referred from 358 in isisd/include-netbsd/clnp.h.'>SRCRT_BADPATH</a>           0x93    <em class='comment'>/* path not acceptable */</em>
+<a id='L336' name='L336'></a>
+<a id='L337' name='L337'></a><em class='comment'>/* lifetime */</em>
+<a id='L338' name='L338'></a><em class='sharp'>#define</em> <a href='../S/503.html#L359' title='Referred from 359 in isisd/include-netbsd/clnp.h.'>TTL_EXPTRANSIT</a>          0xa0    <em class='comment'>/* lifetime expired during transit */</em>
+<a id='L339' name='L339'></a><em class='sharp'>#define</em> <a href='../S/503.html#L359' title='Referred from 359 in isisd/include-netbsd/clnp.h.'>TTL_EXPREASS</a>            0xa1    <em class='comment'>/* lifetime expired during reassembly */</em>
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a><em class='comment'>/* pdu discarded */</em>
+<a id='L342' name='L342'></a><em class='sharp'>#define</em> <a href='../S/503.html#L360' title='Referred from 360 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPOPT</a>          0xb0    <em class='comment'>/* unsupported option not specified? */</em>
+<a id='L343' name='L343'></a><em class='sharp'>#define</em> <a href='../S/503.html#L360' title='Referred from 360 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPVERS</a>         0xb1    <em class='comment'>/* unsupported protocol version */</em>
+<a id='L344' name='L344'></a><em class='sharp'>#define</em> <a href='../S/503.html#L360' title='Referred from 360 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPSECURE</a>       0xb2    <em class='comment'>/* unsupported security option */</em>
+<a id='L345' name='L345'></a><em class='sharp'>#define</em> <a href='../S/503.html#L361' title='Referred from 361 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPSRCRT</a>        0xb3    <em class='comment'>/* unsupported src rt option */</em>
+<a id='L346' name='L346'></a><em class='sharp'>#define</em> <a href='../S/503.html#L361' title='Referred from 361 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPRECRT</a>        0xb4    <em class='comment'>/* unsupported rec rt option */</em>
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a><em class='comment'>/* reassembly */</em>
+<a id='L349' name='L349'></a><em class='sharp'>#define</em> <a href='../S/503.html#L361' title='Referred from 361 in isisd/include-netbsd/clnp.h.'>REASS_INTERFERE</a>         0xc0    <em class='comment'>/* reassembly interference */</em>
+<a id='L350' name='L350'></a><em class='sharp'>#define</em> <a href='../S/503.html#L354' title='Referred from 354 in isisd/include-netbsd/clnp.h.'>CLNP_ERRORS</a>             22
+<a id='L351' name='L351'></a>
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a><em class='sharp'>#ifdef</em> CLNP_ER_CODES
+<a id='L354' name='L354'></a>u_char          clnp_er_codes[<a href='../S/503.html#L350' title='Defined at 350 in isisd/include-netbsd/clnp.h.'>CLNP_ERRORS</a>] = <em class='brace'>{</em>
+<a id='L355' name='L355'></a>        <a href='../S/503.html#L318' title='Defined at 318 in isisd/include-netbsd/clnp.h.'>GEN_NOREAS</a>, <a href='../S/503.html#L319' title='Defined at 319 in isisd/include-netbsd/clnp.h.'>GEN_PROTOERR</a>, <a href='../S/503.html#L320' title='Defined at 320 in isisd/include-netbsd/clnp.h.'>GEN_BADCSUM</a>, <a href='../S/503.html#L321' title='Defined at 321 in isisd/include-netbsd/clnp.h.'>GEN_CONGEST</a>,
+<a id='L356' name='L356'></a>        <a href='../S/503.html#L322' title='Defined at 322 in isisd/include-netbsd/clnp.h.'>GEN_HDRSYNTAX</a>, <a href='../S/503.html#L323' title='Defined at 323 in isisd/include-netbsd/clnp.h.'>GEN_SEGNEEDED</a>, <a href='../S/503.html#L324' title='Defined at 324 in isisd/include-netbsd/clnp.h.'>GEN_INCOMPLETE</a>, <a href='../S/503.html#L325' title='Defined at 325 in isisd/include-netbsd/clnp.h.'>GEN_DUPOPT</a>,
+<a id='L357' name='L357'></a>        <a href='../S/503.html#L328' title='Defined at 328 in isisd/include-netbsd/clnp.h.'>ADDR_DESTUNREACH</a>, <a href='../S/503.html#L329' title='Defined at 329 in isisd/include-netbsd/clnp.h.'>ADDR_DESTUNKNOWN</a>,
+<a id='L358' name='L358'></a>        <a href='../S/503.html#L332' title='Defined at 332 in isisd/include-netbsd/clnp.h.'>SRCRT_UNSPECERR</a>, <a href='../S/503.html#L333' title='Defined at 333 in isisd/include-netbsd/clnp.h.'>SRCRT_SYNTAX</a>, <a href='../S/503.html#L334' title='Defined at 334 in isisd/include-netbsd/clnp.h.'>SRCRT_UNKNOWNADDR</a>, <a href='../S/503.html#L335' title='Defined at 335 in isisd/include-netbsd/clnp.h.'>SRCRT_BADPATH</a>,
+<a id='L359' name='L359'></a>        <a href='../S/503.html#L338' title='Defined at 338 in isisd/include-netbsd/clnp.h.'>TTL_EXPTRANSIT</a>, <a href='../S/503.html#L339' title='Defined at 339 in isisd/include-netbsd/clnp.h.'>TTL_EXPREASS</a>,
+<a id='L360' name='L360'></a>        <a href='../S/503.html#L342' title='Defined at 342 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPOPT</a>, <a href='../S/503.html#L343' title='Defined at 343 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPVERS</a>, <a href='../S/503.html#L344' title='Defined at 344 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPSECURE</a>,
+<a id='L361' name='L361'></a>        <a href='../S/503.html#L345' title='Defined at 345 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPSRCRT</a>, <a href='../S/503.html#L346' title='Defined at 346 in isisd/include-netbsd/clnp.h.'>DISC_UNSUPPRECRT</a>, <a href='../S/503.html#L349' title='Defined at 349 in isisd/include-netbsd/clnp.h.'>REASS_INTERFERE</a>
+<a id='L362' name='L362'></a><em class='brace'>}</em>;
+<a id='L363' name='L363'></a><em class='sharp'>#endif</em>
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a><em class='sharp'>#ifdef</em>  TROLL
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a><em class='sharp'>#define</em> TR_DUPEND               0x01    <em class='comment'>/* duplicate end of fragment */</em>
+<a id='L368' name='L368'></a><em class='sharp'>#define</em> TR_DUPPKT               0x02    <em class='comment'>/* duplicate entire packet */</em>
+<a id='L369' name='L369'></a><em class='sharp'>#define</em> TR_DROPPKT              0x04    <em class='comment'>/* drop packet on output */</em>
+<a id='L370' name='L370'></a><em class='sharp'>#define</em> TR_TRIM                 0x08    <em class='comment'>/* trim bytes from packet */</em>
+<a id='L371' name='L371'></a><em class='sharp'>#define</em> TR_CHANGE               0x10    <em class='comment'>/* change bytes in packet */</em>
+<a id='L372' name='L372'></a><em class='sharp'>#define</em> TR_MTU                  0x20    <em class='comment'>/* delta to change device mtu */</em>
+<a id='L373' name='L373'></a><em class='sharp'>#define</em> TR_CHUCK                0x40    <em class='comment'>/* drop packet in rclnp_input */</em>
+<a id='L374' name='L374'></a><em class='sharp'>#define</em> TR_BLAST                0x80    <em class='comment'>/* force rclnp_output to blast many</em>
+<a id='L375' name='L375'></a><em class='comment'>                                         * packet */</em>
+<a id='L376' name='L376'></a><em class='sharp'>#define</em> TR_RAWLOOP              0x100   <em class='comment'>/* make if_loop call clnpintr</em>
+<a id='L377' name='L377'></a><em class='comment'>                                         * directly */</em>
+<a id='L378' name='L378'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L544' title='Referred from 544 in isisd/include-netbsd/clnp.h.'>troll</a> <em class='brace'>{</em>
+<a id='L379' name='L379'></a>        <strong class='reserved'>int</strong>             tr_ops; <em class='comment'>/* operations to perform */</em>
+<a id='L380' name='L380'></a>        <strong class='reserved'>float</strong>           tr_dup_size;    <em class='comment'>/* % to duplicate */</em>
+<a id='L381' name='L381'></a>        <strong class='reserved'>float</strong>           tr_dup_freq;    <em class='comment'>/* frequency to duplicate packets */</em>
+<a id='L382' name='L382'></a>        <strong class='reserved'>float</strong>           tr_drop_freq;   <em class='comment'>/* frequence to drop packets */</em>
+<a id='L383' name='L383'></a>        <strong class='reserved'>int</strong>             tr_mtu_adj;     <em class='comment'>/* delta to adjust if mtu */</em>
+<a id='L384' name='L384'></a>        <strong class='reserved'>int</strong>             tr_blast_cnt;   <em class='comment'>/* # of pkts to blast out */</em>
+<a id='L385' name='L385'></a><em class='brace'>}</em>;
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a><em class='sharp'>#define</em> SN_OUTPUT(clcp, m)\
+<a id='L388' name='L388'></a>        troll_output(clcp-&gt;clc_ifp, m, clcp-&gt;clc_firsthop, clcp-&gt;clc_rt)
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a><em class='sharp'>#define</em> SN_MTU(ifp, rt) (((rt &amp;&amp; rt-&gt;rt_rmx.rmx_mtu) ?\
+<a id='L391' name='L391'></a>        rt-&gt;rt_rmx.rmx_mtu : clnp_badmtu(ifp, rt, __LINE__, __FILE__))\
+<a id='L392' name='L392'></a>                - trollctl.tr_mtu_adj)
+<a id='L393' name='L393'></a>
+<a id='L394' name='L394'></a><em class='sharp'>#ifdef</em> _KERNEL
+<a id='L395' name='L395'></a><strong class='reserved'>extern</strong> <strong class='reserved'>float</strong>    troll_random;
+<a id='L396' name='L396'></a><em class='sharp'>#endif</em>
+<a id='L397' name='L397'></a>
+<a id='L398' name='L398'></a><em class='sharp'>#else</em>                           <em class='comment'>/* NO TROLL */</em>
+<a id='L399' name='L399'></a>
+<a id='L400' name='L400'></a><em class='sharp'>#define</em> SN_OUTPUT(clcp, m)\
+<a id='L401' name='L401'></a>        (*clcp-&gt;clc_ifp-&gt;if_output)(clcp-&gt;clc_ifp, m, clcp-&gt;clc_firsthop, \
+<a id='L402' name='L402'></a>                                    clcp-&gt;clc_rt)
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a><em class='sharp'>#define</em> SN_MTU(ifp, rt) (((rt &amp;&amp; rt-&gt;rt_rmx.rmx_mtu) ?\
+<a id='L405' name='L405'></a>        rt-&gt;rt_rmx.rmx_mtu : clnp_badmtu(ifp, rt, __LINE__, __FILE__)))
+<a id='L406' name='L406'></a>
+<a id='L407' name='L407'></a><em class='sharp'>#endif</em>                          <em class='comment'>/* TROLL */</em>
+<a id='L408' name='L408'></a>
+<a id='L409' name='L409'></a><em class='comment'>/*</em>
+<a id='L410' name='L410'></a><em class='comment'> *      Macro to remove an address from a clnp header</em>
+<a id='L411' name='L411'></a><em class='comment'> */</em>
+<a id='L412' name='L412'></a><em class='sharp'>#define</em> CLNP_EXTRACT_ADDR(isoa, hoff, hend)\
+<a id='L413' name='L413'></a>        <em class='brace'>{</em>\
+<a id='L414' name='L414'></a>                isoa.isoa_len = (u_char)*hoff;\
+<a id='L415' name='L415'></a>                <strong class='reserved'>if</strong> ((((++hoff) + isoa.isoa_len) &gt; hend) ||\
+<a id='L416' name='L416'></a>                        (isoa.isoa_len &gt; 20) || (isoa.isoa_len == 0)) <em class='brace'>{</em>\
+<a id='L417' name='L417'></a>                        hoff = (caddr_t)0;\
+<a id='L418' name='L418'></a>                <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>\
+<a id='L419' name='L419'></a>                        (<strong class='reserved'>void</strong>) bcopy(hoff, (caddr_t)isoa.isoa_genaddr, \
+<a id='L420' name='L420'></a>                                     isoa.isoa_len);\
+<a id='L421' name='L421'></a>                        hoff += isoa.isoa_len;\
+<a id='L422' name='L422'></a>                <em class='brace'>}</em>\
+<a id='L423' name='L423'></a>        <em class='brace'>}</em>
+<a id='L424' name='L424'></a>
+<a id='L425' name='L425'></a><em class='comment'>/*</em>
+<a id='L426' name='L426'></a><em class='comment'> *      Macro to insert an address into a clnp header</em>
+<a id='L427' name='L427'></a><em class='comment'> */</em>
+<a id='L428' name='L428'></a><em class='sharp'>#define</em> CLNP_INSERT_ADDR(hoff, isoa)\
+<a id='L429' name='L429'></a>        *hoff++ = (isoa).isoa_len;\
+<a id='L430' name='L430'></a>        (<strong class='reserved'>void</strong>) bcopy((caddr_t)((isoa).isoa_genaddr), hoff, (isoa).isoa_len);\
+<a id='L431' name='L431'></a>        hoff += (isoa).isoa_len;
+<a id='L432' name='L432'></a>
+<a id='L433' name='L433'></a><em class='comment'>/*</em>
+<a id='L434' name='L434'></a><em class='comment'> *      Clnp hdr cache. Whenever a clnp packet is sent, a copy of the</em>
+<a id='L435' name='L435'></a><em class='comment'> *      header is made and kept in this cache. In addition to a copy of</em>
+<a id='L436' name='L436'></a><em class='comment'> *      the cached clnp hdr, the cache contains</em>
+<a id='L437' name='L437'></a><em class='comment'> *      information necessary to determine whether the new packet</em>
+<a id='L438' name='L438'></a><em class='comment'> *      to send requires a new header to be built.</em>
+<a id='L439' name='L439'></a><em class='comment'> */</em>
+<a id='L440' name='L440'></a><strong class='reserved'>struct</strong> clnp_cache <em class='brace'>{</em>
+<a id='L441' name='L441'></a>        <em class='comment'>/* these fields are used to check the validity of the cache */</em>
+<a id='L442' name='L442'></a>        <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> clc_dst;<em class='comment'>/* destination of packet */</em>
+<a id='L443' name='L443'></a>        <strong class='reserved'>struct</strong> mbuf    *clc_options;    <em class='comment'>/* ptr to options mbuf */</em>
+<a id='L444' name='L444'></a>        <strong class='reserved'>int</strong>             clc_flags;      <em class='comment'>/* flags passed to clnp_output */</em>
+<a id='L445' name='L445'></a>
+<a id='L446' name='L446'></a>        <em class='comment'>/* these fields are state that clnp_output requires to finish the pkt */</em>
+<a id='L447' name='L447'></a>        <strong class='reserved'>int</strong>             clc_segoff;     <em class='comment'>/* offset of seg part of header */</em>
+<a id='L448' name='L448'></a>        <strong class='reserved'>struct</strong> <a href='../S/992.html#L62' title='Defined at 62 in zebra/rt_ioctl.c.'>rtentry</a> *clc_rt; <em class='comment'>/* ptr to rtentry (points into the route</em>
+<a id='L449' name='L449'></a><em class='comment'>                                 * structure) */</em>
+<a id='L450' name='L450'></a>        <strong class='reserved'>struct</strong> sockaddr *clc_firsthop;  <em class='comment'>/* first hop of packet */</em>
+<a id='L451' name='L451'></a>        <strong class='reserved'>struct</strong> ifnet   *clc_ifp;<em class='comment'>/* ptr to interface structure */</em>
+<a id='L452' name='L452'></a>        <strong class='reserved'>struct</strong> iso_ifaddr
+<a id='L453' name='L453'></a>                       *clc_ifa;<em class='comment'>/* ptr to interface address */</em>
+<a id='L454' name='L454'></a>        <strong class='reserved'>struct</strong> mbuf    *clc_hdr;<em class='comment'>/* cached pkt hdr (finally)! */</em>
+<a id='L455' name='L455'></a><em class='brace'>}</em>;
+<a id='L456' name='L456'></a>
+<a id='L457' name='L457'></a><em class='sharp'>#ifdef</em>  _KERNEL
+<a id='L458' name='L458'></a><strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a>;
+<a id='L459' name='L459'></a><strong class='reserved'>struct</strong> <a href='../S/504.html#L156' title='Defined at 156 in isisd/include-netbsd/iso.h.'>sockaddr_iso</a>;
+<a id='L460' name='L460'></a><strong class='reserved'>struct</strong> mbuf;
+<a id='L461' name='L461'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L122' title='Defined at 122 in isisd/include-netbsd/clnp.h.'>clnp_segment</a>;
+<a id='L462' name='L462'></a><strong class='reserved'>struct</strong> sockaddr;
+<a id='L463' name='L463'></a><strong class='reserved'>struct</strong> rt_entry;
+<a id='L464' name='L464'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L158' title='Defined at 158 in isisd/include-netbsd/clnp.h.'>clnp_fragl</a>;
+<a id='L465' name='L465'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a>;
+<a id='L466' name='L466'></a><strong class='reserved'>struct</strong> isopcb;
+<a id='L467' name='L467'></a><strong class='reserved'>struct</strong> snpa_hdr;
+<a id='L468' name='L468'></a><strong class='reserved'>struct</strong> iso_ifaddr;
+<a id='L469' name='L469'></a><strong class='reserved'>struct</strong> route_iso;
+<a id='L470' name='L470'></a>
+<a id='L471' name='L471'></a><em class='comment'>/* clnp_debug.c */</em>
+<a id='L472' name='L472'></a><strong class='reserved'>char</strong> *clnp_hexp <strong class='reserved'>__P</strong>((<strong class='reserved'>char</strong> *, <strong class='reserved'>int</strong>, <strong class='reserved'>char</strong> *));
+<a id='L473' name='L473'></a><strong class='reserved'>char</strong> *clnp_iso_addrp <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L474' name='L474'></a><strong class='reserved'>char</strong> *clnp_saddr_isop <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/504.html#L156' title='Defined at 156 in isisd/include-netbsd/iso.h.'>sockaddr_iso</a> *));
+<a id='L475' name='L475'></a>
+<a id='L476' name='L476'></a><em class='comment'>/* clnp_er.c */</em>
+<a id='L477' name='L477'></a><strong class='reserved'>void</strong> clnp_er_input <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, u_int));
+<a id='L478' name='L478'></a><strong class='reserved'>void</strong> clnp_discard <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, u_int));
+<a id='L479' name='L479'></a><strong class='reserved'>void</strong> clnp_emit_er <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, u_int));
+<a id='L480' name='L480'></a><strong class='reserved'>int</strong> clnp_er_index <strong class='reserved'>__P</strong>((u_int));
+<a id='L481' name='L481'></a>
+<a id='L482' name='L482'></a><strong class='reserved'>int</strong> clnp_fragment <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> ifnet *, <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> sockaddr *,
+<a id='L483' name='L483'></a>                       <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/992.html#L62' title='Defined at 62 in zebra/rt_ioctl.c.'>rtentry</a> *));
+<a id='L484' name='L484'></a><strong class='reserved'>struct</strong> mbuf *clnp_reass <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *,
+<a id='L485' name='L485'></a>                             <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, <strong class='reserved'>struct</strong> <a href='../S/503.html#L122' title='Defined at 122 in isisd/include-netbsd/clnp.h.'>clnp_segment</a> *));
+<a id='L486' name='L486'></a><strong class='reserved'>int</strong> clnp_newpkt <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *,
+<a id='L487' name='L487'></a>                     <strong class='reserved'>struct</strong> <a href='../S/503.html#L122' title='Defined at 122 in isisd/include-netbsd/clnp.h.'>clnp_segment</a> *));
+<a id='L488' name='L488'></a><strong class='reserved'>void</strong> clnp_insert_frag <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/503.html#L158' title='Defined at 158 in isisd/include-netbsd/clnp.h.'>clnp_fragl</a> *, <strong class='reserved'>struct</strong> mbuf *,
+<a id='L489' name='L489'></a>                           <strong class='reserved'>struct</strong> <a href='../S/503.html#L122' title='Defined at 122 in isisd/include-netbsd/clnp.h.'>clnp_segment</a> *));
+<a id='L490' name='L490'></a><strong class='reserved'>struct</strong> mbuf    *clnp_comp_pdu <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/503.html#L158' title='Defined at 158 in isisd/include-netbsd/clnp.h.'>clnp_fragl</a> *));
+<a id='L491' name='L491'></a><em class='sharp'>#ifdef</em> TROLL
+<a id='L492' name='L492'></a><strong class='reserved'>float</strong> troll_random <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L493' name='L493'></a><strong class='reserved'>int</strong> troll_output <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> ifnet *, <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> sockaddr *,
+<a id='L494' name='L494'></a>                      <strong class='reserved'>struct</strong> <a href='../S/992.html#L62' title='Defined at 62 in zebra/rt_ioctl.c.'>rtentry</a> *));
+<a id='L495' name='L495'></a><em class='sharp'>#endif</em>
+<a id='L496' name='L496'></a>
+<a id='L497' name='L497'></a><em class='comment'>/* clnp_input.c */</em>
+<a id='L498' name='L498'></a><strong class='reserved'>void</strong> clnp_init  <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L499' name='L499'></a><strong class='reserved'>void</strong> clnlintr    <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L500' name='L500'></a><strong class='reserved'>void</strong> clnp_input <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L501' name='L501'></a>
+<a id='L502' name='L502'></a><em class='comment'>/* clnp_options.c */</em>
+<a id='L503' name='L503'></a><strong class='reserved'>void</strong> clnp_update_srcrt <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *));
+<a id='L504' name='L504'></a><strong class='reserved'>void</strong> clnp_dooptions <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *, <strong class='reserved'>struct</strong> ifnet *,
+<a id='L505' name='L505'></a>                         <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L506' name='L506'></a><strong class='reserved'>int</strong> clnp_set_opts <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf **, <strong class='reserved'>struct</strong> mbuf **));
+<a id='L507' name='L507'></a><strong class='reserved'>int</strong> clnp_opt_sanity <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, caddr_t, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *));
+<a id='L508' name='L508'></a>
+<a id='L509' name='L509'></a><em class='comment'>/* clnp_output.c */</em>
+<a id='L510' name='L510'></a><strong class='reserved'>int</strong> clnp_output <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L511' name='L511'></a><strong class='reserved'>void</strong> clnp_ctloutput <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L512' name='L512'></a>
+<a id='L513' name='L513'></a><em class='comment'>/* clnp_raw.c */</em>
+<a id='L514' name='L514'></a><strong class='reserved'>void</strong> rclnp_input <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L515' name='L515'></a><strong class='reserved'>int</strong> rclnp_output <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L516' name='L516'></a><strong class='reserved'>int</strong> rclnp_ctloutput <strong class='reserved'>__P</strong>((<strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> socket *, <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> mbuf **));
+<a id='L517' name='L517'></a><strong class='reserved'>int</strong> clnp_usrreq <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> socket *, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> mbuf *,
+<a id='L518' name='L518'></a>                     <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> proc *));
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a><em class='comment'>/* clnp_subr.c */</em>
+<a id='L521' name='L521'></a><strong class='reserved'>struct</strong> mbuf    *clnp_data_ck <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>int</strong>));
+<a id='L522' name='L522'></a>caddr_t clnp_extract_addr <strong class='reserved'>__P</strong>((caddr_t, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *,
+<a id='L523' name='L523'></a>                               <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L524' name='L524'></a><strong class='reserved'>int</strong> clnp_ours   <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L525' name='L525'></a><strong class='reserved'>void</strong> clnp_forward <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *,
+<a id='L526' name='L526'></a>                       <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> snpa_hdr *));
+<a id='L527' name='L527'></a>caddr_t clnp_insert_addr <strong class='reserved'>__P</strong>((caddr_t, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L528' name='L528'></a><strong class='reserved'>int</strong> clnp_route  <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, <strong class='reserved'>struct</strong> route_iso *, <strong class='reserved'>int</strong>,
+<a id='L529' name='L529'></a>                     <strong class='reserved'>struct</strong> sockaddr **, <strong class='reserved'>struct</strong> iso_ifaddr **));
+<a id='L530' name='L530'></a><strong class='reserved'>int</strong> clnp_srcroute <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *, <strong class='reserved'>struct</strong> route_iso *,
+<a id='L531' name='L531'></a>                       <strong class='reserved'>struct</strong> sockaddr **, <strong class='reserved'>struct</strong> iso_ifaddr **,
+<a id='L532' name='L532'></a>                       <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L533' name='L533'></a><strong class='reserved'>int</strong> clnp_echoreply <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/504.html#L156' title='Defined at 156 in isisd/include-netbsd/iso.h.'>sockaddr_iso</a> *,
+<a id='L534' name='L534'></a>                        <strong class='reserved'>struct</strong> <a href='../S/504.html#L156' title='Defined at 156 in isisd/include-netbsd/iso.h.'>sockaddr_iso</a> *, <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *));
+<a id='L535' name='L535'></a><strong class='reserved'>int</strong> clnp_badmtu <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> ifnet *, <strong class='reserved'>struct</strong> <a href='../S/992.html#L62' title='Defined at 62 in zebra/rt_ioctl.c.'>rtentry</a> *, <strong class='reserved'>int</strong>, <strong class='reserved'>char</strong> *));
+<a id='L536' name='L536'></a><strong class='reserved'>void</strong> clnp_ypocb  <strong class='reserved'>__P</strong>((caddr_t, caddr_t, u_int));
+<a id='L537' name='L537'></a>
+<a id='L538' name='L538'></a><em class='comment'>/* clnp_timer.c */</em>
+<a id='L539' name='L539'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L158' title='Defined at 158 in isisd/include-netbsd/clnp.h.'>clnp_fragl</a> *clnp_freefrags <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> <a href='../S/503.html#L158' title='Defined at 158 in isisd/include-netbsd/clnp.h.'>clnp_fragl</a> *));
+<a id='L540' name='L540'></a><strong class='reserved'>void</strong> clnp_slowtimo <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L541' name='L541'></a><strong class='reserved'>void</strong> clnp_drain <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L542' name='L542'></a>
+<a id='L543' name='L543'></a><em class='sharp'>#ifdef</em>  TROLL
+<a id='L544' name='L544'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L378' title='Defined at 378 in isisd/include-netbsd/clnp.h.'>troll</a>    trollctl;
+<a id='L545' name='L545'></a><em class='sharp'>#endif</em> <em class='comment'>/* TROLL */</em>
+<a id='L546' name='L546'></a>
+<a id='L547' name='L547'></a><em class='sharp'>#endif</em> <em class='comment'>/* _KERNEL */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

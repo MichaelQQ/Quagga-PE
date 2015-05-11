@@ -1,0 +1,779 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/privs.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/privs.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L147'>[^]</a><a href='#L725'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L147' title='Defined at 147.'>zcaps2sys</a></li>
+<li><a href='#L187' title='Defined at 187.'>zprivs_change_caps</a></li>
+<li><a href='#L212' title='Defined at 212.'>zprivs_state_caps</a></li>
+<li><a href='#L238' title='Defined at 238.'>zprivs_caps_init</a></li>
+<li><a href='#L312' title='Defined at 312.'>zprivs_caps_terminate</a></li>
+<li><a href='#L353' title='Defined at 353.'>zcaps2sys</a></li>
+<li><a href='#L377' title='Defined at 377.'>zprivs_change_caps</a></li>
+<li><a href='#L406' title='Defined at 406.'>zprivs_state_caps</a></li>
+<li><a href='#L439' title='Defined at 439.'>zprivs_caps_init</a></li>
+<li><a href='#L537' title='Defined at 537.'>zprivs_caps_terminate</a></li>
+<li><a href='#L561' title='Defined at 561.'>zprivs_change_uid</a></li>
+<li><a href='#L573' title='Defined at 573.'>zprivs_state_uid</a></li>
+<li><a href='#L579' title='Defined at 579.'>zprivs_change_null</a></li>
+<li><a href='#L585' title='Defined at 585.'>zprivs_state_null</a></li>
+<li><a href='#L591' title='Defined at 591.'>zprivs_init</a></li>
+<li><a href='#L696' title='Defined at 696.'>zprivs_terminate</a></li>
+<li><a href='#L725' title='Defined at 725.'>zprivs_get_ids</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* </em>
+<a id='L2' name='L2'></a><em class='comment'> * Zebra privileges.</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (C) 2003 Paul Jakma.</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2005 Sun Microsystems, Inc.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L11' name='L11'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L12' name='L12'></a><em class='comment'> * later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L15' name='L15'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L16' name='L16'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L17' name='L17'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L18' name='L18'></a><em class='comment'> *</em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L20' name='L20'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L21' name='L21'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L22' name='L22'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L23' name='L23'></a><em class='comment'> */</em>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='sharp'>#ifdef</em> HAVE_CAPABILITIES
+<a id='L30' name='L30'></a><em class='comment'>/* sort out some generic internal types for:</em>
+<a id='L31' name='L31'></a><em class='comment'> *</em>
+<a id='L32' name='L32'></a><em class='comment'> * privilege values (cap_value_t, priv_t)       -&gt; pvalue_t</em>
+<a id='L33' name='L33'></a><em class='comment'> * privilege set (..., priv_set_t)              -&gt; pset_t</em>
+<a id='L34' name='L34'></a><em class='comment'> * privilege working storage (cap_t, ...)       -&gt; pstorage_t</em>
+<a id='L35' name='L35'></a><em class='comment'> *</em>
+<a id='L36' name='L36'></a><em class='comment'> * values we think of as numeric (they're ints really, but we dont know)</em>
+<a id='L37' name='L37'></a><em class='comment'> * sets are mostly opaque, to hold a set of privileges, related in some way.</em>
+<a id='L38' name='L38'></a><em class='comment'> * storage binds together a set of sets we're interested in.</em>
+<a id='L39' name='L39'></a><em class='comment'> * (in reality: cap_value_t and priv_t are ints)</em>
+<a id='L40' name='L40'></a><em class='comment'> */</em> 
+<a id='L41' name='L41'></a><em class='sharp'>#ifdef</em> HAVE_LCAPS
+<a id='L42' name='L42'></a><em class='comment'>/* Linux doesn't have a 'set' type: a set of related privileges */</em>
+<a id='L43' name='L43'></a><strong class='reserved'>struct</strong> <a href='../S/189.html#L48' title='Referred from 48 in lib/privs.c.'>_pset</a> <em class='brace'>{</em>
+<a id='L44' name='L44'></a>  <strong class='reserved'>int</strong> num;
+<a id='L45' name='L45'></a>  cap_value_t *caps;
+<a id='L46' name='L46'></a><em class='brace'>}</em>;
+<a id='L47' name='L47'></a><strong class='reserved'>typedef</strong> cap_value_t <a href='../R/8916.html' title='Multiple referred from 25 places.'>pvalue_t</a>;
+<a id='L48' name='L48'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../S/189.html#L43' title='Defined at 43 in lib/privs.c.'>_pset</a> <a href='../R/8911.html' title='Multiple referred from 12 places.'>pset_t</a>;
+<a id='L49' name='L49'></a><strong class='reserved'>typedef</strong> cap_t <a href='../S/189.html#L69' title='Referred from 69 in lib/privs.c.'>pstorage_t</a>;
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><em class='sharp'>#elif</em> <strong class='reserved'>defined</strong> (HAVE_SOLARIS_CAPABILITIES)
+<a id='L52' name='L52'></a><strong class='reserved'>typedef</strong> priv_t <a href='../R/8916.html' title='Multiple referred from 25 places.'>pvalue_t</a>;
+<a id='L53' name='L53'></a><strong class='reserved'>typedef</strong> priv_set_t <a href='../R/8911.html' title='Multiple referred from 12 places.'>pset_t</a>;
+<a id='L54' name='L54'></a><strong class='reserved'>typedef</strong> priv_set_t *<a href='../S/189.html#L69' title='Referred from 69 in lib/privs.c.'>pstorage_t</a>;
+<a id='L55' name='L55'></a><em class='sharp'>#else</em> <em class='comment'>/* neither LCAPS nor SOLARIS_CAPABILITIES */</em>
+<a id='L56' name='L56'></a><em class='sharp'>#error</em> "HAVE_CAPABILITIES defined, but neither LCAPS nor Solaris Capabilties!"
+<a id='L57' name='L57'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_LCAPS */</em>
+<a id='L58' name='L58'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_CAPABILITIES */</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><em class='comment'>/* the default NULL state we report is RAISED, but could be LOWERED if</em>
+<a id='L61' name='L61'></a><em class='comment'> * zprivs_terminate is called and the NULL handler is installed.</em>
+<a id='L62' name='L62'></a><em class='comment'> */</em>
+<a id='L63' name='L63'></a><strong class='reserved'>static</strong> <a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a> zprivs_null_state = <a href='../S/217.html#L47' title='Defined at 47 in lib/privs.h.'>ZPRIVS_RAISED</a>;
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a><em class='comment'>/* internal privileges state */</em>
+<a id='L66' name='L66'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> _zprivs_t
+<a id='L67' name='L67'></a><em class='brace'>{</em>
+<a id='L68' name='L68'></a><em class='sharp'>#ifdef</em> HAVE_CAPABILITIES
+<a id='L69' name='L69'></a>  <a href='../D/9800.html' title='Multiple defined in 2 places.'>pstorage_t</a> caps;              <em class='comment'>/* working storage        */</em>
+<a id='L70' name='L70'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *syscaps_p;            <em class='comment'>/* system-type requested permitted caps    */</em>
+<a id='L71' name='L71'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *syscaps_i;            <em class='comment'>/* system-type requested inheritable caps  */</em>
+<a id='L72' name='L72'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_CAPABILITIES */</em>
+<a id='L73' name='L73'></a>  uid_t zuid,                 <em class='comment'>/* uid to run as            */</em>
+<a id='L74' name='L74'></a>        zsuid;                <em class='comment'>/* saved uid                */</em>
+<a id='L75' name='L75'></a>  gid_t zgid;                 <em class='comment'>/* gid to run as            */</em>
+<a id='L76' name='L76'></a>  gid_t vtygrp;               <em class='comment'>/* gid for vty sockets      */</em>
+<a id='L77' name='L77'></a><em class='brace'>}</em> zprivs_state;
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><em class='comment'>/* externally exported but not directly accessed functions */</em>
+<a id='L80' name='L80'></a><em class='sharp'>#ifdef</em> HAVE_CAPABILITIES
+<a id='L81' name='L81'></a><strong class='reserved'>int</strong> <a href='../D/11638.html' title='Multiple defined in 2 places.'>zprivs_change_caps</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a>);
+<a id='L82' name='L82'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a> <a href='../D/11644.html' title='Multiple defined in 2 places.'>zprivs_state_caps</a> (<strong class='reserved'>void</strong>);
+<a id='L83' name='L83'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_CAPABILITIES */</em>
+<a id='L84' name='L84'></a><strong class='reserved'>int</strong> <a href='../S/189.html#L561' title='Defined at 561 in lib/privs.c.'>zprivs_change_uid</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a>);
+<a id='L85' name='L85'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a> <a href='../S/189.html#L573' title='Defined at 573 in lib/privs.c.'>zprivs_state_uid</a> (<strong class='reserved'>void</strong>);
+<a id='L86' name='L86'></a><strong class='reserved'>int</strong> <a href='../S/189.html#L579' title='Defined at 579 in lib/privs.c.'>zprivs_change_null</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a>);
+<a id='L87' name='L87'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a> <a href='../S/189.html#L585' title='Defined at 585 in lib/privs.c.'>zprivs_state_null</a> (<strong class='reserved'>void</strong>);
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a><em class='sharp'>#ifdef</em> HAVE_CAPABILITIES
+<a id='L90' name='L90'></a><em class='comment'>/* internal capability API */</em>
+<a id='L91' name='L91'></a><strong class='reserved'>static</strong> <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *<a href='../D/11479.html' title='Multiple defined in 2 places.'>zcaps2sys</a> (<a href='../S/217.html#L42' title='Defined at 42 in lib/privs.h.'>zebra_capabilities_t</a> *, <strong class='reserved'>int</strong>);
+<a id='L92' name='L92'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../D/11636.html' title='Multiple defined in 2 places.'>zprivs_caps_init</a> (<strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> *);
+<a id='L93' name='L93'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../D/11637.html' title='Multiple defined in 2 places.'>zprivs_caps_terminate</a> (<strong class='reserved'>void</strong>);
+<a id='L94' name='L94'></a>
+<a id='L95' name='L95'></a><em class='comment'>/* Map of Quagga abstract capabilities to system capabilities */</em>
+<a id='L96' name='L96'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong>
+<a id='L97' name='L97'></a><em class='brace'>{</em>
+<a id='L98' name='L98'></a>  <strong class='reserved'>int</strong> num;
+<a id='L99' name='L99'></a>  <a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> *system_caps;
+<a id='L100' name='L100'></a><em class='brace'>}</em> cap_map [ZCAP_MAX] =
+<a id='L101' name='L101'></a><em class='brace'>{</em>
+<a id='L102' name='L102'></a><em class='sharp'>#ifdef</em> HAVE_LCAPS <em class='comment'>/* Quagga -&gt; Linux capabilities mappings */</em>
+<a id='L103' name='L103'></a>  [<a href='../S/217.html#L30' title='Defined at 30 in lib/privs.h.'>ZCAP_SETID</a>] =        <em class='brace'>{</em> 2, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_SETGID,
+<a id='L104' name='L104'></a>                                             CAP_SETUID                 <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L105' name='L105'></a>  [<a href='../S/217.html#L31' title='Defined at 31 in lib/privs.h.'>ZCAP_BIND</a>] =         <em class='brace'>{</em> 2, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_NET_BIND_SERVICE,
+<a id='L106' name='L106'></a>                                             CAP_NET_BROADCAST          <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L107' name='L107'></a>  [<a href='../S/217.html#L32' title='Defined at 32 in lib/privs.h.'>ZCAP_NET_ADMIN</a>] =    <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_NET_ADMIN              <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L108' name='L108'></a>  [<a href='../S/217.html#L34' title='Defined at 34 in lib/privs.h.'>ZCAP_NET_RAW</a>] =      <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_NET_RAW                <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L109' name='L109'></a>  [<a href='../S/217.html#L35' title='Defined at 35 in lib/privs.h.'>ZCAP_CHROOT</a>] =       <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_SYS_CHROOT,            <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L110' name='L110'></a>  [<a href='../S/217.html#L36' title='Defined at 36 in lib/privs.h.'>ZCAP_NICE</a>] =         <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_SYS_NICE               <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L111' name='L111'></a>  [<a href='../S/217.html#L37' title='Defined at 37 in lib/privs.h.'>ZCAP_PTRACE</a>] =       <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_SYS_PTRACE             <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L112' name='L112'></a>  [<a href='../S/217.html#L38' title='Defined at 38 in lib/privs.h.'>ZCAP_DAC_OVERRIDE</a>] = <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_DAC_OVERRIDE           <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L113' name='L113'></a>  [<a href='../S/217.html#L39' title='Defined at 39 in lib/privs.h.'>ZCAP_READ_SEARCH</a>] =  <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_DAC_READ_SEARCH        <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L114' name='L114'></a>  [<a href='../S/217.html#L33' title='Defined at 33 in lib/privs.h.'>ZCAP_SYS_ADMIN</a>] =    <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_SYS_ADMIN              <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L115' name='L115'></a>  [<a href='../S/217.html#L40' title='Defined at 40 in lib/privs.h.'>ZCAP_FOWNER</a>] =       <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> CAP_FOWNER                 <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L116' name='L116'></a><em class='sharp'>#elif</em> <strong class='reserved'>defined</strong>(HAVE_SOLARIS_CAPABILITIES) <em class='comment'>/* HAVE_LCAPS */</em>
+<a id='L117' name='L117'></a>  <em class='comment'>/* Quagga -&gt; Solaris privilege mappings */</em>
+<a id='L118' name='L118'></a>  [<a href='../S/217.html#L30' title='Defined at 30 in lib/privs.h.'>ZCAP_SETID</a>] =        <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_PROC_SETID            <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L119' name='L119'></a>  [<a href='../S/217.html#L31' title='Defined at 31 in lib/privs.h.'>ZCAP_BIND</a>] =         <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_NET_PRIVADDR          <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L120' name='L120'></a>  <em class='comment'>/* IP_CONFIG is a subset of NET_CONFIG and is allowed in zones */</em>
+<a id='L121' name='L121'></a><em class='sharp'>#ifdef</em> PRIV_SYS_IP_CONFIG
+<a id='L122' name='L122'></a>  [<a href='../S/217.html#L32' title='Defined at 32 in lib/privs.h.'>ZCAP_NET_ADMIN</a>] =    <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_SYS_IP_CONFIG <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L123' name='L123'></a><em class='sharp'>#else</em>
+<a id='L124' name='L124'></a>  [<a href='../S/217.html#L32' title='Defined at 32 in lib/privs.h.'>ZCAP_NET_ADMIN</a>] =    <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_SYS_NET_CONFIG        <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L125' name='L125'></a><em class='sharp'>#endif</em>
+<a id='L126' name='L126'></a>  [<a href='../S/217.html#L34' title='Defined at 34 in lib/privs.h.'>ZCAP_NET_RAW</a>] =      <em class='brace'>{</em> 2, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_NET_RAWACCESS,
+<a id='L127' name='L127'></a>                                             PRIV_NET_ICMPACCESS        <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L128' name='L128'></a>  [<a href='../S/217.html#L35' title='Defined at 35 in lib/privs.h.'>ZCAP_CHROOT</a>] =       <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_PROC_CHROOT           <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L129' name='L129'></a>  [<a href='../S/217.html#L36' title='Defined at 36 in lib/privs.h.'>ZCAP_NICE</a>] =         <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_PROC_PRIOCNTL         <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L130' name='L130'></a>  [<a href='../S/217.html#L37' title='Defined at 37 in lib/privs.h.'>ZCAP_PTRACE</a>] =       <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_PROC_SESSION          <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L131' name='L131'></a>  [<a href='../S/217.html#L38' title='Defined at 38 in lib/privs.h.'>ZCAP_DAC_OVERRIDE</a>] = <em class='brace'>{</em> 2, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_FILE_DAC_EXECUTE, 
+<a id='L132' name='L132'></a>                                             PRIV_FILE_DAC_READ,
+<a id='L133' name='L133'></a>                                             PRIV_FILE_DAC_SEARCH,
+<a id='L134' name='L134'></a>                                             PRIV_FILE_DAC_WRITE,
+<a id='L135' name='L135'></a>                                             PRIV_FILE_DAC_SEARCH       <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L136' name='L136'></a>  [<a href='../S/217.html#L39' title='Defined at 39 in lib/privs.h.'>ZCAP_READ_SEARCH</a>] =  <em class='brace'>{</em> 2, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_FILE_DAC_SEARCH,
+<a id='L137' name='L137'></a>                                             PRIV_FILE_DAC_READ         <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L138' name='L138'></a>  [<a href='../S/217.html#L33' title='Defined at 33 in lib/privs.h.'>ZCAP_SYS_ADMIN</a>] =    <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_SYS_ADMIN             <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L139' name='L139'></a>  [<a href='../S/217.html#L40' title='Defined at 40 in lib/privs.h.'>ZCAP_FOWNER</a>] =       <em class='brace'>{</em> 1, (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a> []) <em class='brace'>{</em> PRIV_FILE_OWNER            <em class='brace'>}</em>, <em class='brace'>}</em>,
+<a id='L140' name='L140'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SOLARIS_CAPABILITIES */</em>
+<a id='L141' name='L141'></a><em class='brace'>}</em>;
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a><em class='sharp'>#ifdef</em> HAVE_LCAPS
+<a id='L144' name='L144'></a><em class='comment'>/* Linux forms of capabilities methods */</em>
+<a id='L145' name='L145'></a><em class='comment'>/* convert zebras privileges to system capabilities */</em>
+<a id='L146' name='L146'></a><strong class='reserved'>static</strong> <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *
+<a id='L147' name='L147'></a><a href='../R/10551.html' title='Multiple referred from 5 places.'>zcaps2sys</a> (<a href='../S/217.html#L42' title='Defined at 42 in lib/privs.h.'>zebra_capabilities_t</a> *zcaps, <strong class='reserved'>int</strong> num)
+<a id='L148' name='L148'></a><em class='brace'>{</em>
+<a id='L149' name='L149'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *syscaps;
+<a id='L150' name='L150'></a>  <strong class='reserved'>int</strong> i, j = 0, count = 0;
+<a id='L151' name='L151'></a>  
+<a id='L152' name='L152'></a>  <strong class='reserved'>if</strong> (!num)
+<a id='L153' name='L153'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L154' name='L154'></a>  
+<a id='L155' name='L155'></a>  <em class='comment'>/* first count up how many system caps we have */</em>
+<a id='L156' name='L156'></a>  <strong class='reserved'>for</strong> (i= 0; i &lt; num; i++)
+<a id='L157' name='L157'></a>    count += cap_map[zcaps[i]].num;
+<a id='L158' name='L158'></a>  
+<a id='L159' name='L159'></a>  <strong class='reserved'>if</strong> ( (syscaps = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_PRIVS, (<strong class='reserved'>sizeof</strong>(<a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a>) * num))) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L160' name='L160'></a>    <em class='brace'>{</em>
+<a id='L161' name='L161'></a>      fprintf (stderr, "%s: could not allocate syscaps!", __func__);
+<a id='L162' name='L162'></a>      <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L163' name='L163'></a>    <em class='brace'>}</em>
+<a id='L164' name='L164'></a>  
+<a id='L165' name='L165'></a>  syscaps-&gt;caps = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_PRIVS, (<strong class='reserved'>sizeof</strong> (<a href='../D/9803.html' title='Multiple defined in 2 places.'>pvalue_t</a>) * count));
+<a id='L166' name='L166'></a>  
+<a id='L167' name='L167'></a>  <strong class='reserved'>if</strong> (!syscaps-&gt;caps)
+<a id='L168' name='L168'></a>    <em class='brace'>{</em>
+<a id='L169' name='L169'></a>      fprintf (stderr, "%s: could not XCALLOC caps!", __func__);
+<a id='L170' name='L170'></a>      <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L171' name='L171'></a>    <em class='brace'>}</em>
+<a id='L172' name='L172'></a>  
+<a id='L173' name='L173'></a>  <em class='comment'>/* copy the capabilities over */</em>
+<a id='L174' name='L174'></a>  count = 0;
+<a id='L175' name='L175'></a>  <strong class='reserved'>for</strong> (i=0; i &lt; num; i++)
+<a id='L176' name='L176'></a>    <strong class='reserved'>for</strong> (j = 0; j &lt; cap_map[zcaps[i]].num; j++)
+<a id='L177' name='L177'></a>      syscaps-&gt;caps[count++] = cap_map[zcaps[i]].system_caps[j];
+<a id='L178' name='L178'></a>  
+<a id='L179' name='L179'></a>  <em class='comment'>/* iterations above should be exact same as previous count, obviously.. */</em>
+<a id='L180' name='L180'></a>  syscaps-&gt;num = count;
+<a id='L181' name='L181'></a>  
+<a id='L182' name='L182'></a>  <strong class='reserved'>return</strong> syscaps;
+<a id='L183' name='L183'></a><em class='brace'>}</em>
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a><em class='comment'>/* set or clear the effective capabilities to/from permitted */</em>
+<a id='L186' name='L186'></a><strong class='reserved'>int</strong> 
+<a id='L187' name='L187'></a><a href='../R/10704.html' title='Multiple referred from 3 places.'>zprivs_change_caps</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a> op)
+<a id='L188' name='L188'></a><em class='brace'>{</em>
+<a id='L189' name='L189'></a>  cap_flag_value_t cflag;
+<a id='L190' name='L190'></a>  
+<a id='L191' name='L191'></a>  <em class='comment'>/* should be no possibility of being called without valid caps */</em>
+<a id='L192' name='L192'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (zprivs_state.syscaps_p &amp;&amp; zprivs_state.caps);
+<a id='L193' name='L193'></a>  <strong class='reserved'>if</strong> (! (zprivs_state.syscaps_p &amp;&amp; zprivs_state.caps))
+<a id='L194' name='L194'></a>    exit (1);
+<a id='L195' name='L195'></a>    
+<a id='L196' name='L196'></a>  <strong class='reserved'>if</strong> (op == <a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>)
+<a id='L197' name='L197'></a>    cflag = CAP_SET;
+<a id='L198' name='L198'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (op == <a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>)
+<a id='L199' name='L199'></a>    cflag = CAP_CLEAR;
+<a id='L200' name='L200'></a>  <strong class='reserved'>else</strong>
+<a id='L201' name='L201'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a>  <strong class='reserved'>if</strong> ( !cap_set_flag (zprivs_state.caps, CAP_EFFECTIVE,
+<a id='L204' name='L204'></a>                       zprivs_state.syscaps_p-&gt;num, 
+<a id='L205' name='L205'></a>                       zprivs_state.syscaps_p-&gt;caps, 
+<a id='L206' name='L206'></a>                       cflag))
+<a id='L207' name='L207'></a>    <strong class='reserved'>return</strong> cap_set_proc (zprivs_state.caps);
+<a id='L208' name='L208'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L209' name='L209'></a><em class='brace'>}</em>
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a>
+<a id='L212' name='L212'></a><a href='../R/10710.html' title='Multiple referred from 3 places.'>zprivs_state_caps</a> (<strong class='reserved'>void</strong>)
+<a id='L213' name='L213'></a><em class='brace'>{</em>
+<a id='L214' name='L214'></a>  <strong class='reserved'>int</strong> i;
+<a id='L215' name='L215'></a>  cap_flag_value_t val;
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  <em class='comment'>/* should be no possibility of being called without valid caps */</em>
+<a id='L218' name='L218'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (zprivs_state.syscaps_p &amp;&amp; zprivs_state.caps);
+<a id='L219' name='L219'></a>  <strong class='reserved'>if</strong> (! (zprivs_state.syscaps_p &amp;&amp; zprivs_state.caps))
+<a id='L220' name='L220'></a>    exit (1);
+<a id='L221' name='L221'></a>  
+<a id='L222' name='L222'></a>  <strong class='reserved'>for</strong> (i=0; i &lt; zprivs_state.syscaps_p-&gt;num; i++)
+<a id='L223' name='L223'></a>    <em class='brace'>{</em>
+<a id='L224' name='L224'></a>      <strong class='reserved'>if</strong> ( cap_get_flag (zprivs_state.caps, zprivs_state.syscaps_p-&gt;caps[i], 
+<a id='L225' name='L225'></a>                         CAP_EFFECTIVE, &amp;val) )
+<a id='L226' name='L226'></a>        <em class='brace'>{</em>
+<a id='L227' name='L227'></a>          zlog_warn ("zprivs_state_caps: could not cap_get_flag, %s",
+<a id='L228' name='L228'></a>                     <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L229' name='L229'></a>          <strong class='reserved'>return</strong> <a href='../S/217.html#L48' title='Defined at 48 in lib/privs.h.'>ZPRIVS_UNKNOWN</a>;
+<a id='L230' name='L230'></a>        <em class='brace'>}</em>
+<a id='L231' name='L231'></a>      <strong class='reserved'>if</strong> (val == CAP_SET)
+<a id='L232' name='L232'></a>        <strong class='reserved'>return</strong> <a href='../S/217.html#L47' title='Defined at 47 in lib/privs.h.'>ZPRIVS_RAISED</a>;
+<a id='L233' name='L233'></a>    <em class='brace'>}</em>
+<a id='L234' name='L234'></a>  <strong class='reserved'>return</strong> <a href='../S/217.html#L46' title='Defined at 46 in lib/privs.h.'>ZPRIVS_LOWERED</a>;
+<a id='L235' name='L235'></a><em class='brace'>}</em>
+<a id='L236' name='L236'></a>
+<a id='L237' name='L237'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L238' name='L238'></a><a href='../R/10702.html' title='Multiple referred from 2 places.'>zprivs_caps_init</a> (<strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> *zprivs)
+<a id='L239' name='L239'></a><em class='brace'>{</em>
+<a id='L240' name='L240'></a>  zprivs_state.syscaps_p = <a href='../D/11479.html' title='Multiple defined in 2 places.'>zcaps2sys</a> (zprivs-&gt;caps_p, zprivs-&gt;cap_num_p);
+<a id='L241' name='L241'></a>  zprivs_state.syscaps_i = <a href='../D/11479.html' title='Multiple defined in 2 places.'>zcaps2sys</a> (zprivs-&gt;caps_i, zprivs-&gt;cap_num_i);
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a>  <em class='comment'>/* Tell kernel we want caps maintained across uid changes */</em>
+<a id='L244' name='L244'></a>  <strong class='reserved'>if</strong> ( prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0) == -1 )
+<a id='L245' name='L245'></a>    <em class='brace'>{</em>
+<a id='L246' name='L246'></a>      fprintf (stderr, "privs_init: could not set PR_SET_KEEPCAPS, %s\n",
+<a id='L247' name='L247'></a>                <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L248' name='L248'></a>      exit(1);
+<a id='L249' name='L249'></a>    <em class='brace'>}</em>
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>  <strong class='reserved'>if</strong> ( !zprivs_state.syscaps_p )
+<a id='L252' name='L252'></a>    <em class='brace'>{</em>
+<a id='L253' name='L253'></a>      fprintf (stderr, "privs_init: capabilities enabled, "
+<a id='L254' name='L254'></a>                       "but no capabilities supplied\n");
+<a id='L255' name='L255'></a>    <em class='brace'>}</em>
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a>  <em class='comment'>/* we have caps, we have no need to ever change back the original user */</em>
+<a id='L258' name='L258'></a>  <strong class='reserved'>if</strong> (zprivs_state.zuid)
+<a id='L259' name='L259'></a>    <em class='brace'>{</em>
+<a id='L260' name='L260'></a>      <strong class='reserved'>if</strong> ( setreuid (zprivs_state.zuid, zprivs_state.zuid) )
+<a id='L261' name='L261'></a>        <em class='brace'>{</em>
+<a id='L262' name='L262'></a>          fprintf (stderr, "zprivs_init (cap): could not setreuid, %s\n", 
+<a id='L263' name='L263'></a>                     <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L264' name='L264'></a>          exit (1);
+<a id='L265' name='L265'></a>        <em class='brace'>}</em>
+<a id='L266' name='L266'></a>    <em class='brace'>}</em>
+<a id='L267' name='L267'></a>  
+<a id='L268' name='L268'></a>  <strong class='reserved'>if</strong> ( !(zprivs_state.caps = cap_init()) )
+<a id='L269' name='L269'></a>    <em class='brace'>{</em>
+<a id='L270' name='L270'></a>      fprintf (stderr, "privs_init: failed to cap_init, %s\n", 
+<a id='L271' name='L271'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L272' name='L272'></a>      exit (1);
+<a id='L273' name='L273'></a>    <em class='brace'>}</em>
+<a id='L274' name='L274'></a>
+<a id='L275' name='L275'></a>  <strong class='reserved'>if</strong> ( cap_clear (zprivs_state.caps) )
+<a id='L276' name='L276'></a>    <em class='brace'>{</em>
+<a id='L277' name='L277'></a>      fprintf (stderr, "privs_init: failed to cap_clear, %s\n", 
+<a id='L278' name='L278'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L279' name='L279'></a>      exit (1);
+<a id='L280' name='L280'></a>    <em class='brace'>}</em>
+<a id='L281' name='L281'></a>  
+<a id='L282' name='L282'></a>  <em class='comment'>/* set permitted caps */</em>
+<a id='L283' name='L283'></a>  cap_set_flag(zprivs_state.caps, CAP_PERMITTED, 
+<a id='L284' name='L284'></a>               zprivs_state.syscaps_p-&gt;num,
+<a id='L285' name='L285'></a>               zprivs_state.syscaps_p-&gt;caps,
+<a id='L286' name='L286'></a>               CAP_SET);
+<a id='L287' name='L287'></a>    
+<a id='L288' name='L288'></a>  <em class='comment'>/* set inheritable caps, if any */</em>
+<a id='L289' name='L289'></a>  <strong class='reserved'>if</strong> (zprivs_state.syscaps_i &amp;&amp; zprivs_state.syscaps_i-&gt;num)
+<a id='L290' name='L290'></a>    <em class='brace'>{</em>
+<a id='L291' name='L291'></a>      cap_set_flag(zprivs_state.caps, CAP_INHERITABLE, 
+<a id='L292' name='L292'></a>                   zprivs_state.syscaps_i-&gt;num, 
+<a id='L293' name='L293'></a>                   zprivs_state.syscaps_i-&gt;caps, 
+<a id='L294' name='L294'></a>                   CAP_SET);
+<a id='L295' name='L295'></a>    <em class='brace'>}</em>
+<a id='L296' name='L296'></a>  
+<a id='L297' name='L297'></a>  <em class='comment'>/* apply caps. CAP_EFFECTIVE is cleared. we'll raise the caps as </em>
+<a id='L298' name='L298'></a><em class='comment'>   * and when, and only when, they are needed.</em>
+<a id='L299' name='L299'></a><em class='comment'>   */</em>
+<a id='L300' name='L300'></a>  <strong class='reserved'>if</strong> ( cap_set_proc (zprivs_state.caps) ) 
+<a id='L301' name='L301'></a>    <em class='brace'>{</em>
+<a id='L302' name='L302'></a>      fprintf (stderr, "privs_init: initial cap_set_proc failed\n");
+<a id='L303' name='L303'></a>      exit (1);
+<a id='L304' name='L304'></a>    <em class='brace'>}</em>
+<a id='L305' name='L305'></a>  
+<a id='L306' name='L306'></a>  <em class='comment'>/* set methods for the caller to use */</em>
+<a id='L307' name='L307'></a>  zprivs-&gt;change = <a href='../D/11638.html' title='Multiple defined in 2 places.'>zprivs_change_caps</a>;
+<a id='L308' name='L308'></a>  zprivs-&gt;current_state = <a href='../D/11644.html' title='Multiple defined in 2 places.'>zprivs_state_caps</a>;
+<a id='L309' name='L309'></a><em class='brace'>}</em>
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L312' name='L312'></a><a href='../R/10703.html' title='Multiple referred from 2 places.'>zprivs_caps_terminate</a> (<strong class='reserved'>void</strong>)
+<a id='L313' name='L313'></a><em class='brace'>{</em>
+<a id='L314' name='L314'></a>  <em class='comment'>/* clear all capabilities */</em>
+<a id='L315' name='L315'></a>  <strong class='reserved'>if</strong> (zprivs_state.caps)
+<a id='L316' name='L316'></a>      cap_clear (zprivs_state.caps);
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a>  <em class='comment'>/* and boom, capabilities are gone forever */</em>
+<a id='L319' name='L319'></a>  <strong class='reserved'>if</strong> ( cap_set_proc (zprivs_state.caps) ) 
+<a id='L320' name='L320'></a>    <em class='brace'>{</em>
+<a id='L321' name='L321'></a>      fprintf (stderr, "privs_terminate: cap_set_proc failed, %s",
+<a id='L322' name='L322'></a>                <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L323' name='L323'></a>      exit (1);
+<a id='L324' name='L324'></a>    <em class='brace'>}</em>  
+<a id='L325' name='L325'></a>
+<a id='L326' name='L326'></a>  <em class='comment'>/* free up private state */</em>
+<a id='L327' name='L327'></a>  <strong class='reserved'>if</strong> (zprivs_state.syscaps_p-&gt;num)
+<a id='L328' name='L328'></a>    <em class='brace'>{</em>
+<a id='L329' name='L329'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_PRIVS, zprivs_state.syscaps_p-&gt;caps);
+<a id='L330' name='L330'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_PRIVS, zprivs_state.syscaps_p);
+<a id='L331' name='L331'></a>    <em class='brace'>}</em>
+<a id='L332' name='L332'></a>  
+<a id='L333' name='L333'></a>  <strong class='reserved'>if</strong> (zprivs_state.syscaps_i &amp;&amp; zprivs_state.syscaps_i-&gt;num)
+<a id='L334' name='L334'></a>    <em class='brace'>{</em>
+<a id='L335' name='L335'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_PRIVS, zprivs_state.syscaps_i-&gt;caps);
+<a id='L336' name='L336'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_PRIVS, zprivs_state.syscaps_i);
+<a id='L337' name='L337'></a>    <em class='brace'>}</em>
+<a id='L338' name='L338'></a>  
+<a id='L339' name='L339'></a>  cap_free (zprivs_state.caps);
+<a id='L340' name='L340'></a><em class='brace'>}</em>
+<a id='L341' name='L341'></a><em class='sharp'>#elif</em> <strong class='reserved'>defined</strong> (HAVE_SOLARIS_CAPABILITIES) <em class='comment'>/* !HAVE_LCAPS */</em>
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a><em class='comment'>/* Solaris specific capability/privilege methods </em>
+<a id='L344' name='L344'></a><em class='comment'> *</em>
+<a id='L345' name='L345'></a><em class='comment'> * Resources:</em>
+<a id='L346' name='L346'></a><em class='comment'> * - the 'privileges' man page</em>
+<a id='L347' name='L347'></a><em class='comment'> * - http://cvs.opensolaris.org</em>
+<a id='L348' name='L348'></a><em class='comment'> * - http://blogs.sun.com/roller/page/gbrunett?entry=privilege_enabling_set_id_programs1</em>
+<a id='L349' name='L349'></a><em class='comment'> */</em>
+<a id='L350' name='L350'></a>
+<a id='L351' name='L351'></a><em class='comment'>/* convert zebras privileges to system capabilities */</em>
+<a id='L352' name='L352'></a><strong class='reserved'>static</strong> <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *
+<a id='L353' name='L353'></a><a href='../R/10551.html' title='Multiple referred from 5 places.'>zcaps2sys</a> (<a href='../S/217.html#L42' title='Defined at 42 in lib/privs.h.'>zebra_capabilities_t</a> *zcaps, <strong class='reserved'>int</strong> num)
+<a id='L354' name='L354'></a><em class='brace'>{</em>
+<a id='L355' name='L355'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *syscaps;
+<a id='L356' name='L356'></a>  <strong class='reserved'>int</strong> i, j = 0;
+<a id='L357' name='L357'></a>  
+<a id='L358' name='L358'></a>  <strong class='reserved'>if</strong> ((syscaps = priv_allocset()) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L359' name='L359'></a>    <em class='brace'>{</em>
+<a id='L360' name='L360'></a>      fprintf (stderr, "%s: could not allocate syscaps!\n", __func__);
+<a id='L361' name='L361'></a>      exit (1);
+<a id='L362' name='L362'></a>    <em class='brace'>}</em>
+<a id='L363' name='L363'></a>    
+<a id='L364' name='L364'></a>  priv_emptyset (syscaps);
+<a id='L365' name='L365'></a>  
+<a id='L366' name='L366'></a>  <strong class='reserved'>for</strong> (i=0; i &lt; num; i++)
+<a id='L367' name='L367'></a>    <strong class='reserved'>for</strong> (j = 0; j &lt; cap_map[zcaps[i]].num; j++)
+<a id='L368' name='L368'></a>      priv_addset (syscaps, cap_map[zcaps[i]].system_caps[j]);
+<a id='L369' name='L369'></a>  
+<a id='L370' name='L370'></a>  <strong class='reserved'>return</strong> syscaps;
+<a id='L371' name='L371'></a><em class='brace'>}</em>
+<a id='L372' name='L372'></a>
+<a id='L373' name='L373'></a><em class='comment'>/* callback exported to users to RAISE and LOWER effective privileges</em>
+<a id='L374' name='L374'></a><em class='comment'> * from nothing to the given permitted set and back down</em>
+<a id='L375' name='L375'></a><em class='comment'> */</em>
+<a id='L376' name='L376'></a><strong class='reserved'>int</strong> 
+<a id='L377' name='L377'></a><a href='../R/10704.html' title='Multiple referred from 3 places.'>zprivs_change_caps</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a> op)
+<a id='L378' name='L378'></a><em class='brace'>{</em>
+<a id='L379' name='L379'></a>  
+<a id='L380' name='L380'></a>  <em class='comment'>/* should be no possibility of being called without valid caps */</em>
+<a id='L381' name='L381'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (zprivs_state.syscaps_p);
+<a id='L382' name='L382'></a>  <strong class='reserved'>if</strong> (!zprivs_state.syscaps_p)
+<a id='L383' name='L383'></a>    <em class='brace'>{</em>
+<a id='L384' name='L384'></a>      fprintf (stderr, "%s: Eek, missing caps!", __func__);
+<a id='L385' name='L385'></a>      exit (1);
+<a id='L386' name='L386'></a>    <em class='brace'>}</em>
+<a id='L387' name='L387'></a>  
+<a id='L388' name='L388'></a>  <em class='comment'>/* to raise: copy original permitted into our working effective set</em>
+<a id='L389' name='L389'></a><em class='comment'>   * to lower: just clear the working effective set</em>
+<a id='L390' name='L390'></a><em class='comment'>   */</em>
+<a id='L391' name='L391'></a>  <strong class='reserved'>if</strong> (op == <a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>)
+<a id='L392' name='L392'></a>    priv_copyset (zprivs_state.syscaps_p, zprivs_state.caps);
+<a id='L393' name='L393'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (op == <a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>)
+<a id='L394' name='L394'></a>    priv_emptyset (zprivs_state.caps);
+<a id='L395' name='L395'></a>  <strong class='reserved'>else</strong>
+<a id='L396' name='L396'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L397' name='L397'></a>  
+<a id='L398' name='L398'></a>  <strong class='reserved'>if</strong> (setppriv (PRIV_SET, PRIV_EFFECTIVE, zprivs_state.caps) != 0)
+<a id='L399' name='L399'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L400' name='L400'></a>  
+<a id='L401' name='L401'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L402' name='L402'></a><em class='brace'>}</em>
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a><em class='comment'>/* Retrieve current privilege state, is it RAISED or LOWERED? */</em>
+<a id='L405' name='L405'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a> 
+<a id='L406' name='L406'></a><a href='../R/10710.html' title='Multiple referred from 3 places.'>zprivs_state_caps</a> (<strong class='reserved'>void</strong>)
+<a id='L407' name='L407'></a><em class='brace'>{</em>
+<a id='L408' name='L408'></a>  <a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a> result;
+<a id='L409' name='L409'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *effective;
+<a id='L410' name='L410'></a>  
+<a id='L411' name='L411'></a>  <strong class='reserved'>if</strong> ( (effective = priv_allocset()) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L412' name='L412'></a>    <em class='brace'>{</em>
+<a id='L413' name='L413'></a>      fprintf (stderr, "%s: failed to get priv_allocset! %s\n", __func__,
+<a id='L414' name='L414'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L415' name='L415'></a>      <strong class='reserved'>return</strong> <a href='../S/217.html#L48' title='Defined at 48 in lib/privs.h.'>ZPRIVS_UNKNOWN</a>;
+<a id='L416' name='L416'></a>    <em class='brace'>}</em>
+<a id='L417' name='L417'></a>  
+<a id='L418' name='L418'></a>  <strong class='reserved'>if</strong> (getppriv (PRIV_EFFECTIVE, effective))
+<a id='L419' name='L419'></a>    <em class='brace'>{</em>
+<a id='L420' name='L420'></a>      fprintf (stderr, "%s: failed to get state! %s\n", __func__,
+<a id='L421' name='L421'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L422' name='L422'></a>      result = <a href='../S/217.html#L48' title='Defined at 48 in lib/privs.h.'>ZPRIVS_UNKNOWN</a>;
+<a id='L423' name='L423'></a>    <em class='brace'>}</em>
+<a id='L424' name='L424'></a>  <strong class='reserved'>else</strong>
+<a id='L425' name='L425'></a>    <em class='brace'>{</em>
+<a id='L426' name='L426'></a>      <strong class='reserved'>if</strong> (priv_isemptyset (effective) == B_TRUE)
+<a id='L427' name='L427'></a>        result = <a href='../S/217.html#L46' title='Defined at 46 in lib/privs.h.'>ZPRIVS_LOWERED</a>;
+<a id='L428' name='L428'></a>      <strong class='reserved'>else</strong>
+<a id='L429' name='L429'></a>        result = <a href='../S/217.html#L47' title='Defined at 47 in lib/privs.h.'>ZPRIVS_RAISED</a>;
+<a id='L430' name='L430'></a>    <em class='brace'>}</em>
+<a id='L431' name='L431'></a>  
+<a id='L432' name='L432'></a>  <strong class='reserved'>if</strong> (effective)
+<a id='L433' name='L433'></a>    priv_freeset (effective);
+<a id='L434' name='L434'></a>  
+<a id='L435' name='L435'></a>  <strong class='reserved'>return</strong> result;
+<a id='L436' name='L436'></a><em class='brace'>}</em>
+<a id='L437' name='L437'></a>
+<a id='L438' name='L438'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L439' name='L439'></a><a href='../R/10702.html' title='Multiple referred from 2 places.'>zprivs_caps_init</a> (<strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> *zprivs)
+<a id='L440' name='L440'></a><em class='brace'>{</em>
+<a id='L441' name='L441'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *basic;
+<a id='L442' name='L442'></a>  <a href='../D/9798.html' title='Multiple defined in 2 places.'>pset_t</a> *empty;
+<a id='L443' name='L443'></a>  
+<a id='L444' name='L444'></a>  <em class='comment'>/* the specified sets */</em>
+<a id='L445' name='L445'></a>  zprivs_state.syscaps_p = <a href='../D/11479.html' title='Multiple defined in 2 places.'>zcaps2sys</a> (zprivs-&gt;caps_p, zprivs-&gt;cap_num_p);
+<a id='L446' name='L446'></a>  zprivs_state.syscaps_i = <a href='../D/11479.html' title='Multiple defined in 2 places.'>zcaps2sys</a> (zprivs-&gt;caps_i, zprivs-&gt;cap_num_i);
+<a id='L447' name='L447'></a>  
+<a id='L448' name='L448'></a>  <em class='comment'>/* nonsensical to have gotten here but not have capabilities */</em>
+<a id='L449' name='L449'></a>  <strong class='reserved'>if</strong> (!zprivs_state.syscaps_p)
+<a id='L450' name='L450'></a>    <em class='brace'>{</em>
+<a id='L451' name='L451'></a>      fprintf (stderr, "%s: capabilities enabled, "
+<a id='L452' name='L452'></a>                       "but no valid capabilities supplied\n",
+<a id='L453' name='L453'></a>                       __func__);
+<a id='L454' name='L454'></a>    <em class='brace'>}</em>
+<a id='L455' name='L455'></a>  
+<a id='L456' name='L456'></a>  <em class='comment'>/* We retain the basic set in our permitted set, as Linux has no</em>
+<a id='L457' name='L457'></a><em class='comment'>   * equivalent. The basic set on Linux hence is implicit, always</em>
+<a id='L458' name='L458'></a><em class='comment'>   * there.</em>
+<a id='L459' name='L459'></a><em class='comment'>   */</em>
+<a id='L460' name='L460'></a>  <strong class='reserved'>if</strong> ((basic = priv_str_to_set("basic", ",", <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L461' name='L461'></a>    <em class='brace'>{</em>
+<a id='L462' name='L462'></a>      fprintf (stderr, "%s: couldn't get basic set!\n", __func__);
+<a id='L463' name='L463'></a>      exit (1);
+<a id='L464' name='L464'></a>    <em class='brace'>}</em>
+<a id='L465' name='L465'></a> 
+<a id='L466' name='L466'></a>  <em class='comment'>/* Add the basic set to the permitted set */</em>
+<a id='L467' name='L467'></a>  priv_union (basic, zprivs_state.syscaps_p);
+<a id='L468' name='L468'></a>  priv_freeset (basic);
+<a id='L469' name='L469'></a>  
+<a id='L470' name='L470'></a>  <em class='comment'>/* we need an empty set for 'effective', potentially for inheritable too */</em>
+<a id='L471' name='L471'></a>  <strong class='reserved'>if</strong> ( (empty = priv_allocset()) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L472' name='L472'></a>    <em class='brace'>{</em>
+<a id='L473' name='L473'></a>      fprintf (stderr, "%s: couldn't get empty set!\n", __func__);
+<a id='L474' name='L474'></a>      exit (1);
+<a id='L475' name='L475'></a>    <em class='brace'>}</em>
+<a id='L476' name='L476'></a>  priv_emptyset (empty);
+<a id='L477' name='L477'></a>  
+<a id='L478' name='L478'></a>  <em class='comment'>/* Hey kernel, we know about privileges! </em>
+<a id='L479' name='L479'></a><em class='comment'>   * this isn't strictly required, use of setppriv should have same effect</em>
+<a id='L480' name='L480'></a><em class='comment'>   */</em>
+<a id='L481' name='L481'></a>  <strong class='reserved'>if</strong> (setpflags (PRIV_AWARE, 1))
+<a id='L482' name='L482'></a>    <em class='brace'>{</em>
+<a id='L483' name='L483'></a>      fprintf (stderr, "%s: error setting PRIV_AWARE!, %s\n", __func__,
+<a id='L484' name='L484'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L485' name='L485'></a>      exit (1);
+<a id='L486' name='L486'></a>    <em class='brace'>}</em>
+<a id='L487' name='L487'></a>  
+<a id='L488' name='L488'></a>  <em class='comment'>/* need either valid or empty sets for both p and i.. */</em>
+<a id='L489' name='L489'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (zprivs_state.syscaps_i &amp;&amp; zprivs_state.syscaps_p);
+<a id='L490' name='L490'></a>  
+<a id='L491' name='L491'></a>  <em class='comment'>/* we have caps, we have no need to ever change back the original user</em>
+<a id='L492' name='L492'></a><em class='comment'>   * change real, effective and saved to the specified user.</em>
+<a id='L493' name='L493'></a><em class='comment'>   */</em>
+<a id='L494' name='L494'></a>  <strong class='reserved'>if</strong> (zprivs_state.zuid)
+<a id='L495' name='L495'></a>    <em class='brace'>{</em>
+<a id='L496' name='L496'></a>      <strong class='reserved'>if</strong> ( setreuid (zprivs_state.zuid, zprivs_state.zuid) )
+<a id='L497' name='L497'></a>        <em class='brace'>{</em>
+<a id='L498' name='L498'></a>          fprintf (stderr, "%s: could not setreuid, %s\n", 
+<a id='L499' name='L499'></a>                   __func__, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L500' name='L500'></a>          exit (1);
+<a id='L501' name='L501'></a>        <em class='brace'>}</em>
+<a id='L502' name='L502'></a>    <em class='brace'>}</em>
+<a id='L503' name='L503'></a>  
+<a id='L504' name='L504'></a>  <em class='comment'>/* set the permitted set */</em>
+<a id='L505' name='L505'></a>  <strong class='reserved'>if</strong> (setppriv (PRIV_SET, PRIV_PERMITTED, zprivs_state.syscaps_p))
+<a id='L506' name='L506'></a>    <em class='brace'>{</em>
+<a id='L507' name='L507'></a>      fprintf (stderr, "%s: error setting permitted set!, %s\n", __func__,
+<a id='L508' name='L508'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L509' name='L509'></a>      exit (1);
+<a id='L510' name='L510'></a>    <em class='brace'>}</em>
+<a id='L511' name='L511'></a>  
+<a id='L512' name='L512'></a>  <em class='comment'>/* set the inheritable set */</em>
+<a id='L513' name='L513'></a>  <strong class='reserved'>if</strong> (setppriv (PRIV_SET, PRIV_INHERITABLE, zprivs_state.syscaps_i))
+<a id='L514' name='L514'></a>    <em class='brace'>{</em>
+<a id='L515' name='L515'></a>      fprintf (stderr, "%s: error setting inheritable set!, %s\n", __func__,
+<a id='L516' name='L516'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L517' name='L517'></a>      exit (1);
+<a id='L518' name='L518'></a>    <em class='brace'>}</em>
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a>  <em class='comment'>/* now clear the effective set and we're ready to go */</em>
+<a id='L521' name='L521'></a>  <strong class='reserved'>if</strong> (setppriv (PRIV_SET, PRIV_EFFECTIVE, empty))
+<a id='L522' name='L522'></a>    <em class='brace'>{</em>
+<a id='L523' name='L523'></a>      fprintf (stderr, "%s: error setting effective set!, %s\n", __func__,
+<a id='L524' name='L524'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L525' name='L525'></a>      exit (1);
+<a id='L526' name='L526'></a>    <em class='brace'>}</em>
+<a id='L527' name='L527'></a>  
+<a id='L528' name='L528'></a>  <em class='comment'>/* we'll use this as our working-storage privset */</em>
+<a id='L529' name='L529'></a>  zprivs_state.caps = empty;
+<a id='L530' name='L530'></a>  
+<a id='L531' name='L531'></a>  <em class='comment'>/* set methods for the caller to use */</em>
+<a id='L532' name='L532'></a>  zprivs-&gt;change = <a href='../D/11638.html' title='Multiple defined in 2 places.'>zprivs_change_caps</a>;
+<a id='L533' name='L533'></a>  zprivs-&gt;current_state = <a href='../D/11644.html' title='Multiple defined in 2 places.'>zprivs_state_caps</a>;
+<a id='L534' name='L534'></a><em class='brace'>}</em>
+<a id='L535' name='L535'></a>
+<a id='L536' name='L536'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L537' name='L537'></a><a href='../R/10703.html' title='Multiple referred from 2 places.'>zprivs_caps_terminate</a> (<strong class='reserved'>void</strong>)
+<a id='L538' name='L538'></a><em class='brace'>{</em>
+<a id='L539' name='L539'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (zprivs_state.caps);
+<a id='L540' name='L540'></a>  
+<a id='L541' name='L541'></a>  <em class='comment'>/* clear all capabilities */</em>
+<a id='L542' name='L542'></a>  priv_emptyset (zprivs_state.caps);
+<a id='L543' name='L543'></a>  setppriv (PRIV_SET, PRIV_EFFECTIVE, zprivs_state.caps);
+<a id='L544' name='L544'></a>  setppriv (PRIV_SET, PRIV_PERMITTED, zprivs_state.caps);
+<a id='L545' name='L545'></a>  setppriv (PRIV_SET, PRIV_INHERITABLE, zprivs_state.caps);
+<a id='L546' name='L546'></a>  
+<a id='L547' name='L547'></a>  <em class='comment'>/* free up private state */</em>
+<a id='L548' name='L548'></a>  <strong class='reserved'>if</strong> (zprivs_state.syscaps_p)
+<a id='L549' name='L549'></a>    priv_freeset (zprivs_state.syscaps_p);
+<a id='L550' name='L550'></a>  <strong class='reserved'>if</strong> (zprivs_state.syscaps_i)
+<a id='L551' name='L551'></a>    priv_freeset (zprivs_state.syscaps_i);
+<a id='L552' name='L552'></a>  
+<a id='L553' name='L553'></a>  priv_freeset (zprivs_state.caps);
+<a id='L554' name='L554'></a><em class='brace'>}</em>
+<a id='L555' name='L555'></a><em class='sharp'>#else</em> <em class='comment'>/* !HAVE_LCAPS &amp;&amp; ! HAVE_SOLARIS_CAPABILITIES */</em>
+<a id='L556' name='L556'></a><em class='sharp'>#error</em> "Neither Solaris nor Linux capabilities, dazed and confused..."
+<a id='L557' name='L557'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_LCAPS */</em>
+<a id='L558' name='L558'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_CAPABILITIES */</em>
+<a id='L559' name='L559'></a>
+<a id='L560' name='L560'></a><strong class='reserved'>int</strong>
+<a id='L561' name='L561'></a><a href='../R/10706.html' title='Multiple referred from 2 places.'>zprivs_change_uid</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a> op)
+<a id='L562' name='L562'></a><em class='brace'>{</em>
+<a id='L563' name='L563'></a>
+<a id='L564' name='L564'></a>  <strong class='reserved'>if</strong> (op == <a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>)
+<a id='L565' name='L565'></a>    <strong class='reserved'>return</strong> seteuid (zprivs_state.zsuid);
+<a id='L566' name='L566'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (op == <a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>)
+<a id='L567' name='L567'></a>    <strong class='reserved'>return</strong> seteuid (zprivs_state.zuid);
+<a id='L568' name='L568'></a>  <strong class='reserved'>else</strong>
+<a id='L569' name='L569'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L570' name='L570'></a><em class='brace'>}</em>
+<a id='L571' name='L571'></a>
+<a id='L572' name='L572'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a>
+<a id='L573' name='L573'></a><a href='../R/10712.html' title='Multiple referred from 2 places.'>zprivs_state_uid</a> (<strong class='reserved'>void</strong>)
+<a id='L574' name='L574'></a><em class='brace'>{</em>
+<a id='L575' name='L575'></a>  <strong class='reserved'>return</strong> ( (zprivs_state.zuid == geteuid()) ? <a href='../S/217.html#L46' title='Defined at 46 in lib/privs.h.'>ZPRIVS_LOWERED</a> : <a href='../S/217.html#L47' title='Defined at 47 in lib/privs.h.'>ZPRIVS_RAISED</a>);
+<a id='L576' name='L576'></a><em class='brace'>}</em>
+<a id='L577' name='L577'></a>
+<a id='L578' name='L578'></a><strong class='reserved'>int</strong>
+<a id='L579' name='L579'></a><a href='../R/10705.html' title='Multiple referred from 3 places.'>zprivs_change_null</a> (<a href='../S/217.html#L55' title='Defined at 55 in lib/privs.h.'>zebra_privs_ops_t</a> op)
+<a id='L580' name='L580'></a><em class='brace'>{</em>
+<a id='L581' name='L581'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L582' name='L582'></a><em class='brace'>}</em>
+<a id='L583' name='L583'></a>
+<a id='L584' name='L584'></a><a href='../S/217.html#L49' title='Defined at 49 in lib/privs.h.'>zebra_privs_current_t</a>
+<a id='L585' name='L585'></a><a href='../R/10711.html' title='Multiple referred from 3 places.'>zprivs_state_null</a> (<strong class='reserved'>void</strong>)
+<a id='L586' name='L586'></a><em class='brace'>{</em>
+<a id='L587' name='L587'></a>  <strong class='reserved'>return</strong> zprivs_null_state;
+<a id='L588' name='L588'></a><em class='brace'>}</em>
+<a id='L589' name='L589'></a>
+<a id='L590' name='L590'></a><strong class='reserved'>void</strong>
+<a id='L591' name='L591'></a><a href='../R/10709.html' title='Multiple referred from 19 places.'>zprivs_init</a>(<strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> *zprivs)
+<a id='L592' name='L592'></a><em class='brace'>{</em>
+<a id='L593' name='L593'></a>  <strong class='reserved'>struct</strong> passwd *pwentry = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L594' name='L594'></a>  <strong class='reserved'>struct</strong> group *grentry = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L595' name='L595'></a>
+<a id='L596' name='L596'></a>  <strong class='reserved'>if</strong> (!zprivs)
+<a id='L597' name='L597'></a>    <em class='brace'>{</em>
+<a id='L598' name='L598'></a>      fprintf (stderr, "zprivs_init: called with NULL arg!\n");
+<a id='L599' name='L599'></a>      exit (1);
+<a id='L600' name='L600'></a>    <em class='brace'>}</em>
+<a id='L601' name='L601'></a>
+<a id='L602' name='L602'></a>  <em class='comment'>/* NULL privs */</em>
+<a id='L603' name='L603'></a>  <strong class='reserved'>if</strong> (! (zprivs-&gt;user || zprivs-&gt;group 
+<a id='L604' name='L604'></a>         || zprivs-&gt;cap_num_p || zprivs-&gt;cap_num_i) )
+<a id='L605' name='L605'></a>    <em class='brace'>{</em>
+<a id='L606' name='L606'></a>      zprivs-&gt;change = <a href='../S/189.html#L579' title='Defined at 579 in lib/privs.c.'>zprivs_change_null</a>;
+<a id='L607' name='L607'></a>      zprivs-&gt;current_state = <a href='../S/189.html#L585' title='Defined at 585 in lib/privs.c.'>zprivs_state_null</a>;
+<a id='L608' name='L608'></a>      <strong class='reserved'>return</strong>;
+<a id='L609' name='L609'></a>    <em class='brace'>}</em>
+<a id='L610' name='L610'></a>
+<a id='L611' name='L611'></a>  <strong class='reserved'>if</strong> (zprivs-&gt;user)
+<a id='L612' name='L612'></a>    <em class='brace'>{</em>
+<a id='L613' name='L613'></a>      <strong class='reserved'>if</strong> ( (pwentry = getpwnam (zprivs-&gt;user)) )
+<a id='L614' name='L614'></a>        <em class='brace'>{</em>
+<a id='L615' name='L615'></a>          zprivs_state.zuid = pwentry-&gt;pw_uid;
+<a id='L616' name='L616'></a>        <em class='brace'>}</em>
+<a id='L617' name='L617'></a>      <strong class='reserved'>else</strong>
+<a id='L618' name='L618'></a>        <em class='brace'>{</em>
+<a id='L619' name='L619'></a>          <em class='comment'>/* cant use log.h here as it depends on vty */</em>
+<a id='L620' name='L620'></a>          fprintf (stderr, "privs_init: could not lookup user %s\n",
+<a id='L621' name='L621'></a>                   zprivs-&gt;user);
+<a id='L622' name='L622'></a>          exit (1);
+<a id='L623' name='L623'></a>        <em class='brace'>}</em>
+<a id='L624' name='L624'></a>    <em class='brace'>}</em>
+<a id='L625' name='L625'></a>
+<a id='L626' name='L626'></a>  grentry = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L627' name='L627'></a>
+<a id='L628' name='L628'></a>  <strong class='reserved'>if</strong> (zprivs-&gt;vty_group)
+<a id='L629' name='L629'></a>    <em class='comment'>/* Add the vty_group to the supplementary groups so it can be chowned to */</em>
+<a id='L630' name='L630'></a>    <em class='brace'>{</em>
+<a id='L631' name='L631'></a>      <strong class='reserved'>if</strong> ( (grentry = getgrnam (zprivs-&gt;vty_group)) )
+<a id='L632' name='L632'></a>        <em class='brace'>{</em>
+<a id='L633' name='L633'></a>          zprivs_state.vtygrp = grentry-&gt;gr_gid;
+<a id='L634' name='L634'></a>          <strong class='reserved'>if</strong> ( setgroups (1, &amp;zprivs_state.vtygrp) )
+<a id='L635' name='L635'></a>            <em class='brace'>{</em>
+<a id='L636' name='L636'></a>              fprintf (stderr, "privs_init: could not setgroups, %s\n",
+<a id='L637' name='L637'></a>                         <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L638' name='L638'></a>              exit (1);
+<a id='L639' name='L639'></a>            <em class='brace'>}</em>       
+<a id='L640' name='L640'></a>        <em class='brace'>}</em>
+<a id='L641' name='L641'></a>      <strong class='reserved'>else</strong>
+<a id='L642' name='L642'></a>        <em class='brace'>{</em>
+<a id='L643' name='L643'></a>          fprintf (stderr, "privs_init: could not lookup vty group %s\n",
+<a id='L644' name='L644'></a>                   zprivs-&gt;vty_group);
+<a id='L645' name='L645'></a>          exit (1);
+<a id='L646' name='L646'></a>        <em class='brace'>}</em>
+<a id='L647' name='L647'></a>    <em class='brace'>}</em>
+<a id='L648' name='L648'></a>  
+<a id='L649' name='L649'></a>  <strong class='reserved'>if</strong> (zprivs-&gt;group)
+<a id='L650' name='L650'></a>    <em class='brace'>{</em>
+<a id='L651' name='L651'></a>      <strong class='reserved'>if</strong> ( (grentry = getgrnam (zprivs-&gt;group)) )
+<a id='L652' name='L652'></a>        <em class='brace'>{</em>
+<a id='L653' name='L653'></a>          zprivs_state.zgid = grentry-&gt;gr_gid;
+<a id='L654' name='L654'></a>        <em class='brace'>}</em>
+<a id='L655' name='L655'></a>      <strong class='reserved'>else</strong>
+<a id='L656' name='L656'></a>        <em class='brace'>{</em>
+<a id='L657' name='L657'></a>          fprintf (stderr, "privs_init: could not lookup group %s\n",
+<a id='L658' name='L658'></a>                   zprivs-&gt;group);
+<a id='L659' name='L659'></a>          exit (1);
+<a id='L660' name='L660'></a>        <em class='brace'>}</em>
+<a id='L661' name='L661'></a>      <em class='comment'>/* change group now, forever. uid we do later */</em>
+<a id='L662' name='L662'></a>      <strong class='reserved'>if</strong> ( setregid (zprivs_state.zgid, zprivs_state.zgid) )
+<a id='L663' name='L663'></a>        <em class='brace'>{</em>
+<a id='L664' name='L664'></a>          fprintf (stderr, "zprivs_init: could not setregid, %s\n",
+<a id='L665' name='L665'></a>                    <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L666' name='L666'></a>          exit (1);
+<a id='L667' name='L667'></a>        <em class='brace'>}</em>
+<a id='L668' name='L668'></a>    <em class='brace'>}</em>
+<a id='L669' name='L669'></a>  
+<a id='L670' name='L670'></a><em class='sharp'>#ifdef</em> HAVE_CAPABILITIES
+<a id='L671' name='L671'></a>  <a href='../D/11636.html' title='Multiple defined in 2 places.'>zprivs_caps_init</a> (zprivs);
+<a id='L672' name='L672'></a><em class='sharp'>#else</em> <em class='comment'>/* !HAVE_CAPABILITIES */</em>
+<a id='L673' name='L673'></a>  <em class='comment'>/* we dont have caps. we'll need to maintain rid and saved uid</em>
+<a id='L674' name='L674'></a><em class='comment'>   * and change euid back to saved uid (who we presume has all neccessary</em>
+<a id='L675' name='L675'></a><em class='comment'>   * privileges) whenever we are asked to raise our privileges.</em>
+<a id='L676' name='L676'></a><em class='comment'>   *</em>
+<a id='L677' name='L677'></a><em class='comment'>   * This is not worth that much security wise, but all we can do.</em>
+<a id='L678' name='L678'></a><em class='comment'>   */</em>
+<a id='L679' name='L679'></a>  zprivs_state.zsuid = geteuid();  
+<a id='L680' name='L680'></a>  <strong class='reserved'>if</strong> ( zprivs_state.zuid )
+<a id='L681' name='L681'></a>    <em class='brace'>{</em>
+<a id='L682' name='L682'></a>      <strong class='reserved'>if</strong> ( setreuid (-1, zprivs_state.zuid) )
+<a id='L683' name='L683'></a>        <em class='brace'>{</em>
+<a id='L684' name='L684'></a>          fprintf (stderr, "privs_init (uid): could not setreuid, %s\n", 
+<a id='L685' name='L685'></a>                   <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L686' name='L686'></a>          exit (1);
+<a id='L687' name='L687'></a>        <em class='brace'>}</em>
+<a id='L688' name='L688'></a>    <em class='brace'>}</em>
+<a id='L689' name='L689'></a>  
+<a id='L690' name='L690'></a>  zprivs-&gt;change = <a href='../S/189.html#L561' title='Defined at 561 in lib/privs.c.'>zprivs_change_uid</a>;
+<a id='L691' name='L691'></a>  zprivs-&gt;current_state = <a href='../S/189.html#L573' title='Defined at 573 in lib/privs.c.'>zprivs_state_uid</a>;
+<a id='L692' name='L692'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_CAPABILITIES */</em>
+<a id='L693' name='L693'></a><em class='brace'>}</em>
+<a id='L694' name='L694'></a>
+<a id='L695' name='L695'></a><strong class='reserved'>void</strong> 
+<a id='L696' name='L696'></a><a href='../R/10713.html' title='Multiple referred from 3 places.'>zprivs_terminate</a> (<strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> *zprivs)
+<a id='L697' name='L697'></a><em class='brace'>{</em>
+<a id='L698' name='L698'></a>  <strong class='reserved'>if</strong> (!zprivs)
+<a id='L699' name='L699'></a>    <em class='brace'>{</em>
+<a id='L700' name='L700'></a>      fprintf (stderr, "%s: no privs struct given, terminating", __func__);
+<a id='L701' name='L701'></a>      exit (0);
+<a id='L702' name='L702'></a>    <em class='brace'>}</em>
+<a id='L703' name='L703'></a>  
+<a id='L704' name='L704'></a><em class='sharp'>#ifdef</em> HAVE_CAPABILITIES
+<a id='L705' name='L705'></a>  <a href='../D/11637.html' title='Multiple defined in 2 places.'>zprivs_caps_terminate</a>();
+<a id='L706' name='L706'></a><em class='sharp'>#else</em> <em class='comment'>/* !HAVE_CAPABILITIES */</em>
+<a id='L707' name='L707'></a>  <strong class='reserved'>if</strong> (zprivs_state.zuid)
+<a id='L708' name='L708'></a>    <em class='brace'>{</em>
+<a id='L709' name='L709'></a>      <strong class='reserved'>if</strong> ( setreuid (zprivs_state.zuid, zprivs_state.zuid) )
+<a id='L710' name='L710'></a>        <em class='brace'>{</em>
+<a id='L711' name='L711'></a>          fprintf (stderr, "privs_terminate: could not setreuid, %s", 
+<a id='L712' name='L712'></a>                     <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno) );
+<a id='L713' name='L713'></a>          exit (1);
+<a id='L714' name='L714'></a>        <em class='brace'>}</em>
+<a id='L715' name='L715'></a>     <em class='brace'>}</em>
+<a id='L716' name='L716'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_LCAPS */</em>
+<a id='L717' name='L717'></a>
+<a id='L718' name='L718'></a>  zprivs-&gt;change = <a href='../S/189.html#L579' title='Defined at 579 in lib/privs.c.'>zprivs_change_null</a>;
+<a id='L719' name='L719'></a>  zprivs-&gt;current_state = <a href='../S/189.html#L585' title='Defined at 585 in lib/privs.c.'>zprivs_state_null</a>;
+<a id='L720' name='L720'></a>  zprivs_null_state = <a href='../S/217.html#L46' title='Defined at 46 in lib/privs.h.'>ZPRIVS_LOWERED</a>;
+<a id='L721' name='L721'></a>  <strong class='reserved'>return</strong>;
+<a id='L722' name='L722'></a><em class='brace'>}</em>
+<a id='L723' name='L723'></a>
+<a id='L724' name='L724'></a><strong class='reserved'>void</strong>
+<a id='L725' name='L725'></a><a href='../R/10707.html' title='Multiple referred from 4 places.'>zprivs_get_ids</a>(<strong class='reserved'>struct</strong> <a href='../S/217.html#L73' title='Defined at 73 in lib/privs.h.'>zprivs_ids_t</a> *ids)
+<a id='L726' name='L726'></a><em class='brace'>{</em>
+<a id='L727' name='L727'></a>
+<a id='L728' name='L728'></a>   ids-&gt;uid_priv = getuid();
+<a id='L729' name='L729'></a>   (zprivs_state.zuid) ? (ids-&gt;uid_normal = zprivs_state.zuid)
+<a id='L730' name='L730'></a>                     : (ids-&gt;uid_normal = -1);
+<a id='L731' name='L731'></a>   (zprivs_state.zgid) ? (ids-&gt;gid_normal = zprivs_state.zgid)
+<a id='L732' name='L732'></a>                     : (ids-&gt;gid_normal = -1);
+<a id='L733' name='L733'></a>   (zprivs_state.vtygrp) ? (ids-&gt;gid_vty = zprivs_state.vtygrp)
+<a id='L734' name='L734'></a>                       : (ids-&gt;gid_vty = -1);
+<a id='L735' name='L735'></a>   
+<a id='L736' name='L736'></a>   <strong class='reserved'>return</strong>;
+<a id='L737' name='L737'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L147'>[^]</a><a href='#L725'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

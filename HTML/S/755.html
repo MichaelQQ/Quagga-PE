@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_lsdb.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_lsdb.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/464.html' title='Multiple included from 24 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * OSPF LSDB support.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999, 2000 Alex Zinin, Kunihiro Ishiguro, Toshiaki Takada</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/755.html#L24' title='Defined at 24 in ospfd/ospf_lsdb.h.'>_ZEBRA_OSPF_LSDB_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/755.html#L23' title='Referred from 23 in ospfd/ospf_lsdb.h.'>_ZEBRA_OSPF_LSDB_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='comment'>/* OSPF LSDB structure. */</em>
+<a id='L27' name='L27'></a><strong class='reserved'>struct</strong> <a href='../R/8256.html' title='Multiple referred from 57 places.'>ospf_lsdb</a>
+<a id='L28' name='L28'></a><em class='brace'>{</em>
+<a id='L29' name='L29'></a>  <strong class='reserved'>struct</strong>
+<a id='L30' name='L30'></a>  <em class='brace'>{</em>
+<a id='L31' name='L31'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> count;
+<a id='L32' name='L32'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> count_self;
+<a id='L33' name='L33'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>;
+<a id='L34' name='L34'></a>    <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *db;
+<a id='L35' name='L35'></a>  <em class='brace'>}</em> type[<a href='../D/3135.html' title='Multiple defined in 2 places.'>OSPF_MAX_LSA</a>];
+<a id='L36' name='L36'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> total;
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/1636.html' title='Multiple referred from 7 places.'>MONITOR_LSDB_CHANGE</a> 1 <em class='comment'>/* XXX */</em>
+<a id='L38' name='L38'></a><em class='sharp'>#ifdef</em> <a href='../S/755.html#L37' title='Defined at 37 in ospfd/ospf_lsdb.h.'>MONITOR_LSDB_CHANGE</a>
+<a id='L39' name='L39'></a>  <em class='comment'>/* Hooks for callback functions to catch every add/del event. */</em>
+<a id='L40' name='L40'></a>  <strong class='reserved'>int</strong> (* new_lsa_hook)(<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L41' name='L41'></a>  <strong class='reserved'>int</strong> (* del_lsa_hook)(<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L42' name='L42'></a><em class='sharp'>#endif</em> <em class='comment'>/* MONITOR_LSDB_CHANGE */</em>
+<a id='L43' name='L43'></a><em class='brace'>}</em>;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='comment'>/* Macros. */</em>
+<a id='L46' name='L46'></a><em class='sharp'>#define</em> <a href='../R/1535.html' title='Multiple referred from 60 places.'>LSDB_LOOP</a>(T,N,L)                                                      \
+<a id='L47' name='L47'></a>  <strong class='reserved'>if</strong> ((T) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)                                                            \
+<a id='L48' name='L48'></a>  <strong class='reserved'>for</strong> ((N) = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> ((T)); ((N)); ((N)) = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> ((N)))                \
+<a id='L49' name='L49'></a>    <strong class='reserved'>if</strong> (((L) = (N)-&gt;info))
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><em class='sharp'>#define</em> <a href='../R/3367.html' title='Multiple referred from 5 places.'>ROUTER_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)       ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>].db)
+<a id='L52' name='L52'></a><em class='sharp'>#define</em> <a href='../R/2038.html' title='Multiple referred from 5 places.'>NETWORK_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)      ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>].db)
+<a id='L53' name='L53'></a><em class='sharp'>#define</em> <a href='../R/3556.html' title='Multiple referred from 9 places.'>SUMMARY_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)      ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L40' title='Defined at 40 in ospfd/ospf_lsa.h.'>OSPF_SUMMARY_LSA</a>].db)
+<a id='L54' name='L54'></a><em class='sharp'>#define</em> <a href='../R/38.html' title='Multiple referred from 9 places.'>ASBR_SUMMARY_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>) ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L41' title='Defined at 41 in ospfd/ospf_lsa.h.'>OSPF_ASBR_SUMMARY_LSA</a>].db)
+<a id='L55' name='L55'></a><em class='sharp'>#define</em> <a href='../R/728.html' title='Multiple referred from 8 places.'>EXTERNAL_LSDB</a>(O)     ((O)-&gt;lsdb-&gt;type[<a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a>].db)
+<a id='L56' name='L56'></a><em class='sharp'>#define</em> <a href='../R/2113.html' title='Multiple referred from 7 places.'>NSSA_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)         ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>].db)
+<a id='L57' name='L57'></a><em class='sharp'>#define</em> <a href='../R/2141.html' title='Multiple referred from 7 places.'>OPAQUE_LINK_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)  ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L46' title='Defined at 46 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_LINK_LSA</a>].db)
+<a id='L58' name='L58'></a><em class='sharp'>#define</em> <a href='../R/2136.html' title='Multiple referred from 6 places.'>OPAQUE_AREA_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)  ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[<a href='../S/733.html#L47' title='Defined at 47 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AREA_LSA</a>].db)
+<a id='L59' name='L59'></a><em class='sharp'>#define</em> <a href='../R/2137.html' title='Multiple referred from 5 places.'>OPAQUE_AS_LSDB</a>(O)    ((O)-&gt;lsdb-&gt;type[<a href='../S/733.html#L48' title='Defined at 48 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AS_LSA</a>].db)
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='sharp'>#define</em> <a href='../R/32.html' title='Multiple referred from 3 places.'>AREA_LSDB</a>(<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>,T)       ((<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)-&gt;lsdb-&gt;type[(T)].db)
+<a id='L62' name='L62'></a><em class='sharp'>#define</em> <a href='../R/50.html' title='Multiple referred from 3 places.'>AS_LSDB</a>(O,T)         ((O)-&gt;lsdb-&gt;type[(T)].db)
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='comment'>/* OSPF LSDB related functions. */</em>
+<a id='L65' name='L65'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *<a href='../S/778.html#L36' title='Defined at 36 in ospfd/ospf_lsdb.c.'>ospf_lsdb_new</a> (<strong class='reserved'>void</strong>);
+<a id='L66' name='L66'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L47' title='Defined at 47 in ospfd/ospf_lsdb.c.'>ospf_lsdb_init</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *);
+<a id='L67' name='L67'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L56' title='Defined at 56 in ospfd/ospf_lsdb.c.'>ospf_lsdb_free</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *);
+<a id='L68' name='L68'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L63' title='Defined at 63 in ospfd/ospf_lsdb.c.'>ospf_lsdb_cleanup</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *);
+<a id='L69' name='L69'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L76' title='Defined at 76 in ospfd/ospf_lsdb.c.'>ls_prefix_set</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L76' title='Defined at 76 in lib/prefix.h.'>prefix_ls</a> *lp, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa);
+<a id='L70' name='L70'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L114' title='Defined at 114 in ospfd/ospf_lsdb.c.'>ospf_lsdb_add</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L71' name='L71'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L149' title='Defined at 149 in ospfd/ospf_lsdb.c.'>ospf_lsdb_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L72' name='L72'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L183' title='Defined at 183 in ospfd/ospf_lsdb.c.'>ospf_lsdb_delete_all</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *);
+<a id='L73' name='L73'></a><em class='comment'>/* Set all stats to -1 (LSA_SPF_NOT_EXPLORED). */</em>
+<a id='L74' name='L74'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/778.html#L199' title='Defined at 199 in ospfd/ospf_lsdb.c.'>ospf_lsdb_clean_stat</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *lsdb);
+<a id='L75' name='L75'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *<a href='../S/778.html#L216' title='Defined at 216 in ospfd/ospf_lsdb.c.'>ospf_lsdb_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L76' name='L76'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *<a href='../S/778.html#L236' title='Defined at 236 in ospfd/ospf_lsdb.c.'>ospf_lsdb_lookup_by_id</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, u_char,
+<a id='L77' name='L77'></a>                                        <strong class='reserved'>struct</strong> in_addr, <strong class='reserved'>struct</strong> in_addr);
+<a id='L78' name='L78'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *<a href='../S/778.html#L263' title='Defined at 263 in ospfd/ospf_lsdb.c.'>ospf_lsdb_lookup_by_id_next</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, u_char,
+<a id='L79' name='L79'></a>                                             <strong class='reserved'>struct</strong> in_addr, <strong class='reserved'>struct</strong> in_addr,
+<a id='L80' name='L80'></a>                                             <strong class='reserved'>int</strong>);
+<a id='L81' name='L81'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/778.html#L303' title='Defined at 303 in ospfd/ospf_lsdb.c.'>ospf_lsdb_count_all</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *);
+<a id='L82' name='L82'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/778.html#L309' title='Defined at 309 in ospfd/ospf_lsdb.c.'>ospf_lsdb_count</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, <strong class='reserved'>int</strong>);
+<a id='L83' name='L83'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/778.html#L315' title='Defined at 315 in ospfd/ospf_lsdb.c.'>ospf_lsdb_count_self</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, <strong class='reserved'>int</strong>);
+<a id='L84' name='L84'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/778.html#L321' title='Defined at 321 in ospfd/ospf_lsdb.c.'>ospf_lsdb_checksum</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *, <strong class='reserved'>int</strong>);
+<a id='L85' name='L85'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/778.html#L327' title='Defined at 327 in ospfd/ospf_lsdb.c.'>ospf_lsdb_isempty</a> (<strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *);
+<a id='L86' name='L86'></a>
+<a id='L87' name='L87'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_OSPF_LSDB_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

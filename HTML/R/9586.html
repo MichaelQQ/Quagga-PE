@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>route_table</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/636.html#L48'>route_table</a>        48 bgpd/bgp_table.c   route_table_finish (rt-&gt;route_table);</span>
+<span class='curline'><a href='../S/636.html#L49'>route_table</a>        49 bgpd/bgp_table.c   rt-&gt;route_table = NULL;</span>
+<span class='curline'><a href='../S/636.html#L74'>route_table</a>        74 bgpd/bgp_table.c bgp_node_create (route_table_delegate_t *delegate, struct route_table *table)</span>
+<span class='curline'><a href='../S/636.html#L86'>route_table</a>        86 bgpd/bgp_table.c 		  struct route_table *table, struct route_node *node)</span>
+<span class='curline'><a href='../S/636.html#L112'>route_table</a>       112 bgpd/bgp_table.c   rt-&gt;route_table = route_table_init_with_delegate (&amp;bgp_table_delegate);</span>
+<span class='curline'><a href='../S/636.html#L117'>route_table</a>       117 bgpd/bgp_table.c   rt-&gt;route_table-&gt;info = rt;</span>
+<span class='curline'><a href='../S/646.html#L45'>route_table</a>        45 bgpd/bgp_table.h   struct route_table *route_table;</span>
+<span class='curline'><a href='../S/646.html#L188'>route_table</a>       188 bgpd/bgp_table.h   return bgp_node_from_rnode (table-&gt;route_table-&gt;top);</span>
+<span class='curline'><a href='../S/646.html#L197'>route_table</a>       197 bgpd/bgp_table.h   return bgp_node_from_rnode (route_top (table-&gt;route_table));</span>
+<span class='curline'><a href='../S/646.html#L228'>route_table</a>       228 bgpd/bgp_table.h   return bgp_node_from_rnode (route_node_get (table-&gt;route_table, p));</span>
+<span class='curline'><a href='../S/646.html#L237'>route_table</a>       237 bgpd/bgp_table.h   return bgp_node_from_rnode (route_node_lookup (table-&gt;route_table, p));</span>
+<span class='curline'><a href='../S/646.html#L255'>route_table</a>       255 bgpd/bgp_table.h   return bgp_node_from_rnode (route_node_match (table-&gt;route_table, p));</span>
+<span class='curline'><a href='../S/646.html#L264'>route_table</a>       264 bgpd/bgp_table.h   return bgp_node_from_rnode (route_node_match_ipv4 (table-&gt;route_table, </span>
+<span class='curline'><a href='../S/646.html#L276'>route_table</a>       276 bgpd/bgp_table.h   return bgp_node_from_rnode (route_node_match_ipv6 (table-&gt;route_table,</span>
+<span class='curline'><a href='../S/646.html#L285'>route_table</a>       285 bgpd/bgp_table.h   return route_table_count (table-&gt;route_table);</span>
+<span class='curline'><a href='../S/646.html#L294'>route_table</a>       294 bgpd/bgp_table.h   return bgp_node_from_rnode (route_table_get_next (table-&gt;route_table, p));</span>
+<span class='curline'><a href='../S/646.html#L305'>route_table</a>       305 bgpd/bgp_table.h   route_table_iter_init (&amp;iter-&gt;rt_iter, table-&gt;route_table);</span>
+<span class='curline'><a href='../S/489.html#L100'>route_table</a>       100 isisd/isis_events.c   if (area-&gt;route_table[level - 1])</span>
+<span class='curline'><a href='../S/489.html#L102'>route_table</a>       102 isisd/isis_events.c       route_table_finish (area-&gt;route_table[level - 1]);</span>
+<span class='curline'><a href='../S/489.html#L103'>route_table</a>       103 isisd/isis_events.c       area-&gt;route_table[level - 1] = NULL;</span>
+<span class='curline'><a href='../S/489.html#L137'>route_table</a>       137 isisd/isis_events.c       if (area-&gt;route_table[1] == NULL)</span>
+<span class='curline'><a href='../S/489.html#L138'>route_table</a>       138 isisd/isis_events.c         area-&gt;route_table[1] = route_table_init ();</span>
+<span class='curline'><a href='../S/489.html#L158'>route_table</a>       158 isisd/isis_events.c       if (area-&gt;route_table[0] == NULL)</span>
+<span class='curline'><a href='../S/489.html#L159'>route_table</a>       159 isisd/isis_events.c         area-&gt;route_table[0] = route_table_init ();</span>
+<span class='curline'><a href='../S/515.html#L435'>route_table</a>       435 isisd/isis_route.c     route_node = route_node_get (area-&gt;route_table[level - 1], prefix);</span>
+<span class='curline'><a href='../S/515.html#L485'>route_table</a>       485 isisd/isis_route.c isis_route_delete (struct prefix *prefix, struct route_table *table)</span>
+<span class='curline'><a href='../S/515.html#L520'>route_table</a>       520 isisd/isis_route.c isis_route_validate_table (struct isis_area *area, struct route_table *table)</span>
+<span class='curline'><a href='../S/515.html#L561'>route_table</a>       561 isisd/isis_route.c 	      drnode = route_node_get (area-&gt;route_table[0], &amp;rnode-&gt;p);</span>
+<span class='curline'><a href='../S/515.html#L564'>route_table</a>       564 isisd/isis_route.c 	      drnode = route_node_get (area-&gt;route_table[1], &amp;rnode-&gt;p);</span>
+<span class='curline'><a href='../S/515.html#L599'>route_table</a>       599 isisd/isis_route.c   struct route_table *table = NULL;</span>
+<span class='curline'><a href='../S/515.html#L600'>route_table</a>       600 isisd/isis_route.c   struct route_table *merge;</span>
+<span class='curline'><a href='../S/515.html#L606'>route_table</a>       606 isisd/isis_route.c     table = area-&gt;route_table[0];</span>
+<span class='curline'><a href='../S/515.html#L621'>route_table</a>       621 isisd/isis_route.c     table = area-&gt;route_table[1];</span>
+<span class='curline'><a href='../S/515.html#L650'>route_table</a>       650 isisd/isis_route.c     isis_route_validate_table (area, area-&gt;route_table[0]);</span>
+<span class='curline'><a href='../S/515.html#L652'>route_table</a>       652 isisd/isis_route.c     isis_route_validate_table (area, area-&gt;route_table[1]);</span>
+<span class='curline'><a href='../S/515.html#L673'>route_table</a>       673 isisd/isis_route.c isis_route_invalidate_table (struct isis_area *area, struct route_table *table)</span>
+<span class='curline'><a href='../S/515.html#L691'>route_table</a>       691 isisd/isis_route.c     isis_route_invalidate_table (area, area-&gt;route_table[0]);</span>
+<span class='curline'><a href='../S/515.html#L693'>route_table</a>       693 isisd/isis_route.c     isis_route_invalidate_table (area, area-&gt;route_table[1]);</span>
+<span class='curline'><a href='../S/525.html#L67'>route_table</a>        67 isisd/isis_route.h                                   struct route_table *table);</span>
+<span class='curline'><a href='../S/464.html#L1238'>route_table</a>      1238 isisd/isis_spf.c   struct route_table *table = NULL;</span>
+<span class='curline'><a href='../S/464.html#L1266'>route_table</a>      1266 isisd/isis_spf.c     table = area-&gt;route_table[level - 1];</span>
+<span class='curline'><a href='../S/499.html#L138'>route_table</a>       138 isisd/isisd.c        area-&gt;route_table[0] = route_table_init ();</span>
+<span class='curline'><a href='../S/499.html#L146'>route_table</a>       146 isisd/isisd.c        area-&gt;route_table[1] = route_table_init ();</span>
+<span class='curline'><a href='../S/499.html#L279'>route_table</a>       279 isisd/isisd.c    if (area-&gt;route_table[0])</span>
+<span class='curline'><a href='../S/499.html#L281'>route_table</a>       281 isisd/isisd.c        route_table_finish (area-&gt;route_table[0]);</span>
+<span class='curline'><a href='../S/499.html#L282'>route_table</a>       282 isisd/isisd.c        area-&gt;route_table[0] = NULL;</span>
+<span class='curline'><a href='../S/499.html#L284'>route_table</a>       284 isisd/isisd.c    if (area-&gt;route_table[1])</span>
+<span class='curline'><a href='../S/499.html#L286'>route_table</a>       286 isisd/isisd.c        route_table_finish (area-&gt;route_table[1]);</span>
+<span class='curline'><a href='../S/499.html#L287'>route_table</a>       287 isisd/isisd.c        area-&gt;route_table[1] = NULL;</span>
+<span class='curline'><a href='../S/510.html#L57'>route_table</a>        57 isisd/isisd.h    struct route_table *external_info[ZEBRA_ROUTE_MAX + 1];</span>
+<span class='curline'><a href='../S/510.html#L89'>route_table</a>        89 isisd/isisd.h    struct route_table *route_table[ISIS_LEVELS];	  /* IPv4 routes */</span>
+<span class='curline'><a href='../S/510.html#L92'>route_table</a>        92 isisd/isisd.h    struct route_table *route_table6[ISIS_LEVELS];  /* IPv6 routes */</span>
+<span class='curline'><a href='../S/439.html#L27'>route_table</a>        27 ldpd/ldp_zebra.c struct route_table *table;</span>
+<span class='curline'><a href='../S/400.html#L9'>route_table</a>         9 ldpd/ldp_zebra.h extern struct route_table* table;</span>
+<span class='curline'><a href='../S/240.html#L816'>route_table</a>       816 lib/if.c       struct route_table *ifaddr_ipv4_table;</span>
+<span class='curline'><a href='../S/236.html#L31'>route_table</a>        31 lib/table.c    static void route_table_free (struct route_table *);</span>
+<span class='curline'><a href='../S/236.html#L37'>route_table</a>        37 lib/table.c    struct route_table *</span>
+<span class='curline'><a href='../S/236.html#L40'>route_table</a>        40 lib/table.c      struct route_table *rt;</span>
+<span class='curline'><a href='../S/236.html#L42'>route_table</a>        42 lib/table.c      rt = XCALLOC (MTYPE_ROUTE_TABLE, sizeof (struct route_table));</span>
+<span class='curline'><a href='../S/236.html#L48'>route_table</a>        48 lib/table.c    route_table_finish (struct route_table *rt)</span>
+<span class='curline'><a href='../S/236.html#L55'>route_table</a>        55 lib/table.c    route_node_new (struct route_table *table)</span>
+<span class='curline'><a href='../S/236.html#L62'>route_table</a>        62 lib/table.c    route_node_set (struct route_table *table, struct prefix *prefix)</span>
+<span class='curline'><a href='../S/236.html#L76'>route_table</a>        76 lib/table.c    route_node_free (struct route_table *table, struct route_node *node)</span>
+<span class='curline'><a href='../S/236.html#L83'>route_table</a>        83 lib/table.c    route_table_free (struct route_table *rt)</span>
+<span class='curline'><a href='../S/236.html#L207'>route_table</a>       207 lib/table.c    route_node_match (const struct route_table *table, const struct prefix *p)</span>
+<span class='curline'><a href='../S/236.html#L237'>route_table</a>       237 lib/table.c    route_node_match_ipv4 (const struct route_table *table,</span>
+<span class='curline'><a href='../S/236.html#L252'>route_table</a>       252 lib/table.c    route_node_match_ipv6 (const struct route_table *table,</span>
+<span class='curline'><a href='../S/236.html#L268'>route_table</a>       268 lib/table.c    route_node_lookup (const struct route_table *table, struct prefix *p)</span>
+<span class='curline'><a href='../S/236.html#L289'>route_table</a>       289 lib/table.c    route_node_lookup2 (struct route_table *table, struct prefix *p)</span>
+<span class='curline'><a href='../S/236.html#L321'>route_table</a>       321 lib/table.c    route_node_get (struct route_table *const table, struct prefix *p)</span>
+<span class='curline'><a href='../S/236.html#L421'>route_table</a>       421 lib/table.c    route_top (struct route_table *table)</span>
+<span class='curline'><a href='../S/236.html#L531'>route_table</a>       531 lib/table.c    route_table_count (const struct route_table *table)</span>
+<span class='curline'><a href='../S/236.html#L543'>route_table</a>       543 lib/table.c    		   struct route_table *table)</span>
+<span class='curline'><a href='../S/236.html#L557'>route_table</a>       557 lib/table.c    		    struct route_table *table, struct route_node *node)</span>
+<span class='curline'><a href='../S/236.html#L573'>route_table</a>       573 lib/table.c    struct route_table *</span>
+<span class='curline'><a href='../S/236.html#L672'>route_table</a>       672 lib/table.c    route_table_get_next_internal (const struct route_table *table,</span>
+<span class='curline'><a href='../S/236.html#L777'>route_table</a>       777 lib/table.c    route_table_get_next (const struct route_table *table, struct prefix *p)</span>
+<span class='curline'><a href='../S/236.html#L794'>route_table</a>       794 lib/table.c    route_table_iter_init (route_table_iter_t * iter, struct route_table *table)</span>
+<span class='curline'><a href='../S/215.html#L30'>route_table</a>        30 lib/table.h    struct route_table;</span>
+<span class='curline'><a href='../S/215.html#L41'>route_table</a>        41 lib/table.h      (route_table_delegate_t *, struct route_table *);</span>
+<span class='curline'><a href='../S/215.html#L44'>route_table</a>        44 lib/table.h      (route_table_delegate_t *, struct route_table *, struct route_node *);</span>
+<span class='curline'><a href='../S/215.html#L78'>route_table</a>        78 lib/table.h      struct route_table *table;			\</span>
+<span class='curline'><a href='../S/215.html#L125'>route_table</a>       125 lib/table.h      struct route_table *table;</span>
+<span class='curline'><a href='../S/215.html#L139'>route_table</a>       139 lib/table.h    extern struct route_table *route_table_init (void);</span>
+<span class='curline'><a href='../S/215.html#L141'>route_table</a>       141 lib/table.h    extern struct route_table *</span>
+<span class='curline'><a href='../S/215.html#L144'>route_table</a>       144 lib/table.h    extern void route_table_finish (struct route_table *);</span>
+<span class='curline'><a href='../S/215.html#L146'>route_table</a>       146 lib/table.h    extern struct route_node *route_top (struct route_table *);</span>
+<span class='curline'><a href='../S/215.html#L151'>route_table</a>       151 lib/table.h    extern struct route_node *route_node_get (struct route_table *const,</span>
+<span class='curline'><a href='../S/215.html#L153'>route_table</a>       153 lib/table.h    extern struct route_node *route_node_lookup (const struct route_table *,</span>
+<span class='curline'><a href='../S/215.html#L156'>route_table</a>       156 lib/table.h    extern struct route_node *route_node_lookup2 (struct route_table *, struct prefix *);</span>
+<span class='curline'><a href='../S/215.html#L157'>route_table</a>       157 lib/table.h    extern struct route_node *route_node_match (const struct route_table *,</span>
+<span class='curline'><a href='../S/215.html#L159'>route_table</a>       159 lib/table.h    extern struct route_node *route_node_match_ipv4 (const struct route_table *,</span>
+<span class='curline'><a href='../S/215.html#L162'>route_table</a>       162 lib/table.h    extern struct route_node *route_node_match_ipv6 (const struct route_table *,</span>
+<span class='curline'><a href='../S/215.html#L166'>route_table</a>       166 lib/table.h    extern unsigned long route_table_count (const struct route_table *);</span>
+<span class='curline'><a href='../S/215.html#L169'>route_table</a>       169 lib/table.h    route_table_get_next (const struct route_table *table, struct prefix *p);</span>
+<span class='curline'><a href='../S/215.html#L177'>route_table</a>       177 lib/table.h    				   struct route_table *table);</span>
+<span class='curline'><a href='../S/38.html#L100'>route_table</a>       100 ospf6d/ospf6_abr.c   for (ro = ospf6_route_head (area-&gt;ospf6-&gt;route_table); ro;</span>
+<span class='curline'><a href='../S/38.html#L484'>route_table</a>       484 ospf6d/ospf6_abr.c   for (ro = ospf6_route_match_head (&amp;range-&gt;prefix, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/38.html#L560'>route_table</a>       560 ospf6d/ospf6_abr.c       table = oa-&gt;ospf6-&gt;route_table;</span>
+<span class='curline'><a href='../S/2.html#L121'>route_table</a>       121 ospf6d/ospf6_area.c   ospf6_route_add (copy, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/2.html#L129'>route_table</a>       129 ospf6d/ospf6_area.c   copy = ospf6_route_lookup_identical (route, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/2.html#L131'>route_table</a>       131 ospf6d/ospf6_area.c     ospf6_route_remove (copy, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/2.html#L154'>route_table</a>       154 ospf6d/ospf6_area.c   oa-&gt;route_table = OSPF6_ROUTE_TABLE_CREATE (AREA, ROUTES);</span>
+<span class='curline'><a href='../S/2.html#L155'>route_table</a>       155 ospf6d/ospf6_area.c   oa-&gt;route_table-&gt;scope = oa;</span>
+<span class='curline'><a href='../S/2.html#L156'>route_table</a>       156 ospf6d/ospf6_area.c   oa-&gt;route_table-&gt;hook_add = ospf6_area_route_hook_add;</span>
+<span class='curline'><a href='../S/2.html#L157'>route_table</a>       157 ospf6d/ospf6_area.c   oa-&gt;route_table-&gt;hook_remove = ospf6_area_route_hook_remove;</span>
+<span class='curline'><a href='../S/2.html#L175'>route_table</a>       175 ospf6d/ospf6_area.c   for (route = ospf6_route_head (o-&gt;route_table); route;</span>
+<span class='curline'><a href='../S/2.html#L204'>route_table</a>       204 ospf6d/ospf6_area.c   ospf6_route_table_delete (oa-&gt;route_table);</span>
+<span class='curline'><a href='../S/35.html#L56'>route_table</a>        56 ospf6d/ospf6_area.h   struct ospf6_route_table *route_table;</span>
+<span class='curline'><a href='../S/37.html#L233'>route_table</a>       233 ospf6d/ospf6_asbr.c   ospf6_route_add (route, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/37.html#L262'>route_table</a>       262 ospf6d/ospf6_asbr.c   route = ospf6_route_lookup (&amp;prefix, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/37.html#L291'>route_table</a>       291 ospf6d/ospf6_asbr.c       ospf6_route_remove (route, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/10.html#L1108'>route_table</a>      1108 ospf6d/ospf6_intra.c       ospf6_route_add (route, oa-&gt;route_table);</span>
+<span class='curline'><a href='../S/10.html#L1154'>route_table</a>      1154 ospf6d/ospf6_intra.c       route = ospf6_route_lookup (&amp;prefix, oa-&gt;route_table);</span>
+<span class='curline'><a href='../S/10.html#L1178'>route_table</a>      1178 ospf6d/ospf6_intra.c           ospf6_route_remove (route, oa-&gt;route_table);</span>
+<span class='curline'><a href='../S/10.html#L1200'>route_table</a>      1200 ospf6d/ospf6_intra.c   hook_add = oa-&gt;route_table-&gt;hook_add;</span>
+<span class='curline'><a href='../S/10.html#L1201'>route_table</a>      1201 ospf6d/ospf6_intra.c   hook_remove = oa-&gt;route_table-&gt;hook_remove;</span>
+<span class='curline'><a href='../S/10.html#L1202'>route_table</a>      1202 ospf6d/ospf6_intra.c   oa-&gt;route_table-&gt;hook_add = NULL;</span>
+<span class='curline'><a href='../S/10.html#L1203'>route_table</a>      1203 ospf6d/ospf6_intra.c   oa-&gt;route_table-&gt;hook_remove = NULL;</span>
+<span class='curline'><a href='../S/10.html#L1205'>route_table</a>      1205 ospf6d/ospf6_intra.c   for (route = ospf6_route_head (oa-&gt;route_table); route;</span>
+<span class='curline'><a href='../S/10.html#L1214'>route_table</a>      1214 ospf6d/ospf6_intra.c   oa-&gt;route_table-&gt;hook_add = hook_add;</span>
+<span class='curline'><a href='../S/10.html#L1215'>route_table</a>      1215 ospf6d/ospf6_intra.c   oa-&gt;route_table-&gt;hook_remove = hook_remove;</span>
+<span class='curline'><a href='../S/10.html#L1217'>route_table</a>      1217 ospf6d/ospf6_intra.c   for (route = ospf6_route_head (oa-&gt;route_table); route;</span>
+<span class='curline'><a href='../S/10.html#L1228'>route_table</a>      1228 ospf6d/ospf6_intra.c         ospf6_route_remove (route, oa-&gt;route_table);</span>
+<span class='curline'><a href='../S/31.html#L31'>route_table</a>        31 ospf6d/ospf6_lsdb.h   struct route_table *table;</span>
+<span class='curline'><a href='../S/44.html#L171'>route_table</a>       171 ospf6d/ospf6_route.h   struct route_table *table;</span>
+<span class='curline'><a href='../S/13.html#L130'>route_table</a>       130 ospf6d/ospf6_top.c   o-&gt;route_table = OSPF6_ROUTE_TABLE_CREATE (GLOBAL, ROUTES);</span>
+<span class='curline'><a href='../S/13.html#L131'>route_table</a>       131 ospf6d/ospf6_top.c   o-&gt;route_table-&gt;scope = o;</span>
+<span class='curline'><a href='../S/13.html#L132'>route_table</a>       132 ospf6d/ospf6_top.c   o-&gt;route_table-&gt;hook_add = ospf6_top_route_hook_add;</span>
+<span class='curline'><a href='../S/13.html#L133'>route_table</a>       133 ospf6d/ospf6_top.c   o-&gt;route_table-&gt;hook_remove = ospf6_top_route_hook_remove;</span>
+<span class='curline'><a href='../S/13.html#L163'>route_table</a>       163 ospf6d/ospf6_top.c   ospf6_route_table_delete (o-&gt;route_table);</span>
+<span class='curline'><a href='../S/13.html#L200'>route_table</a>       200 ospf6d/ospf6_top.c       ospf6_route_remove_all (o-&gt;route_table);</span>
+<span class='curline'><a href='../S/13.html#L498'>route_table</a>       498 ospf6d/ospf6_top.c   ospf6_route_table_show (vty, argc, argv, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/13.html#L536'>route_table</a>       536 ospf6d/ospf6_top.c   ospf6_route_table_show (vty, sargc, sargv, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/13.html#L563'>route_table</a>       563 ospf6d/ospf6_top.c   ospf6_route_table_show (vty, sargc, sargv, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/13.html#L627'>route_table</a>       627 ospf6d/ospf6_top.c   ospf6_route_table_show (vty, sargc, sargv, ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/7.html#L46'>route_table</a>        46 ospf6d/ospf6_top.h   struct ospf6_route_table *route_table;</span>
+<span class='curline'><a href='../S/7.html#L50'>route_table</a>        50 ospf6d/ospf6_top.h   struct route_table *external_id_table;</span>
+<span class='curline'><a href='../S/3.html#L486'>route_table</a>       486 ospf6d/ospf6_zebra.c       ospf6-&gt;route_table-&gt;hook_add = NULL;</span>
+<span class='curline'><a href='../S/3.html#L487'>route_table</a>       487 ospf6d/ospf6_zebra.c       ospf6-&gt;route_table-&gt;hook_remove = NULL;</span>
+<span class='curline'><a href='../S/3.html#L498'>route_table</a>       498 ospf6d/ospf6_zebra.c       ospf6-&gt;route_table-&gt;hook_add = NULL;</span>
+<span class='curline'><a href='../S/3.html#L499'>route_table</a>       499 ospf6d/ospf6_zebra.c       ospf6-&gt;route_table-&gt;hook_remove = NULL;</span>
+<span class='curline'><a href='../S/3.html#L522'>route_table</a>       522 ospf6d/ospf6_zebra.c   for (route = ospf6_route_head (ospf6-&gt;route_table); route;</span>
+<span class='curline'><a href='../S/3.html#L526'>route_table</a>       526 ospf6d/ospf6_zebra.c   ospf6-&gt;route_table-&gt;hook_add = ospf6_zebra_route_update_add;</span>
+<span class='curline'><a href='../S/3.html#L527'>route_table</a>       527 ospf6d/ospf6_zebra.c   ospf6-&gt;route_table-&gt;hook_remove = ospf6_zebra_route_update_remove;</span>
+<span class='curline'><a href='../S/3.html#L549'>route_table</a>       549 ospf6d/ospf6_zebra.c   ospf6-&gt;route_table-&gt;hook_add = NULL;</span>
+<span class='curline'><a href='../S/3.html#L550'>route_table</a>       550 ospf6d/ospf6_zebra.c   ospf6-&gt;route_table-&gt;hook_remove = NULL;</span>
+<span class='curline'><a href='../S/3.html#L553'>route_table</a>       553 ospf6d/ospf6_zebra.c   for (route = ospf6_route_head (ospf6-&gt;route_table); route;</span>
+<span class='curline'><a href='../S/24.html#L1895'>route_table</a>      1895 ospf6d/ospf6d.c   if (ospf6-&gt;route_table)</span>
+<span class='curline'><a href='../S/24.html#L1896'>route_table</a>      1896 ospf6d/ospf6d.c     ospf6_route_remove_all (ospf6-&gt;route_table);</span>
+<span class='curline'><a href='../S/800.html#L1023'>route_table</a>      1023 ospfd/ospf_abr.c 			     struct route_table *rt)</span>
+<span class='curline'><a href='../S/800.html#L1245'>route_table</a>      1245 ospfd/ospf_abr.c ospf_abr_process_router_rt (struct ospf *ospf, struct route_table *rt)</span>
+<span class='curline'><a href='../S/740.html#L51'>route_table</a>        51 ospfd/ospf_ase.c 		      struct route_table *rtrs, struct prefix_ipv4 *asbr)</span>
+<span class='curline'><a href='../S/740.html#L106'>route_table</a>       106 ospfd/ospf_ase.c ospf_find_asbr_route_through_area (struct route_table *rtrs, </span>
+<span class='curline'><a href='../S/740.html#L163'>route_table</a>       163 ospfd/ospf_ase.c 			       struct route_table *rt_network,</span>
+<span class='curline'><a href='../S/740.html#L164'>route_table</a>       164 ospfd/ospf_ase.c 			       struct route_table *rt_router,</span>
+<span class='curline'><a href='../S/740.html#L547'>route_table</a>       547 ospfd/ospf_ase.c ospf_ase_route_match_same (struct route_table *rt, struct prefix *prefix,</span>
+<span class='curline'><a href='../S/740.html#L605'>route_table</a>       605 ospfd/ospf_ase.c ospf_ase_compare_tables (struct route_table *new_external_route,</span>
+<span class='curline'><a href='../S/740.html#L606'>route_table</a>       606 ospfd/ospf_ase.c 			 struct route_table *old_external_route)</span>
+<span class='curline'><a href='../S/740.html#L748'>route_table</a>       748 ospfd/ospf_ase.c ospf_ase_external_lsas_finish (struct route_table *rt)</span>
+<span class='curline'><a href='../S/740.html#L773'>route_table</a>       773 ospfd/ospf_ase.c   struct route_table *tmp_old;</span>
+<span class='curline'><a href='../S/809.html#L28'>route_table</a>        28 ospfd/ospf_ase.h 						struct route_table *,</span>
+<span class='curline'><a href='../S/809.html#L31'>route_table</a>        31 ospfd/ospf_ase.h 							     route_table *,</span>
+<span class='curline'><a href='../S/809.html#L41'>route_table</a>        41 ospfd/ospf_ase.h extern void ospf_ase_external_lsas_finish (struct route_table *);</span>
+<span class='curline'><a href='../S/811.html#L914'>route_table</a>       914 ospfd/ospf_flood.c       struct route_table *table = lsdb-&gt;type[i].db;</span>
+<span class='curline'><a href='../S/766.html#L50'>route_table</a>        50 ospfd/ospf_ia.c ospf_find_abr_route (struct route_table *rtrs, </span>
+<span class='curline'><a href='../S/766.html#L72'>route_table</a>        72 ospfd/ospf_ia.c ospf_ia_network_route (struct ospf *ospf, struct route_table *rt,</span>
+<span class='curline'><a href='../S/766.html#L129'>route_table</a>       129 ospfd/ospf_ia.c ospf_ia_router_route (struct ospf *ospf, struct route_table *rtrs,</span>
+<span class='curline'><a href='../S/766.html#L198'>route_table</a>       198 ospfd/ospf_ia.c process_summary_lsa (struct ospf_area *area, struct route_table *rt,</span>
+<span class='curline'><a href='../S/766.html#L199'>route_table</a>       199 ospfd/ospf_ia.c 		     struct route_table *rtrs, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/766.html#L288'>route_table</a>       288 ospfd/ospf_ia.c 			struct route_table *lsdb_rt,</span>
+<span class='curline'><a href='../S/766.html#L289'>route_table</a>       289 ospfd/ospf_ia.c                         struct route_table *rt,</span>
+<span class='curline'><a href='../S/766.html#L290'>route_table</a>       290 ospfd/ospf_ia.c                         struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/766.html#L308'>route_table</a>       308 ospfd/ospf_ia.c 			   struct route_table *rt, </span>
+<span class='curline'><a href='../S/766.html#L309'>route_table</a>       309 ospfd/ospf_ia.c                            struct route_table *rtrs,</span>
+<span class='curline'><a href='../S/766.html#L437'>route_table</a>       437 ospfd/ospf_ia.c 			  struct route_table *rtrs, </span>
+<span class='curline'><a href='../S/766.html#L533'>route_table</a>       533 ospfd/ospf_ia.c process_transit_summary_lsa (struct ospf_area *area, struct route_table *rt,</span>
+<span class='curline'><a href='../S/766.html#L534'>route_table</a>       534 ospfd/ospf_ia.c 			     struct route_table *rtrs, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/766.html#L592'>route_table</a>       592 ospfd/ospf_ia.c 				struct route_table *lsdb_rt,</span>
+<span class='curline'><a href='../S/766.html#L593'>route_table</a>       593 ospfd/ospf_ia.c                                 struct route_table *rt,</span>
+<span class='curline'><a href='../S/766.html#L594'>route_table</a>       594 ospfd/ospf_ia.c                                 struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/766.html#L605'>route_table</a>       605 ospfd/ospf_ia.c 		 struct route_table *rt,</span>
+<span class='curline'><a href='../S/766.html#L606'>route_table</a>       606 ospfd/ospf_ia.c                  struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/789.html#L39'>route_table</a>        39 ospfd/ospf_ia.h extern void ospf_ia_routing (struct ospf *, struct route_table *,</span>
+<span class='curline'><a href='../S/789.html#L40'>route_table</a>        40 ospfd/ospf_ia.h 		             struct route_table *);</span>
+<span class='curline'><a href='../S/791.html#L91'>route_table</a>        91 ospfd/ospf_interface.h   struct route_table *params;</span>
+<span class='curline'><a href='../S/791.html#L92'>route_table</a>        92 ospfd/ospf_interface.h   struct route_table *oifs;</span>
+<span class='curline'><a href='../S/791.html#L182'>route_table</a>       182 ospfd/ospf_interface.h   struct route_table *nbrs;             /* OSPF Neighbor List */</span>
+<span class='curline'><a href='../S/791.html#L198'>route_table</a>       198 ospfd/ospf_interface.h   struct route_table *ls_upd_queue;</span>
+<span class='curline'><a href='../S/765.html#L166'>route_table</a>       166 ospfd/ospf_ism.c ospf_dr_eligible_routers (struct route_table *nbrs, struct list *el_list)</span>
+<span class='curline'><a href='../S/765.html#L184'>route_table</a>       184 ospfd/ospf_ism.c ospf_dr_change (struct ospf *ospf, struct route_table *nbrs)</span>
+<span class='curline'><a href='../S/747.html#L2083'>route_table</a>      2083 ospfd/ospf_lsa.c   struct route_table *rt;</span>
+<span class='curline'><a href='../S/778.html#L116'>route_table</a>       116 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/778.html#L151'>route_table</a>       151 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/778.html#L185'>route_table</a>       185 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/778.html#L201'>route_table</a>       201 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/778.html#L218'>route_table</a>       218 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/778.html#L239'>route_table</a>       239 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/778.html#L267'>route_table</a>       267 ospfd/ospf_lsdb.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/755.html#L34'>route_table</a>        34 ospfd/ospf_lsdb.h     struct route_table *db;</span>
+<span class='curline'><a href='../S/756.html#L289'>route_table</a>       289 ospfd/ospf_neighbor.c ospf_nbr_lookup_by_addr (struct route_table *nbrs,</span>
+<span class='curline'><a href='../S/756.html#L320'>route_table</a>       320 ospfd/ospf_neighbor.c ospf_nbr_lookup_by_routerid (struct route_table *nbrs,</span>
+<span class='curline'><a href='../S/756.html#L342'>route_table</a>       342 ospfd/ospf_neighbor.c   struct route_table *nbrs;</span>
+<span class='curline'><a href='../S/772.html#L113'>route_table</a>       113 ospfd/ospf_neighbor.h extern struct ospf_neighbor *ospf_nbr_lookup_by_addr (struct route_table *,</span>
+<span class='curline'><a href='../S/772.html#L115'>route_table</a>       115 ospfd/ospf_neighbor.h extern struct ospf_neighbor *ospf_nbr_lookup_by_routerid (struct route_table</span>
+<span class='curline'><a href='../S/815.html#L252'>route_table</a>       252 ospfd/ospf_nsm.c       struct route_table *table = lsdb-&gt;type[i].db;</span>
+<span class='curline'><a href='../S/750.html#L2128'>route_table</a>      2128 ospfd/ospf_opaque.c static void ospf_opaque_exclude_lsa_from_lsreq (struct route_table *nbrs, struct ospf_neighbor *inbr, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L2132'>route_table</a>      2132 ospfd/ospf_opaque.c static unsigned long ospf_opaque_nrxmt_self (struct route_table *nbrs, int lsa_type);</span>
+<span class='curline'><a href='../S/750.html#L2209'>route_table</a>      2209 ospfd/ospf_opaque.c ospf_opaque_exclude_lsa_from_lsreq (struct route_table *nbrs,</span>
+<span class='curline'><a href='../S/750.html#L2422'>route_table</a>      2422 ospfd/ospf_opaque.c ospf_opaque_nrxmt_self (struct route_table *nbrs, int lsa_type)</span>
+<span class='curline'><a href='../S/768.html#L496'>route_table</a>       496 ospfd/ospf_packet.c 	  struct route_table *table = lsdb-&gt;type[i].db;</span>
+<span class='curline'><a href='../S/768.html#L3179'>route_table</a>      3179 ospfd/ospf_packet.c       struct route_table *table = lsdb-&gt;type[i].db;</span>
+<span class='curline'><a href='../S/768.html#L3272'>route_table</a>      3272 ospfd/ospf_packet.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/813.html#L95'>route_table</a>        95 ospfd/ospf_route.c ospf_route_delete (struct route_table *rt)</span>
+<span class='curline'><a href='../S/813.html#L112'>route_table</a>       112 ospfd/ospf_route.c ospf_route_table_free (struct route_table *rt)</span>
+<span class='curline'><a href='../S/813.html#L134'>route_table</a>       134 ospfd/ospf_route.c ospf_route_exist_new_table (struct route_table *rt, struct prefix_ipv4 *prefix)</span>
+<span class='curline'><a href='../S/813.html#L157'>route_table</a>       157 ospfd/ospf_route.c ospf_route_match_same (struct route_table *rt, struct prefix_ipv4 *prefix,</span>
+<span class='curline'><a href='../S/813.html#L208'>route_table</a>       208 ospfd/ospf_route.c ospf_route_delete_same_ext(struct route_table *external_routes,</span>
+<span class='curline'><a href='../S/813.html#L209'>route_table</a>       209 ospfd/ospf_route.c                      struct route_table *routes)</span>
+<span class='curline'><a href='../S/813.html#L239'>route_table</a>       239 ospfd/ospf_route.c ospf_route_delete_uniq (struct route_table *rt, struct route_table *cmprt)</span>
+<span class='curline'><a href='../S/813.html#L264'>route_table</a>       264 ospfd/ospf_route.c ospf_route_install (struct ospf *ospf, struct route_table *rt)</span>
+<span class='curline'><a href='../S/813.html#L302'>route_table</a>       302 ospfd/ospf_route.c ospf_intra_add_router (struct route_table *rt, struct vertex *v,</span>
+<span class='curline'><a href='../S/813.html#L394'>route_table</a>       394 ospfd/ospf_route.c ospf_intra_add_transit (struct route_table *rt, struct vertex *v,</span>
+<span class='curline'><a href='../S/813.html#L455'>route_table</a>       455 ospfd/ospf_route.c ospf_intra_add_stub (struct route_table *rt, struct router_lsa_link *link,</span>
+<span class='curline'><a href='../S/813.html#L639'>route_table</a>       639 ospfd/ospf_route.c ospf_route_table_dump (struct route_table *rt)</span>
+<span class='curline'><a href='../S/813.html#L846'>route_table</a>       846 ospfd/ospf_route.c ospf_route_add (struct route_table *rt, struct prefix_ipv4 *p,</span>
+<span class='curline'><a href='../S/813.html#L867'>route_table</a>       867 ospfd/ospf_route.c ospf_prune_unreachable_networks (struct route_table *rt)</span>
+<span class='curline'><a href='../S/813.html#L896'>route_table</a>       896 ospfd/ospf_route.c ospf_prune_unreachable_routers (struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/813.html#L942'>route_table</a>       942 ospfd/ospf_route.c ospf_add_discard_route (struct route_table *rt, struct ospf_area *area,</span>
+<span class='curline'><a href='../S/813.html#L1001'>route_table</a>      1001 ospfd/ospf_route.c ospf_delete_discard_route (struct route_table *rt, struct prefix_ipv4 *p)</span>
+<span class='curline'><a href='../S/759.html#L129'>route_table</a>       129 ospfd/ospf_route.h extern void ospf_route_delete (struct route_table *);</span>
+<span class='curline'><a href='../S/759.html#L130'>route_table</a>       130 ospfd/ospf_route.h extern void ospf_route_table_free (struct route_table *);</span>
+<span class='curline'><a href='../S/759.html#L132'>route_table</a>       132 ospfd/ospf_route.h extern void ospf_route_install (struct ospf *, struct route_table *);</span>
+<span class='curline'><a href='../S/759.html#L133'>route_table</a>       133 ospfd/ospf_route.h extern void ospf_route_table_dump (struct route_table *);</span>
+<span class='curline'><a href='../S/759.html#L135'>route_table</a>       135 ospfd/ospf_route.h extern void ospf_intra_add_router (struct route_table *, struct vertex *,</span>
+<span class='curline'><a href='../S/759.html#L138'>route_table</a>       138 ospfd/ospf_route.h extern void ospf_intra_add_transit (struct route_table *, struct vertex *,</span>
+<span class='curline'><a href='../S/759.html#L141'>route_table</a>       141 ospfd/ospf_route.h extern void ospf_intra_add_stub (struct route_table *,</span>
+<span class='curline'><a href='../S/759.html#L154'>route_table</a>       154 ospfd/ospf_route.h extern void ospf_route_add (struct route_table *, struct prefix_ipv4 *,</span>
+<span class='curline'><a href='../S/759.html#L158'>route_table</a>       158 ospfd/ospf_route.h extern void ospf_prune_unreachable_networks (struct route_table *);</span>
+<span class='curline'><a href='../S/759.html#L159'>route_table</a>       159 ospfd/ospf_route.h extern void ospf_prune_unreachable_routers (struct route_table *);</span>
+<span class='curline'><a href='../S/759.html#L160'>route_table</a>       160 ospfd/ospf_route.h extern int ospf_add_discard_route (struct route_table *, struct ospf_area *,</span>
+<span class='curline'><a href='../S/759.html#L162'>route_table</a>       162 ospfd/ospf_route.h extern void ospf_delete_discard_route (struct route_table *, struct prefix_ipv4 *);</span>
+<span class='curline'><a href='../S/759.html#L163'>route_table</a>       163 ospfd/ospf_route.h extern int ospf_route_match_same (struct route_table *, struct prefix_ipv4 *,</span>
+<span class='curline'><a href='../S/742.html#L1915'>route_table</a>      1915 ospfd/ospf_snmp.c struct route_table *ospf_snmp_vl_table;</span>
+<span class='curline'><a href='../S/805.html#L989'>route_table</a>       989 ospfd/ospf_spf.c                         struct route_table *rt,</span>
+<span class='curline'><a href='../S/805.html#L1054'>route_table</a>      1054 ospfd/ospf_spf.c ospf_rtrs_free (struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/805.html#L1081'>route_table</a>      1081 ospfd/ospf_spf.c ospf_rtrs_print (struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/805.html#L1143'>route_table</a>      1143 ospfd/ospf_spf.c ospf_spf_calculate (struct ospf_area *area, struct route_table *new_table,</span>
+<span class='curline'><a href='../S/805.html#L1144'>route_table</a>      1144 ospfd/ospf_spf.c                     struct route_table *new_rtrs)</span>
+<span class='curline'><a href='../S/805.html#L1263'>route_table</a>      1263 ospfd/ospf_spf.c   struct route_table *new_table, *new_rtrs;</span>
+<span class='curline'><a href='../S/812.html#L63'>route_table</a>        63 ospfd/ospf_spf.h extern void ospf_rtrs_free (struct route_table *);</span>
+<span class='curline'><a href='../S/738.html#L3855'>route_table</a>      3855 ospfd/ospf_vty.c show_lsa_detail_proc (struct vty *vty, struct route_table *rt,</span>
+<span class='curline'><a href='../S/738.html#L3910'>route_table</a>      3910 ospfd/ospf_vty.c show_lsa_detail_adv_router_proc (struct vty *vty, struct route_table *rt,</span>
+<span class='curline'><a href='../S/738.html#L7176'>route_table</a>      7176 ospfd/ospf_vty.c show_ip_ospf_route_network (struct vty *vty, struct route_table *rt)</span>
+<span class='curline'><a href='../S/738.html#L7229'>route_table</a>      7229 ospfd/ospf_vty.c show_ip_ospf_route_router (struct vty *vty, struct route_table *rtrs)</span>
+<span class='curline'><a href='../S/738.html#L7282'>route_table</a>      7282 ospfd/ospf_vty.c show_ip_ospf_route_external (struct vty *vty, struct route_table *rt)</span>
+<span class='curline'><a href='../S/773.html#L968'>route_table</a>       968 ospfd/ospf_zebra.c   struct route_table *rt;</span>
+<span class='curline'><a href='../S/773.html#L1009'>route_table</a>      1009 ospfd/ospf_zebra.c   struct route_table *rt;</span>
+<span class='curline'><a href='../S/790.html#L143'>route_table</a>       143 ospfd/ospfd.h    struct route_table *external_info[ZEBRA_ROUTE_MAX + 1];</span>
+<span class='curline'><a href='../S/790.html#L215'>route_table</a>       215 ospfd/ospfd.h    struct route_table *networks;         /* OSPF config networks. */</span>
+<span class='curline'><a href='../S/790.html#L218'>route_table</a>       218 ospfd/ospfd.h    struct route_table *nbr_nbma;</span>
+<span class='curline'><a href='../S/790.html#L236'>route_table</a>       236 ospfd/ospfd.h    struct route_table *old_table;        /* Old routing table. */</span>
+<span class='curline'><a href='../S/790.html#L237'>route_table</a>       237 ospfd/ospfd.h    struct route_table *new_table;        /* Current routing table. */</span>
+<span class='curline'><a href='../S/790.html#L239'>route_table</a>       239 ospfd/ospfd.h    struct route_table *old_rtrs;         /* Old ABR/ASBR RT. */</span>
+<span class='curline'><a href='../S/790.html#L240'>route_table</a>       240 ospfd/ospfd.h    struct route_table *new_rtrs;         /* New ABR/ASBR RT. */</span>
+<span class='curline'><a href='../S/790.html#L242'>route_table</a>       242 ospfd/ospfd.h    struct route_table *new_external_route;   /* New External Route. */</span>
+<span class='curline'><a href='../S/790.html#L243'>route_table</a>       243 ospfd/ospfd.h    struct route_table *old_external_route;   /* Old External Route. */</span>
+<span class='curline'><a href='../S/790.html#L245'>route_table</a>       245 ospfd/ospfd.h    struct route_table *external_lsas;    /* Database of external LSAs,</span>
+<span class='curline'><a href='../S/790.html#L251'>route_table</a>       251 ospfd/ospfd.h    struct route_table *maxage_lsa;       /* List of MaxAge LSA for deletion. */</span>
+<span class='curline'><a href='../S/790.html#L334'>route_table</a>       334 ospfd/ospfd.h    struct route_table *distance_table;</span>
+<span class='curline'><a href='../S/790.html#L385'>route_table</a>       385 ospfd/ospfd.h    struct route_table *ranges;		/* Configured Area Ranges. */</span>
+<span class='curline'><a href='../S/594.html#L66'>route_table</a>        66 ripd/rip_interface.c struct route_table *rip_enable_network;</span>
+<span class='curline'><a href='../S/589.html#L87'>route_table</a>        87 ripd/rip_snmp.c struct route_table *rip_ifaddr_table;</span>
+<span class='curline'><a href='../S/596.html#L57'>route_table</a>        57 ripd/ripd.c    struct route_table *rip_neighbor_table;</span>
+<span class='curline'><a href='../S/596.html#L3108'>route_table</a>      3108 ripd/ripd.c    struct route_table *rip_distance_table;</span>
+<span class='curline'><a href='../S/593.html#L111'>route_table</a>       111 ripd/ripd.h      struct route_table *table;</span>
+<span class='curline'><a href='../S/593.html#L114'>route_table</a>       114 ripd/ripd.h      struct route_table *route;</span>
+<span class='curline'><a href='../S/593.html#L117'>route_table</a>       117 ripd/ripd.h      struct route_table *neighbor;</span>
+<span class='curline'><a href='../S/593.html#L144'>route_table</a>       144 ripd/ripd.h      struct route_table *distance_table;</span>
+<span class='curline'><a href='../S/102.html#L513'>route_table</a>       513 ripngd/ripng_interface.c struct route_table *ripng_enable_network;</span>
+<span class='curline'><a href='../S/110.html#L112'>route_table</a>       112 ripngd/ripngd.h   struct route_table *table;</span>
+<span class='curline'><a href='../S/110.html#L115'>route_table</a>       115 ripngd/ripngd.h   struct route_table *route;</span>
+<span class='curline'><a href='../S/110.html#L118'>route_table</a>       118 ripngd/ripngd.h   struct route_table *aggregate;</span>
+<span class='curline'><a href='../S/91.html#L52'>route_table</a>        52 tests/table_test.c add_node (struct route_table *table, const char *prefix_str)</span>
+<span class='curline'><a href='../S/91.html#L88'>route_table</a>        88 tests/table_test.c add_nodes (struct route_table *table, ...)</span>
+<span class='curline'><a href='../S/91.html#L149'>route_table</a>       149 tests/table_test.c print_table (struct route_table *table)</span>
+<span class='curline'><a href='../S/91.html#L170'>route_table</a>       170 tests/table_test.c clear_table (struct route_table *table)</span>
+<span class='curline'><a href='../S/91.html#L204'>route_table</a>       204 tests/table_test.c verify_next_by_iterating (struct route_table *table,</span>
+<span class='curline'><a href='../S/91.html#L235'>route_table</a>       235 tests/table_test.c verify_next (struct route_table *table, const char *target, const char *next)</span>
+<span class='curline'><a href='../S/91.html#L291'>route_table</a>       291 tests/table_test.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/91.html#L455'>route_table</a>       455 tests/table_test.c verify_iter_with_pause (struct route_table *table)</span>
+<span class='curline'><a href='../S/91.html#L512'>route_table</a>       512 tests/table_test.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/997.html#L197'>route_table</a>       197 zebra/interface.h   struct route_table *ipv4_subnets;</span>
+<span class='curline'><a href='../S/954.html#L91'>route_table</a>        91 zebra/redistribute.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/954.html#L145'>route_table</a>       145 zebra/redistribute.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/981.html#L283'>route_table</a>       283 zebra/rib.h      struct route_table *table[AFI_MAX][SAFI_MAX];</span>
+<span class='curline'><a href='../S/981.html#L286'>route_table</a>       286 zebra/rib.h      struct route_table *stable[AFI_MAX][SAFI_MAX];</span>
+<span class='curline'><a href='../S/981.html#L351'>route_table</a>       351 zebra/rib.h    extern struct route_table *vrf_table (afi_t afi, safi_t safi, u_int32_t id);</span>
+<span class='curline'><a href='../S/981.html#L352'>route_table</a>       352 zebra/rib.h    extern struct route_table *vrf_static_table (afi_t afi, safi_t safi, u_int32_t id);</span>
+<span class='curline'><a href='../S/981.html#L401'>route_table</a>       401 zebra/rib.h    extern struct route_table *rib_table_ipv6;</span>
+<span class='curline'><a href='../S/981.html#L415'>route_table</a>       415 zebra/rib.h    extern struct route_table *rib_tables_iter_next (rib_tables_iter_t *iter);</span>
+<span class='curline'><a href='../S/981.html#L425'>route_table</a>       425 zebra/rib.h    rib_table_info (struct route_table *table)</span>
+<span class='curline'><a href='../S/981.html#L480'>route_table</a>       480 zebra/rib.h    static inline struct route_table *</span>
+<span class='curline'><a href='../S/976.html#L323'>route_table</a>       323 zebra/zebra_fpm.c zfpm_is_table_for_fpm (struct route_table *table)</span>
+<span class='curline'><a href='../S/976.html#L367'>route_table</a>       367 zebra/zebra_fpm.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L85'>route_table</a>        85 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L149'>route_table</a>       149 zebra/zebra_rib.c struct route_table *</span>
+<span class='curline'><a href='../S/940.html#L165'>route_table</a>       165 zebra/zebra_rib.c struct route_table *</span>
+<span class='curline'><a href='../S/940.html#L375'>route_table</a>       375 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L476'>route_table</a>       476 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L577'>route_table</a>       577 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L638'>route_table</a>       638 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L693'>route_table</a>       693 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L759'>route_table</a>       759 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L1686'>route_table</a>      1686 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L1844'>route_table</a>      1844 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L1894'>route_table</a>      1894 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L1942'>route_table</a>      1942 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2016'>route_table</a>      2016 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2146'>route_table</a>      2146 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2239'>route_table</a>      2239 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2304'>route_table</a>      2304 zebra/zebra_rib.c   struct route_table *stable;</span>
+<span class='curline'><a href='../S/940.html#L2396'>route_table</a>      2396 zebra/zebra_rib.c   struct route_table *stable;</span>
+<span class='curline'><a href='../S/940.html#L2482'>route_table</a>      2482 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2574'>route_table</a>      2574 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2696'>route_table</a>      2696 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2788'>route_table</a>      2788 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L2857'>route_table</a>      2857 zebra/zebra_rib.c   struct route_table *stable;</span>
+<span class='curline'><a href='../S/940.html#L2942'>route_table</a>      2942 zebra/zebra_rib.c   struct route_table *stable;</span>
+<span class='curline'><a href='../S/940.html#L2994'>route_table</a>      2994 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/940.html#L3012'>route_table</a>      3012 zebra/zebra_rib.c rib_weed_table (struct route_table *table)</span>
+<span class='curline'><a href='../S/940.html#L3041'>route_table</a>      3041 zebra/zebra_rib.c rib_sweep_table (struct route_table *table)</span>
+<span class='curline'><a href='../S/940.html#L3075'>route_table</a>      3075 zebra/zebra_rib.c rib_score_proto_table (u_char proto, struct route_table *table)</span>
+<span class='curline'><a href='../S/940.html#L3108'>route_table</a>      3108 zebra/zebra_rib.c rib_close_table (struct route_table *table)</span>
+<span class='curline'><a href='../S/940.html#L3171'>route_table</a>      3171 zebra/zebra_rib.c struct route_table *</span>
+<span class='curline'><a href='../S/940.html#L3174'>route_table</a>      3174 zebra/zebra_rib.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/942.html#L139'>route_table</a>       139 zebra/zebra_snmp.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/942.html#L164'>route_table</a>       164 zebra/zebra_snmp.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/942.html#L301'>route_table</a>       301 zebra/zebra_snmp.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L821'>route_table</a>       821 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L853'>route_table</a>       853 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L894'>route_table</a>       894 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L934'>route_table</a>       934 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L975'>route_table</a>       975 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1013'>route_table</a>      1013 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1042'>route_table</a>      1042 zebra/zebra_vty.c vty_show_ip_route_summary (struct vty *vty, struct route_table *table)</span>
+<span class='curline'><a href='../S/996.html#L1112'>route_table</a>      1112 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1129'>route_table</a>      1129 zebra/zebra_vty.c   struct route_table *stable;</span>
+<span class='curline'><a href='../S/996.html#L1218'>route_table</a>      1218 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1794'>route_table</a>      1794 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1826'>route_table</a>      1826 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1868'>route_table</a>      1868 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1909'>route_table</a>      1909 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1947'>route_table</a>      1947 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L1984'>route_table</a>      1984 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L2007'>route_table</a>      2007 zebra/zebra_vty.c   struct route_table *table;</span>
+<span class='curline'><a href='../S/996.html#L2038'>route_table</a>      2038 zebra/zebra_vty.c   struct route_table *stable;</span>
+</pre>
+</body>
+</html>

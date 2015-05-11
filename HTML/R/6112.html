@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>is_neigh</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/511.html#L869'>is_neigh</a>          869 isisd/isis_lsp.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/511.html#L951'>is_neigh</a>          951 isisd/isis_lsp.c     for (ALL_LIST_ELEMENTS_RO (lsp-&gt;tlv_data.is_neighs, lnode, is_neigh))</span>
+<span class='curline'><a href='../S/511.html#L953'>is_neigh</a>          953 isisd/isis_lsp.c 	lspid_print (is_neigh-&gt;neigh_id, LSPid, dynhost, 0);</span>
+<span class='curline'><a href='../S/511.html#L955'>is_neigh</a>          955 isisd/isis_lsp.c 		 is_neigh-&gt;metrics.metric_default, LSPid, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/511.html#L1196'>is_neigh</a>         1196 isisd/isis_lsp.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/511.html#L1326'>is_neigh</a>         1326 isisd/isis_lsp.c       is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L1328'>is_neigh</a>         1328 isisd/isis_lsp.c       memcpy (&amp;is_neigh-&gt;neigh_id, area-&gt;topology_baseis, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/511.html#L1329'>is_neigh</a>         1329 isisd/isis_lsp.c       is_neigh-&gt;neigh_id[ISIS_SYS_ID_LEN - 1] = (1 &amp; 0xFF);</span>
+<span class='curline'><a href='../S/511.html#L1330'>is_neigh</a>         1330 isisd/isis_lsp.c       is_neigh-&gt;neigh_id[ISIS_SYS_ID_LEN - 2] = ((1 &gt;&gt; 8) &amp; 0xFF);</span>
+<span class='curline'><a href='../S/511.html#L1331'>is_neigh</a>         1331 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_default = 0x01;</span>
+<span class='curline'><a href='../S/511.html#L1332'>is_neigh</a>         1332 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_delay = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L1333'>is_neigh</a>         1333 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_expense = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L1334'>is_neigh</a>         1334 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_error = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L1335'>is_neigh</a>         1335 isisd/isis_lsp.c       listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L1445'>is_neigh</a>         1445 isisd/isis_lsp.c 		  is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L1447'>is_neigh</a>         1447 isisd/isis_lsp.c 		    memcpy (is_neigh-&gt;neigh_id,</span>
+<span class='curline'><a href='../S/511.html#L1450'>is_neigh</a>         1450 isisd/isis_lsp.c 		    memcpy (is_neigh-&gt;neigh_id,</span>
+<span class='curline'><a href='../S/511.html#L1452'>is_neigh</a>         1452 isisd/isis_lsp.c 		  is_neigh-&gt;metrics = circuit-&gt;metrics[level - 1];</span>
+<span class='curline'><a href='../S/511.html#L1453'>is_neigh</a>         1453 isisd/isis_lsp.c                   if (!memcmp (is_neigh-&gt;neigh_id, zero_id,</span>
+<span class='curline'><a href='../S/511.html#L1455'>is_neigh</a>         1455 isisd/isis_lsp.c                     XFREE (MTYPE_ISIS_TLV, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L1457'>is_neigh</a>         1457 isisd/isis_lsp.c                     listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L1498'>is_neigh</a>         1498 isisd/isis_lsp.c 		  is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L1499'>is_neigh</a>         1499 isisd/isis_lsp.c 		  memcpy (is_neigh-&gt;neigh_id, nei-&gt;sysid, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/511.html#L1500'>is_neigh</a>         1500 isisd/isis_lsp.c 		  is_neigh-&gt;metrics = circuit-&gt;metrics[level - 1];</span>
+<span class='curline'><a href='../S/511.html#L1501'>is_neigh</a>         1501 isisd/isis_lsp.c 		  listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L1866'>is_neigh</a>         1866 isisd/isis_lsp.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/511.html#L1888'>is_neigh</a>         1888 isisd/isis_lsp.c       is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L1890'>is_neigh</a>         1890 isisd/isis_lsp.c       memcpy (&amp;is_neigh-&gt;neigh_id, isis-&gt;sysid, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/511.html#L1891'>is_neigh</a>         1891 isisd/isis_lsp.c       listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L1921'>is_neigh</a>         1921 isisd/isis_lsp.c 		  is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L1923'>is_neigh</a>         1923 isisd/isis_lsp.c 		  memcpy (&amp;is_neigh-&gt;neigh_id, adj-&gt;sysid, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/511.html#L1924'>is_neigh</a>         1924 isisd/isis_lsp.c 		  listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L2602'>is_neigh</a>         2602 isisd/isis_lsp.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/511.html#L2646'>is_neigh</a>         2646 isisd/isis_lsp.c       is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L2648'>is_neigh</a>         2648 isisd/isis_lsp.c       memcpy (&amp;is_neigh-&gt;neigh_id, isis-&gt;sysid, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/511.html#L2649'>is_neigh</a>         2649 isisd/isis_lsp.c       LSP_PSEUDO_ID (is_neigh-&gt;neigh_id) = 0x00;</span>
+<span class='curline'><a href='../S/511.html#L2651'>is_neigh</a>         2651 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_default = 0x01;</span>
+<span class='curline'><a href='../S/511.html#L2652'>is_neigh</a>         2652 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_delay = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L2653'>is_neigh</a>         2653 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_expense = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L2654'>is_neigh</a>         2654 isisd/isis_lsp.c       is_neigh-&gt;metrics.metric_error = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L2655'>is_neigh</a>         2655 isisd/isis_lsp.c       listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/511.html#L2673'>is_neigh</a>         2673 isisd/isis_lsp.c 	  is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));</span>
+<span class='curline'><a href='../S/511.html#L2675'>is_neigh</a>         2675 isisd/isis_lsp.c 	  memcpy (&amp;is_neigh-&gt;neigh_id, area-&gt;topology_baseis, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/511.html#L2676'>is_neigh</a>         2676 isisd/isis_lsp.c 	  is_neigh-&gt;neigh_id[ISIS_SYS_ID_LEN - 1] = (to_lsp &amp; 0xFF);</span>
+<span class='curline'><a href='../S/511.html#L2677'>is_neigh</a>         2677 isisd/isis_lsp.c 	  is_neigh-&gt;neigh_id[ISIS_SYS_ID_LEN - 2] = ((to_lsp &gt;&gt; 8) &amp; 0xFF);</span>
+<span class='curline'><a href='../S/511.html#L2678'>is_neigh</a>         2678 isisd/isis_lsp.c 	  is_neigh-&gt;metrics.metric_default = arc-&gt;distance;</span>
+<span class='curline'><a href='../S/511.html#L2679'>is_neigh</a>         2679 isisd/isis_lsp.c 	  is_neigh-&gt;metrics.metric_delay = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L2680'>is_neigh</a>         2680 isisd/isis_lsp.c 	  is_neigh-&gt;metrics.metric_expense = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L2681'>is_neigh</a>         2681 isisd/isis_lsp.c 	  is_neigh-&gt;metrics.metric_error = METRICS_UNSUPPORTED;</span>
+<span class='curline'><a href='../S/511.html#L2682'>is_neigh</a>         2682 isisd/isis_lsp.c 	  listnode_add (tlv_data.is_neighs, is_neigh);</span>
+<span class='curline'><a href='../S/464.html#L734'>is_neigh</a>          734 isisd/isis_spf.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/464.html#L763'>is_neigh</a>          763 isisd/isis_spf.c       for (ALL_LIST_ELEMENTS_RO (lsp-&gt;tlv_data.is_neighs, node, is_neigh))</span>
+<span class='curline'><a href='../S/464.html#L767'>is_neigh</a>          767 isisd/isis_spf.c         if (!LSP_PSEUDO_ID (is_neigh-&gt;neigh_id) &amp;&amp;</span>
+<span class='curline'><a href='../S/464.html#L768'>is_neigh</a>          768 isisd/isis_spf.c             !memcmp (is_neigh-&gt;neigh_id, root_sysid, ISIS_SYS_ID_LEN))</span>
+<span class='curline'><a href='../S/464.html#L770'>is_neigh</a>          770 isisd/isis_spf.c         if (!memcmp (is_neigh-&gt;neigh_id, null_sysid, ISIS_SYS_ID_LEN))</span>
+<span class='curline'><a href='../S/464.html#L772'>is_neigh</a>          772 isisd/isis_spf.c         dist = cost + is_neigh-&gt;metrics.metric_default;</span>
+<span class='curline'><a href='../S/464.html#L773'>is_neigh</a>          773 isisd/isis_spf.c         vtype = LSP_PSEUDO_ID (is_neigh-&gt;neigh_id) ? VTYPE_PSEUDO_IS</span>
+<span class='curline'><a href='../S/464.html#L775'>is_neigh</a>          775 isisd/isis_spf.c         process_N (spftree, vtype, (void *) is_neigh-&gt;neigh_id, dist,</span>
+<span class='curline'><a href='../S/464.html#L887'>is_neigh</a>          887 isisd/isis_spf.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/464.html#L909'>is_neigh</a>          909 isisd/isis_spf.c     for (ALL_LIST_ELEMENTS_RO (lsp-&gt;tlv_data.is_neighs, node, is_neigh))</span>
+<span class='curline'><a href='../S/464.html#L912'>is_neigh</a>          912 isisd/isis_spf.c 	if (!memcmp (is_neigh-&gt;neigh_id, root_sysid, ISIS_SYS_ID_LEN))</span>
+<span class='curline'><a href='../S/464.html#L914'>is_neigh</a>          914 isisd/isis_spf.c         dist = cost + is_neigh-&gt;metrics.metric_default;</span>
+<span class='curline'><a href='../S/464.html#L915'>is_neigh</a>          915 isisd/isis_spf.c         vtype = LSP_PSEUDO_ID (is_neigh-&gt;neigh_id) ? VTYPE_PSEUDO_IS</span>
+<span class='curline'><a href='../S/464.html#L917'>is_neigh</a>          917 isisd/isis_spf.c         process_N (spftree, vtype, (void *) is_neigh-&gt;neigh_id, dist,</span>
+<span class='curline'><a href='../S/479.html#L112'>is_neigh</a>          112 isisd/isis_tlv.c   struct is_neigh *is_nei;</span>
+<span class='curline'><a href='../S/479.html#L206'>is_neigh</a>          206 isisd/isis_tlv.c 		  is_nei = (struct is_neigh *) pnt;</span>
+<span class='curline'><a href='../S/479.html#L829'>is_neigh</a>          829 isisd/isis_tlv.c   struct is_neigh *is_neigh;</span>
+<span class='curline'><a href='../S/479.html#L837'>is_neigh</a>          837 isisd/isis_tlv.c   for (ALL_LIST_ELEMENTS_RO (is_neighs, node, is_neigh))</span>
+<span class='curline'><a href='../S/479.html#L846'>is_neigh</a>          846 isisd/isis_tlv.c       *pos = is_neigh-&gt;metrics.metric_default;</span>
+<span class='curline'><a href='../S/479.html#L848'>is_neigh</a>          848 isisd/isis_tlv.c       *pos = is_neigh-&gt;metrics.metric_delay;</span>
+<span class='curline'><a href='../S/479.html#L850'>is_neigh</a>          850 isisd/isis_tlv.c       *pos = is_neigh-&gt;metrics.metric_expense;</span>
+<span class='curline'><a href='../S/479.html#L852'>is_neigh</a>          852 isisd/isis_tlv.c       *pos = is_neigh-&gt;metrics.metric_error;</span>
+<span class='curline'><a href='../S/479.html#L854'>is_neigh</a>          854 isisd/isis_tlv.c       memcpy (pos, is_neigh-&gt;neigh_id, ISIS_SYS_ID_LEN + 1);</span>
+</pre>
+</body>
+</html>

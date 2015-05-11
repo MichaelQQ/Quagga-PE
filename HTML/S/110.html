@@ -1,0 +1,443 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ripngd/ripngd.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1031.html'>ripngd</a>/ripngd.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/516.html' title='Multiple included from 10 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * RIPng related value and structure.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1998 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/110.html#L24' title='Defined at 24 in ripngd/ripngd.h.'>_ZEBRA_RIPNG_RIPNGD_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/110.html#L23' title='Referred from 23 in ripngd/ripngd.h.'>_ZEBRA_RIPNG_RIPNGD_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;<a href='210.html'>zclient.h</a>&gt;
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> &lt;<a href='304.html'>vty.h</a>&gt;
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='comment'>/* RIPng version and port number. */</em>
+<a id='L30' name='L30'></a><em class='sharp'>#define</em> <a href='../R/3261.html' title='Multiple referred from 3 places.'>RIPNG_V1</a>                         1
+<a id='L31' name='L31'></a><em class='sharp'>#define</em> <a href='../R/3242.html' title='Multiple referred from 3 places.'>RIPNG_PORT_DEFAULT</a>             521
+<a id='L32' name='L32'></a><em class='sharp'>#define</em> <a href='../R/3263.html' title='Multiple referred from 3 places.'>RIPNG_VTY_PORT</a>                2603
+<a id='L33' name='L33'></a><em class='sharp'>#define</em> <a href='../R/3234.html' title='Multiple referred from 3 places.'>RIPNG_MAX_PACKET_SIZE</a>         1500
+<a id='L34' name='L34'></a><em class='sharp'>#define</em> <a href='../S/99.html#L183' title='Referred from 183 in ripngd/ripngd.c.'>RIPNG_PRIORITY_DEFAULT</a>           0
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><em class='comment'>/* RIPng commands. */</em>
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/3244.html' title='Multiple referred from 3 places.'>RIPNG_REQUEST</a>                    1
+<a id='L38' name='L38'></a><em class='sharp'>#define</em> <a href='../R/3245.html' title='Multiple referred from 4 places.'>RIPNG_RESPONSE</a>                   2
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='comment'>/* RIPng metric and multicast group address. */</em>
+<a id='L41' name='L41'></a><em class='sharp'>#define</em> <a href='../R/3235.html' title='Multiple referred from 31 places.'>RIPNG_METRIC_INFINITY</a>           16
+<a id='L42' name='L42'></a><em class='sharp'>#define</em> <a href='../R/3236.html' title='Multiple referred from 4 places.'>RIPNG_METRIC_NEXTHOP</a>          0xff
+<a id='L43' name='L43'></a><em class='sharp'>#define</em> <a href='../R/3233.html' title='Multiple referred from 3 places.'>RIPNG_GROUP</a>              "ff02::9"
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='comment'>/* RIPng timers. */</em>
+<a id='L46' name='L46'></a><em class='sharp'>#define</em> <a href='../R/3259.html' title='Multiple referred from 5 places.'>RIPNG_UPDATE_TIMER_DEFAULT</a>      30
+<a id='L47' name='L47'></a><em class='sharp'>#define</em> <a href='../R/3256.html' title='Multiple referred from 5 places.'>RIPNG_TIMEOUT_TIMER_DEFAULT</a>    180
+<a id='L48' name='L48'></a><em class='sharp'>#define</em> <a href='../R/3232.html' title='Multiple referred from 5 places.'>RIPNG_GARBAGE_TIMER_DEFAULT</a>    120
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><em class='comment'>/* RIPng peer timeout value. */</em>
+<a id='L51' name='L51'></a><em class='sharp'>#define</em> <a href='../S/101.html#L119' title='Referred from 119 in ripngd/ripng_peer.c.'>RIPNG_PEER_TIMER_DEFAULT</a>       180
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><em class='comment'>/* Default config file name. */</em>
+<a id='L54' name='L54'></a><em class='sharp'>#define</em> <a href='../S/106.html#L41' title='Referred from 41 in ripngd/ripng_main.c.'>RIPNG_DEFAULT_CONFIG</a> "ripngd.conf"
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><em class='comment'>/* RIPng route types. */</em>
+<a id='L57' name='L57'></a><em class='sharp'>#define</em> <a href='../R/3249.html' title='Multiple referred from 9 places.'>RIPNG_ROUTE_RTE</a>                  0
+<a id='L58' name='L58'></a><em class='sharp'>#define</em> <a href='../R/3250.html' title='Multiple referred from 6 places.'>RIPNG_ROUTE_STATIC</a>               1
+<a id='L59' name='L59'></a><em class='sharp'>#define</em> <a href='../R/3246.html' title='Multiple referred from 6 places.'>RIPNG_ROUTE_DEFAULT</a>              2
+<a id='L60' name='L60'></a><em class='sharp'>#define</em> <a href='../R/3248.html' title='Multiple referred from 4 places.'>RIPNG_ROUTE_REDISTRIBUTE</a>         3
+<a id='L61' name='L61'></a><em class='sharp'>#define</em> <a href='../R/3247.html' title='Multiple referred from 7 places.'>RIPNG_ROUTE_INTERFACE</a>            4
+<a id='L62' name='L62'></a><em class='sharp'>#define</em> RIPNG_ROUTE_AGGREGATE            5
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='comment'>/* Interface send/receive configuration. */</em>
+<a id='L65' name='L65'></a><em class='sharp'>#define</em> RIPNG_SEND_UNSPEC                0
+<a id='L66' name='L66'></a><em class='sharp'>#define</em> <a href='../S/99.html#L1466' title='Referred from 1466 in ripngd/ripngd.c.'>RIPNG_SEND_OFF</a>                   1
+<a id='L67' name='L67'></a><em class='sharp'>#define</em> RIPNG_RECEIVE_UNSPEC             0
+<a id='L68' name='L68'></a><em class='sharp'>#define</em> RIPNG_RECEIVE_OFF                1
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a><em class='comment'>/* RIP default route's accept/announce methods. */</em>
+<a id='L71' name='L71'></a><em class='sharp'>#define</em> RIPNG_DEFAULT_ADVERTISE_UNSPEC   0
+<a id='L72' name='L72'></a><em class='sharp'>#define</em> RIPNG_DEFAULT_ADVERTISE_NONE     1
+<a id='L73' name='L73'></a><em class='sharp'>#define</em> RIPNG_DEFAULT_ADVERTISE          2
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a><em class='sharp'>#define</em> RIPNG_DEFAULT_ACCEPT_UNSPEC      0
+<a id='L76' name='L76'></a><em class='sharp'>#define</em> RIPNG_DEFAULT_ACCEPT_NONE        1
+<a id='L77' name='L77'></a><em class='sharp'>#define</em> RIPNG_DEFAULT_ACCEPT             2
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><em class='comment'>/* Default value for "default-metric" command. */</em>
+<a id='L80' name='L80'></a><em class='sharp'>#define</em> <a href='../R/3228.html' title='Multiple referred from 3 places.'>RIPNG_DEFAULT_METRIC_DEFAULT</a>     1
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a><em class='comment'>/* For max RTE calculation. */</em>
+<a id='L83' name='L83'></a><em class='sharp'>#ifndef</em> <a href='../S/110.html#L84' title='Defined at 84 in ripngd/ripngd.h.'>IPV6_HDRLEN</a>
+<a id='L84' name='L84'></a><em class='sharp'>#define</em> <a href='../R/995.html' title='Multiple referred from 2 places.'>IPV6_HDRLEN</a> 40
+<a id='L85' name='L85'></a><em class='sharp'>#endif</em> <em class='comment'>/* IPV6_HDRLEN */</em>
+<a id='L86' name='L86'></a>
+<a id='L87' name='L87'></a><em class='sharp'>#ifndef</em> <a href='../S/110.html#L88' title='Defined at 88 in ripngd/ripngd.h.'>IFMINMTU</a>
+<a id='L88' name='L88'></a><em class='sharp'>#define</em> <a href='../R/873.html' title='Multiple referred from 2 places.'>IFMINMTU</a>    576
+<a id='L89' name='L89'></a><em class='sharp'>#endif</em> <em class='comment'>/* IFMINMTU */</em>
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><em class='comment'>/* RIPng structure. */</em>
+<a id='L92' name='L92'></a><strong class='reserved'>struct</strong> <a href='../R/9242.html' title='Multiple referred from 183 places.'>ripng</a> 
+<a id='L93' name='L93'></a><em class='brace'>{</em>
+<a id='L94' name='L94'></a>  <em class='comment'>/* RIPng socket. */</em>
+<a id='L95' name='L95'></a>  <strong class='reserved'>int</strong> sock;
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a>  <em class='comment'>/* RIPng Parameters.*/</em>
+<a id='L98' name='L98'></a>  u_char <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>;
+<a id='L99' name='L99'></a>  u_char version;
+<a id='L100' name='L100'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> update_time;
+<a id='L101' name='L101'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> timeout_time;
+<a id='L102' name='L102'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> garbage_time;
+<a id='L103' name='L103'></a>  <strong class='reserved'>int</strong> max_mtu;
+<a id='L104' name='L104'></a>  <strong class='reserved'>int</strong> default_metric;
+<a id='L105' name='L105'></a>  <strong class='reserved'>int</strong> default_information;
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a>  <em class='comment'>/* Input/output buffer of RIPng. */</em>
+<a id='L108' name='L108'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *ibuf;
+<a id='L109' name='L109'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *obuf;
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>  <em class='comment'>/* RIPng routing information base. */</em>
+<a id='L112' name='L112'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a>  <em class='comment'>/* RIPng only static route information. */</em>
+<a id='L115' name='L115'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *route;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <em class='comment'>/* RIPng aggregate route information. */</em>
+<a id='L118' name='L118'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *aggregate;
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>  <em class='comment'>/* RIPng threads. */</em>
+<a id='L121' name='L121'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_read;
+<a id='L122' name='L122'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_write;
+<a id='L123' name='L123'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_update;
+<a id='L124' name='L124'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_garbage;
+<a id='L125' name='L125'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_zebra;
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a>  <em class='comment'>/* Triggered update hack. */</em>
+<a id='L128' name='L128'></a>  <strong class='reserved'>int</strong> trigger;
+<a id='L129' name='L129'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_triggered_update;
+<a id='L130' name='L130'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_triggered_interval;
+<a id='L131' name='L131'></a>
+<a id='L132' name='L132'></a>  <em class='comment'>/* For redistribute route map. */</em>
+<a id='L133' name='L133'></a>  <strong class='reserved'>struct</strong>
+<a id='L134' name='L134'></a>  <em class='brace'>{</em>
+<a id='L135' name='L135'></a>    <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L136' name='L136'></a>    <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L137' name='L137'></a>    <strong class='reserved'>int</strong> metric_config;
+<a id='L138' name='L138'></a>    <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L139' name='L139'></a>  <em class='brace'>}</em> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a>[<a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>];
+<a id='L140' name='L140'></a><em class='brace'>}</em>;
+<a id='L141' name='L141'></a>
+<a id='L142' name='L142'></a><em class='comment'>/* Routing table entry. */</em>
+<a id='L143' name='L143'></a><strong class='reserved'>struct</strong> <a href='../R/9658.html' title='Multiple referred from 190 places.'>rte</a>
+<a id='L144' name='L144'></a><em class='brace'>{</em>
+<a id='L145' name='L145'></a>  <strong class='reserved'>struct</strong> in6_addr addr; <em class='comment'>/* RIPng destination prefix */</em>
+<a id='L146' name='L146'></a>  u_short tag;          <em class='comment'>/* RIPng tag */</em>
+<a id='L147' name='L147'></a>  u_char prefixlen;     <em class='comment'>/* Length of the RIPng prefix */</em>
+<a id='L148' name='L148'></a>  u_char <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;        <em class='comment'>/* Metric of the RIPng route */</em>
+<a id='L149' name='L149'></a>                        <em class='comment'>/* The nexthop is stored by the structure</em>
+<a id='L150' name='L150'></a><em class='comment'>                         * ripng_nexthop within ripngd.c */</em>
+<a id='L151' name='L151'></a><em class='brace'>}</em>;
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a><em class='comment'>/* RIPNG send packet. */</em>
+<a id='L154' name='L154'></a><strong class='reserved'>struct</strong> <a href='../R/9317.html' title='Multiple referred from 16 places.'>ripng_packet</a>
+<a id='L155' name='L155'></a><em class='brace'>{</em>
+<a id='L156' name='L156'></a>  u_char <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>;
+<a id='L157' name='L157'></a>  u_char version;
+<a id='L158' name='L158'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> zero; 
+<a id='L159' name='L159'></a>  <strong class='reserved'>struct</strong> <a href='../D/10563.html' title='Multiple defined in 2 places.'>rte</a> <a href='../D/10563.html' title='Multiple defined in 2 places.'>rte</a>[1];
+<a id='L160' name='L160'></a><em class='brace'>}</em>;
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a><em class='comment'>/* Each route's information. */</em>
+<a id='L163' name='L163'></a><strong class='reserved'>struct</strong> <a href='../R/9283.html' title='Multiple referred from 41 places.'>ripng_info</a>
+<a id='L164' name='L164'></a><em class='brace'>{</em>
+<a id='L165' name='L165'></a>  <em class='comment'>/* This route's type.  Static, ripng or aggregate. */</em>
+<a id='L166' name='L166'></a>  u_char type;
+<a id='L167' name='L167'></a>
+<a id='L168' name='L168'></a>  <em class='comment'>/* Sub type for static route. */</em>
+<a id='L169' name='L169'></a>  u_char sub_type;
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a>  <em class='comment'>/* RIPng specific information */</em>
+<a id='L172' name='L172'></a>  <strong class='reserved'>struct</strong> in6_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;      
+<a id='L173' name='L173'></a>  <strong class='reserved'>struct</strong> in6_addr from;
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a>  <em class='comment'>/* Which interface does this route come from. */</em>
+<a id='L176' name='L176'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> ifindex;         
+<a id='L177' name='L177'></a>
+<a id='L178' name='L178'></a>  <em class='comment'>/* Metric of this route.  */</em>
+<a id='L179' name='L179'></a>  u_char <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;                
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a>  <em class='comment'>/* Tag field of RIPng packet.*/</em>
+<a id='L182' name='L182'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> tag;                
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>  <em class='comment'>/* For aggregation. */</em>
+<a id='L185' name='L185'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> suppress;
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a>  <em class='comment'>/* Flags of RIPng route. */</em>
+<a id='L188' name='L188'></a><em class='sharp'>#define</em> <a href='../R/3252.html' title='Multiple referred from 6 places.'>RIPNG_RTF_FIB</a>      1
+<a id='L189' name='L189'></a><em class='sharp'>#define</em> <a href='../R/3251.html' title='Multiple referred from 9 places.'>RIPNG_RTF_CHANGED</a>  2
+<a id='L190' name='L190'></a>  u_char <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>  <em class='comment'>/* Garbage collect timer. */</em>
+<a id='L193' name='L193'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_timeout;
+<a id='L194' name='L194'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_garbage_collect;
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>  <em class='comment'>/* Route-map features - this variables can be changed. */</em>
+<a id='L197' name='L197'></a>  <strong class='reserved'>struct</strong> in6_addr nexthop_out;
+<a id='L198' name='L198'></a>  u_char metric_set;
+<a id='L199' name='L199'></a>  u_char metric_out;
+<a id='L200' name='L200'></a>  u_short tag_out;
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rp;
+<a id='L203' name='L203'></a><em class='brace'>}</em>;
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a><em class='sharp'>#ifdef</em> notyet
+<a id='L206' name='L206'></a><em class='sharp'>#if</em> 0
+<a id='L207' name='L207'></a><em class='comment'>/* RIPng tag structure. */</em>
+<a id='L208' name='L208'></a><strong class='reserved'>struct</strong> <a href='../S/110.html#L271' title='Referred from 271 in ripngd/ripngd.h.'>ripng_tag</a>
+<a id='L209' name='L209'></a><em class='brace'>{</em>
+<a id='L210' name='L210'></a>  <em class='comment'>/* Tag value. */</em>
+<a id='L211' name='L211'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> tag;
+<a id='L212' name='L212'></a>
+<a id='L213' name='L213'></a>  <em class='comment'>/* Port. */</em>
+<a id='L214' name='L214'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> port;
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a>  <em class='comment'>/* Multicast group. */</em>
+<a id='L217' name='L217'></a>  <strong class='reserved'>struct</strong> in6_addr maddr;
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>  <em class='comment'>/* Table number. */</em>
+<a id='L220' name='L220'></a>  <strong class='reserved'>int</strong> table;
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a>  <em class='comment'>/* Distance. */</em>
+<a id='L223' name='L223'></a>  <strong class='reserved'>int</strong> distance;
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a>  <em class='comment'>/* Split horizon. */</em>
+<a id='L226' name='L226'></a>  u_char split_horizon;
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a>  <em class='comment'>/* Poison reverse. */</em>
+<a id='L229' name='L229'></a>  u_char poison_reverse;
+<a id='L230' name='L230'></a><em class='brace'>}</em>;
+<a id='L231' name='L231'></a><em class='sharp'>#endif</em> <em class='comment'>/* 0 */</em>
+<a id='L232' name='L232'></a><em class='sharp'>#endif</em> <em class='comment'>/* not yet */</em>
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>enum</strong> <em class='brace'>{</em>
+<a id='L235' name='L235'></a>  <a href='../R/3237.html' title='Multiple referred from 4 places.'>RIPNG_NO_SPLIT_HORIZON</a> = 0,
+<a id='L236' name='L236'></a>  <a href='../R/3254.html' title='Multiple referred from 4 places.'>RIPNG_SPLIT_HORIZON</a>,
+<a id='L237' name='L237'></a>  <a href='../R/3255.html' title='Multiple referred from 3 places.'>RIPNG_SPLIT_HORIZON_POISONED_REVERSE</a>
+<a id='L238' name='L238'></a><em class='brace'>}</em> <a href='../R/9972.html' title='Multiple referred from 4 places.'>split_horizon_policy_t</a>;
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a><em class='comment'>/* RIPng specific interface configuration. */</em>
+<a id='L241' name='L241'></a><strong class='reserved'>struct</strong> <a href='../R/9287.html' title='Multiple referred from 24 places.'>ripng_interface</a>
+<a id='L242' name='L242'></a><em class='brace'>{</em>
+<a id='L243' name='L243'></a>  <em class='comment'>/* RIPng is enabled on this interface. */</em>
+<a id='L244' name='L244'></a>  <strong class='reserved'>int</strong> enable_network;
+<a id='L245' name='L245'></a>  <strong class='reserved'>int</strong> enable_interface;
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a>  <em class='comment'>/* RIPng is running on this interface. */</em>
+<a id='L248' name='L248'></a>  <strong class='reserved'>int</strong> running;
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a>  <em class='comment'>/* Split horizon flag. */</em>
+<a id='L251' name='L251'></a>  <a href='../D/10884.html' title='Multiple defined in 2 places.'>split_horizon_policy_t</a> split_horizon;
+<a id='L252' name='L252'></a>  <a href='../D/10884.html' title='Multiple defined in 2 places.'>split_horizon_policy_t</a> split_horizon_default;
+<a id='L253' name='L253'></a>  
+<a id='L254' name='L254'></a>  <em class='comment'>/* For filter type slot. */</em>
+<a id='L255' name='L255'></a><em class='sharp'>#define</em> <a href='../R/3229.html' title='Multiple referred from 15 places.'>RIPNG_FILTER_IN</a>  0
+<a id='L256' name='L256'></a><em class='sharp'>#define</em> <a href='../R/3231.html' title='Multiple referred from 17 places.'>RIPNG_FILTER_OUT</a> 1
+<a id='L257' name='L257'></a><em class='sharp'>#define</em> <a href='../R/3230.html' title='Multiple referred from 3 places.'>RIPNG_FILTER_MAX</a> 2
+<a id='L258' name='L258'></a>
+<a id='L259' name='L259'></a>  <em class='comment'>/* Access-list. */</em>
+<a id='L260' name='L260'></a>  <strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/110.html#L257' title='Defined at 257 in ripngd/ripngd.h.'>RIPNG_FILTER_MAX</a>];
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>  <em class='comment'>/* Prefix-list. */</em>
+<a id='L263' name='L263'></a>  <strong class='reserved'>struct</strong> <a href='../S/302.html#L40' title='Defined at 40 in lib/plist.h.'>prefix_list</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/110.html#L257' title='Defined at 257 in ripngd/ripngd.h.'>RIPNG_FILTER_MAX</a>];
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a>  <em class='comment'>/* Route-map. */</em>
+<a id='L266' name='L266'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *routemap[<a href='../S/110.html#L257' title='Defined at 257 in ripngd/ripngd.h.'>RIPNG_FILTER_MAX</a>];
+<a id='L267' name='L267'></a>
+<a id='L268' name='L268'></a><em class='sharp'>#ifdef</em> notyet
+<a id='L269' name='L269'></a><em class='sharp'>#if</em> 0
+<a id='L270' name='L270'></a>  <em class='comment'>/* RIPng tag configuration. */</em>
+<a id='L271' name='L271'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L208' title='Defined at 208 in ripngd/ripngd.h.'>ripng_tag</a> *rtag;
+<a id='L272' name='L272'></a><em class='sharp'>#endif</em> <em class='comment'>/* 0 */</em>
+<a id='L273' name='L273'></a><em class='sharp'>#endif</em> <em class='comment'>/* notyet */</em>
+<a id='L274' name='L274'></a>
+<a id='L275' name='L275'></a>  <em class='comment'>/* Default information originate. */</em>
+<a id='L276' name='L276'></a>  u_char default_originate;
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a>  <em class='comment'>/* Default information only. */</em>
+<a id='L279' name='L279'></a>  u_char default_only;
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>  <em class='comment'>/* Wake up thread. */</em>
+<a id='L282' name='L282'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_wakeup;
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a>  <em class='comment'>/* Passive interface. */</em>
+<a id='L285' name='L285'></a>  <strong class='reserved'>int</strong> passive;
+<a id='L286' name='L286'></a><em class='brace'>}</em>;
+<a id='L287' name='L287'></a>
+<a id='L288' name='L288'></a><em class='comment'>/* RIPng peer information. */</em>
+<a id='L289' name='L289'></a><strong class='reserved'>struct</strong> <a href='../R/9325.html' title='Multiple referred from 18 places.'>ripng_peer</a>
+<a id='L290' name='L290'></a><em class='brace'>{</em>
+<a id='L291' name='L291'></a>  <em class='comment'>/* Peer address. */</em>
+<a id='L292' name='L292'></a>  <strong class='reserved'>struct</strong> in6_addr addr;
+<a id='L293' name='L293'></a>
+<a id='L294' name='L294'></a>  <em class='comment'>/* Peer RIPng tag value. */</em>
+<a id='L295' name='L295'></a>  <strong class='reserved'>int</strong> domain;
+<a id='L296' name='L296'></a>
+<a id='L297' name='L297'></a>  <em class='comment'>/* Last update time. */</em>
+<a id='L298' name='L298'></a>  time_t uptime;
+<a id='L299' name='L299'></a>
+<a id='L300' name='L300'></a>  <em class='comment'>/* Peer RIP version. */</em>
+<a id='L301' name='L301'></a>  u_char version;
+<a id='L302' name='L302'></a>
+<a id='L303' name='L303'></a>  <em class='comment'>/* Statistics. */</em>
+<a id='L304' name='L304'></a>  <strong class='reserved'>int</strong> recv_badpackets;
+<a id='L305' name='L305'></a>  <strong class='reserved'>int</strong> recv_badroutes;
+<a id='L306' name='L306'></a>
+<a id='L307' name='L307'></a>  <em class='comment'>/* Timeout thread. */</em>
+<a id='L308' name='L308'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_timeout;
+<a id='L309' name='L309'></a><em class='brace'>}</em>;
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a><em class='comment'>/* All RIPng events. */</em>
+<a id='L312' name='L312'></a><strong class='reserved'>enum</strong> <a href='../R/9273.html' title='Multiple referred from 16 places.'>ripng_event</a>
+<a id='L313' name='L313'></a><em class='brace'>{</em>
+<a id='L314' name='L314'></a>  RIPNG_READ,
+<a id='L315' name='L315'></a>  RIPNG_ZEBRA,
+<a id='L316' name='L316'></a>  RIPNG_REQUEST_EVENT,
+<a id='L317' name='L317'></a>  RIPNG_UPDATE_EVENT,
+<a id='L318' name='L318'></a>  RIPNG_TRIGGERED_UPDATE,
+<a id='L319' name='L319'></a><em class='brace'>}</em>;
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a><em class='comment'>/* RIPng timer on/off macro. */</em>
+<a id='L322' name='L322'></a><em class='sharp'>#define</em> <a href='../R/3258.html' title='Multiple referred from 5 places.'>RIPNG_TIMER_ON</a>(T,<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>,V) \
+<a id='L323' name='L323'></a><strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L324' name='L324'></a>   <strong class='reserved'>if</strong> (!(T)) \
+<a id='L325' name='L325'></a>      (T) = <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, (<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>), rinfo, (V)); \
+<a id='L326' name='L326'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L327' name='L327'></a>
+<a id='L328' name='L328'></a><em class='sharp'>#define</em> <a href='../R/3257.html' title='Multiple referred from 13 places.'>RIPNG_TIMER_OFF</a>(T) \
+<a id='L329' name='L329'></a><strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L330' name='L330'></a>   <strong class='reserved'>if</strong> (T) \
+<a id='L331' name='L331'></a>     <em class='brace'>{</em> \
+<a id='L332' name='L332'></a>       <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a>(T); \
+<a id='L333' name='L333'></a>       (T) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>; \
+<a id='L334' name='L334'></a>     <em class='brace'>}</em> \
+<a id='L335' name='L335'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L336' name='L336'></a>
+<a id='L337' name='L337'></a><em class='comment'>/* Count prefix size from mask length */</em>
+<a id='L338' name='L338'></a><em class='sharp'>#define</em> <a href='../R/3023.html' title='Multiple referred from 32 places.'>PSIZE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) (((<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) + 7) / (8))
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a><em class='comment'>/* Extern variables. */</em>
+<a id='L341' name='L341'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/110.html#L92' title='Defined at 92 in ripngd/ripngd.h.'>ripng</a> *<a href='../S/110.html#L92' title='Defined at 92 in ripngd/ripngd.h.'>ripng</a>;
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L344' name='L344'></a>
+<a id='L345' name='L345'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L346' name='L346'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L2944' title='Defined at 2944 in ripngd/ripngd.c.'>ripng_init</a> (<strong class='reserved'>void</strong>);
+<a id='L347' name='L347'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L2850' title='Defined at 2850 in ripngd/ripngd.c.'>ripng_reset</a> (<strong class='reserved'>void</strong>);
+<a id='L348' name='L348'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L2773' title='Defined at 2773 in ripngd/ripngd.c.'>ripng_clean</a> (<strong class='reserved'>void</strong>);
+<a id='L349' name='L349'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/102.html#L818' title='Defined at 818 in ripngd/ripng_interface.c.'>ripng_clean_network</a> (<strong class='reserved'>void</strong>);
+<a id='L350' name='L350'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/102.html#L326' title='Defined at 326 in ripngd/ripng_interface.c.'>ripng_interface_clean</a> (<strong class='reserved'>void</strong>);
+<a id='L351' name='L351'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/102.html#L349' title='Defined at 349 in ripngd/ripng_interface.c.'>ripng_interface_reset</a> (<strong class='reserved'>void</strong>);
+<a id='L352' name='L352'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/102.html#L916' title='Defined at 916 in ripngd/ripng_interface.c.'>ripng_passive_interface_clean</a> (<strong class='reserved'>void</strong>);
+<a id='L353' name='L353'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/102.html#L1200' title='Defined at 1200 in ripngd/ripng_interface.c.'>ripng_if_init</a> (<strong class='reserved'>void</strong>);
+<a id='L354' name='L354'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/107.html#L715' title='Defined at 715 in ripngd/ripng_routemap.c.'>ripng_route_map_init</a> (<strong class='reserved'>void</strong>);
+<a id='L355' name='L355'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> ripng_route_map_reset (<strong class='reserved'>void</strong>);
+<a id='L356' name='L356'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> ripng_terminate (<strong class='reserved'>void</strong>);
+<a id='L357' name='L357'></a> <em class='comment'>/* zclient_init() is done by ripng_zebra.c:zebra_init() */</em>
+<a id='L358' name='L358'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../D/11515.html' title='Multiple defined in 2 places.'>zebra_init</a> (<strong class='reserved'>void</strong>);
+<a id='L359' name='L359'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> ripng_zclient_start (<strong class='reserved'>void</strong>);
+<a id='L360' name='L360'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/108.html#L148' title='Defined at 148 in ripngd/ripng_zebra.c.'>ripng_zclient_reset</a> (<strong class='reserved'>void</strong>);
+<a id='L361' name='L361'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/94.html#L362' title='Defined at 362 in ripngd/ripng_offset.c.'>ripng_offset_init</a> (<strong class='reserved'>void</strong>);
+<a id='L362' name='L362'></a>
+<a id='L363' name='L363'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/94.html#L385' title='Defined at 385 in ripngd/ripng_offset.c.'>config_write_ripng_offset_list</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/101.html#L212' title='Defined at 212 in ripngd/ripng_peer.c.'>ripng_peer_init</a> (<strong class='reserved'>void</strong>);
+<a id='L366' name='L366'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/101.html#L128' title='Defined at 128 in ripngd/ripng_peer.c.'>ripng_peer_update</a> (<strong class='reserved'>struct</strong> sockaddr_in6 *, u_char);
+<a id='L367' name='L367'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/101.html#L136' title='Defined at 136 in ripngd/ripng_peer.c.'>ripng_peer_bad_route</a> (<strong class='reserved'>struct</strong> sockaddr_in6 *);
+<a id='L368' name='L368'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/101.html#L144' title='Defined at 144 in ripngd/ripng_peer.c.'>ripng_peer_bad_packet</a> (<strong class='reserved'>struct</strong> sockaddr_in6 *);
+<a id='L369' name='L369'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/101.html#L187' title='Defined at 187 in ripngd/ripng_peer.c.'>ripng_peer_display</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L370' name='L370'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/101.html#L55' title='Defined at 55 in ripngd/ripng_peer.c.'>ripng_peer_lookup</a> (<strong class='reserved'>struct</strong> in6_addr *);
+<a id='L371' name='L371'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/101.html#L69' title='Defined at 69 in ripngd/ripng_peer.c.'>ripng_peer_lookup_next</a> (<strong class='reserved'>struct</strong> in6_addr *);
+<a id='L372' name='L372'></a>
+<a id='L373' name='L373'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/94.html#L214' title='Defined at 214 in ripngd/ripng_offset.c.'>ripng_offset_list_apply_in</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *,
+<a id='L374' name='L374'></a>                                       <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *, u_char *);
+<a id='L375' name='L375'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/94.html#L253' title='Defined at 253 in ripngd/ripng_offset.c.'>ripng_offset_list_apply_out</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *,
+<a id='L376' name='L376'></a>                                        <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *, u_char *);
+<a id='L377' name='L377'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/94.html#L375' title='Defined at 375 in ripngd/ripng_offset.c.'>ripng_offset_clean</a> (<strong class='reserved'>void</strong>);
+<a id='L378' name='L378'></a>
+<a id='L379' name='L379'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/110.html#L163' title='Defined at 163 in ripngd/ripngd.h.'>ripng_info</a> * <a href='../S/99.html#L84' title='Defined at 84 in ripngd/ripngd.c.'>ripng_info_new</a> (<strong class='reserved'>void</strong>);
+<a id='L380' name='L380'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L94' title='Defined at 94 in ripngd/ripngd.c.'>ripng_info_free</a> (<strong class='reserved'>struct</strong> <a href='../S/110.html#L163' title='Defined at 163 in ripngd/ripngd.h.'>ripng_info</a> *rinfo);
+<a id='L381' name='L381'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../D/10173.html' title='Multiple defined in 2 places.'>ripng_event</a> (<strong class='reserved'>enum</strong> <a href='../D/10173.html' title='Multiple defined in 2 places.'>ripng_event</a>, <strong class='reserved'>int</strong>);
+<a id='L382' name='L382'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/99.html#L1863' title='Defined at 1863 in ripngd/ripngd.c.'>ripng_request</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp);
+<a id='L383' name='L383'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L920' title='Defined at 920 in ripngd/ripngd.c.'>ripng_redistribute_add</a> (<strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *,
+<a id='L384' name='L384'></a>                                    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> in6_addr *);
+<a id='L385' name='L385'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L1018' title='Defined at 1018 in ripngd/ripngd.c.'>ripng_redistribute_delete</a> (<strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *,
+<a id='L386' name='L386'></a>                                       <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>);
+<a id='L387' name='L387'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L1072' title='Defined at 1072 in ripngd/ripngd.c.'>ripng_redistribute_withdraw</a> (<strong class='reserved'>int</strong> type);
+<a id='L388' name='L388'></a>
+<a id='L389' name='L389'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L2745' title='Defined at 2745 in ripngd/ripngd.c.'>ripng_distribute_update_interface</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *);
+<a id='L390' name='L390'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L2905' title='Defined at 2905 in ripngd/ripngd.c.'>ripng_if_rmap_update_interface</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *);
+<a id='L391' name='L391'></a>
+<a id='L392' name='L392'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/108.html#L46' title='Defined at 46 in ripngd/ripng_zebra.c.'>ripng_zebra_ipv6_add</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *p,
+<a id='L393' name='L393'></a>                                  <strong class='reserved'>struct</strong> in6_addr *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L394' name='L394'></a>                                  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> ifindex, u_char <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L395' name='L395'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/108.html#L71' title='Defined at 71 in ripngd/ripng_zebra.c.'>ripng_zebra_ipv6_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *p,
+<a id='L396' name='L396'></a>                                     <strong class='reserved'>struct</strong> in6_addr *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L397' name='L397'></a>                                     <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> ifindex);
+<a id='L398' name='L398'></a>
+<a id='L399' name='L399'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/108.html#L226' title='Defined at 226 in ripngd/ripng_zebra.c.'>ripng_redistribute_clean</a> (<strong class='reserved'>void</strong>);
+<a id='L400' name='L400'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/108.html#L170' title='Defined at 170 in ripngd/ripng_zebra.c.'>ripng_redistribute_check</a> (<strong class='reserved'>int</strong>);
+<a id='L401' name='L401'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> ripng_redistribute_write (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong>);
+<a id='L402' name='L402'></a>
+<a id='L403' name='L403'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/99.html#L1570' title='Defined at 1570 in ripngd/ripngd.c.'>ripng_write_rte</a> (<strong class='reserved'>int</strong> num, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *p,
+<a id='L404' name='L404'></a>                            <strong class='reserved'>struct</strong> in6_addr *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L405' name='L405'></a>                            <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> tag, u_char <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L406' name='L406'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/99.html#L160' title='Defined at 160 in ripngd/ripngd.c.'>ripng_send_packet</a> (caddr_t buf, <strong class='reserved'>int</strong> bufsize,
+<a id='L407' name='L407'></a>                              <strong class='reserved'>struct</strong> sockaddr_in6 *to, <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp);
+<a id='L408' name='L408'></a>
+<a id='L409' name='L409'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/99.html#L296' title='Defined at 296 in ripngd/ripngd.c.'>ripng_packet_dump</a> (<strong class='reserved'>struct</strong> <a href='../S/110.html#L154' title='Defined at 154 in ripngd/ripngd.h.'>ripng_packet</a> *packet, <strong class='reserved'>int</strong> size,
+<a id='L410' name='L410'></a>                               <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *sndrcv);
+<a id='L411' name='L411'></a>
+<a id='L412' name='L412'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L217' title='Defined at 217 in ripngd/ripng_interface.c.'>ripng_interface_up</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a>);
+<a id='L413' name='L413'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L248' title='Defined at 248 in ripngd/ripng_interface.c.'>ripng_interface_down</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a>);
+<a id='L414' name='L414'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L273' title='Defined at 273 in ripngd/ripng_interface.c.'>ripng_interface_add</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a>);
+<a id='L415' name='L415'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L297' title='Defined at 297 in ripngd/ripng_interface.c.'>ripng_interface_delete</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a>);
+<a id='L416' name='L416'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L411' title='Defined at 411 in ripngd/ripng_interface.c.'>ripng_interface_address_add</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a>);
+<a id='L417' name='L417'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L478' title='Defined at 478 in ripngd/ripng_interface.c.'>ripng_interface_address_delete</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a>);
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/102.html#L932' title='Defined at 932 in ripngd/ripng_interface.c.'>ripng_network_write</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong>);
+<a id='L420' name='L420'></a>
+<a id='L421' name='L421'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_RIPNG_RIPNGD_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospf_lsa</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/800.html#L351'>ospf_lsa</a>          351 ospfd/ospf_abr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/800.html#L614'>ospf_lsa</a>          614 ospfd/ospf_abr.c set_metric (struct ospf_lsa *lsa, u_int32_t metric)</span>
+<span class='curline'><a href='../S/800.html#L627'>ospf_lsa</a>          627 ospfd/ospf_abr.c ospf_abr_translate_nssa (struct ospf_area *area, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/800.html#L640'>ospf_lsa</a>          640 ospfd/ospf_abr.c   struct ospf_lsa *old = NULL,</span>
+<span class='curline'><a href='../S/800.html#L726'>ospf_lsa</a>          726 ospfd/ospf_abr.c   struct ospf_lsa *lsa, *old = NULL;</span>
+<span class='curline'><a href='../S/800.html#L995'>ospf_lsa</a>          995 ospfd/ospf_abr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/800.html#L1123'>ospf_lsa</a>         1123 ospfd/ospf_abr.c   struct ospf_lsa *lsa, *old = NULL;</span>
+<span class='curline'><a href='../S/800.html#L1347'>ospf_lsa</a>         1347 ospfd/ospf_abr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/800.html#L1376'>ospf_lsa</a>         1376 ospfd/ospf_abr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/800.html#L1631'>ospf_lsa</a>         1631 ospfd/ospf_abr.c 					     struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/800.html#L1652'>ospf_lsa</a>         1652 ospfd/ospf_abr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/800.html#L1672'>ospf_lsa</a>         1672 ospfd/ospf_abr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/774.html#L226'>ospf_lsa</a>          226 ospfd/ospf_apiserver.c lookup_apiserver_by_lsa (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L244'>ospf_lsa</a>          244 ospfd/ospf_apiserver.c ospf_apiserver_new_lsa_hook (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L252'>ospf_lsa</a>          252 ospfd/ospf_apiserver.c ospf_apiserver_del_lsa_hook (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L1270'>ospf_lsa</a>         1270 ospfd/ospf_apiserver.c apiserver_sync_callback (struct ospf_lsa *lsa, void *p_arg, int int_arg)</span>
+<span class='curline'><a href='../S/774.html#L1350'>ospf_lsa</a>         1350 ospfd/ospf_apiserver.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/774.html#L1454'>ospf_lsa</a>         1454 ospfd/ospf_apiserver.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/774.html#L1461'>ospf_lsa</a>         1461 ospfd/ospf_apiserver.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/774.html#L1587'>ospf_lsa</a>         1587 ospfd/ospf_apiserver.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/774.html#L1588'>ospf_lsa</a>         1588 ospfd/ospf_apiserver.c   struct ospf_lsa *old;</span>
+<span class='curline'><a href='../S/774.html#L1722'>ospf_lsa</a>         1722 ospfd/ospf_apiserver.c ospf_apiserver_flood_opaque_lsa (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L1759'>ospf_lsa</a>         1759 ospfd/ospf_apiserver.c ospf_apiserver_originate1 (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L1831'>ospf_lsa</a>         1831 ospfd/ospf_apiserver.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/774.html#L1832'>ospf_lsa</a>         1832 ospfd/ospf_apiserver.c ospf_apiserver_lsa_refresher (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L1835'>ospf_lsa</a>         1835 ospfd/ospf_apiserver.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/774.html#L1918'>ospf_lsa</a>         1918 ospfd/ospf_apiserver.c   struct ospf_lsa *old;</span>
+<span class='curline'><a href='../S/774.html#L1999'>ospf_lsa</a>         1999 ospfd/ospf_apiserver.c apiserver_flush_opaque_type_callback (struct ospf_lsa *lsa,</span>
+<span class='curline'><a href='../S/774.html#L2053'>ospf_lsa</a>         2053 ospfd/ospf_apiserver.c       struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/774.html#L2177'>ospf_lsa</a>         2177 ospfd/ospf_apiserver.c ospf_apiserver_show_info (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L2484'>ospf_lsa</a>         2484 ospfd/ospf_apiserver.c apiserver_clients_lsa_change_notify (u_char msgtype, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L2585'>ospf_lsa</a>         2585 ospfd/ospf_apiserver.c apiserver_notify_clients_lsa (u_char msgtype, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L2628'>ospf_lsa</a>         2628 ospfd/ospf_apiserver.c ospf_apiserver_lsa_update (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/774.html#L2634'>ospf_lsa</a>         2634 ospfd/ospf_apiserver.c ospf_apiserver_lsa_delete (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/753.html#L159'>ospf_lsa</a>          159 ospfd/ospf_apiserver.h extern struct ospf_lsa *ospf_apiserver_opaque_lsa_new (struct ospf_area *area,</span>
+<span class='curline'><a href='../S/753.html#L166'>ospf_lsa</a>          166 ospfd/ospf_apiserver.h extern int ospf_apiserver_originate1 (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/753.html#L167'>ospf_lsa</a>          167 ospfd/ospf_apiserver.h extern void ospf_apiserver_flood_opaque_lsa (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/753.html#L181'>ospf_lsa</a>          181 ospfd/ospf_apiserver.h extern void ospf_apiserver_show_info (struct vty *vty, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/753.html#L183'>ospf_lsa</a>          183 ospfd/ospf_apiserver.h extern struct ospf_lsa *ospf_apiserver_lsa_refresher (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/753.html#L195'>ospf_lsa</a>          195 ospfd/ospf_apiserver.h extern int ospf_apiserver_lsa_update (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/753.html#L196'>ospf_lsa</a>          196 ospfd/ospf_apiserver.h extern int ospf_apiserver_lsa_delete (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/753.html#L199'>ospf_lsa</a>          199 ospfd/ospf_apiserver.h 					       struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/746.html#L206'>ospf_lsa</a>          206 ospfd/ospf_asbr.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/746.html#L210'>ospf_lsa</a>          210 ospfd/ospf_asbr.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/814.html#L76'>ospf_lsa</a>           76 ospfd/ospf_asbr.h extern void ospf_asbr_route_install_lsa (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/814.html#L77'>ospf_lsa</a>           77 ospfd/ospf_asbr.h extern struct ospf_lsa *ospf_external_info_find_lsa (struct ospf *,</span>
+<span class='curline'><a href='../S/740.html#L243'>ospf_lsa</a>          243 ospfd/ospf_ase.c ospf_ase_calculate_new_route (struct ospf_lsa *lsa,</span>
+<span class='curline'><a href='../S/740.html#L287'>ospf_lsa</a>          287 ospfd/ospf_ase.c ospf_ase_calculate_route (struct ospf *ospf, struct ospf_lsa * lsa)</span>
+<span class='curline'><a href='../S/740.html#L635'>ospf_lsa</a>          635 ospfd/ospf_ase.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/740.html#L701'>ospf_lsa</a>          701 ospfd/ospf_ase.c ospf_ase_register_external_lsa (struct ospf_lsa *lsa, struct ospf *top)</span>
+<span class='curline'><a href='../S/740.html#L724'>ospf_lsa</a>          724 ospfd/ospf_ase.c ospf_ase_unregister_external_lsa (struct ospf_lsa *lsa, struct ospf *top)</span>
+<span class='curline'><a href='../S/740.html#L751'>ospf_lsa</a>          751 ospfd/ospf_ase.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/740.html#L767'>ospf_lsa</a>          767 ospfd/ospf_ase.c ospf_ase_incremental_update (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/809.html#L37'>ospf_lsa</a>           37 ospfd/ospf_ase.h extern int ospf_ase_calculate_route (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/809.html#L42'>ospf_lsa</a>           42 ospfd/ospf_ase.h extern void ospf_ase_incremental_update (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/809.html#L43'>ospf_lsa</a>           43 ospfd/ospf_ase.h extern void ospf_ase_register_external_lsa (struct ospf_lsa *, struct ospf *);</span>
+<span class='curline'><a href='../S/809.html#L44'>ospf_lsa</a>           44 ospfd/ospf_ase.h extern void ospf_ase_unregister_external_lsa (struct ospf_lsa *,</span>
+<span class='curline'><a href='../S/811.html#L57'>ospf_lsa</a>           57 ospfd/ospf_flood.c ospf_flood_delayed_lsa_ack (struct ospf_neighbor *inbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L80'>ospf_lsa</a>           80 ospfd/ospf_flood.c ospf_external_info_check (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L115'>ospf_lsa</a>          115 ospfd/ospf_flood.c 				  struct ospf_lsa *new, struct ospf_area *area)</span>
+<span class='curline'><a href='../S/811.html#L235'>ospf_lsa</a>          235 ospfd/ospf_flood.c 	    struct ospf_lsa *current, struct ospf_lsa *new)</span>
+<span class='curline'><a href='../S/811.html#L347'>ospf_lsa</a>          347 ospfd/ospf_flood.c 			      struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L370'>ospf_lsa</a>          370 ospfd/ospf_flood.c       struct ospf_lsa *ls_req;</span>
+<span class='curline'><a href='../S/811.html#L563'>ospf_lsa</a>          563 ospfd/ospf_flood.c 			 struct ospf_neighbor *inbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L601'>ospf_lsa</a>          601 ospfd/ospf_flood.c 		       struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L681'>ospf_lsa</a>          681 ospfd/ospf_flood.c 		    struct ospf_neighbor *inbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L764'>ospf_lsa</a>          764 ospfd/ospf_flood.c ospf_ls_request_add (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L794'>ospf_lsa</a>          794 ospfd/ospf_flood.c ospf_ls_request_delete (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L820'>ospf_lsa</a>          820 ospfd/ospf_flood.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/811.html#L821'>ospf_lsa</a>          821 ospfd/ospf_flood.c ospf_ls_request_lookup (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L826'>ospf_lsa</a>          826 ospfd/ospf_flood.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/811.html#L829'>ospf_lsa</a>          829 ospfd/ospf_flood.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/811.html#L860'>ospf_lsa</a>          860 ospfd/ospf_flood.c ospf_ls_retransmit_add (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L862'>ospf_lsa</a>          862 ospfd/ospf_flood.c   struct ospf_lsa *old;</span>
+<span class='curline'><a href='../S/811.html#L890'>ospf_lsa</a>          890 ospfd/ospf_flood.c ospf_ls_retransmit_delete (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L916'>ospf_lsa</a>          916 ospfd/ospf_flood.c       struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/811.html#L928'>ospf_lsa</a>          928 ospfd/ospf_flood.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/811.html#L929'>ospf_lsa</a>          929 ospfd/ospf_flood.c ospf_ls_retransmit_lookup (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L936'>ospf_lsa</a>          936 ospfd/ospf_flood.c 				  struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L940'>ospf_lsa</a>          940 ospfd/ospf_flood.c   struct ospf_lsa *lsr;</span>
+<span class='curline'><a href='../S/811.html#L957'>ospf_lsa</a>          957 ospfd/ospf_flood.c 				    struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L967'>ospf_lsa</a>          967 ospfd/ospf_flood.c ospf_ls_retransmit_delete_nbr_as (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L981'>ospf_lsa</a>          981 ospfd/ospf_flood.c ospf_lsa_flush_area (struct ospf_lsa *lsa, struct ospf_area *area)</span>
+<span class='curline'><a href='../S/811.html#L989'>ospf_lsa</a>          989 ospfd/ospf_flood.c ospf_lsa_flush_as (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/811.html#L997'>ospf_lsa</a>          997 ospfd/ospf_flood.c ospf_lsa_flush (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/799.html#L27'>ospf_lsa</a>           27 ospfd/ospf_flood.h 		       struct ospf_lsa *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L29'>ospf_lsa</a>           29 ospfd/ospf_flood.h 			       struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L32'>ospf_lsa</a>           32 ospfd/ospf_flood.h 				    struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L34'>ospf_lsa</a>           34 ospfd/ospf_flood.h 				  struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L38'>ospf_lsa</a>           38 ospfd/ospf_flood.h extern struct ospf_lsa *ospf_ls_request_new (struct lsa_header *);</span>
+<span class='curline'><a href='../S/799.html#L39'>ospf_lsa</a>           39 ospfd/ospf_flood.h extern void ospf_ls_request_free (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L40'>ospf_lsa</a>           40 ospfd/ospf_flood.h extern void ospf_ls_request_add (struct ospf_neighbor *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L42'>ospf_lsa</a>           42 ospfd/ospf_flood.h 				    struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L44'>ospf_lsa</a>           44 ospfd/ospf_flood.h extern struct ospf_lsa *ospf_ls_request_lookup (struct ospf_neighbor *,</span>
+<span class='curline'><a href='../S/799.html#L45'>ospf_lsa</a>           45 ospfd/ospf_flood.h 						struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L52'>ospf_lsa</a>           52 ospfd/ospf_flood.h 				    struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L54'>ospf_lsa</a>           54 ospfd/ospf_flood.h 				       struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L56'>ospf_lsa</a>           56 ospfd/ospf_flood.h extern struct ospf_lsa *ospf_ls_retransmit_lookup (struct ospf_neighbor *,</span>
+<span class='curline'><a href='../S/799.html#L57'>ospf_lsa</a>           57 ospfd/ospf_flood.h 						   struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L59'>ospf_lsa</a>           59 ospfd/ospf_flood.h 						struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L61'>ospf_lsa</a>           61 ospfd/ospf_flood.h 					      struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L63'>ospf_lsa</a>           63 ospfd/ospf_flood.h 					    struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L65'>ospf_lsa</a>           65 ospfd/ospf_flood.h extern void ospf_flood_lsa_area (struct ospf_lsa *, struct ospf_area *);</span>
+<span class='curline'><a href='../S/799.html#L66'>ospf_lsa</a>           66 ospfd/ospf_flood.h extern void ospf_flood_lsa_as (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L67'>ospf_lsa</a>           67 ospfd/ospf_flood.h extern void ospf_lsa_flush_area (struct ospf_lsa *, struct ospf_area *);</span>
+<span class='curline'><a href='../S/799.html#L68'>ospf_lsa</a>           68 ospfd/ospf_flood.h extern void ospf_lsa_flush_as (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L69'>ospf_lsa</a>           69 ospfd/ospf_flood.h extern void ospf_lsa_flush (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/799.html#L70'>ospf_lsa</a>           70 ospfd/ospf_flood.h extern struct external_info *ospf_external_info_check (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/766.html#L199'>ospf_lsa</a>          199 ospfd/ospf_ia.c 		     struct route_table *rtrs, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/766.html#L292'>ospf_lsa</a>          292 ospfd/ospf_ia.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/766.html#L534'>ospf_lsa</a>          534 ospfd/ospf_ia.c 			     struct route_table *rtrs, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/766.html#L596'>ospf_lsa</a>          596 ospfd/ospf_ia.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/788.html#L262'>ospf_lsa</a>          262 ospfd/ospf_interface.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/791.html#L193'>ospf_lsa</a>          193 ospfd/ospf_interface.h   struct ospf_lsa *network_lsa_self;	/* network-LSA. */</span>
+<span class='curline'><a href='../S/765.html#L538'>ospf_lsa</a>          538 ospfd/ospf_ism.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L140'>ospf_lsa</a>          140 ospfd/ospf_lsa.c ospf_lsa_refresh_delay (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L164'>ospf_lsa</a>          164 ospfd/ospf_lsa.c get_age (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L210'>ospf_lsa</a>          210 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L213'>ospf_lsa</a>          213 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L215'>ospf_lsa</a>          215 ospfd/ospf_lsa.c   new = XCALLOC (MTYPE_OSPF_LSA, sizeof (struct ospf_lsa));</span>
+<span class='curline'><a href='../S/747.html#L228'>ospf_lsa</a>          228 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L229'>ospf_lsa</a>          229 ospfd/ospf_lsa.c ospf_lsa_dup (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L231'>ospf_lsa</a>          231 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L236'>ospf_lsa</a>          236 ospfd/ospf_lsa.c   new = XCALLOC (MTYPE_OSPF_LSA, sizeof (struct ospf_lsa));</span>
+<span class='curline'><a href='../S/747.html#L238'>ospf_lsa</a>          238 ospfd/ospf_lsa.c   memcpy (new, lsa, sizeof (struct ospf_lsa));</span>
+<span class='curline'><a href='../S/747.html#L258'>ospf_lsa</a>          258 ospfd/ospf_lsa.c ospf_lsa_free (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L271'>ospf_lsa</a>          271 ospfd/ospf_lsa.c   memset (lsa, 0, sizeof (struct ospf_lsa)); </span>
+<span class='curline'><a href='../S/747.html#L276'>ospf_lsa</a>          276 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L277'>ospf_lsa</a>          277 ospfd/ospf_lsa.c ospf_lsa_lock (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L285'>ospf_lsa</a>          285 ospfd/ospf_lsa.c ospf_lsa_unlock (struct ospf_lsa **lsa)</span>
+<span class='curline'><a href='../S/747.html#L305'>ospf_lsa</a>          305 ospfd/ospf_lsa.c ospf_lsa_discard (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L348'>ospf_lsa</a>          348 ospfd/ospf_lsa.c dump_lsa_key (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L370'>ospf_lsa</a>          370 ospfd/ospf_lsa.c lsa_seqnum_increment (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L799'>ospf_lsa</a>          799 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L805'>ospf_lsa</a>          805 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L849'>ospf_lsa</a>          849 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L852'>ospf_lsa</a>          852 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L890'>ospf_lsa</a>          890 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L891'>ospf_lsa</a>          891 ospfd/ospf_lsa.c ospf_router_lsa_refresh (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L894'>ospf_lsa</a>          894 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L957'>ospf_lsa</a>          957 ospfd/ospf_lsa.c       struct ospf_lsa *lsa = area-&gt;router_lsa_self;</span>
+<span class='curline'><a href='../S/747.html#L1023'>ospf_lsa</a>         1023 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1027'>ospf_lsa</a>         1027 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1092'>ospf_lsa</a>         1092 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1124'>ospf_lsa</a>         1124 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1125'>ospf_lsa</a>         1125 ospfd/ospf_lsa.c ospf_network_lsa_refresh (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L1128'>ospf_lsa</a>         1128 ospfd/ospf_lsa.c   struct ospf_lsa *new, *new2;</span>
+<span class='curline'><a href='../S/747.html#L1211'>ospf_lsa</a>         1211 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1216'>ospf_lsa</a>         1216 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1260'>ospf_lsa</a>         1260 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1264'>ospf_lsa</a>         1264 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1301'>ospf_lsa</a>         1301 ospfd/ospf_lsa.c static struct ospf_lsa*</span>
+<span class='curline'><a href='../S/747.html#L1302'>ospf_lsa</a>         1302 ospfd/ospf_lsa.c ospf_summary_lsa_refresh (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L1304'>ospf_lsa</a>         1304 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1353'>ospf_lsa</a>         1353 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1358'>ospf_lsa</a>         1358 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1402'>ospf_lsa</a>         1402 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1406'>ospf_lsa</a>         1406 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1444'>ospf_lsa</a>         1444 ospfd/ospf_lsa.c static struct ospf_lsa*</span>
+<span class='curline'><a href='../S/747.html#L1445'>ospf_lsa</a>         1445 ospfd/ospf_lsa.c ospf_summary_asbr_lsa_refresh (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L1447'>ospf_lsa</a>         1447 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1637'>ospf_lsa</a>         1637 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1643'>ospf_lsa</a>         1643 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1704'>ospf_lsa</a>         1704 ospfd/ospf_lsa.c 			 struct ospf_lsa *lsa, struct external_info *ei)</span>
+<span class='curline'><a href='../S/747.html#L1706'>ospf_lsa</a>         1706 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1787'>ospf_lsa</a>         1787 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1789'>ospf_lsa</a>         1789 ospfd/ospf_lsa.c                              struct ospf_lsa *type7)</span>
+<span class='curline'><a href='../S/747.html#L1792'>ospf_lsa</a>         1792 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1833'>ospf_lsa</a>         1833 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1834'>ospf_lsa</a>         1834 ospfd/ospf_lsa.c ospf_translated_nssa_originate (struct ospf *ospf, struct ospf_lsa *type7)</span>
+<span class='curline'><a href='../S/747.html#L1836'>ospf_lsa</a>         1836 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L1879'>ospf_lsa</a>         1879 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L1880'>ospf_lsa</a>         1880 ospfd/ospf_lsa.c ospf_translated_nssa_refresh (struct ospf *ospf, struct ospf_lsa *type7, </span>
+<span class='curline'><a href='../S/747.html#L1881'>ospf_lsa</a>         1881 ospfd/ospf_lsa.c                               struct ospf_lsa *type5)</span>
+<span class='curline'><a href='../S/747.html#L1883'>ospf_lsa</a>         1883 ospfd/ospf_lsa.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/747.html#L1916'>ospf_lsa</a>         1916 ospfd/ospf_lsa.c       struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L1997'>ospf_lsa</a>         1997 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2000'>ospf_lsa</a>         2000 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L2160'>ospf_lsa</a>         2160 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L2191'>ospf_lsa</a>         2191 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L2240'>ospf_lsa</a>         2240 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L2289'>ospf_lsa</a>         2289 ospfd/ospf_lsa.c 	      struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L2299'>ospf_lsa</a>         2299 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2300'>ospf_lsa</a>         2300 ospfd/ospf_lsa.c ospf_external_lsa_refresh (struct ospf *ospf, struct ospf_lsa *lsa,</span>
+<span class='curline'><a href='../S/747.html#L2303'>ospf_lsa</a>         2303 ospfd/ospf_lsa.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/747.html#L2375'>ospf_lsa</a>         2375 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2376'>ospf_lsa</a>         2376 ospfd/ospf_lsa.c ospf_router_lsa_install (struct ospf *ospf, struct ospf_lsa *new,</span>
+<span class='curline'><a href='../S/747.html#L2413'>ospf_lsa</a>         2413 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2416'>ospf_lsa</a>         2416 ospfd/ospf_lsa.c 			  struct ospf_lsa *new,</span>
+<span class='curline'><a href='../S/747.html#L2444'>ospf_lsa</a>         2444 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2445'>ospf_lsa</a>         2445 ospfd/ospf_lsa.c ospf_summary_lsa_install (struct ospf *ospf, struct ospf_lsa *new,</span>
+<span class='curline'><a href='../S/747.html#L2475'>ospf_lsa</a>         2475 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2476'>ospf_lsa</a>         2476 ospfd/ospf_lsa.c ospf_summary_asbr_lsa_install (struct ospf *ospf, struct ospf_lsa *new,</span>
+<span class='curline'><a href='../S/747.html#L2506'>ospf_lsa</a>         2506 ospfd/ospf_lsa.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2507'>ospf_lsa</a>         2507 ospfd/ospf_lsa.c ospf_external_lsa_install (struct ospf *ospf, struct ospf_lsa *new,</span>
+<span class='curline'><a href='../S/747.html#L2550'>ospf_lsa</a>         2550 ospfd/ospf_lsa.c 		      struct ospf_lsdb *lsdb, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L2552'>ospf_lsa</a>         2552 ospfd/ospf_lsa.c   struct ospf_lsa *old;</span>
+<span class='curline'><a href='../S/747.html#L2597'>ospf_lsa</a>         2597 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L2599'>ospf_lsa</a>         2599 ospfd/ospf_lsa.c 		  struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L2601'>ospf_lsa</a>         2601 ospfd/ospf_lsa.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/747.html#L2602'>ospf_lsa</a>         2602 ospfd/ospf_lsa.c   struct ospf_lsa *old = NULL;</span>
+<span class='curline'><a href='../S/747.html#L2827'>ospf_lsa</a>         2827 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L2896'>ospf_lsa</a>         2896 ospfd/ospf_lsa.c ospf_lsa_maxage_delete (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L2923'>ospf_lsa</a>         2923 ospfd/ospf_lsa.c ospf_lsa_maxage (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L2966'>ospf_lsa</a>         2966 ospfd/ospf_lsa.c ospf_lsa_maxage_walker_remover (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3020'>ospf_lsa</a>         3020 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L3062'>ospf_lsa</a>         3062 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L3066'>ospf_lsa</a>         3066 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L3093'>ospf_lsa</a>         3093 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L3124'>ospf_lsa</a>         3124 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L3128'>ospf_lsa</a>         3128 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L3165'>ospf_lsa</a>         3165 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L3168'>ospf_lsa</a>         3168 ospfd/ospf_lsa.c   struct ospf_lsa *match;</span>
+<span class='curline'><a href='../S/747.html#L3193'>ospf_lsa</a>         3193 ospfd/ospf_lsa.c ospf_lsa_more_recent (struct ospf_lsa *l1, struct ospf_lsa *l2)</span>
+<span class='curline'><a href='../S/747.html#L3236'>ospf_lsa</a>         3236 ospfd/ospf_lsa.c ospf_lsa_different (struct ospf_lsa *l1, struct ospf_lsa *l2)</span>
+<span class='curline'><a href='../S/747.html#L3277'>ospf_lsa</a>         3277 ospfd/ospf_lsa.c                                 struct ospf_lsa *self,</span>
+<span class='curline'><a href='../S/747.html#L3278'>ospf_lsa</a>         3278 ospfd/ospf_lsa.c                                 struct ospf_lsa *new)</span>
+<span class='curline'><a href='../S/747.html#L3315'>ospf_lsa</a>         3315 ospfd/ospf_lsa.c ospf_lsa_flush_schedule (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3352'>ospf_lsa</a>         3352 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L3430'>ospf_lsa</a>         3430 ospfd/ospf_lsa.c ospf_lsa_is_self_originated (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3474'>ospf_lsa</a>         3474 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L3526'>ospf_lsa</a>         3526 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/747.html#L3556'>ospf_lsa</a>         3556 ospfd/ospf_lsa.c ospf_schedule_lsa_flood_area (struct ospf_area *area, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3569'>ospf_lsa</a>         3569 ospfd/ospf_lsa.c ospf_schedule_lsa_flush_area (struct ospf_area *area, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3583'>ospf_lsa</a>         3583 ospfd/ospf_lsa.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/747.html#L3584'>ospf_lsa</a>         3584 ospfd/ospf_lsa.c ospf_lsa_refresh (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3587'>ospf_lsa</a>         3587 ospfd/ospf_lsa.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/747.html#L3633'>ospf_lsa</a>         3633 ospfd/ospf_lsa.c ospf_refresher_register_lsa (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3678'>ospf_lsa</a>         3678 ospfd/ospf_lsa.c ospf_refresher_unregister_lsa (struct ospf *ospf, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/747.html#L3702'>ospf_lsa</a>         3702 ospfd/ospf_lsa.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/733.html#L244'>ospf_lsa</a>          244 ospfd/ospf_lsa.h extern int get_age (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L247'>ospf_lsa</a>          247 ospfd/ospf_lsa.h extern int ospf_lsa_refresh_delay (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L249'>ospf_lsa</a>          249 ospfd/ospf_lsa.h extern const char *dump_lsa_key (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L250'>ospf_lsa</a>          250 ospfd/ospf_lsa.h extern u_int32_t lsa_seqnum_increment (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L256'>ospf_lsa</a>          256 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_new (void);</span>
+<span class='curline'><a href='../S/733.html#L257'>ospf_lsa</a>          257 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_dup (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L258'>ospf_lsa</a>          258 ospfd/ospf_lsa.h extern void ospf_lsa_free (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L259'>ospf_lsa</a>          259 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_lock (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L260'>ospf_lsa</a>          260 ospfd/ospf_lsa.h extern void ospf_lsa_unlock (struct ospf_lsa **);</span>
+<span class='curline'><a href='../S/733.html#L261'>ospf_lsa</a>          261 ospfd/ospf_lsa.h extern void ospf_lsa_discard (struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L273'>ospf_lsa</a>          273 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_summary_lsa_originate (struct prefix_ipv4 *, u_int32_t,</span>
+<span class='curline'><a href='../S/733.html#L275'>ospf_lsa</a>          275 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_summary_asbr_lsa_originate (struct prefix_ipv4 *,</span>
+<span class='curline'><a href='../S/733.html#L279'>ospf_lsa</a>          279 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_install (struct ospf *,</span>
+<span class='curline'><a href='../S/733.html#L280'>ospf_lsa</a>          280 ospfd/ospf_lsa.h 				   struct ospf_interface *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L288'>ospf_lsa</a>          288 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_external_lsa_originate (struct ospf *, struct external_info *);</span>
+<span class='curline'><a href='../S/733.html#L291'>ospf_lsa</a>          291 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_lookup (struct ospf_area *, u_int32_t,</span>
+<span class='curline'><a href='../S/733.html#L293'>ospf_lsa</a>          293 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_lookup_by_id (struct ospf_area *,</span>
+<span class='curline'><a href='../S/733.html#L296'>ospf_lsa</a>          296 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_lookup_by_header (struct ospf_area *,</span>
+<span class='curline'><a href='../S/733.html#L298'>ospf_lsa</a>          298 ospfd/ospf_lsa.h extern int ospf_lsa_more_recent (struct ospf_lsa *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L299'>ospf_lsa</a>          299 ospfd/ospf_lsa.h extern int ospf_lsa_different (struct ospf_lsa *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L302'>ospf_lsa</a>          302 ospfd/ospf_lsa.h extern int ospf_lsa_is_self_originated (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L304'>ospf_lsa</a>          304 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_lookup_by_prefix (struct ospf_lsdb *, u_char,</span>
+<span class='curline'><a href='../S/733.html#L308'>ospf_lsa</a>          308 ospfd/ospf_lsa.h extern void ospf_lsa_maxage (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L312'>ospf_lsa</a>          312 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_lsa_refresh (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L317'>ospf_lsa</a>          317 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_external_lsa_refresh (struct ospf *,</span>
+<span class='curline'><a href='../S/733.html#L318'>ospf_lsa</a>          318 ospfd/ospf_lsa.h                                                    struct ospf_lsa *,</span>
+<span class='curline'><a href='../S/733.html#L323'>ospf_lsa</a>          323 ospfd/ospf_lsa.h extern void ospf_schedule_lsa_flood_area (struct ospf_area *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L324'>ospf_lsa</a>          324 ospfd/ospf_lsa.h extern void ospf_schedule_lsa_flush_area (struct ospf_area *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L326'>ospf_lsa</a>          326 ospfd/ospf_lsa.h extern void ospf_refresher_register_lsa (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L327'>ospf_lsa</a>          327 ospfd/ospf_lsa.h extern void ospf_refresher_unregister_lsa (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L330'>ospf_lsa</a>          330 ospfd/ospf_lsa.h extern void ospf_lsa_maxage_delete (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L332'>ospf_lsa</a>          332 ospfd/ospf_lsa.h extern void ospf_discard_from_db (struct ospf *, struct ospf_lsdb *, struct ospf_lsa*);</span>
+<span class='curline'><a href='../S/733.html#L339'>ospf_lsa</a>          339 ospfd/ospf_lsa.h extern int ospf_translated_nssa_compare (struct ospf_lsa *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L340'>ospf_lsa</a>          340 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_translated_nssa_refresh (struct ospf *, struct ospf_lsa *,</span>
+<span class='curline'><a href='../S/733.html#L341'>ospf_lsa</a>          341 ospfd/ospf_lsa.h                                    struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/733.html#L342'>ospf_lsa</a>          342 ospfd/ospf_lsa.h extern struct ospf_lsa *ospf_translated_nssa_originate (struct ospf *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/778.html#L76'>ospf_lsa</a>           76 ospfd/ospf_lsdb.c ls_prefix_set (struct prefix_ls *lp, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/778.html#L90'>ospf_lsa</a>           90 ospfd/ospf_lsdb.c   struct ospf_lsa *lsa = rn-&gt;info;</span>
+<span class='curline'><a href='../S/778.html#L114'>ospf_lsa</a>          114 ospfd/ospf_lsdb.c ospf_lsdb_add (struct ospf_lsdb *lsdb, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/778.html#L149'>ospf_lsa</a>          149 ospfd/ospf_lsdb.c ospf_lsdb_delete (struct ospf_lsdb *lsdb, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/778.html#L203'>ospf_lsa</a>          203 ospfd/ospf_lsdb.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/778.html#L215'>ospf_lsa</a>          215 ospfd/ospf_lsdb.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/778.html#L216'>ospf_lsa</a>          216 ospfd/ospf_lsdb.c ospf_lsdb_lookup (struct ospf_lsdb *lsdb, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/778.html#L221'>ospf_lsa</a>          221 ospfd/ospf_lsdb.c   struct ospf_lsa *find;</span>
+<span class='curline'><a href='../S/778.html#L235'>ospf_lsa</a>          235 ospfd/ospf_lsdb.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/778.html#L242'>ospf_lsa</a>          242 ospfd/ospf_lsdb.c   struct ospf_lsa *find;</span>
+<span class='curline'><a href='../S/778.html#L262'>ospf_lsa</a>          262 ospfd/ospf_lsdb.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/778.html#L270'>ospf_lsa</a>          270 ospfd/ospf_lsdb.c   struct ospf_lsa *find;</span>
+<span class='curline'><a href='../S/755.html#L40'>ospf_lsa</a>           40 ospfd/ospf_lsdb.h   int (* new_lsa_hook)(struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/755.html#L41'>ospf_lsa</a>           41 ospfd/ospf_lsdb.h   int (* del_lsa_hook)(struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/755.html#L69'>ospf_lsa</a>           69 ospfd/ospf_lsdb.h extern void ls_prefix_set (struct prefix_ls *lp, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/755.html#L70'>ospf_lsa</a>           70 ospfd/ospf_lsdb.h extern void ospf_lsdb_add (struct ospf_lsdb *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/755.html#L71'>ospf_lsa</a>           71 ospfd/ospf_lsdb.h extern void ospf_lsdb_delete (struct ospf_lsdb *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/755.html#L75'>ospf_lsa</a>           75 ospfd/ospf_lsdb.h extern struct ospf_lsa *ospf_lsdb_lookup (struct ospf_lsdb *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/755.html#L76'>ospf_lsa</a>           76 ospfd/ospf_lsdb.h extern struct ospf_lsa *ospf_lsdb_lookup_by_id (struct ospf_lsdb *, u_char,</span>
+<span class='curline'><a href='../S/755.html#L78'>ospf_lsa</a>           78 ospfd/ospf_lsdb.h extern struct ospf_lsa *ospf_lsdb_lookup_by_id_next (struct ospf_lsdb *, u_char,</span>
+<span class='curline'><a href='../S/772.html#L66'>ospf_lsa</a>           66 ospfd/ospf_neighbor.h   struct ospf_lsa *ls_req_last;</span>
+<span class='curline'><a href='../S/815.html#L209'>ospf_lsa</a>          209 ospfd/ospf_nsm.c ospf_db_summary_add (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/815.html#L273'>ospf_lsa</a>          273 ospfd/ospf_nsm.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L81'>ospf_lsa</a>           81 ospfd/ospf_opaque.c static int ospf_opaque_lsa_install_hook (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L82'>ospf_lsa</a>           82 ospfd/ospf_opaque.c static int ospf_opaque_lsa_delete_hook (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L258'>ospf_lsa</a>          258 ospfd/ospf_opaque.c   void (* show_opaque_info   )(struct vty *vty, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L260'>ospf_lsa</a>          260 ospfd/ospf_opaque.c   struct ospf_lsa *(* lsa_refresher )(struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L261'>ospf_lsa</a>          261 ospfd/ospf_opaque.c   int (* new_lsa_hook)(struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L262'>ospf_lsa</a>          262 ospfd/ospf_opaque.c   int (* del_lsa_hook)(struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L361'>ospf_lsa</a>          361 ospfd/ospf_opaque.c   void (* show_opaque_info   )(struct vty *vty, struct ospf_lsa *lsa),</span>
+<span class='curline'><a href='../S/750.html#L363'>ospf_lsa</a>          363 ospfd/ospf_opaque.c   struct ospf_lsa *(* lsa_refresher )(struct ospf_lsa *lsa),</span>
+<span class='curline'><a href='../S/750.html#L364'>ospf_lsa</a>          364 ospfd/ospf_opaque.c   int (* new_lsa_hook)(struct ospf_lsa *lsa),</span>
+<span class='curline'><a href='../S/750.html#L365'>ospf_lsa</a>          365 ospfd/ospf_opaque.c   int (* del_lsa_hook)(struct ospf_lsa *lsa))</span>
+<span class='curline'><a href='../S/750.html#L455'>ospf_lsa</a>          455 ospfd/ospf_opaque.c ospf_opaque_functab_lookup (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L525'>ospf_lsa</a>          525 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L528'>ospf_lsa</a>          528 ospfd/ospf_opaque.c static struct opaque_info_per_type *register_opaque_info_per_type (struct ospf_opaque_functab *functab, struct ospf_lsa *new);</span>
+<span class='curline'><a href='../S/750.html#L529'>ospf_lsa</a>          529 ospfd/ospf_opaque.c static struct opaque_info_per_type *lookup_opaque_info_by_type (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L530'>ospf_lsa</a>          530 ospfd/ospf_opaque.c static struct opaque_info_per_id *register_opaque_info_per_id (struct opaque_info_per_type *oipt, struct ospf_lsa *new);</span>
+<span class='curline'><a href='../S/750.html#L531'>ospf_lsa</a>          531 ospfd/ospf_opaque.c static struct opaque_info_per_id *lookup_opaque_info_by_id (struct opaque_info_per_type *oipt, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L532'>ospf_lsa</a>          532 ospfd/ospf_opaque.c static struct opaque_info_per_id *register_opaque_lsa (struct ospf_lsa *new);</span>
+<span class='curline'><a href='../S/750.html#L537'>ospf_lsa</a>          537 ospfd/ospf_opaque.c                                struct ospf_lsa *new)</span>
+<span class='curline'><a href='../S/750.html#L595'>ospf_lsa</a>          595 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L641'>ospf_lsa</a>          641 ospfd/ospf_opaque.c lookup_opaque_info_by_type (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L689'>ospf_lsa</a>          689 ospfd/ospf_opaque.c                              struct ospf_lsa *new)</span>
+<span class='curline'><a href='../S/750.html#L724'>ospf_lsa</a>          724 ospfd/ospf_opaque.c                           struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L738'>ospf_lsa</a>          738 ospfd/ospf_opaque.c register_opaque_lsa (struct ospf_lsa *new)</span>
+<span class='curline'><a href='../S/750.html#L944'>ospf_lsa</a>          944 ospfd/ospf_opaque.c new_lsa_callback (struct list *funclist, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L961'>ospf_lsa</a>          961 ospfd/ospf_opaque.c del_lsa_callback (struct list *funclist, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L1172'>ospf_lsa</a>         1172 ospfd/ospf_opaque.c show_opaque_info_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L1214'>ospf_lsa</a>         1214 ospfd/ospf_opaque.c   struct ospf_lsa lsa;</span>
+<span class='curline'><a href='../S/750.html#L1222'>ospf_lsa</a>         1222 ospfd/ospf_opaque.c ospf_opaque_lsa_install_hook (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L1253'>ospf_lsa</a>         1253 ospfd/ospf_opaque.c ospf_opaque_lsa_delete_hook (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L1540'>ospf_lsa</a>         1540 ospfd/ospf_opaque.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/750.html#L1541'>ospf_lsa</a>         1541 ospfd/ospf_opaque.c ospf_opaque_lsa_install (struct ospf_lsa *lsa, int rt_recalc)</span>
+<span class='curline'><a href='../S/750.html#L1543'>ospf_lsa</a>         1543 ospfd/ospf_opaque.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/750.html#L1617'>ospf_lsa</a>         1617 ospfd/ospf_opaque.c struct ospf_lsa *</span>
+<span class='curline'><a href='../S/750.html#L1618'>ospf_lsa</a>         1618 ospfd/ospf_opaque.c ospf_opaque_lsa_refresh (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L1622'>ospf_lsa</a>         1622 ospfd/ospf_opaque.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/750.html#L1657'>ospf_lsa</a>         1657 ospfd/ospf_opaque.c static struct ospf_lsa *pseudo_lsa (struct ospf_interface *oi, struct ospf_area *area, u_char lsa_type, u_char opaque_type);</span>
+<span class='curline'><a href='../S/750.html#L1671'>ospf_lsa</a>         1671 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L1823'>ospf_lsa</a>         1823 ospfd/ospf_opaque.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/750.html#L1827'>ospf_lsa</a>         1827 ospfd/ospf_opaque.c   static struct ospf_lsa lsa = { 0 };</span>
+<span class='curline'><a href='../S/750.html#L1990'>ospf_lsa</a>         1990 ospfd/ospf_opaque.c ospf_opaque_lsa_refresh_schedule (struct ospf_lsa *lsa0)</span>
+<span class='curline'><a href='../S/750.html#L1994'>ospf_lsa</a>         1994 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L2049'>ospf_lsa</a>         2049 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L2066'>ospf_lsa</a>         2066 ospfd/ospf_opaque.c ospf_opaque_lsa_flush_schedule (struct ospf_lsa *lsa0)</span>
+<span class='curline'><a href='../S/750.html#L2070'>ospf_lsa</a>         2070 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L2128'>ospf_lsa</a>         2128 ospfd/ospf_opaque.c static void ospf_opaque_exclude_lsa_from_lsreq (struct route_table *nbrs, struct ospf_neighbor *inbr, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/750.html#L2142'>ospf_lsa</a>         2142 ospfd/ospf_opaque.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/750.html#L2211'>ospf_lsa</a>         2211 ospfd/ospf_opaque.c                                     struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L2215'>ospf_lsa</a>         2215 ospfd/ospf_opaque.c   struct ospf_lsa *ls_req;</span>
+<span class='curline'><a href='../S/750.html#L2238'>ospf_lsa</a>         2238 ospfd/ospf_opaque.c                                           struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/750.html#L2282'>ospf_lsa</a>         2282 ospfd/ospf_opaque.c ospf_opaque_ls_ack_received (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/744.html#L121'>ospf_lsa</a>          121 ospfd/ospf_opaque.h   void (* show_opaque_info   )(struct vty *vty, struct ospf_lsa *lsa),</span>
+<span class='curline'><a href='../S/744.html#L123'>ospf_lsa</a>          123 ospfd/ospf_opaque.h   struct ospf_lsa *(* lsa_refresher )(struct ospf_lsa *lsa),</span>
+<span class='curline'><a href='../S/744.html#L124'>ospf_lsa</a>          124 ospfd/ospf_opaque.h   int (* new_lsa_hook)(struct ospf_lsa *lsa),</span>
+<span class='curline'><a href='../S/744.html#L125'>ospf_lsa</a>          125 ospfd/ospf_opaque.h   int (* del_lsa_hook)(struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/744.html#L139'>ospf_lsa</a>          139 ospfd/ospf_opaque.h extern void show_opaque_info_detail (struct vty *vty, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/744.html#L144'>ospf_lsa</a>          144 ospfd/ospf_opaque.h extern struct ospf_lsa *ospf_opaque_lsa_install (struct ospf_lsa *,</span>
+<span class='curline'><a href='../S/744.html#L146'>ospf_lsa</a>          146 ospfd/ospf_opaque.h extern struct ospf_lsa *ospf_opaque_lsa_refresh (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/744.html#L151'>ospf_lsa</a>          151 ospfd/ospf_opaque.h extern void ospf_opaque_lsa_refresh_schedule (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/744.html#L152'>ospf_lsa</a>          152 ospfd/ospf_opaque.h extern void ospf_opaque_lsa_flush_schedule (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/744.html#L158'>ospf_lsa</a>          158 ospfd/ospf_opaque.h 						      struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/744.html#L160'>ospf_lsa</a>          160 ospfd/ospf_opaque.h 					 struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/768.html#L501'>ospf_lsa</a>          501 ospfd/ospf_packet.c 	      struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L1044'>ospf_lsa</a>         1044 ospfd/ospf_packet.c   struct ospf_lsa *new, *find;</span>
+<span class='curline'><a href='../S/768.html#L1469'>ospf_lsa</a>         1469 ospfd/ospf_packet.c   struct ospf_lsa *find;</span>
+<span class='curline'><a href='../S/768.html#L1571'>ospf_lsa</a>         1571 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L1693'>ospf_lsa</a>         1693 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L1709'>ospf_lsa</a>         1709 ospfd/ospf_packet.c   struct ospf_lsa *lsa = NULL;</span>
+<span class='curline'><a href='../S/768.html#L1773'>ospf_lsa</a>         1773 ospfd/ospf_packet.c       struct ospf_lsa *ls_ret, *current;</span>
+<span class='curline'><a href='../S/768.html#L2106'>ospf_lsa</a>         2106 ospfd/ospf_packet.c       struct ospf_lsa *lsa, *lsr;</span>
+<span class='curline'><a href='../S/768.html#L3127'>ospf_lsa</a>         3127 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L3245'>ospf_lsa</a>         3245 ospfd/ospf_packet.c 		       struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/768.html#L3269'>ospf_lsa</a>         3269 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L3294'>ospf_lsa</a>         3294 ospfd/ospf_packet.c ls_age_increment (struct ospf_lsa *lsa, int delay)</span>
+<span class='curline'><a href='../S/768.html#L3306'>ospf_lsa</a>         3306 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L3373'>ospf_lsa</a>         3373 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L3645'>ospf_lsa</a>         3645 ospfd/ospf_packet.c ospf_ls_upd_send_lsa (struct ospf_neighbor *nbr, struct ospf_lsa *lsa,</span>
+<span class='curline'><a href='../S/768.html#L3668'>ospf_lsa</a>         3668 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L3822'>ospf_lsa</a>         3822 ospfd/ospf_packet.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/768.html#L3913'>ospf_lsa</a>         3913 ospfd/ospf_packet.c ospf_ls_ack_send (struct ospf_neighbor *nbr, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/806.html#L161'>ospf_lsa</a>          161 ospfd/ospf_packet.h extern void ospf_ls_upd_send_lsa (struct ospf_neighbor *, struct ospf_lsa *,</span>
+<span class='curline'><a href='../S/806.html#L164'>ospf_lsa</a>          164 ospfd/ospf_packet.h extern void ospf_ls_ack_send (struct ospf_neighbor *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/806.html#L166'>ospf_lsa</a>          166 ospfd/ospf_packet.h extern void ospf_ls_retransmit (struct ospf_interface *, struct ospf_lsa *);</span>
+<span class='curline'><a href='../S/759.html#L78'>ospf_lsa</a>           78 ospfd/ospf_route.h   struct ospf_lsa *origin;</span>
+<span class='curline'><a href='../S/742.html#L897'>ospf_lsa</a>          897 ospfd/ospf_snmp.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/742.html#L902'>ospf_lsa</a>          902 ospfd/ospf_snmp.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/742.html#L932'>ospf_lsa</a>          932 ospfd/ospf_snmp.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/742.html#L939'>ospf_lsa</a>          939 ospfd/ospf_snmp.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/742.html#L1081'>ospf_lsa</a>         1081 ospfd/ospf_snmp.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/742.html#L2423'>ospf_lsa</a>         2423 ospfd/ospf_snmp.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/742.html#L2432'>ospf_lsa</a>         2432 ospfd/ospf_snmp.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/742.html#L2518'>ospf_lsa</a>         2518 ospfd/ospf_snmp.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/805.html#L164'>ospf_lsa</a>          164 ospfd/ospf_spf.c ospf_vertex_new (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/805.html#L751'>ospf_lsa</a>          751 ospfd/ospf_spf.c   struct ospf_lsa *w_lsa = NULL;</span>
+<span class='curline'><a href='../S/798.html#L134'>ospf_lsa</a>          134 ospfd/ospf_te.c static void ospf_mpls_te_show_info (struct vty *vty, struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/798.html#L136'>ospf_lsa</a>          136 ospfd/ospf_te.c static struct ospf_lsa *ospf_mpls_te_lsa_refresh (struct ospf_lsa *lsa);</span>
+<span class='curline'><a href='../S/798.html#L266'>ospf_lsa</a>          266 ospfd/ospf_te.c lookup_linkparams_by_instance (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/798.html#L857'>ospf_lsa</a>          857 ospfd/ospf_te.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/798.html#L862'>ospf_lsa</a>          862 ospfd/ospf_te.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/798.html#L925'>ospf_lsa</a>          925 ospfd/ospf_te.c   struct ospf_lsa *new;</span>
+<span class='curline'><a href='../S/798.html#L1012'>ospf_lsa</a>         1012 ospfd/ospf_te.c static struct ospf_lsa *</span>
+<span class='curline'><a href='../S/798.html#L1013'>ospf_lsa</a>         1013 ospfd/ospf_te.c ospf_mpls_te_lsa_refresh (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/798.html#L1017'>ospf_lsa</a>         1017 ospfd/ospf_te.c   struct ospf_lsa *new = NULL;</span>
+<span class='curline'><a href='../S/798.html#L1080'>ospf_lsa</a>         1080 ospfd/ospf_te.c   struct ospf_lsa lsa;</span>
+<span class='curline'><a href='../S/798.html#L1373'>ospf_lsa</a>         1373 ospfd/ospf_te.c ospf_mpls_te_show_info (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3433'>ospf_lsa</a>         3433 ospfd/ospf_vty.c show_lsa_summary (struct vty *vty, struct ospf_lsa *lsa, int self)</span>
+<span class='curline'><a href='../S/738.html#L3533'>ospf_lsa</a>         3533 ospfd/ospf_vty.c show_ip_ospf_database_header (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3627'>ospf_lsa</a>         3627 ospfd/ospf_vty.c show_router_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3647'>ospf_lsa</a>         3647 ospfd/ospf_vty.c show_network_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3674'>ospf_lsa</a>         3674 ospfd/ospf_vty.c show_summary_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3694'>ospf_lsa</a>         3694 ospfd/ospf_vty.c show_summary_asbr_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3714'>ospf_lsa</a>         3714 ospfd/ospf_vty.c show_as_external_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3742'>ospf_lsa</a>         3742 ospfd/ospf_vty.c show_as_external_lsa_stdvty (struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3768'>ospf_lsa</a>         3768 ospfd/ospf_vty.c show_as_nssa_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3795'>ospf_lsa</a>         3795 ospfd/ospf_vty.c show_func_dummy (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3802'>ospf_lsa</a>         3802 ospfd/ospf_vty.c show_opaque_lsa_detail (struct vty *vty, struct ospf_lsa *lsa)</span>
+<span class='curline'><a href='../S/738.html#L3815'>ospf_lsa</a>         3815 ospfd/ospf_vty.c int (*show_function[])(struct vty *, struct ospf_lsa *) =</span>
+<span class='curline'><a href='../S/738.html#L3860'>ospf_lsa</a>         3860 ospfd/ospf_vty.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/738.html#L3914'>ospf_lsa</a>         3914 ospfd/ospf_vty.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/738.html#L3963'>ospf_lsa</a>         3963 ospfd/ospf_vty.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/738.html#L4035'>ospf_lsa</a>         4035 ospfd/ospf_vty.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/738.html#L4042'>ospf_lsa</a>         4042 ospfd/ospf_vty.c       struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/773.html#L895'>ospf_lsa</a>          895 ospfd/ospf_zebra.c                   struct ospf_lsa *current;</span>
+<span class='curline'><a href='../S/773.html#L969'>ospf_lsa</a>          969 ospfd/ospf_zebra.c   struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/794.html#L403'>ospf_lsa</a>          403 ospfd/ospfd.c    struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/794.html#L507'>ospf_lsa</a>          507 ospfd/ospfd.c        struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/794.html#L607'>ospf_lsa</a>          607 ospfd/ospfd.c    struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/794.html#L934'>ospf_lsa</a>          934 ospfd/ospfd.c    struct ospf_lsa *lsa;</span>
+<span class='curline'><a href='../S/790.html#L397'>ospf_lsa</a>          397 ospfd/ospfd.h    struct ospf_lsa *router_lsa_self;</span>
+</pre>
+</body>
+</html>

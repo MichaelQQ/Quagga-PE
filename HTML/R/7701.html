@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospf6_route</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/38.html#L74'>ospf6_route</a>        74 ospf6d/ospf6_abr.c   struct ospf6_route *ro;</span>
+<span class='curline'><a href='../S/38.html#L109'>ospf6_route</a>       109 ospf6d/ospf6_abr.c   struct ospf6_route *ro;</span>
+<span class='curline'><a href='../S/38.html#L143'>ospf6_route</a>       143 ospf6d/ospf6_abr.c ospf6_abr_originate_summary_to_area (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/38.html#L148'>ospf6_route</a>       148 ospf6d/ospf6_abr.c   struct ospf6_route *summary, *range = NULL;</span>
+<span class='curline'><a href='../S/38.html#L476'>ospf6_route</a>       476 ospf6d/ospf6_abr.c ospf6_abr_range_update (struct ospf6_route *range)</span>
+<span class='curline'><a href='../S/38.html#L479'>ospf6_route</a>       479 ospf6d/ospf6_abr.c   struct ospf6_route *ro;</span>
+<span class='curline'><a href='../S/38.html#L506'>ospf6_route</a>       506 ospf6d/ospf6_abr.c ospf6_abr_originate_summary (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/38.html#L510'>ospf6_route</a>       510 ospf6d/ospf6_abr.c   struct ospf6_route *range = NULL;</span>
+<span class='curline'><a href='../S/38.html#L530'>ospf6_route</a>       530 ospf6d/ospf6_abr.c   struct ospf6_route *range, *route, *old = NULL;</span>
+<span class='curline'><a href='../S/38.html#L531'>ospf6_route</a>       531 ospf6d/ospf6_abr.c   struct ospf6_route *abr_entry;</span>
+<span class='curline'><a href='../S/39.html#L65'>ospf6_route</a>        65 ospf6d/ospf6_abr.h extern void ospf6_abr_originate_summary_to_area (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/39.html#L67'>ospf6_route</a>        67 ospf6d/ospf6_abr.h extern void ospf6_abr_originate_summary (struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/2.html#L118'>ospf6_route</a>       118 ospf6d/ospf6_area.c ospf6_area_route_hook_add (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/2.html#L120'>ospf6_route</a>       120 ospf6d/ospf6_area.c   struct ospf6_route *copy = ospf6_route_copy (route);</span>
+<span class='curline'><a href='../S/2.html#L125'>ospf6_route</a>       125 ospf6d/ospf6_area.c ospf6_area_route_hook_remove (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/2.html#L127'>ospf6_route</a>       127 ospf6d/ospf6_area.c   struct ospf6_route *copy;</span>
+<span class='curline'><a href='../S/2.html#L139'>ospf6_route</a>       139 ospf6d/ospf6_area.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/2.html#L321'>ospf6_route</a>       321 ospf6d/ospf6_area.c   struct ospf6_route *range;</span>
+<span class='curline'><a href='../S/2.html#L383'>ospf6_route</a>       383 ospf6d/ospf6_area.c   struct ospf6_route *range;</span>
+<span class='curline'><a href='../S/2.html#L412'>ospf6_route</a>       412 ospf6d/ospf6_area.c   struct ospf6_route *range;</span>
+<span class='curline'><a href='../S/2.html#L639'>ospf6_route</a>       639 ospf6d/ospf6_area.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/2.html#L674'>ospf6_route</a>       674 ospf6d/ospf6_area.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/2.html#L717'>ospf6_route</a>       717 ospf6d/ospf6_area.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/37.html#L57'>ospf6_route</a>        57 ospf6d/ospf6_asbr.c ospf6_as_external_lsa_originate (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/37.html#L160'>ospf6_route</a>       160 ospf6d/ospf6_asbr.c   struct ospf6_route *asbr_entry, *route;</span>
+<span class='curline'><a href='../S/37.html#L241'>ospf6_route</a>       241 ospf6d/ospf6_asbr.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/37.html#L296'>ospf6_route</a>       296 ospf6d/ospf6_asbr.c ospf6_asbr_lsentry_add (struct ospf6_route *asbr_entry)</span>
+<span class='curline'><a href='../S/37.html#L322'>ospf6_route</a>       322 ospf6d/ospf6_asbr.c ospf6_asbr_lsentry_remove (struct ospf6_route *asbr_entry)</span>
+<span class='curline'><a href='../S/37.html#L390'>ospf6_route</a>       390 ospf6d/ospf6_asbr.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/37.html#L412'>ospf6_route</a>       412 ospf6d/ospf6_asbr.c   struct ospf6_route troute;</span>
+<span class='curline'><a href='../S/37.html#L414'>ospf6_route</a>       414 ospf6d/ospf6_asbr.c   struct ospf6_route *route, *match;</span>
+<span class='curline'><a href='../S/37.html#L556'>ospf6_route</a>       556 ospf6d/ospf6_asbr.c   struct ospf6_route *match;</span>
+<span class='curline'><a href='../S/37.html#L707'>ospf6_route</a>       707 ospf6d/ospf6_asbr.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/37.html#L796'>ospf6_route</a>       796 ospf6d/ospf6_asbr.c       ei = ((struct ospf6_route *) object)-&gt;route_option;</span>
+<span class='curline'><a href='../S/37.html#L837'>ospf6_route</a>       837 ospf6d/ospf6_asbr.c   struct ospf6_route *route = object;</span>
+<span class='curline'><a href='../S/37.html#L878'>ospf6_route</a>       878 ospf6d/ospf6_asbr.c   struct ospf6_route *route = object;</span>
+<span class='curline'><a href='../S/37.html#L918'>ospf6_route</a>       918 ospf6d/ospf6_asbr.c   struct ospf6_route *route = object;</span>
+<span class='curline'><a href='../S/37.html#L1213'>ospf6_route</a>      1213 ospf6d/ospf6_asbr.c ospf6_asbr_external_route_show (struct vty *vty, struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/37.html#L1245'>ospf6_route</a>      1245 ospf6d/ospf6_asbr.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/12.html#L78'>ospf6_route</a>        78 ospf6d/ospf6_asbr.h extern void ospf6_asbr_lsentry_add (struct ospf6_route *asbr_entry);</span>
+<span class='curline'><a href='../S/12.html#L79'>ospf6_route</a>        79 ospf6d/ospf6_asbr.h extern void ospf6_asbr_lsentry_remove (struct ospf6_route *asbr_entry);</span>
+<span class='curline'><a href='../S/28.html#L313'>ospf6_route</a>       313 ospf6d/ospf6_interface.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/10.html#L529'>ospf6_route</a>       529 ospf6d/ospf6_intra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/10.html#L687'>ospf6_route</a>       687 ospf6d/ospf6_intra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/10.html#L836'>ospf6_route</a>       836 ospf6d/ospf6_intra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/10.html#L1027'>ospf6_route</a>      1027 ospf6d/ospf6_intra.c   struct ospf6_route *route, *ls_entry;</span>
+<span class='curline'><a href='../S/10.html#L1122'>ospf6_route</a>      1122 ospf6d/ospf6_intra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/10.html#L1191'>ospf6_route</a>      1191 ospf6d/ospf6_intra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/10.html#L1194'>ospf6_route</a>      1194 ospf6d/ospf6_intra.c   void (*hook_add) (struct ospf6_route *) = NULL;</span>
+<span class='curline'><a href='../S/10.html#L1195'>ospf6_route</a>      1195 ospf6d/ospf6_intra.c   void (*hook_remove) (struct ospf6_route *) = NULL;</span>
+<span class='curline'><a href='../S/10.html#L1244'>ospf6_route</a>      1244 ospf6d/ospf6_intra.c ospf6_brouter_debug_print (struct ospf6_route *brouter)</span>
+<span class='curline'><a href='../S/10.html#L1298'>ospf6_route</a>      1298 ospf6d/ospf6_intra.c   struct ospf6_route *brouter, *copy;</span>
+<span class='curline'><a href='../S/10.html#L1299'>ospf6_route</a>      1299 ospf6d/ospf6_intra.c   void (*hook_add) (struct ospf6_route *) = NULL;</span>
+<span class='curline'><a href='../S/10.html#L1300'>ospf6_route</a>      1300 ospf6d/ospf6_intra.c   void (*hook_remove) (struct ospf6_route *) = NULL;</span>
+<span class='curline'><a href='../S/22.html#L176'>ospf6_route</a>       176 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L179'>ospf6_route</a>       179 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L180'>ospf6_route</a>       180 ospf6d/ospf6_route.c   route = XCALLOC (MTYPE_OSPF6_ROUTE, sizeof (struct ospf6_route));</span>
+<span class='curline'><a href='../S/22.html#L185'>ospf6_route</a>       185 ospf6d/ospf6_route.c ospf6_route_delete (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L190'>ospf6_route</a>       190 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L191'>ospf6_route</a>       191 ospf6d/ospf6_route.c ospf6_route_copy (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L193'>ospf6_route</a>       193 ospf6d/ospf6_route.c   struct ospf6_route *new;</span>
+<span class='curline'><a href='../S/22.html#L196'>ospf6_route</a>       196 ospf6d/ospf6_route.c   memcpy (new, route, sizeof (struct ospf6_route));</span>
+<span class='curline'><a href='../S/22.html#L206'>ospf6_route</a>       206 ospf6d/ospf6_route.c ospf6_route_lock (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L212'>ospf6_route</a>       212 ospf6d/ospf6_route.c ospf6_route_unlock (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L230'>ospf6_route</a>       230 ospf6d/ospf6_route.c ospf6_route_cmp (struct ospf6_route *ra, struct ospf6_route *rb)</span>
+<span class='curline'><a href='../S/22.html#L261'>ospf6_route</a>       261 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L266'>ospf6_route</a>       266 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L272'>ospf6_route</a>       272 ospf6d/ospf6_route.c   route = (struct ospf6_route *) node-&gt;info;</span>
+<span class='curline'><a href='../S/22.html#L276'>ospf6_route</a>       276 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L277'>ospf6_route</a>       277 ospf6d/ospf6_route.c ospf6_route_lookup_identical (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/22.html#L280'>ospf6_route</a>       280 ospf6d/ospf6_route.c   struct ospf6_route *target;</span>
+<span class='curline'><a href='../S/22.html#L291'>ospf6_route</a>       291 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L296'>ospf6_route</a>       296 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L303'>ospf6_route</a>       303 ospf6d/ospf6_route.c   route = (struct ospf6_route *) node-&gt;info;</span>
+<span class='curline'><a href='../S/22.html#L311'>ospf6_route</a>       311 ospf6d/ospf6_route.c   struct ospf6_route *prev, *r, *next;</span>
+<span class='curline'><a href='../S/22.html#L355'>ospf6_route</a>       355 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L356'>ospf6_route</a>       356 ospf6d/ospf6_route.c ospf6_route_add (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/22.html#L360'>ospf6_route</a>       360 ospf6d/ospf6_route.c   struct ospf6_route *current = NULL;</span>
+<span class='curline'><a href='../S/22.html#L361'>ospf6_route</a>       361 ospf6d/ospf6_route.c   struct ospf6_route *prev = NULL, *old = NULL, *next = NULL;</span>
+<span class='curline'><a href='../S/22.html#L578'>ospf6_route</a>       578 ospf6d/ospf6_route.c ospf6_route_remove (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/22.html#L582'>ospf6_route</a>       582 ospf6d/ospf6_route.c   struct ospf6_route *current;</span>
+<span class='curline'><a href='../S/22.html#L638'>ospf6_route</a>       638 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L642'>ospf6_route</a>       642 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L657'>ospf6_route</a>       657 ospf6d/ospf6_route.c   route = (struct ospf6_route *) node-&gt;info;</span>
+<span class='curline'><a href='../S/22.html#L670'>ospf6_route</a>       670 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L671'>ospf6_route</a>       671 ospf6d/ospf6_route.c ospf6_route_next (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L673'>ospf6_route</a>       673 ospf6d/ospf6_route.c   struct ospf6_route *next = route-&gt;next;</span>
+<span class='curline'><a href='../S/22.html#L687'>ospf6_route</a>       687 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L688'>ospf6_route</a>       688 ospf6d/ospf6_route.c ospf6_route_best_next (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L691'>ospf6_route</a>       691 ospf6d/ospf6_route.c   struct ospf6_route *next;</span>
+<span class='curline'><a href='../S/22.html#L705'>ospf6_route</a>       705 ospf6d/ospf6_route.c   next = (struct ospf6_route *) rnode-&gt;info;</span>
+<span class='curline'><a href='../S/22.html#L710'>ospf6_route</a>       710 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L715'>ospf6_route</a>       715 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L739'>ospf6_route</a>       739 ospf6d/ospf6_route.c struct ospf6_route *</span>
+<span class='curline'><a href='../S/22.html#L741'>ospf6_route</a>       741 ospf6d/ospf6_route.c                         struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L743'>ospf6_route</a>       743 ospf6d/ospf6_route.c   struct ospf6_route *next;</span>
+<span class='curline'><a href='../S/22.html#L758'>ospf6_route</a>       758 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L786'>ospf6_route</a>       786 ospf6d/ospf6_route.c ospf6_route_show (struct vty *vty, struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L834'>ospf6_route</a>       834 ospf6d/ospf6_route.c ospf6_route_show_detail (struct vty *vty, struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L933'>ospf6_route</a>       933 ospf6d/ospf6_route.c   struct ospf6_route *route, *prev = NULL;</span>
+<span class='curline'><a href='../S/22.html#L977'>ospf6_route</a>       977 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L999'>ospf6_route</a>       999 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L1022'>ospf6_route</a>      1022 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L1040'>ospf6_route</a>      1040 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L1060'>ospf6_route</a>      1060 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L1182'>ospf6_route</a>      1182 ospf6d/ospf6_route.c ospf6_linkstate_show (struct vty *vty, struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/22.html#L1211'>ospf6_route</a>      1211 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L1232'>ospf6_route</a>      1232 ospf6d/ospf6_route.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/22.html#L1319'>ospf6_route</a>      1319 ospf6d/ospf6_route.c ospf6_brouter_show (struct vty *vty, struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/44.html#L117'>ospf6_route</a>       117 ospf6d/ospf6_route.h   struct ospf6_route *prev;</span>
+<span class='curline'><a href='../S/44.html#L118'>ospf6_route</a>       118 ospf6d/ospf6_route.h   struct ospf6_route *next;</span>
+<span class='curline'><a href='../S/44.html#L176'>ospf6_route</a>       176 ospf6d/ospf6_route.h   void (*hook_add) (struct ospf6_route *);</span>
+<span class='curline'><a href='../S/44.html#L177'>ospf6_route</a>       177 ospf6d/ospf6_route.h   void (*hook_change) (struct ospf6_route *);</span>
+<span class='curline'><a href='../S/44.html#L178'>ospf6_route</a>       178 ospf6d/ospf6_route.h   void (*hook_remove) (struct ospf6_route *);</span>
+<span class='curline'><a href='../S/44.html#L254'>ospf6_route</a>       254 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_create (void);</span>
+<span class='curline'><a href='../S/44.html#L255'>ospf6_route</a>       255 ospf6d/ospf6_route.h extern void ospf6_route_delete (struct ospf6_route *);</span>
+<span class='curline'><a href='../S/44.html#L256'>ospf6_route</a>       256 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_copy (struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L258'>ospf6_route</a>       258 ospf6d/ospf6_route.h extern void ospf6_route_lock (struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L259'>ospf6_route</a>       259 ospf6d/ospf6_route.h extern void ospf6_route_unlock (struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L261'>ospf6_route</a>       261 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_lookup (struct prefix *prefix,</span>
+<span class='curline'><a href='../S/44.html#L263'>ospf6_route</a>       263 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_lookup_identical (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/44.html#L265'>ospf6_route</a>       265 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_lookup_bestmatch (struct prefix *prefix,</span>
+<span class='curline'><a href='../S/44.html#L268'>ospf6_route</a>       268 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_add (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/44.html#L270'>ospf6_route</a>       270 ospf6d/ospf6_route.h extern void ospf6_route_remove (struct ospf6_route *route,</span>
+<span class='curline'><a href='../S/44.html#L273'>ospf6_route</a>       273 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_head (struct ospf6_route_table *table);</span>
+<span class='curline'><a href='../S/44.html#L274'>ospf6_route</a>       274 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_next (struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L275'>ospf6_route</a>       275 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_best_next (struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L277'>ospf6_route</a>       277 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_match_head (struct prefix *prefix,</span>
+<span class='curline'><a href='../S/44.html#L279'>ospf6_route</a>       279 ospf6d/ospf6_route.h extern struct ospf6_route *ospf6_route_match_next (struct prefix *prefix,</span>
+<span class='curline'><a href='../S/44.html#L280'>ospf6_route</a>       280 ospf6d/ospf6_route.h                                             struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L288'>ospf6_route</a>       288 ospf6d/ospf6_route.h extern void ospf6_route_show (struct vty *vty, struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L289'>ospf6_route</a>       289 ospf6d/ospf6_route.h extern void ospf6_route_show_detail (struct vty *vty, struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/44.html#L298'>ospf6_route</a>       298 ospf6d/ospf6_route.h extern void ospf6_brouter_show (struct vty *vty, struct ospf6_route *route);</span>
+<span class='curline'><a href='../S/20.html#L521'>ospf6_route</a>       521 ospf6d/ospf6_snmp.c   struct ospf6_route *ro;</span>
+<span class='curline'><a href='../S/8.html#L283'>ospf6_route</a>       283 ospf6d/ospf6_spf.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/8.html#L369'>ospf6_route</a>       369 ospf6d/ospf6_spf.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/13.html#L85'>ospf6_route</a>        85 ospf6d/ospf6_top.c ospf6_top_route_hook_add (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/13.html#L92'>ospf6_route</a>        92 ospf6d/ospf6_top.c ospf6_top_route_hook_remove (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/13.html#L99'>ospf6_route</a>        99 ospf6d/ospf6_top.c ospf6_top_brouter_hook_add (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/13.html#L107'>ospf6_route</a>       107 ospf6d/ospf6_top.c ospf6_top_brouter_hook_remove (struct ospf6_route *route)</span>
+<span class='curline'><a href='../S/3.html#L351'>ospf6_route</a>       351 ospf6d/ospf6_zebra.c ospf6_zebra_route_update (int type, struct ospf6_route *request)</span>
+<span class='curline'><a href='../S/3.html#L482'>ospf6_route</a>       482 ospf6d/ospf6_zebra.c ospf6_zebra_route_update_add (struct ospf6_route *request)</span>
+<span class='curline'><a href='../S/3.html#L494'>ospf6_route</a>       494 ospf6d/ospf6_zebra.c ospf6_zebra_route_update_remove (struct ospf6_route *request)</span>
+<span class='curline'><a href='../S/3.html#L511'>ospf6_route</a>       511 ospf6d/ospf6_zebra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/3.html#L539'>ospf6_route</a>       539 ospf6d/ospf6_zebra.c   struct ospf6_route *route;</span>
+<span class='curline'><a href='../S/42.html#L40'>ospf6_route</a>        40 ospf6d/ospf6_zebra.h extern void ospf6_zebra_route_update_add (struct ospf6_route *request);</span>
+<span class='curline'><a href='../S/42.html#L41'>ospf6_route</a>        41 ospf6d/ospf6_zebra.h extern void ospf6_zebra_route_update_remove (struct ospf6_route *request);</span>
+<span class='curline'><a href='../S/24.html#L1625'>ospf6_route</a>      1625 ospf6d/ospf6d.c   void (*showfunc) (struct vty *, struct ospf6_route *);</span>
+<span class='curline'><a href='../S/24.html#L1626'>ospf6_route</a>      1626 ospf6d/ospf6d.c   struct ospf6_route *ro;</span>
+</pre>
+</body>
+</html>

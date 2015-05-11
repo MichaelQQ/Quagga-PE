@@ -1,0 +1,1070 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/stream.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/stream.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L90'>[^]</a><a href='#L991'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L90' title='Defined at 90.'>stream_new</a></li>
+<li><a href='#L119' title='Defined at 119.'>stream_free</a></li>
+<li><a href='#L129' title='Defined at 129.'>stream_copy</a></li>
+<li><a href='#L145' title='Defined at 145.'>stream_dup</a></li>
+<li><a href='#L158' title='Defined at 158.'>stream_resize</a></li>
+<li><a href='#L182' title='Defined at 182.'>stream_get_getp</a></li>
+<li><a href='#L189' title='Defined at 189.'>stream_get_endp</a></li>
+<li><a href='#L196' title='Defined at 196.'>stream_get_size</a></li>
+<li><a href='#L204' title='Defined at 204.'>stream_set_getp</a></li>
+<li><a href='#L218' title='Defined at 218.'>stream_set_endp</a></li>
+<li><a href='#L243' title='Defined at 243.'>stream_forward_getp</a></li>
+<li><a href='#L257' title='Defined at 257.'>stream_forward_endp</a></li>
+<li><a href='#L272' title='Defined at 272.'>stream_get</a></li>
+<li><a href='#L288' title='Defined at 288.'>stream_getc</a></li>
+<li><a href='#L306' title='Defined at 306.'>stream_getc_from</a></li>
+<li><a href='#L325' title='Defined at 325.'>stream_getw</a></li>
+<li><a href='#L345' title='Defined at 345.'>stream_getw_from</a></li>
+<li><a href='#L365' title='Defined at 365.'>stream_getl_from</a></li>
+<li><a href='#L386' title='Defined at 386.'>stream_getl</a></li>
+<li><a href='#L408' title='Defined at 408.'>stream_getq_from</a></li>
+<li><a href='#L433' title='Defined at 433.'>stream_getq</a></li>
+<li><a href='#L459' title='Defined at 459.'>stream_get_ipv4</a></li>
+<li><a href='#L485' title='Defined at 485.'>stream_put</a></li>
+<li><a href='#L509' title='Defined at 509.'>stream_putc</a></li>
+<li><a href='#L525' title='Defined at 525.'>stream_putw</a></li>
+<li><a href='#L543' title='Defined at 543.'>stream_putl</a></li>
+<li><a href='#L563' title='Defined at 563.'>stream_putq</a></li>
+<li><a href='#L586' title='Defined at 586.'>stream_putc_at</a></li>
+<li><a href='#L602' title='Defined at 602.'>stream_putw_at</a></li>
+<li><a href='#L619' title='Defined at 619.'>stream_putl_at</a></li>
+<li><a href='#L637' title='Defined at 637.'>stream_putq_at</a></li>
+<li><a href='#L660' title='Defined at 660.'>stream_put_ipv4</a></li>
+<li><a href='#L677' title='Defined at 677.'>stream_put_in_addr</a></li>
+<li><a href='#L695' title='Defined at 695.'>stream_put_prefix</a></li>
+<li><a href='#L718' title='Defined at 718.'>stream_read</a></li>
+<li><a href='#L740' title='Defined at 740.'>stream_read_unblock</a></li>
+<li><a href='#L765' title='Defined at 765.'>stream_read_try</a></li>
+<li><a href='#L795' title='Defined at 795.'>stream_recvfrom</a></li>
+<li><a href='#L829' title='Defined at 829.'>stream_recvmsg</a></li>
+<li><a href='#L860' title='Defined at 860.'>stream_write</a></li>
+<li><a href='#L885' title='Defined at 885.'>stream_pnt</a></li>
+<li><a href='#L893' title='Defined at 893.'>stream_empty</a></li>
+<li><a href='#L902' title='Defined at 902.'>stream_reset</a></li>
+<li><a href='#L911' title='Defined at 911.'>stream_flush</a></li>
+<li><a href='#L925' title='Defined at 925.'>stream_fifo_new</a></li>
+<li><a href='#L935' title='Defined at 935.'>stream_fifo_push</a></li>
+<li><a href='#L949' title='Defined at 949.'>stream_fifo_pop</a></li>
+<li><a href='#L970' title='Defined at 970.'>stream_fifo_head</a></li>
+<li><a href='#L976' title='Defined at 976.'>stream_fifo_clean</a></li>
+<li><a href='#L991' title='Defined at 991.'>stream_fifo_free</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>  <em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Packet interface</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;stddef.h&gt;
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='301.html'>network.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='comment'>/* Tests whether a position is valid */</em> 
+<a id='L33' name='L33'></a><em class='sharp'>#define</em> <a href='../R/786.html' title='Multiple referred from 9 places.'>GETP_VALID</a>(S,<a href='../S/288.html#L48' title='Defined at 48 in lib/md5.c.'>G</a>) \
+<a id='L34' name='L34'></a>  ((<a href='../S/288.html#L48' title='Defined at 48 in lib/md5.c.'>G</a>) &lt;= (S)-&gt;endp)
+<a id='L35' name='L35'></a><em class='sharp'>#define</em> <a href='../R/3030.html' title='Multiple referred from 4 places.'>PUT_AT_VALID</a>(S,<a href='../S/288.html#L48' title='Defined at 48 in lib/md5.c.'>G</a>) <a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a>(S,<a href='../S/288.html#L48' title='Defined at 48 in lib/md5.c.'>G</a>)
+<a id='L36' name='L36'></a><em class='sharp'>#define</em> <a href='../R/705.html' title='Multiple referred from 4 places.'>ENDP_VALID</a>(S,E) \
+<a id='L37' name='L37'></a>  ((E) &lt;= (S)-&gt;size)
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='comment'>/* asserting sanity checks. Following must be true before</em>
+<a id='L40' name='L40'></a><em class='comment'> * stream functions are called:</em>
+<a id='L41' name='L41'></a><em class='comment'> *</em>
+<a id='L42' name='L42'></a><em class='comment'> * Following must always be true of stream elements</em>
+<a id='L43' name='L43'></a><em class='comment'> * before and after calls to stream functions:</em>
+<a id='L44' name='L44'></a><em class='comment'> *</em>
+<a id='L45' name='L45'></a><em class='comment'> * getp &lt;= endp &lt;= size</em>
+<a id='L46' name='L46'></a><em class='comment'> *</em>
+<a id='L47' name='L47'></a><em class='comment'> * Note that after a stream function is called following may be true:</em>
+<a id='L48' name='L48'></a><em class='comment'> * if (getp == endp) then stream is no longer readable</em>
+<a id='L49' name='L49'></a><em class='comment'> * if (endp == size) then stream is no longer writeable</em>
+<a id='L50' name='L50'></a><em class='comment'> *</em>
+<a id='L51' name='L51'></a><em class='comment'> * It is valid to put to anywhere within the size of the stream, but only</em>
+<a id='L52' name='L52'></a><em class='comment'> * using stream_put..._at() functions.</em>
+<a id='L53' name='L53'></a><em class='comment'> */</em>
+<a id='L54' name='L54'></a><em class='sharp'>#define</em> <a href='../R/3551.html' title='Multiple referred from 3 places.'>STREAM_WARN_OFFSETS</a>(S) \
+<a id='L55' name='L55'></a>  zlog_warn ("&amp;(struct stream): %p, size: %lu, getp: %lu, endp: %lu\n", \
+<a id='L56' name='L56'></a>             (S), \
+<a id='L57' name='L57'></a>             (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) (S)-&gt;size, \
+<a id='L58' name='L58'></a>             (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) (S)-&gt;getp, \
+<a id='L59' name='L59'></a>             (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) (S)-&gt;endp)\
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='sharp'>#define</em> <a href='../R/3550.html' title='Multiple referred from 44 places.'>STREAM_VERIFY_SANE</a>(S) \
+<a id='L62' name='L62'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L63' name='L63'></a>    <strong class='reserved'>if</strong> ( !(<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a>(S, (S)-&gt;getp)) &amp;&amp; <a href='../S/296.html#L36' title='Defined at 36 in lib/stream.c.'>ENDP_VALID</a>(S, (S)-&gt;endp) ) \
+<a id='L64' name='L64'></a>      <a href='../S/296.html#L54' title='Defined at 54 in lib/stream.c.'>STREAM_WARN_OFFSETS</a>(S); \
+<a id='L65' name='L65'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> ( <a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a>(S, (S)-&gt;getp) ); \
+<a id='L66' name='L66'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> ( <a href='../S/296.html#L36' title='Defined at 36 in lib/stream.c.'>ENDP_VALID</a>(S, (S)-&gt;endp) ); \
+<a id='L67' name='L67'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><em class='sharp'>#define</em> <a href='../R/3544.html' title='Multiple referred from 33 places.'>STREAM_BOUND_WARN</a>(S, WHAT) \
+<a id='L70' name='L70'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L71' name='L71'></a>    zlog_warn ("%s: Attempt to %s out of bounds", __func__, (WHAT)); \
+<a id='L72' name='L72'></a>    <a href='../S/296.html#L54' title='Defined at 54 in lib/stream.c.'>STREAM_WARN_OFFSETS</a>(S); \
+<a id='L73' name='L73'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (0); \
+<a id='L74' name='L74'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><em class='comment'>/* XXX: Deprecated macro: do not use */</em>
+<a id='L77' name='L77'></a><em class='sharp'>#define</em> <a href='../R/462.html' title='Multiple referred from 2 places.'>CHECK_SIZE</a>(S, Z) \
+<a id='L78' name='L78'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L79' name='L79'></a>    <strong class='reserved'>if</strong> (((S)-&gt;endp + (Z)) &gt; (S)-&gt;size) \
+<a id='L80' name='L80'></a>      <em class='brace'>{</em> \
+<a id='L81' name='L81'></a>        zlog_warn ("CHECK_SIZE: truncating requested size %lu\n", \
+<a id='L82' name='L82'></a>                   (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>) (Z)); \
+<a id='L83' name='L83'></a>        <a href='../S/296.html#L54' title='Defined at 54 in lib/stream.c.'>STREAM_WARN_OFFSETS</a>(S); \
+<a id='L84' name='L84'></a>        (Z) = (S)-&gt;size - (S)-&gt;endp; \
+<a id='L85' name='L85'></a>      <em class='brace'>}</em> \
+<a id='L86' name='L86'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0);
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a><em class='comment'>/* Make stream buffer. */</em>
+<a id='L89' name='L89'></a><strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *
+<a id='L90' name='L90'></a><a href='../R/10036.html' title='Multiple referred from 52 places.'>stream_new</a> (size_t size)
+<a id='L91' name='L91'></a><em class='brace'>{</em>
+<a id='L92' name='L92'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (size &gt; 0);
+<a id='L95' name='L95'></a>  
+<a id='L96' name='L96'></a>  <strong class='reserved'>if</strong> (size == 0)
+<a id='L97' name='L97'></a>    <em class='brace'>{</em>
+<a id='L98' name='L98'></a>      zlog_warn ("stream_new(): called with 0 size!");
+<a id='L99' name='L99'></a>      <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L100' name='L100'></a>    <em class='brace'>}</em>
+<a id='L101' name='L101'></a>  
+<a id='L102' name='L102'></a>  s = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_STREAM, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>));
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>  <strong class='reserved'>if</strong> (s == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L105' name='L105'></a>    <strong class='reserved'>return</strong> s;
+<a id='L106' name='L106'></a>  
+<a id='L107' name='L107'></a>  <strong class='reserved'>if</strong> ( (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_STREAM_DATA, size)) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L108' name='L108'></a>    <em class='brace'>{</em>
+<a id='L109' name='L109'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_STREAM, s);
+<a id='L110' name='L110'></a>      <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L111' name='L111'></a>    <em class='brace'>}</em>
+<a id='L112' name='L112'></a>  
+<a id='L113' name='L113'></a>  s-&gt;size = size;
+<a id='L114' name='L114'></a>  <strong class='reserved'>return</strong> s;
+<a id='L115' name='L115'></a><em class='brace'>}</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='comment'>/* Free it now. */</em>
+<a id='L118' name='L118'></a><strong class='reserved'>void</strong>
+<a id='L119' name='L119'></a><a href='../R/10022.html' title='Multiple referred from 39 places.'>stream_free</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L120' name='L120'></a><em class='brace'>{</em>
+<a id='L121' name='L121'></a>  <strong class='reserved'>if</strong> (!s)
+<a id='L122' name='L122'></a>    <strong class='reserved'>return</strong>;
+<a id='L123' name='L123'></a>  
+<a id='L124' name='L124'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_STREAM_DATA, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L125' name='L125'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_STREAM, s);
+<a id='L126' name='L126'></a><em class='brace'>}</em>
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a><strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *
+<a id='L129' name='L129'></a><a href='../R/10009.html' title='Multiple referred from 5 places.'>stream_copy</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *new, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *src)
+<a id='L130' name='L130'></a><em class='brace'>{</em>
+<a id='L131' name='L131'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (src);
+<a id='L132' name='L132'></a>  
+<a id='L133' name='L133'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (new != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L134' name='L134'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/284.html#L119' title='Defined at 119 in lib/stream.h.'>STREAM_SIZE</a>(new) &gt;= src-&gt;endp);
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  new-&gt;endp = src-&gt;endp;
+<a id='L137' name='L137'></a>  new-&gt;getp = src-&gt;getp;
+<a id='L138' name='L138'></a>  
+<a id='L139' name='L139'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, src-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, src-&gt;endp);
+<a id='L140' name='L140'></a>  
+<a id='L141' name='L141'></a>  <strong class='reserved'>return</strong> new;
+<a id='L142' name='L142'></a><em class='brace'>}</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a><strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *
+<a id='L145' name='L145'></a><a href='../R/10010.html' title='Multiple referred from 9 places.'>stream_dup</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L146' name='L146'></a><em class='brace'>{</em>
+<a id='L147' name='L147'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *new;
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a>  <strong class='reserved'>if</strong> ( (new = <a href='../S/296.html#L90' title='Defined at 90 in lib/stream.c.'>stream_new</a> (s-&gt;endp)) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L152' name='L152'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a>  <strong class='reserved'>return</strong> (<a href='../S/296.html#L129' title='Defined at 129 in lib/stream.c.'>stream_copy</a> (new, s));
+<a id='L155' name='L155'></a><em class='brace'>}</em>
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a>size_t
+<a id='L158' name='L158'></a><a href='../R/10057.html' title='Multiple referred from 4 places.'>stream_resize</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t newsize)
+<a id='L159' name='L159'></a><em class='brace'>{</em>
+<a id='L160' name='L160'></a>  u_char *newdata;
+<a id='L161' name='L161'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L162' name='L162'></a>  
+<a id='L163' name='L163'></a>  newdata = <a href='../D/4560.html' title='Multiple defined in 4 places.'>XREALLOC</a> (MTYPE_STREAM_DATA, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, newsize);
+<a id='L164' name='L164'></a>  
+<a id='L165' name='L165'></a>  <strong class='reserved'>if</strong> (newdata == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L166' name='L166'></a>    <strong class='reserved'>return</strong> s-&gt;size;
+<a id='L167' name='L167'></a>  
+<a id='L168' name='L168'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = newdata;
+<a id='L169' name='L169'></a>  s-&gt;size = newsize;
+<a id='L170' name='L170'></a>  
+<a id='L171' name='L171'></a>  <strong class='reserved'>if</strong> (s-&gt;endp &gt; s-&gt;size)
+<a id='L172' name='L172'></a>    s-&gt;endp = s-&gt;size;
+<a id='L173' name='L173'></a>  <strong class='reserved'>if</strong> (s-&gt;getp &gt; s-&gt;endp)
+<a id='L174' name='L174'></a>    s-&gt;getp = s-&gt;endp;
+<a id='L175' name='L175'></a>  
+<a id='L176' name='L176'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L177' name='L177'></a>  
+<a id='L178' name='L178'></a>  <strong class='reserved'>return</strong> s-&gt;size;
+<a id='L179' name='L179'></a><em class='brace'>}</em>
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a>size_t
+<a id='L182' name='L182'></a><a href='../R/10025.html' title='Multiple referred from 44 places.'>stream_get_getp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L183' name='L183'></a><em class='brace'>{</em>
+<a id='L184' name='L184'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L185' name='L185'></a>  <strong class='reserved'>return</strong> s-&gt;getp;
+<a id='L186' name='L186'></a><em class='brace'>}</em>
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a>size_t
+<a id='L189' name='L189'></a><a href='../R/10024.html' title='Multiple referred from 197 places.'>stream_get_endp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L190' name='L190'></a><em class='brace'>{</em>
+<a id='L191' name='L191'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L192' name='L192'></a>  <strong class='reserved'>return</strong> s-&gt;endp;
+<a id='L193' name='L193'></a><em class='brace'>}</em>
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a>size_t
+<a id='L196' name='L196'></a><a href='../R/10027.html' title='Multiple referred from 9 places.'>stream_get_size</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L197' name='L197'></a><em class='brace'>{</em>
+<a id='L198' name='L198'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L199' name='L199'></a>  <strong class='reserved'>return</strong> s-&gt;size;
+<a id='L200' name='L200'></a><em class='brace'>}</em>
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a><em class='comment'>/* Stream structre' stream pointer related functions.  */</em>
+<a id='L203' name='L203'></a><strong class='reserved'>void</strong>
+<a id='L204' name='L204'></a><a href='../R/10059.html' title='Multiple referred from 27 places.'>stream_set_getp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t pos)
+<a id='L205' name='L205'></a><em class='brace'>{</em>
+<a id='L206' name='L206'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L207' name='L207'></a>  
+<a id='L208' name='L208'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a> (s, pos))
+<a id='L209' name='L209'></a>    <em class='brace'>{</em>
+<a id='L210' name='L210'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "set getp");
+<a id='L211' name='L211'></a>      pos = s-&gt;endp;
+<a id='L212' name='L212'></a>    <em class='brace'>}</em>
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a>  s-&gt;getp = pos;
+<a id='L215' name='L215'></a><em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a><strong class='reserved'>void</strong>
+<a id='L218' name='L218'></a><a href='../R/10058.html' title='Multiple referred from 5 places.'>stream_set_endp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t pos)
+<a id='L219' name='L219'></a><em class='brace'>{</em>
+<a id='L220' name='L220'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L36' title='Defined at 36 in lib/stream.c.'>ENDP_VALID</a>(s, pos))
+<a id='L223' name='L223'></a>    <em class='brace'>{</em>
+<a id='L224' name='L224'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "set endp");
+<a id='L225' name='L225'></a>      <strong class='reserved'>return</strong>;
+<a id='L226' name='L226'></a>    <em class='brace'>}</em>
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a>  <em class='comment'>/*</em>
+<a id='L229' name='L229'></a><em class='comment'>   * Make sure the current read pointer is not beyond the new endp.</em>
+<a id='L230' name='L230'></a><em class='comment'>   */</em>
+<a id='L231' name='L231'></a>  <strong class='reserved'>if</strong> (s-&gt;getp &gt; pos)
+<a id='L232' name='L232'></a>    <em class='brace'>{</em>
+<a id='L233' name='L233'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a>(s, "set endp");
+<a id='L234' name='L234'></a>      <strong class='reserved'>return</strong>;
+<a id='L235' name='L235'></a>    <em class='brace'>}</em>
+<a id='L236' name='L236'></a>
+<a id='L237' name='L237'></a>  s-&gt;endp = pos;
+<a id='L238' name='L238'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L239' name='L239'></a><em class='brace'>}</em>
+<a id='L240' name='L240'></a>
+<a id='L241' name='L241'></a><em class='comment'>/* Forward pointer. */</em>
+<a id='L242' name='L242'></a><strong class='reserved'>void</strong>
+<a id='L243' name='L243'></a><a href='../R/10021.html' title='Multiple referred from 34 places.'>stream_forward_getp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t size)
+<a id='L244' name='L244'></a><em class='brace'>{</em>
+<a id='L245' name='L245'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L246' name='L246'></a>  
+<a id='L247' name='L247'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a> (s, s-&gt;getp + size))
+<a id='L248' name='L248'></a>    <em class='brace'>{</em>
+<a id='L249' name='L249'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "seek getp");
+<a id='L250' name='L250'></a>      <strong class='reserved'>return</strong>;
+<a id='L251' name='L251'></a>    <em class='brace'>}</em>
+<a id='L252' name='L252'></a>  
+<a id='L253' name='L253'></a>  s-&gt;getp += size;
+<a id='L254' name='L254'></a><em class='brace'>}</em>
+<a id='L255' name='L255'></a>
+<a id='L256' name='L256'></a><strong class='reserved'>void</strong>
+<a id='L257' name='L257'></a><a href='../R/10020.html' title='Multiple referred from 10 places.'>stream_forward_endp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t size)
+<a id='L258' name='L258'></a><em class='brace'>{</em>
+<a id='L259' name='L259'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L260' name='L260'></a>  
+<a id='L261' name='L261'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L36' title='Defined at 36 in lib/stream.c.'>ENDP_VALID</a> (s, s-&gt;endp + size))
+<a id='L262' name='L262'></a>    <em class='brace'>{</em>
+<a id='L263' name='L263'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "seek endp");
+<a id='L264' name='L264'></a>      <strong class='reserved'>return</strong>;
+<a id='L265' name='L265'></a>    <em class='brace'>}</em>
+<a id='L266' name='L266'></a>  
+<a id='L267' name='L267'></a>  s-&gt;endp += size;
+<a id='L268' name='L268'></a><em class='brace'>}</em>
+<a id='L269' name='L269'></a>
+<a id='L270' name='L270'></a><em class='comment'>/* Copy from stream to destination. */</em>
+<a id='L271' name='L271'></a><strong class='reserved'>void</strong>
+<a id='L272' name='L272'></a><a href='../R/10023.html' title='Multiple referred from 47 places.'>stream_get</a> (<strong class='reserved'>void</strong> *dst, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t size)
+<a id='L273' name='L273'></a><em class='brace'>{</em>
+<a id='L274' name='L274'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L275' name='L275'></a>  
+<a id='L276' name='L276'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L123' title='Defined at 123 in lib/stream.h.'>STREAM_READABLE</a>(s) &lt; size)
+<a id='L277' name='L277'></a>    <em class='brace'>{</em>
+<a id='L278' name='L278'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get");
+<a id='L279' name='L279'></a>      <strong class='reserved'>return</strong>;
+<a id='L280' name='L280'></a>    <em class='brace'>}</em>
+<a id='L281' name='L281'></a>  
+<a id='L282' name='L282'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (dst, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;getp, size);
+<a id='L283' name='L283'></a>  s-&gt;getp += size;
+<a id='L284' name='L284'></a><em class='brace'>}</em>
+<a id='L285' name='L285'></a>
+<a id='L286' name='L286'></a><em class='comment'>/* Get next character from the stream. */</em>
+<a id='L287' name='L287'></a>u_char
+<a id='L288' name='L288'></a><a href='../R/10028.html' title='Multiple referred from 182 places.'>stream_getc</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L289' name='L289'></a><em class='brace'>{</em>
+<a id='L290' name='L290'></a>  u_char c;
+<a id='L291' name='L291'></a>  
+<a id='L292' name='L292'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L293' name='L293'></a>
+<a id='L294' name='L294'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L123' title='Defined at 123 in lib/stream.h.'>STREAM_READABLE</a>(s) &lt; <strong class='reserved'>sizeof</strong> (u_char))
+<a id='L295' name='L295'></a>    <em class='brace'>{</em>
+<a id='L296' name='L296'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get char");
+<a id='L297' name='L297'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L298' name='L298'></a>    <em class='brace'>}</em>
+<a id='L299' name='L299'></a>  c = s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++];
+<a id='L300' name='L300'></a>  
+<a id='L301' name='L301'></a>  <strong class='reserved'>return</strong> c;
+<a id='L302' name='L302'></a><em class='brace'>}</em>
+<a id='L303' name='L303'></a>
+<a id='L304' name='L304'></a><em class='comment'>/* Get next character from the stream. */</em>
+<a id='L305' name='L305'></a>u_char
+<a id='L306' name='L306'></a><a href='../R/10029.html' title='Multiple referred from 7 places.'>stream_getc_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t from)
+<a id='L307' name='L307'></a><em class='brace'>{</em>
+<a id='L308' name='L308'></a>  u_char c;
+<a id='L309' name='L309'></a>
+<a id='L310' name='L310'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L311' name='L311'></a>  
+<a id='L312' name='L312'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a> (s, from + <strong class='reserved'>sizeof</strong> (u_char)))
+<a id='L313' name='L313'></a>    <em class='brace'>{</em>
+<a id='L314' name='L314'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get char");
+<a id='L315' name='L315'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L316' name='L316'></a>    <em class='brace'>}</em>
+<a id='L317' name='L317'></a>  
+<a id='L318' name='L318'></a>  c = s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from];
+<a id='L319' name='L319'></a>  
+<a id='L320' name='L320'></a>  <strong class='reserved'>return</strong> c;
+<a id='L321' name='L321'></a><em class='brace'>}</em>
+<a id='L322' name='L322'></a>
+<a id='L323' name='L323'></a><em class='comment'>/* Get next word from the stream. */</em>
+<a id='L324' name='L324'></a><a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>
+<a id='L325' name='L325'></a><a href='../R/10034.html' title='Multiple referred from 44 places.'>stream_getw</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L326' name='L326'></a><em class='brace'>{</em>
+<a id='L327' name='L327'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> w;
+<a id='L328' name='L328'></a>
+<a id='L329' name='L329'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L123' title='Defined at 123 in lib/stream.h.'>STREAM_READABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>))
+<a id='L332' name='L332'></a>    <em class='brace'>{</em>
+<a id='L333' name='L333'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get ");
+<a id='L334' name='L334'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L335' name='L335'></a>    <em class='brace'>}</em>
+<a id='L336' name='L336'></a>  
+<a id='L337' name='L337'></a>  w = s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++] &lt;&lt; 8;
+<a id='L338' name='L338'></a>  w |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++];
+<a id='L339' name='L339'></a>  
+<a id='L340' name='L340'></a>  <strong class='reserved'>return</strong> w;
+<a id='L341' name='L341'></a><em class='brace'>}</em>
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a><em class='comment'>/* Get next word from the stream. */</em>
+<a id='L344' name='L344'></a><a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>
+<a id='L345' name='L345'></a><a href='../R/10035.html' title='Multiple referred from 2 places.'>stream_getw_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t from)
+<a id='L346' name='L346'></a><em class='brace'>{</em>
+<a id='L347' name='L347'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> w;
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L350' name='L350'></a>  
+<a id='L351' name='L351'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a> (s, from + <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>)))
+<a id='L352' name='L352'></a>    <em class='brace'>{</em>
+<a id='L353' name='L353'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get ");
+<a id='L354' name='L354'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L355' name='L355'></a>    <em class='brace'>}</em>
+<a id='L356' name='L356'></a>  
+<a id='L357' name='L357'></a>  w = s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++] &lt;&lt; 8;
+<a id='L358' name='L358'></a>  w |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from];
+<a id='L359' name='L359'></a>  
+<a id='L360' name='L360'></a>  <strong class='reserved'>return</strong> w;
+<a id='L361' name='L361'></a><em class='brace'>}</em>
+<a id='L362' name='L362'></a>
+<a id='L363' name='L363'></a><em class='comment'>/* Get next long word from the stream. */</em>
+<a id='L364' name='L364'></a><a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>
+<a id='L365' name='L365'></a><a href='../S/284.html#L173' title='Referred from 173 in lib/stream.h.'>stream_getl_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t from)
+<a id='L366' name='L366'></a><em class='brace'>{</em>
+<a id='L367' name='L367'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l;
+<a id='L368' name='L368'></a>
+<a id='L369' name='L369'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L370' name='L370'></a>  
+<a id='L371' name='L371'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a> (s, from + <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>)))
+<a id='L372' name='L372'></a>    <em class='brace'>{</em>
+<a id='L373' name='L373'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get long");
+<a id='L374' name='L374'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L375' name='L375'></a>    <em class='brace'>}</em>
+<a id='L376' name='L376'></a>  
+<a id='L377' name='L377'></a>  l  = s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++] &lt;&lt; 24;
+<a id='L378' name='L378'></a>  l |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++] &lt;&lt; 16;
+<a id='L379' name='L379'></a>  l |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++] &lt;&lt; 8;
+<a id='L380' name='L380'></a>  l |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from];
+<a id='L381' name='L381'></a>  
+<a id='L382' name='L382'></a>  <strong class='reserved'>return</strong> l;
+<a id='L383' name='L383'></a><em class='brace'>}</em>
+<a id='L384' name='L384'></a>
+<a id='L385' name='L385'></a><a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>
+<a id='L386' name='L386'></a><a href='../R/10030.html' title='Multiple referred from 64 places.'>stream_getl</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L387' name='L387'></a><em class='brace'>{</em>
+<a id='L388' name='L388'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l;
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L391' name='L391'></a>  
+<a id='L392' name='L392'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L123' title='Defined at 123 in lib/stream.h.'>STREAM_READABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>))
+<a id='L393' name='L393'></a>    <em class='brace'>{</em>
+<a id='L394' name='L394'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get long");
+<a id='L395' name='L395'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L396' name='L396'></a>    <em class='brace'>}</em>
+<a id='L397' name='L397'></a>  
+<a id='L398' name='L398'></a>  l  = s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++] &lt;&lt; 24;
+<a id='L399' name='L399'></a>  l |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++] &lt;&lt; 16;
+<a id='L400' name='L400'></a>  l |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++] &lt;&lt; 8;
+<a id='L401' name='L401'></a>  l |= s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++];
+<a id='L402' name='L402'></a>  
+<a id='L403' name='L403'></a>  <strong class='reserved'>return</strong> l;
+<a id='L404' name='L404'></a><em class='brace'>}</em>
+<a id='L405' name='L405'></a>
+<a id='L406' name='L406'></a><em class='comment'>/* Get next quad word from the stream. */</em>
+<a id='L407' name='L407'></a>uint64_t
+<a id='L408' name='L408'></a><a href='../S/284.html#L175' title='Referred from 175 in lib/stream.h.'>stream_getq_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t from)
+<a id='L409' name='L409'></a><em class='brace'>{</em>
+<a id='L410' name='L410'></a>  uint64_t q;
+<a id='L411' name='L411'></a>
+<a id='L412' name='L412'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L413' name='L413'></a>  
+<a id='L414' name='L414'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L33' title='Defined at 33 in lib/stream.c.'>GETP_VALID</a> (s, from + <strong class='reserved'>sizeof</strong> (uint64_t)))
+<a id='L415' name='L415'></a>    <em class='brace'>{</em>
+<a id='L416' name='L416'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get quad");
+<a id='L417' name='L417'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L418' name='L418'></a>    <em class='brace'>}</em>
+<a id='L419' name='L419'></a>  
+<a id='L420' name='L420'></a>  q  = ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 56;
+<a id='L421' name='L421'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 48;
+<a id='L422' name='L422'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 40;
+<a id='L423' name='L423'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 32;  
+<a id='L424' name='L424'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 24;
+<a id='L425' name='L425'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 16;
+<a id='L426' name='L426'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]) &lt;&lt; 8;
+<a id='L427' name='L427'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[from++]);
+<a id='L428' name='L428'></a>  
+<a id='L429' name='L429'></a>  <strong class='reserved'>return</strong> q;
+<a id='L430' name='L430'></a><em class='brace'>}</em>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a>uint64_t
+<a id='L433' name='L433'></a><a href='../R/10032.html' title='Multiple referred from 3 places.'>stream_getq</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L434' name='L434'></a><em class='brace'>{</em>
+<a id='L435' name='L435'></a>  uint64_t q;
+<a id='L436' name='L436'></a>
+<a id='L437' name='L437'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L438' name='L438'></a>  
+<a id='L439' name='L439'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L123' title='Defined at 123 in lib/stream.h.'>STREAM_READABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (uint64_t))
+<a id='L440' name='L440'></a>    <em class='brace'>{</em>
+<a id='L441' name='L441'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get quad");
+<a id='L442' name='L442'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L443' name='L443'></a>    <em class='brace'>}</em>
+<a id='L444' name='L444'></a>  
+<a id='L445' name='L445'></a>  q  = ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 56;
+<a id='L446' name='L446'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 48;
+<a id='L447' name='L447'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 40;
+<a id='L448' name='L448'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 32;  
+<a id='L449' name='L449'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 24;
+<a id='L450' name='L450'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 16;
+<a id='L451' name='L451'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]) &lt;&lt; 8;
+<a id='L452' name='L452'></a>  q |= ((uint64_t) s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;getp++]);
+<a id='L453' name='L453'></a>  
+<a id='L454' name='L454'></a>  <strong class='reserved'>return</strong> q;
+<a id='L455' name='L455'></a><em class='brace'>}</em>
+<a id='L456' name='L456'></a>
+<a id='L457' name='L457'></a><em class='comment'>/* Get next long word from the stream. */</em>
+<a id='L458' name='L458'></a><a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>
+<a id='L459' name='L459'></a><a href='../R/10026.html' title='Multiple referred from 32 places.'>stream_get_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L460' name='L460'></a><em class='brace'>{</em>
+<a id='L461' name='L461'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l;
+<a id='L462' name='L462'></a>
+<a id='L463' name='L463'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L464' name='L464'></a>  
+<a id='L465' name='L465'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L123' title='Defined at 123 in lib/stream.h.'>STREAM_READABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong>(<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>))
+<a id='L466' name='L466'></a>    <em class='brace'>{</em>
+<a id='L467' name='L467'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "get ipv4");
+<a id='L468' name='L468'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L469' name='L469'></a>    <em class='brace'>}</em>
+<a id='L470' name='L470'></a>  
+<a id='L471' name='L471'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;l, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;getp, <strong class='reserved'>sizeof</strong>(<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>));
+<a id='L472' name='L472'></a>  s-&gt;getp += <strong class='reserved'>sizeof</strong>(<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L473' name='L473'></a>
+<a id='L474' name='L474'></a>  <strong class='reserved'>return</strong> l;
+<a id='L475' name='L475'></a><em class='brace'>}</em>
+<a id='L476' name='L476'></a>
+<a id='L477' name='L477'></a><em class='comment'>/* Copy to source to stream.</em>
+<a id='L478' name='L478'></a><em class='comment'> *</em>
+<a id='L479' name='L479'></a><em class='comment'> * XXX: This uses CHECK_SIZE and hence has funny semantics -&gt; Size will wrap</em>
+<a id='L480' name='L480'></a><em class='comment'> * around. This should be fixed once the stream updates are working.</em>
+<a id='L481' name='L481'></a><em class='comment'> *</em>
+<a id='L482' name='L482'></a><em class='comment'> * stream_write() is saner</em>
+<a id='L483' name='L483'></a><em class='comment'> */</em>
+<a id='L484' name='L484'></a><strong class='reserved'>void</strong>
+<a id='L485' name='L485'></a><a href='../R/10038.html' title='Multiple referred from 74 places.'>stream_put</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *src, size_t size)
+<a id='L486' name='L486'></a><em class='brace'>{</em>
+<a id='L487' name='L487'></a>
+<a id='L488' name='L488'></a>  <em class='comment'>/* XXX: CHECK_SIZE has strange semantics. It should be deprecated */</em>
+<a id='L489' name='L489'></a>  <a href='../S/296.html#L77' title='Defined at 77 in lib/stream.c.'>CHECK_SIZE</a>(s, size);
+<a id='L490' name='L490'></a>  
+<a id='L491' name='L491'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L492' name='L492'></a>  
+<a id='L493' name='L493'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; size)
+<a id='L494' name='L494'></a>    <em class='brace'>{</em>
+<a id='L495' name='L495'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L496' name='L496'></a>      <strong class='reserved'>return</strong>;
+<a id='L497' name='L497'></a>    <em class='brace'>}</em>
+<a id='L498' name='L498'></a>  
+<a id='L499' name='L499'></a>  <strong class='reserved'>if</strong> (src)
+<a id='L500' name='L500'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, src, size);
+<a id='L501' name='L501'></a>  <strong class='reserved'>else</strong>
+<a id='L502' name='L502'></a>    memset (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, 0, size);
+<a id='L503' name='L503'></a>
+<a id='L504' name='L504'></a>  s-&gt;endp += size;
+<a id='L505' name='L505'></a><em class='brace'>}</em>
+<a id='L506' name='L506'></a>
+<a id='L507' name='L507'></a><em class='comment'>/* Put character to the stream. */</em>
+<a id='L508' name='L508'></a><strong class='reserved'>int</strong>
+<a id='L509' name='L509'></a><a href='../R/10043.html' title='Multiple referred from 321 places.'>stream_putc</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, u_char c)
+<a id='L510' name='L510'></a><em class='brace'>{</em>
+<a id='L511' name='L511'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L512' name='L512'></a>  
+<a id='L513' name='L513'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong>(u_char))
+<a id='L514' name='L514'></a>    <em class='brace'>{</em>
+<a id='L515' name='L515'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L516' name='L516'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L517' name='L517'></a>    <em class='brace'>}</em>
+<a id='L518' name='L518'></a>  
+<a id='L519' name='L519'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = c;
+<a id='L520' name='L520'></a>  <strong class='reserved'>return</strong> <strong class='reserved'>sizeof</strong> (u_char);
+<a id='L521' name='L521'></a><em class='brace'>}</em>
+<a id='L522' name='L522'></a>
+<a id='L523' name='L523'></a><em class='comment'>/* Put word to the stream. */</em>
+<a id='L524' name='L524'></a><strong class='reserved'>int</strong>
+<a id='L525' name='L525'></a><a href='../R/10049.html' title='Multiple referred from 102 places.'>stream_putw</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> w)
+<a id='L526' name='L526'></a><em class='brace'>{</em>
+<a id='L527' name='L527'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L528' name='L528'></a>
+<a id='L529' name='L529'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>))
+<a id='L530' name='L530'></a>    <em class='brace'>{</em>
+<a id='L531' name='L531'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L532' name='L532'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L533' name='L533'></a>    <em class='brace'>}</em>
+<a id='L534' name='L534'></a>  
+<a id='L535' name='L535'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(w &gt;&gt;  8);
+<a id='L536' name='L536'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char) w;
+<a id='L537' name='L537'></a>
+<a id='L538' name='L538'></a>  <strong class='reserved'>return</strong> 2;
+<a id='L539' name='L539'></a><em class='brace'>}</em>
+<a id='L540' name='L540'></a>
+<a id='L541' name='L541'></a><em class='comment'>/* Put long word to the stream. */</em>
+<a id='L542' name='L542'></a><strong class='reserved'>int</strong>
+<a id='L543' name='L543'></a><a href='../R/10045.html' title='Multiple referred from 73 places.'>stream_putl</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l)
+<a id='L544' name='L544'></a><em class='brace'>{</em>
+<a id='L545' name='L545'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L546' name='L546'></a>
+<a id='L547' name='L547'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>))
+<a id='L548' name='L548'></a>    <em class='brace'>{</em>
+<a id='L549' name='L549'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L550' name='L550'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L551' name='L551'></a>    <em class='brace'>}</em>
+<a id='L552' name='L552'></a>  
+<a id='L553' name='L553'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(l &gt;&gt; 24);
+<a id='L554' name='L554'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(l &gt;&gt; 16);
+<a id='L555' name='L555'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(l &gt;&gt;  8);
+<a id='L556' name='L556'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)l;
+<a id='L557' name='L557'></a>
+<a id='L558' name='L558'></a>  <strong class='reserved'>return</strong> 4;
+<a id='L559' name='L559'></a><em class='brace'>}</em>
+<a id='L560' name='L560'></a>
+<a id='L561' name='L561'></a><em class='comment'>/* Put quad word to the stream. */</em>
+<a id='L562' name='L562'></a><strong class='reserved'>int</strong>
+<a id='L563' name='L563'></a><a href='../R/10047.html' title='Multiple referred from 3 places.'>stream_putq</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, uint64_t q)
+<a id='L564' name='L564'></a><em class='brace'>{</em>
+<a id='L565' name='L565'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L566' name='L566'></a>
+<a id='L567' name='L567'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (uint64_t))
+<a id='L568' name='L568'></a>    <em class='brace'>{</em>
+<a id='L569' name='L569'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put quad");
+<a id='L570' name='L570'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L571' name='L571'></a>    <em class='brace'>}</em>
+<a id='L572' name='L572'></a>  
+<a id='L573' name='L573'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt; 56);
+<a id='L574' name='L574'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt; 48);
+<a id='L575' name='L575'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt; 40);
+<a id='L576' name='L576'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt; 32);
+<a id='L577' name='L577'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt; 24);
+<a id='L578' name='L578'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt; 16);
+<a id='L579' name='L579'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)(q &gt;&gt;  8);
+<a id='L580' name='L580'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[s-&gt;endp++] = (u_char)q;
+<a id='L581' name='L581'></a>
+<a id='L582' name='L582'></a>  <strong class='reserved'>return</strong> 8;
+<a id='L583' name='L583'></a><em class='brace'>}</em>
+<a id='L584' name='L584'></a>
+<a id='L585' name='L585'></a><strong class='reserved'>int</strong>
+<a id='L586' name='L586'></a><a href='../R/10044.html' title='Multiple referred from 18 places.'>stream_putc_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t putp, u_char c)
+<a id='L587' name='L587'></a><em class='brace'>{</em>
+<a id='L588' name='L588'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L589' name='L589'></a>  
+<a id='L590' name='L590'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L35' title='Defined at 35 in lib/stream.c.'>PUT_AT_VALID</a> (s, putp + <strong class='reserved'>sizeof</strong> (u_char)))
+<a id='L591' name='L591'></a>    <em class='brace'>{</em>
+<a id='L592' name='L592'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L593' name='L593'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L594' name='L594'></a>    <em class='brace'>}</em>
+<a id='L595' name='L595'></a>  
+<a id='L596' name='L596'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp] = c;
+<a id='L597' name='L597'></a>  
+<a id='L598' name='L598'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L599' name='L599'></a><em class='brace'>}</em>
+<a id='L600' name='L600'></a>
+<a id='L601' name='L601'></a><strong class='reserved'>int</strong>
+<a id='L602' name='L602'></a><a href='../R/10050.html' title='Multiple referred from 38 places.'>stream_putw_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t putp, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> w)
+<a id='L603' name='L603'></a><em class='brace'>{</em>
+<a id='L604' name='L604'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L605' name='L605'></a>  
+<a id='L606' name='L606'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L35' title='Defined at 35 in lib/stream.c.'>PUT_AT_VALID</a> (s, putp + <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>)))
+<a id='L607' name='L607'></a>    <em class='brace'>{</em>
+<a id='L608' name='L608'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L609' name='L609'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L610' name='L610'></a>    <em class='brace'>}</em>
+<a id='L611' name='L611'></a>  
+<a id='L612' name='L612'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp] = (u_char)(w &gt;&gt;  8);
+<a id='L613' name='L613'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 1] = (u_char) w;
+<a id='L614' name='L614'></a>  
+<a id='L615' name='L615'></a>  <strong class='reserved'>return</strong> 2;
+<a id='L616' name='L616'></a><em class='brace'>}</em>
+<a id='L617' name='L617'></a>
+<a id='L618' name='L618'></a><strong class='reserved'>int</strong>
+<a id='L619' name='L619'></a><a href='../R/10046.html' title='Multiple referred from 4 places.'>stream_putl_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t putp, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l)
+<a id='L620' name='L620'></a><em class='brace'>{</em>
+<a id='L621' name='L621'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L622' name='L622'></a>  
+<a id='L623' name='L623'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L35' title='Defined at 35 in lib/stream.c.'>PUT_AT_VALID</a> (s, putp + <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>)))
+<a id='L624' name='L624'></a>    <em class='brace'>{</em>
+<a id='L625' name='L625'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L626' name='L626'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L627' name='L627'></a>    <em class='brace'>}</em>
+<a id='L628' name='L628'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp] = (u_char)(l &gt;&gt; 24);
+<a id='L629' name='L629'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 1] = (u_char)(l &gt;&gt; 16);
+<a id='L630' name='L630'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 2] = (u_char)(l &gt;&gt;  8);
+<a id='L631' name='L631'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 3] = (u_char)l;
+<a id='L632' name='L632'></a>  
+<a id='L633' name='L633'></a>  <strong class='reserved'>return</strong> 4;
+<a id='L634' name='L634'></a><em class='brace'>}</em>
+<a id='L635' name='L635'></a>
+<a id='L636' name='L636'></a><strong class='reserved'>int</strong>
+<a id='L637' name='L637'></a><a href='../S/284.html#L162' title='Referred from 162 in lib/stream.h.'>stream_putq_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, size_t putp, uint64_t q)
+<a id='L638' name='L638'></a><em class='brace'>{</em>
+<a id='L639' name='L639'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L640' name='L640'></a>  
+<a id='L641' name='L641'></a>  <strong class='reserved'>if</strong> (!<a href='../S/296.html#L35' title='Defined at 35 in lib/stream.c.'>PUT_AT_VALID</a> (s, putp + <strong class='reserved'>sizeof</strong> (uint64_t)))
+<a id='L642' name='L642'></a>    <em class='brace'>{</em>
+<a id='L643' name='L643'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L644' name='L644'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L645' name='L645'></a>    <em class='brace'>}</em>
+<a id='L646' name='L646'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp] =     (u_char)(q &gt;&gt; 56);
+<a id='L647' name='L647'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 1] = (u_char)(q &gt;&gt; 48);
+<a id='L648' name='L648'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 2] = (u_char)(q &gt;&gt; 40);
+<a id='L649' name='L649'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 3] = (u_char)(q &gt;&gt; 32);
+<a id='L650' name='L650'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 4] = (u_char)(q &gt;&gt; 24);
+<a id='L651' name='L651'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 5] = (u_char)(q &gt;&gt; 16);
+<a id='L652' name='L652'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 6] = (u_char)(q &gt;&gt;  8);
+<a id='L653' name='L653'></a>  s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[putp + 7] = (u_char)q;
+<a id='L654' name='L654'></a>  
+<a id='L655' name='L655'></a>  <strong class='reserved'>return</strong> 8;
+<a id='L656' name='L656'></a><em class='brace'>}</em>
+<a id='L657' name='L657'></a>
+<a id='L658' name='L658'></a><em class='comment'>/* Put long word to the stream. */</em>
+<a id='L659' name='L659'></a><strong class='reserved'>int</strong>
+<a id='L660' name='L660'></a><a href='../R/10040.html' title='Multiple referred from 29 places.'>stream_put_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l)
+<a id='L661' name='L661'></a><em class='brace'>{</em>
+<a id='L662' name='L662'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L663' name='L663'></a>  
+<a id='L664' name='L664'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>))
+<a id='L665' name='L665'></a>    <em class='brace'>{</em>
+<a id='L666' name='L666'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L667' name='L667'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L668' name='L668'></a>    <em class='brace'>}</em>
+<a id='L669' name='L669'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, &amp;l, <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>));
+<a id='L670' name='L670'></a>  s-&gt;endp += <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L671' name='L671'></a>
+<a id='L672' name='L672'></a>  <strong class='reserved'>return</strong> <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L673' name='L673'></a><em class='brace'>}</em>
+<a id='L674' name='L674'></a>
+<a id='L675' name='L675'></a><em class='comment'>/* Put long word to the stream. */</em>
+<a id='L676' name='L676'></a><strong class='reserved'>int</strong>
+<a id='L677' name='L677'></a><a href='../R/10039.html' title='Multiple referred from 27 places.'>stream_put_in_addr</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>struct</strong> in_addr *addr)
+<a id='L678' name='L678'></a><em class='brace'>{</em>
+<a id='L679' name='L679'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L680' name='L680'></a>  
+<a id='L681' name='L681'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>))
+<a id='L682' name='L682'></a>    <em class='brace'>{</em>
+<a id='L683' name='L683'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L684' name='L684'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L685' name='L685'></a>    <em class='brace'>}</em>
+<a id='L686' name='L686'></a>
+<a id='L687' name='L687'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, addr, <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>));
+<a id='L688' name='L688'></a>  s-&gt;endp += <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L689' name='L689'></a>
+<a id='L690' name='L690'></a>  <strong class='reserved'>return</strong> <strong class='reserved'>sizeof</strong> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L691' name='L691'></a><em class='brace'>}</em>
+<a id='L692' name='L692'></a>
+<a id='L693' name='L693'></a><em class='comment'>/* Put prefix by nlri type format. */</em>
+<a id='L694' name='L694'></a><strong class='reserved'>int</strong>
+<a id='L695' name='L695'></a><a href='../R/10042.html' title='Multiple referred from 12 places.'>stream_put_prefix</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L696' name='L696'></a><em class='brace'>{</em>
+<a id='L697' name='L697'></a>  size_t psize;
+<a id='L698' name='L698'></a>  
+<a id='L699' name='L699'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L700' name='L700'></a>  
+<a id='L701' name='L701'></a>  psize = <a href='../D/3540.html' title='Multiple defined in 4 places.'>PSIZE</a> (p-&gt;prefixlen);
+<a id='L702' name='L702'></a>  
+<a id='L703' name='L703'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; psize)
+<a id='L704' name='L704'></a>    <em class='brace'>{</em>
+<a id='L705' name='L705'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L706' name='L706'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L707' name='L707'></a>    <em class='brace'>}</em>
+<a id='L708' name='L708'></a>  
+<a id='L709' name='L709'></a>  <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, p-&gt;prefixlen);
+<a id='L710' name='L710'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, &amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, psize);
+<a id='L711' name='L711'></a>  s-&gt;endp += psize;
+<a id='L712' name='L712'></a>  
+<a id='L713' name='L713'></a>  <strong class='reserved'>return</strong> psize;
+<a id='L714' name='L714'></a><em class='brace'>}</em>
+<a id='L715' name='L715'></a>
+<a id='L716' name='L716'></a><em class='comment'>/* Read size from fd. */</em>
+<a id='L717' name='L717'></a><strong class='reserved'>int</strong>
+<a id='L718' name='L718'></a><a href='../R/10051.html' title='Multiple referred from 8 places.'>stream_read</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, size_t size)
+<a id='L719' name='L719'></a><em class='brace'>{</em>
+<a id='L720' name='L720'></a>  <strong class='reserved'>int</strong> nbytes;
+<a id='L721' name='L721'></a>
+<a id='L722' name='L722'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L723' name='L723'></a>  
+<a id='L724' name='L724'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; size)
+<a id='L725' name='L725'></a>    <em class='brace'>{</em>
+<a id='L726' name='L726'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L727' name='L727'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L728' name='L728'></a>    <em class='brace'>}</em>
+<a id='L729' name='L729'></a>  
+<a id='L730' name='L730'></a>  nbytes = <a href='../S/212.html#L29' title='Defined at 29 in lib/network.c.'>readn</a> (fd, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, size);
+<a id='L731' name='L731'></a>
+<a id='L732' name='L732'></a>  <strong class='reserved'>if</strong> (nbytes &gt; 0)
+<a id='L733' name='L733'></a>    s-&gt;endp += nbytes;
+<a id='L734' name='L734'></a>  
+<a id='L735' name='L735'></a>  <strong class='reserved'>return</strong> nbytes;
+<a id='L736' name='L736'></a><em class='brace'>}</em>
+<a id='L737' name='L737'></a>
+<a id='L738' name='L738'></a><em class='comment'>/* Read size from fd. */</em>
+<a id='L739' name='L739'></a><strong class='reserved'>int</strong>
+<a id='L740' name='L740'></a><a href='../S/284.html#L187' title='Referred from 187 in lib/stream.h.'>stream_read_unblock</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, size_t size)
+<a id='L741' name='L741'></a><em class='brace'>{</em>
+<a id='L742' name='L742'></a>  <strong class='reserved'>int</strong> nbytes;
+<a id='L743' name='L743'></a>  <strong class='reserved'>int</strong> val;
+<a id='L744' name='L744'></a>  
+<a id='L745' name='L745'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L746' name='L746'></a>  
+<a id='L747' name='L747'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; size)
+<a id='L748' name='L748'></a>    <em class='brace'>{</em>
+<a id='L749' name='L749'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L750' name='L750'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L751' name='L751'></a>    <em class='brace'>}</em>
+<a id='L752' name='L752'></a>  
+<a id='L753' name='L753'></a>  val = fcntl (fd, F_GETFL, 0);
+<a id='L754' name='L754'></a>  fcntl (fd, F_SETFL, val|O_NONBLOCK);
+<a id='L755' name='L755'></a>  nbytes = read (fd, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, size);
+<a id='L756' name='L756'></a>  fcntl (fd, F_SETFL, val);
+<a id='L757' name='L757'></a>
+<a id='L758' name='L758'></a>  <strong class='reserved'>if</strong> (nbytes &gt; 0)
+<a id='L759' name='L759'></a>    s-&gt;endp += nbytes;
+<a id='L760' name='L760'></a>  
+<a id='L761' name='L761'></a>  <strong class='reserved'>return</strong> nbytes;
+<a id='L762' name='L762'></a><em class='brace'>}</em>
+<a id='L763' name='L763'></a>
+<a id='L764' name='L764'></a>ssize_t
+<a id='L765' name='L765'></a><a href='../R/10052.html' title='Multiple referred from 8 places.'>stream_read_try</a>(<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, size_t size)
+<a id='L766' name='L766'></a><em class='brace'>{</em>
+<a id='L767' name='L767'></a>  ssize_t nbytes;
+<a id='L768' name='L768'></a>
+<a id='L769' name='L769'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L770' name='L770'></a>  
+<a id='L771' name='L771'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a>(s) &lt; size)
+<a id='L772' name='L772'></a>    <em class='brace'>{</em>
+<a id='L773' name='L773'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L774' name='L774'></a>      <em class='comment'>/* Fatal (not transient) error, since retrying will not help</em>
+<a id='L775' name='L775'></a><em class='comment'>         (stream is too small to contain the desired data). */</em>
+<a id='L776' name='L776'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L777' name='L777'></a>    <em class='brace'>}</em>
+<a id='L778' name='L778'></a>
+<a id='L779' name='L779'></a>  <strong class='reserved'>if</strong> ((nbytes = read(fd, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, size)) &gt;= 0)
+<a id='L780' name='L780'></a>    <em class='brace'>{</em>
+<a id='L781' name='L781'></a>      s-&gt;endp += nbytes;
+<a id='L782' name='L782'></a>      <strong class='reserved'>return</strong> nbytes;
+<a id='L783' name='L783'></a>    <em class='brace'>}</em>
+<a id='L784' name='L784'></a>  <em class='comment'>/* Error: was it transient (return -2) or fatal (return -1)? */</em>
+<a id='L785' name='L785'></a>  <strong class='reserved'>if</strong> (<a href='../S/301.html#L37' title='Defined at 37 in lib/network.h.'>ERRNO_IO_RETRY</a>(errno))
+<a id='L786' name='L786'></a>    <strong class='reserved'>return</strong> -2;
+<a id='L787' name='L787'></a>  zlog_warn("%s: read failed on fd %d: %s", __func__, fd, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L788' name='L788'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L789' name='L789'></a><em class='brace'>}</em>
+<a id='L790' name='L790'></a>
+<a id='L791' name='L791'></a><em class='comment'>/* Read up to size bytes into the stream from the fd, using recvmsgfrom</em>
+<a id='L792' name='L792'></a><em class='comment'> * whose arguments match the remaining arguments to this function</em>
+<a id='L793' name='L793'></a><em class='comment'> */</em>
+<a id='L794' name='L794'></a>ssize_t 
+<a id='L795' name='L795'></a><a href='../R/10054.html' title='Multiple referred from 2 places.'>stream_recvfrom</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, size_t size, <strong class='reserved'>int</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>,
+<a id='L796' name='L796'></a>                 <strong class='reserved'>struct</strong> sockaddr *from, <a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *fromlen)                     
+<a id='L797' name='L797'></a><em class='brace'>{</em>
+<a id='L798' name='L798'></a>  ssize_t nbytes;
+<a id='L799' name='L799'></a>
+<a id='L800' name='L800'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L801' name='L801'></a>  
+<a id='L802' name='L802'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a>(s) &lt; size)
+<a id='L803' name='L803'></a>    <em class='brace'>{</em>
+<a id='L804' name='L804'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L805' name='L805'></a>      <em class='comment'>/* Fatal (not transient) error, since retrying will not help</em>
+<a id='L806' name='L806'></a><em class='comment'>         (stream is too small to contain the desired data). */</em>
+<a id='L807' name='L807'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L808' name='L808'></a>    <em class='brace'>}</em>
+<a id='L809' name='L809'></a>
+<a id='L810' name='L810'></a>  <strong class='reserved'>if</strong> ((nbytes = recvfrom (fd, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, size, 
+<a id='L811' name='L811'></a>                          <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, from, fromlen)) &gt;= 0)
+<a id='L812' name='L812'></a>    <em class='brace'>{</em>
+<a id='L813' name='L813'></a>      s-&gt;endp += nbytes;
+<a id='L814' name='L814'></a>      <strong class='reserved'>return</strong> nbytes;
+<a id='L815' name='L815'></a>    <em class='brace'>}</em>
+<a id='L816' name='L816'></a>  <em class='comment'>/* Error: was it transient (return -2) or fatal (return -1)? */</em>
+<a id='L817' name='L817'></a>  <strong class='reserved'>if</strong> (<a href='../S/301.html#L37' title='Defined at 37 in lib/network.h.'>ERRNO_IO_RETRY</a>(errno))
+<a id='L818' name='L818'></a>    <strong class='reserved'>return</strong> -2;
+<a id='L819' name='L819'></a>  zlog_warn("%s: read failed on fd %d: %s", __func__, fd, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L820' name='L820'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L821' name='L821'></a><em class='brace'>}</em>
+<a id='L822' name='L822'></a>
+<a id='L823' name='L823'></a><em class='comment'>/* Read up to smaller of size or SIZE_REMAIN() bytes to the stream, starting</em>
+<a id='L824' name='L824'></a><em class='comment'> * from endp.</em>
+<a id='L825' name='L825'></a><em class='comment'> * First iovec will be used to receive the data.</em>
+<a id='L826' name='L826'></a><em class='comment'> * Stream need not be empty.</em>
+<a id='L827' name='L827'></a><em class='comment'> */</em>
+<a id='L828' name='L828'></a>ssize_t
+<a id='L829' name='L829'></a><a href='../R/10055.html' title='Multiple referred from 2 places.'>stream_recvmsg</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, <strong class='reserved'>struct</strong> msghdr *msgh, <strong class='reserved'>int</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, 
+<a id='L830' name='L830'></a>                size_t size)
+<a id='L831' name='L831'></a><em class='brace'>{</em>
+<a id='L832' name='L832'></a>  <strong class='reserved'>int</strong> nbytes;
+<a id='L833' name='L833'></a>  <strong class='reserved'>struct</strong> iovec *iov;
+<a id='L834' name='L834'></a>  
+<a id='L835' name='L835'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L836' name='L836'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (msgh-&gt;msg_iovlen &gt; 0);  
+<a id='L837' name='L837'></a>  
+<a id='L838' name='L838'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; size)
+<a id='L839' name='L839'></a>    <em class='brace'>{</em>
+<a id='L840' name='L840'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L841' name='L841'></a>      <em class='comment'>/* This is a logic error in the calling code: the stream is too small</em>
+<a id='L842' name='L842'></a><em class='comment'>         to hold the desired data! */</em>
+<a id='L843' name='L843'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L844' name='L844'></a>    <em class='brace'>}</em>
+<a id='L845' name='L845'></a>  
+<a id='L846' name='L846'></a>  iov = &amp;(msgh-&gt;msg_iov[0]);
+<a id='L847' name='L847'></a>  iov-&gt;iov_base = (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp);
+<a id='L848' name='L848'></a>  iov-&gt;iov_len = size;
+<a id='L849' name='L849'></a>  
+<a id='L850' name='L850'></a>  nbytes = recvmsg (fd, msgh, <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L851' name='L851'></a>  
+<a id='L852' name='L852'></a>  <strong class='reserved'>if</strong> (nbytes &gt; 0)
+<a id='L853' name='L853'></a>    s-&gt;endp += nbytes;
+<a id='L854' name='L854'></a>  
+<a id='L855' name='L855'></a>  <strong class='reserved'>return</strong> nbytes;
+<a id='L856' name='L856'></a><em class='brace'>}</em>
+<a id='L857' name='L857'></a>  
+<a id='L858' name='L858'></a><em class='comment'>/* Write data to buffer. */</em>
+<a id='L859' name='L859'></a>size_t
+<a id='L860' name='L860'></a><a href='../R/10060.html' title='Multiple referred from 26 places.'>stream_write</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *ptr, size_t size)
+<a id='L861' name='L861'></a><em class='brace'>{</em>
+<a id='L862' name='L862'></a>
+<a id='L863' name='L863'></a>  <a href='../S/296.html#L77' title='Defined at 77 in lib/stream.c.'>CHECK_SIZE</a>(s, size);
+<a id='L864' name='L864'></a>
+<a id='L865' name='L865'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L866' name='L866'></a>  
+<a id='L867' name='L867'></a>  <strong class='reserved'>if</strong> (<a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a> (s) &lt; size)
+<a id='L868' name='L868'></a>    <em class='brace'>{</em>
+<a id='L869' name='L869'></a>      <a href='../S/296.html#L69' title='Defined at 69 in lib/stream.c.'>STREAM_BOUND_WARN</a> (s, "put");
+<a id='L870' name='L870'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L871' name='L871'></a>    <em class='brace'>}</em>
+<a id='L872' name='L872'></a>  
+<a id='L873' name='L873'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;endp, ptr, size);
+<a id='L874' name='L874'></a>  s-&gt;endp += size;
+<a id='L875' name='L875'></a>
+<a id='L876' name='L876'></a>  <strong class='reserved'>return</strong> size;
+<a id='L877' name='L877'></a><em class='brace'>}</em>
+<a id='L878' name='L878'></a>
+<a id='L879' name='L879'></a><em class='comment'>/* Return current read pointer. </em>
+<a id='L880' name='L880'></a><em class='comment'> * DEPRECATED!</em>
+<a id='L881' name='L881'></a><em class='comment'> * Use stream_get_pnt_to if you must, but decoding streams properly</em>
+<a id='L882' name='L882'></a><em class='comment'> * is preferred</em>
+<a id='L883' name='L883'></a><em class='comment'> */</em>
+<a id='L884' name='L884'></a>u_char *
+<a id='L885' name='L885'></a><a href='../R/10037.html' title='Multiple referred from 33 places.'>stream_pnt</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L886' name='L886'></a><em class='brace'>{</em>
+<a id='L887' name='L887'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L888' name='L888'></a>  <strong class='reserved'>return</strong> s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;getp;
+<a id='L889' name='L889'></a><em class='brace'>}</em>
+<a id='L890' name='L890'></a>
+<a id='L891' name='L891'></a><em class='comment'>/* Check does this stream empty? */</em>
+<a id='L892' name='L892'></a><strong class='reserved'>int</strong>
+<a id='L893' name='L893'></a><a href='../R/10011.html' title='Multiple referred from 7 places.'>stream_empty</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L894' name='L894'></a><em class='brace'>{</em>
+<a id='L895' name='L895'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L896' name='L896'></a>
+<a id='L897' name='L897'></a>  <strong class='reserved'>return</strong> (s-&gt;endp == 0);
+<a id='L898' name='L898'></a><em class='brace'>}</em>
+<a id='L899' name='L899'></a>
+<a id='L900' name='L900'></a><em class='comment'>/* Reset stream. */</em>
+<a id='L901' name='L901'></a><strong class='reserved'>void</strong>
+<a id='L902' name='L902'></a><a href='../R/10056.html' title='Multiple referred from 68 places.'>stream_reset</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L903' name='L903'></a><em class='brace'>{</em>
+<a id='L904' name='L904'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a> (s);
+<a id='L905' name='L905'></a>
+<a id='L906' name='L906'></a>  s-&gt;getp = s-&gt;endp = 0;
+<a id='L907' name='L907'></a><em class='brace'>}</em>
+<a id='L908' name='L908'></a>
+<a id='L909' name='L909'></a><em class='comment'>/* Write stream contens to the file discriptor. */</em>
+<a id='L910' name='L910'></a><strong class='reserved'>int</strong>
+<a id='L911' name='L911'></a><a href='../S/284.html#L208' title='Referred from 208 in lib/stream.h.'>stream_flush</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd)
+<a id='L912' name='L912'></a><em class='brace'>{</em>
+<a id='L913' name='L913'></a>  <strong class='reserved'>int</strong> nbytes;
+<a id='L914' name='L914'></a>  
+<a id='L915' name='L915'></a>  <a href='../S/296.html#L61' title='Defined at 61 in lib/stream.c.'>STREAM_VERIFY_SANE</a>(s);
+<a id='L916' name='L916'></a>  
+<a id='L917' name='L917'></a>  nbytes = write (fd, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;getp, s-&gt;endp - s-&gt;getp);
+<a id='L918' name='L918'></a>  
+<a id='L919' name='L919'></a>  <strong class='reserved'>return</strong> nbytes;
+<a id='L920' name='L920'></a><em class='brace'>}</em>
+<a id='L921' name='L921'></a>
+<a id='L922' name='L922'></a><em class='comment'>/* Stream first in first out queue. */</em>
+<a id='L923' name='L923'></a>
+<a id='L924' name='L924'></a><strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *
+<a id='L925' name='L925'></a><a href='../R/10016.html' title='Multiple referred from 3 places.'>stream_fifo_new</a> (<strong class='reserved'>void</strong>)
+<a id='L926' name='L926'></a><em class='brace'>{</em>
+<a id='L927' name='L927'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *new;
+<a id='L928' name='L928'></a> 
+<a id='L929' name='L929'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_STREAM_FIFO, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a>));
+<a id='L930' name='L930'></a>  <strong class='reserved'>return</strong> new;
+<a id='L931' name='L931'></a><em class='brace'>}</em>
+<a id='L932' name='L932'></a>
+<a id='L933' name='L933'></a><em class='comment'>/* Add new stream to fifo. */</em>
+<a id='L934' name='L934'></a><strong class='reserved'>void</strong>
+<a id='L935' name='L935'></a><a href='../R/10018.html' title='Multiple referred from 2 places.'>stream_fifo_push</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L936' name='L936'></a><em class='brace'>{</em>
+<a id='L937' name='L937'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;tail)
+<a id='L938' name='L938'></a>    <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;tail-&gt;next = s;
+<a id='L939' name='L939'></a>  <strong class='reserved'>else</strong>
+<a id='L940' name='L940'></a>    <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head = s;
+<a id='L941' name='L941'></a>     
+<a id='L942' name='L942'></a>  <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;tail = s;
+<a id='L943' name='L943'></a>
+<a id='L944' name='L944'></a>  <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;count++;
+<a id='L945' name='L945'></a><em class='brace'>}</em>
+<a id='L946' name='L946'></a>
+<a id='L947' name='L947'></a><em class='comment'>/* Delete first stream from fifo. */</em>
+<a id='L948' name='L948'></a><strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *
+<a id='L949' name='L949'></a><a href='../R/10017.html' title='Multiple referred from 2 places.'>stream_fifo_pop</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>)
+<a id='L950' name='L950'></a><em class='brace'>{</em>
+<a id='L951' name='L951'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L952' name='L952'></a>  
+<a id='L953' name='L953'></a>  s = <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head; 
+<a id='L954' name='L954'></a>
+<a id='L955' name='L955'></a>  <strong class='reserved'>if</strong> (s)
+<a id='L956' name='L956'></a>    <em class='brace'>{</em> 
+<a id='L957' name='L957'></a>      <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head = s-&gt;next;
+<a id='L958' name='L958'></a>
+<a id='L959' name='L959'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L960' name='L960'></a>        <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;tail = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L961' name='L961'></a>
+<a id='L962' name='L962'></a>      <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;count--;
+<a id='L963' name='L963'></a>    <em class='brace'>}</em>
+<a id='L964' name='L964'></a>
+<a id='L965' name='L965'></a>  <strong class='reserved'>return</strong> s; 
+<a id='L966' name='L966'></a><em class='brace'>}</em>
+<a id='L967' name='L967'></a>
+<a id='L968' name='L968'></a><em class='comment'>/* Return first fifo entry. */</em>
+<a id='L969' name='L969'></a><strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *
+<a id='L970' name='L970'></a><a href='../R/10015.html' title='Multiple referred from 4 places.'>stream_fifo_head</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>)
+<a id='L971' name='L971'></a><em class='brace'>{</em>
+<a id='L972' name='L972'></a>  <strong class='reserved'>return</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head;
+<a id='L973' name='L973'></a><em class='brace'>}</em>
+<a id='L974' name='L974'></a>
+<a id='L975' name='L975'></a><strong class='reserved'>void</strong>
+<a id='L976' name='L976'></a><a href='../R/10013.html' title='Multiple referred from 4 places.'>stream_fifo_clean</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>)
+<a id='L977' name='L977'></a><em class='brace'>{</em>
+<a id='L978' name='L978'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L979' name='L979'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *next;
+<a id='L980' name='L980'></a>
+<a id='L981' name='L981'></a>  <strong class='reserved'>for</strong> (s = <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head; s; s = next)
+<a id='L982' name='L982'></a>    <em class='brace'>{</em>
+<a id='L983' name='L983'></a>      next = s-&gt;next;
+<a id='L984' name='L984'></a>      <a href='../S/296.html#L119' title='Defined at 119 in lib/stream.c.'>stream_free</a> (s);
+<a id='L985' name='L985'></a>    <em class='brace'>}</em>
+<a id='L986' name='L986'></a>  <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;head = <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;tail = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L987' name='L987'></a>  <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>-&gt;count = 0;
+<a id='L988' name='L988'></a><em class='brace'>}</em>
+<a id='L989' name='L989'></a>
+<a id='L990' name='L990'></a><strong class='reserved'>void</strong>
+<a id='L991' name='L991'></a><a href='../R/10014.html' title='Multiple referred from 2 places.'>stream_fifo_free</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>)
+<a id='L992' name='L992'></a><em class='brace'>{</em>
+<a id='L993' name='L993'></a>  <a href='../S/296.html#L976' title='Defined at 976 in lib/stream.c.'>stream_fifo_clean</a> (<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L994' name='L994'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_STREAM_FIFO, <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L995' name='L995'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L90'>[^]</a><a href='#L991'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

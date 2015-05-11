@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_label_rel_with.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_label_rel_with.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L26'>[^]</a><a href='#L196'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L26' title='Defined at 26.'>rel_with2attr</a></li>
+<li><a href='#L50' title='Defined at 50.'>ldp_label_rel_with_prepare_msg</a></li>
+<li><a href='#L84' title='Defined at 84.'>ldp_label_rel_with_send</a></li>
+<li><a href='#L99' title='Defined at 99.'>ldp_label_release_send</a></li>
+<li><a href='#L109' title='Defined at 109.'>ldp_label_withdraw_send</a></li>
+<li><a href='#L125' title='Defined at 125.'>ldp_label_release_process</a></li>
+<li><a href='#L196' title='Defined at 196.'>ldp_label_withdraw_process</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2000</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L11' name='L11'></a><em class='sharp'>#include</em> "<a href='346.html'>ldp_attr.h</a>"
+<a id='L12' name='L12'></a><em class='sharp'>#include</em> "<a href='411.html'>ldp_session.h</a>"
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='443.html'>ldp_global.h</a>"
+<a id='L14' name='L14'></a><em class='sharp'>#include</em> "<a href='393.html'>ldp_inlabel.h</a>"
+<a id='L15' name='L15'></a><em class='sharp'>#include</em> "<a href='459.html'>ldp_entity.h</a>"
+<a id='L16' name='L16'></a><em class='sharp'>#include</em> "<a href='403.html'>ldp_outlabel.h</a>"
+<a id='L17' name='L17'></a><em class='sharp'>#include</em> "<a href='363.html'>ldp_label_rel_with.h</a>"
+<a id='L18' name='L18'></a><em class='sharp'>#include</em> "<a href='460.html'>ldp_nexthop.h</a>"
+<a id='L19' name='L19'></a><em class='sharp'>#include</em> "<a href='412.html'>ldp_label_mapping.h</a>"
+<a id='L20' name='L20'></a><em class='sharp'>#include</em> "<a href='390.html'>ldp_fec.h</a>"
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> "<a href='356.html'>ldp_mesg.h</a>"
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> "<a href='396.html'>ldp_pdu_setup.h</a>"
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='415.html'>mpls_trace_impl.h</a>"
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> <a href='../R/8988.html' title='Multiple referred from 3 places.'>rel_with2attr</a>(<a href='../S/401.html#L1704' title='Defined at 1704 in ldpd/ldp_nortel.h.'>mplsLdpLbl_W_R_Msg_t</a> * rw, <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L27' name='L27'></a><em class='brace'>{</em>
+<a id='L28' name='L28'></a>  <a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> retval = <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>;
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a>  <strong class='reserved'>if</strong> (rw-&gt;fecTlvExists) <em class='brace'>{</em>
+<a id='L31' name='L31'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;fecTlv, &amp;rw-&gt;fecTlv, <strong class='reserved'>sizeof</strong>(<a href='../S/401.html#L1114' title='Defined at 1114 in ldpd/ldp_nortel.h.'>mplsLdpFecTlv_t</a>));
+<a id='L32' name='L32'></a>    <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;fecTlvExists = 1;
+<a id='L33' name='L33'></a>  <em class='brace'>}</em>
+<a id='L34' name='L34'></a>  <strong class='reserved'>if</strong> (rw-&gt;genLblTlvExists) <em class='brace'>{</em>
+<a id='L35' name='L35'></a>    retval = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L36' name='L36'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;genLblTlv, &amp;rw-&gt;genLblTlv, <strong class='reserved'>sizeof</strong>(<a href='../S/401.html#L1132' title='Defined at 1132 in ldpd/ldp_nortel.h.'>mplsLdpGenLblTlv_t</a>));
+<a id='L37' name='L37'></a>    <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;genLblTlvExists = 1;
+<a id='L38' name='L38'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (rw-&gt;atmLblTlvExists) <em class='brace'>{</em>
+<a id='L39' name='L39'></a>    retval = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L40' name='L40'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;atmLblTlv, &amp;rw-&gt;atmLblTlv, <strong class='reserved'>sizeof</strong>(<a href='../S/401.html#L1160' title='Defined at 1160 in ldpd/ldp_nortel.h.'>mplsLdpAtmLblTlv_t</a>));
+<a id='L41' name='L41'></a>    <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;atmLblTlvExists = 1;
+<a id='L42' name='L42'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (rw-&gt;frLblTlvExists) <em class='brace'>{</em>
+<a id='L43' name='L43'></a>    retval = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L44' name='L44'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;frLblTlv, &amp;rw-&gt;frLblTlv, <strong class='reserved'>sizeof</strong>(<a href='../S/401.html#L1187' title='Defined at 1187 in ldpd/ldp_nortel.h.'>mplsLdpFrLblTlv_t</a>));
+<a id='L45' name='L45'></a>    <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>-&gt;frLblTlvExists = 1;
+<a id='L46' name='L46'></a>  <em class='brace'>}</em>
+<a id='L47' name='L47'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L48' name='L48'></a><em class='brace'>}</em>
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>void</strong> <a href='../S/397.html#L89' title='Referred from 89 in ldpd/ldp_label_rel_with.c.'>ldp_label_rel_with_prepare_msg</a>(<a href='../D/7421.html' title='Multiple defined in 2 places.'>ldp_mesg</a> * <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> msgid,
+<a id='L51' name='L51'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/409.html#L183' title='Defined at 183 in ldpd/ldp_struct.h.'>ldp_notif_status</a> status, <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> type)
+<a id='L52' name='L52'></a><em class='brace'>{</em>
+<a id='L53' name='L53'></a>  <a href='../S/401.html#L1704' title='Defined at 1704 in ldpd/ldp_nortel.h.'>mplsLdpLbl_W_R_Msg_t</a> *rw = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>  <a href='../S/375.html#L118' title='Defined at 118 in ldpd/ldp_mesg.c.'>ldp_mesg_prepare</a>(<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, type, msgid);
+<a id='L56' name='L56'></a>  rw = &amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>-&gt;u.release;
+<a id='L57' name='L57'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;fecTlvExists) <em class='brace'>{</em>
+<a id='L58' name='L58'></a>    rw-&gt;fecTlvExists = 1;
+<a id='L59' name='L59'></a>    rw-&gt;baseMsg.msgLength += <a href='../S/462.html#L202' title='Defined at 202 in ldpd/ldp_pdu_setup.c.'>setupFecTlv</a>(&amp;rw-&gt;fecTlv);
+<a id='L60' name='L60'></a>    rw-&gt;baseMsg.msgLength += <a href='../S/462.html#L240' title='Defined at 240 in ldpd/ldp_pdu_setup.c.'>addFecElem2FecTlv</a>(&amp;rw-&gt;fecTlv,
+<a id='L61' name='L61'></a>      &amp;<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;fecTlv.fecElArray[0]);
+<a id='L62' name='L62'></a>  <em class='brace'>}</em>
+<a id='L63' name='L63'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;genLblTlvExists) <em class='brace'>{</em>
+<a id='L64' name='L64'></a>    rw-&gt;genLblTlvExists = 1;
+<a id='L65' name='L65'></a>    rw-&gt;baseMsg.msgLength += <a href='../S/462.html#L362' title='Defined at 362 in ldpd/ldp_pdu_setup.c.'>setupGenLblTlv</a>(&amp;rw-&gt;genLblTlv, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;genLblTlv.label);
+<a id='L66' name='L66'></a>  <em class='brace'>}</em>
+<a id='L67' name='L67'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;atmLblTlvExists) <em class='brace'>{</em>
+<a id='L68' name='L68'></a>    rw-&gt;atmLblTlvExists = 1;
+<a id='L69' name='L69'></a>    rw-&gt;baseMsg.msgLength += <a href='../S/462.html#L311' title='Defined at 311 in ldpd/ldp_pdu_setup.c.'>setupAtmLblTlv</a>(&amp;rw-&gt;atmLblTlv, 0, 0,
+<a id='L70' name='L70'></a>      <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;atmLblTlv.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>.vpi, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;atmLblTlv.vci);
+<a id='L71' name='L71'></a>  <em class='brace'>}</em>
+<a id='L72' name='L72'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;frLblTlvExists) <em class='brace'>{</em>
+<a id='L73' name='L73'></a>    rw-&gt;frLblTlvExists = 1;
+<a id='L74' name='L74'></a>    rw-&gt;baseMsg.msgLength += <a href='../S/462.html#L337' title='Defined at 337 in ldpd/ldp_pdu_setup.c.'>setupFrLblTlv</a>(&amp;rw-&gt;frLblTlv, 0,
+<a id='L75' name='L75'></a>      <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;frLblTlv.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>.len, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;frLblTlv.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>.dlci);
+<a id='L76' name='L76'></a>  <em class='brace'>}</em>
+<a id='L77' name='L77'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;lspidTlvExists) <em class='brace'>{</em>
+<a id='L78' name='L78'></a>    rw-&gt;lspidTlvExists = 1;
+<a id='L79' name='L79'></a>    rw-&gt;baseMsg.msgLength += <a href='../S/462.html#L469' title='Defined at 469 in ldpd/ldp_pdu_setup.c.'>setupLspidTlv</a>(&amp;rw-&gt;lspidTlv, 0,
+<a id='L80' name='L80'></a>      <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;lspidTlv.localCrlspId, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;lspidTlv.routerId);
+<a id='L81' name='L81'></a>  <em class='brace'>}</em>
+<a id='L82' name='L82'></a><em class='brace'>}</em>
+<a id='L83' name='L83'></a>
+<a id='L84' name='L84'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6623.html' title='Multiple referred from 2 places.'>ldp_label_rel_with_send</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s,
+<a id='L85' name='L85'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/409.html#L183' title='Defined at 183 in ldpd/ldp_struct.h.'>ldp_notif_status</a> status, <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> type)
+<a id='L86' name='L86'></a><em class='brace'>{</em>
+<a id='L87' name='L87'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_label_rel_with_send");
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>  <a href='../S/397.html#L50' title='Defined at 50 in ldpd/ldp_label_rel_with.c.'>ldp_label_rel_with_prepare_msg</a>(s-&gt;tx_message, g-&gt;message_identifier++, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,
+<a id='L90' name='L90'></a>    status, type);
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a>  <a href='../S/375.html#L21' title='Defined at 21 in ldpd/ldp_mesg.c.'>ldp_mesg_send_tcp</a>(g, s, s-&gt;tx_message);
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_label_rel_with_send");
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L97' name='L97'></a><em class='brace'>}</em>
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6625.html' title='Multiple referred from 6 places.'>ldp_label_release_send</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s,
+<a id='L100' name='L100'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/409.html#L183' title='Defined at 183 in ldpd/ldp_struct.h.'>ldp_notif_status</a> status)
+<a id='L101' name='L101'></a><em class='brace'>{</em>
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>  <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L94' title='Defined at 94 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_SEND</a>, <a href='../S/409.html#L140' title='Defined at 140 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_LABEL</a>,
+<a id='L104' name='L104'></a>    "Release Sent: session(%d)\n", s-&gt;index);
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>  <strong class='reserved'>return</strong> <a href='../S/397.html#L84' title='Defined at 84 in ldpd/ldp_label_rel_with.c.'>ldp_label_rel_with_send</a>(g, s, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, status, <a href='../S/401.html#L279' title='Defined at 279 in ldpd/ldp_nortel.h.'>MPLS_LBLREL_MSGTYPE</a>);
+<a id='L107' name='L107'></a><em class='brace'>}</em>
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6632.html' title='Multiple referred from 3 places.'>ldp_label_withdraw_send</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s,
+<a id='L110' name='L110'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * us_attr, <a href='../S/409.html#L183' title='Defined at 183 in ldpd/ldp_struct.h.'>ldp_notif_status</a> status)
+<a id='L111' name='L111'></a><em class='brace'>{</em>
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>  us_attr-&gt;state = <a href='../S/409.html#L122' title='Defined at 122 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_WITH_SENT</a>;
+<a id='L114' name='L114'></a>  <strong class='reserved'>if</strong> (<a href='../S/397.html#L84' title='Defined at 84 in ldpd/ldp_label_rel_with.c.'>ldp_label_rel_with_send</a>(g, s, us_attr, status, <a href='../S/401.html#L278' title='Defined at 278 in ldpd/ldp_nortel.h.'>MPLS_LBLWITH_MSGTYPE</a>) ==
+<a id='L115' name='L115'></a>    <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>) <em class='brace'>{</em>
+<a id='L116' name='L116'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L117' name='L117'></a>  <em class='brace'>}</em>
+<a id='L118' name='L118'></a>
+<a id='L119' name='L119'></a>  <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L94' title='Defined at 94 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_SEND</a>, <a href='../S/409.html#L140' title='Defined at 140 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_LABEL</a>,
+<a id='L120' name='L120'></a>    "Withdraw Sent: session(%d)\n", s-&gt;index);
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L123' name='L123'></a><em class='brace'>}</em>
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6624.html' title='Multiple referred from 3 places.'>ldp_label_release_process</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s,
+<a id='L126' name='L126'></a>  <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * r_attr, <a href='../D/7288.html' title='Multiple defined in 2 places.'>ldp_fec</a> * f)
+<a id='L127' name='L127'></a><em class='brace'>{</em>
+<a id='L128' name='L128'></a>  <a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> label_exists = <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>;
+<a id='L129' name='L129'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> *us_attr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L130' name='L130'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> *ds_attr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L131' name='L131'></a>  <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> retval = <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_label_release_process");
+<a id='L134' name='L134'></a>
+<a id='L135' name='L135'></a>  <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L95' title='Defined at 95 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_RECV</a>, <a href='../S/409.html#L140' title='Defined at 140 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_LABEL</a>,
+<a id='L136' name='L136'></a>    "Release Recv from %s\n", s-&gt;session_name);
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <strong class='reserved'>if</strong> (r_attr-&gt;genLblTlvExists || r_attr-&gt;atmLblTlvExists
+<a id='L139' name='L139'></a>    || r_attr-&gt;frLblTlvExists) <em class='brace'>{</em>
+<a id='L140' name='L140'></a>    label_exists = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L141' name='L141'></a>  <em class='brace'>}</em>
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a>  <strong class='reserved'>if</strong> (f) <em class='brace'>{</em>
+<a id='L144' name='L144'></a>    <em class='comment'>/* LRl.1 is accomplished at LRl.10 */</em>
+<a id='L145' name='L145'></a>    us_attr = <a href='../S/420.html#L230' title='Defined at 230 in ldpd/ldp_attr.c.'>ldp_attr_find_upstream_state2</a>(g, s, f, <a href='../S/409.html#L121' title='Defined at 121 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_MAP_SENT</a>);
+<a id='L146' name='L146'></a>    <strong class='reserved'>if</strong> (!us_attr) <em class='brace'>{</em>
+<a id='L147' name='L147'></a>      us_attr =
+<a id='L148' name='L148'></a>        <a href='../S/420.html#L230' title='Defined at 230 in ldpd/ldp_attr.c.'>ldp_attr_find_upstream_state2</a>(g, s, f, <a href='../S/409.html#L122' title='Defined at 122 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_WITH_SENT</a>);
+<a id='L149' name='L149'></a>      <strong class='reserved'>if</strong> (!us_attr) <em class='brace'>{</em>           <em class='comment'>/* LRl.2 */</em>
+<a id='L150' name='L150'></a>        <strong class='reserved'>goto</strong> LRl_13;
+<a id='L151' name='L151'></a>      <em class='brace'>}</em>
+<a id='L152' name='L152'></a>      <em class='comment'>/* LRl.3 is accomplished at LRl.10 */</em>
+<a id='L153' name='L153'></a>    <em class='brace'>}</em>
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a>    <strong class='reserved'>if</strong> (g-&gt;label_merge == <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>) <em class='brace'>{</em> <em class='comment'>/* LR1.4 */</em>
+<a id='L156' name='L156'></a>      <strong class='reserved'>goto</strong> LRl_6;
+<a id='L157' name='L157'></a>    <em class='brace'>}</em>
+<a id='L158' name='L158'></a>    <em class='comment'>/* LR1.5 */</em>
+<a id='L159' name='L159'></a>    <strong class='reserved'>if</strong> (<a href='../S/420.html#L152' title='Defined at 152 in ldpd/ldp_attr.c.'>ldp_attr_find_upstream_state_any2</a>(g, f, <a href='../S/409.html#L121' title='Defined at 121 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_MAP_SENT</a>)) <em class='brace'>{</em>
+<a id='L160' name='L160'></a>      <strong class='reserved'>goto</strong> LRl_10;
+<a id='L161' name='L161'></a>    <em class='brace'>}</em>
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a>  LRl_6:
+<a id='L164' name='L164'></a>    <em class='comment'>/* we can only propogate a release to the downstream attached to</em>
+<a id='L165' name='L165'></a><em class='comment'>       the upstream we found up top */</em>
+<a id='L166' name='L166'></a>    <em class='comment'>/* LRl.6,7 */</em>
+<a id='L167' name='L167'></a>    <strong class='reserved'>if</strong> (us_attr-&gt;ds_attr &amp;&amp; us_attr-&gt;ds_attr-&gt;state == <a href='../S/409.html#L120' title='Defined at 120 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_MAP_RECV</a>) <em class='brace'>{</em>
+<a id='L168' name='L168'></a>      ds_attr = us_attr-&gt;ds_attr;
+<a id='L169' name='L169'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L170' name='L170'></a>      <strong class='reserved'>goto</strong> LRl_10;
+<a id='L171' name='L171'></a>    <em class='brace'>}</em>
+<a id='L172' name='L172'></a>
+<a id='L173' name='L173'></a>    <strong class='reserved'>if</strong> (g-&gt;propagate_release == <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>) <em class='brace'>{</em> <em class='comment'>/* LRl.8 */</em>
+<a id='L174' name='L174'></a>      <strong class='reserved'>goto</strong> LRl_10;
+<a id='L175' name='L175'></a>    <em class='brace'>}</em>
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a>    <strong class='reserved'>if</strong> (<a href='../S/397.html#L99' title='Defined at 99 in ldpd/ldp_label_rel_with.c.'>ldp_label_release_send</a>(g, ds_attr-&gt;session, ds_attr,
+<a id='L178' name='L178'></a>      <a href='../S/409.html#L156' title='Defined at 156 in ldpd/ldp_struct.h.'>LDP_NOTIF_NONE</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em> <em class='comment'>/* LRl.9 */</em>
+<a id='L179' name='L179'></a>      retval = <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L180' name='L180'></a>    <em class='brace'>}</em>
+<a id='L181' name='L181'></a>    <a href='../S/420.html#L244' title='Defined at 244 in ldpd/ldp_attr.c.'>ldp_attr_remove_complete</a>(g, ds_attr, <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>);
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a>  LRl_10:
+<a id='L184' name='L184'></a>    <a href='../S/420.html#L244' title='Defined at 244 in ldpd/ldp_attr.c.'>ldp_attr_remove_complete</a>(g, us_attr, <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>); <em class='comment'>/* LRl.10,11 */</em>
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L187' name='L187'></a>    <a href='../S/453.html#L42' title='Defined at 42 in ldpd/mpls_trace.h.'>LDP_PRINT</a>(g-&gt;user_data, "No FEC in release, need to implement\n");
+<a id='L188' name='L188'></a>    <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L189' name='L189'></a>  <em class='brace'>}</em>
+<a id='L190' name='L190'></a>
+<a id='L191' name='L191'></a>LRl_13:
+<a id='L192' name='L192'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_label_release_process");
+<a id='L193' name='L193'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L194' name='L194'></a><em class='brace'>}</em>
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6631.html' title='Multiple referred from 2 places.'>ldp_label_withdraw_process</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s,
+<a id='L197' name='L197'></a>  <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> * r_attr, <a href='../D/7288.html' title='Multiple defined in 2 places.'>ldp_fec</a> * f)
+<a id='L198' name='L198'></a><em class='brace'>{</em>
+<a id='L199' name='L199'></a>  <a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> label_exists = <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>;
+<a id='L200' name='L200'></a>  <a href='../S/409.html#L34' title='Defined at 34 in ldpd/ldp_struct.h.'>ldp_attr_list</a> *ds_list = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L201' name='L201'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> *ds_attr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L202' name='L202'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> *ds_temp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L203' name='L203'></a>  <a href='../D/7161.html' title='Multiple defined in 2 places.'>ldp_attr</a> *us_temp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L204' name='L204'></a>  <a href='../D/7437.html' title='Multiple defined in 2 places.'>ldp_nexthop</a> *nh = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L205' name='L205'></a>  <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> retval = <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_label_withdraw_process");
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a>  <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L95' title='Defined at 95 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_RECV</a>, <a href='../S/409.html#L140' title='Defined at 140 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_LABEL</a>,
+<a id='L210' name='L210'></a>    "Withdraw Recv for %s\n", s-&gt;session_name);
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  <strong class='reserved'>if</strong> (r_attr-&gt;genLblTlvExists || r_attr-&gt;atmLblTlvExists
+<a id='L213' name='L213'></a>    || r_attr-&gt;frLblTlvExists) <em class='brace'>{</em>
+<a id='L214' name='L214'></a>    label_exists = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L215' name='L215'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L216' name='L216'></a>    <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L217' name='L217'></a>  <em class='brace'>}</em>
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>  <strong class='reserved'>if</strong> (f) <em class='brace'>{</em>
+<a id='L220' name='L220'></a>    <strong class='reserved'>if</strong> ((ds_list = <a href='../S/420.html#L686' title='Defined at 686 in ldpd/ldp_attr.c.'>ldp_attr_find_downstream_all2</a>(g, s, f)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L221' name='L221'></a>      ds_temp = <a href='../S/373.html#L108' title='Defined at 108 in ldpd/mpls_list.h.'>MPLS_LIST_HEAD</a>(ds_list);
+<a id='L222' name='L222'></a>      <strong class='reserved'>while</strong> (ds_temp) <em class='brace'>{</em>
+<a id='L223' name='L223'></a>        <strong class='reserved'>if</strong> (ds_temp-&gt;state == <a href='../S/409.html#L120' title='Defined at 120 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_MAP_RECV</a>) <em class='brace'>{</em> <em class='comment'>/* LWd.3 */</em>
+<a id='L224' name='L224'></a>          <strong class='reserved'>if</strong> (<a href='../S/420.html#L469' title='Defined at 469 in ldpd/ldp_attr.c.'>ldp_attr_is_equal</a>(r_attr, ds_temp, <a href='../S/346.html#L14' title='Defined at 14 in ldpd/ldp_attr.h.'>LDP_ATTR_LABEL</a>)) <em class='brace'>{</em>
+<a id='L225' name='L225'></a>            ds_attr = ds_temp;
+<a id='L226' name='L226'></a>            <strong class='reserved'>break</strong>;
+<a id='L227' name='L227'></a>          <em class='brace'>}</em>
+<a id='L228' name='L228'></a>        <em class='brace'>}</em>
+<a id='L229' name='L229'></a>        ds_temp = <a href='../S/373.html#L109' title='Defined at 109 in ldpd/mpls_list.h.'>MPLS_LIST_NEXT</a>(ds_list, ds_temp, _fs);
+<a id='L230' name='L230'></a>      <em class='brace'>}</em>
+<a id='L231' name='L231'></a>    <em class='brace'>}</em>
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>    <strong class='reserved'>if</strong> (!ds_attr) <em class='brace'>{</em>
+<a id='L234' name='L234'></a>      retval = <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L235' name='L235'></a>      <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L95' title='Defined at 95 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_RECV</a>, <a href='../S/409.html#L140' title='Defined at 140 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_LABEL</a>,
+<a id='L236' name='L236'></a>        "Withdraw Recv for a non-existant mapping from %s\n",s-&gt;session_name);
+<a id='L237' name='L237'></a>      <strong class='reserved'>goto</strong> LWd_13;
+<a id='L238' name='L238'></a>    <em class='brace'>}</em>
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a>    <em class='comment'>/*</em>
+<a id='L241' name='L241'></a><em class='comment'>     * we want to remove it from the tree, but not delete it yet</em>
+<a id='L242' name='L242'></a><em class='comment'>     * so hold a refcnt, we will release that refcnt at the end, thus</em>
+<a id='L243' name='L243'></a><em class='comment'>     * deleting it if no one else it holding a refcnt</em>
+<a id='L244' name='L244'></a><em class='comment'>     */</em>
+<a id='L245' name='L245'></a>    <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(ds_attr);
+<a id='L246' name='L246'></a>    <a href='../S/420.html#L244' title='Defined at 244 in ldpd/ldp_attr.c.'>ldp_attr_remove_complete</a>(g, ds_attr, <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>); <em class='comment'>/* LWd.4 */</em>
+<a id='L247' name='L247'></a>
+<a id='L248' name='L248'></a>    <em class='comment'>/* LWd.2 */</em>
+<a id='L249' name='L249'></a>    <strong class='reserved'>if</strong> (<a href='../S/397.html#L99' title='Defined at 99 in ldpd/ldp_label_rel_with.c.'>ldp_label_release_send</a>(g, s, ds_attr, <a href='../S/409.html#L156' title='Defined at 156 in ldpd/ldp_struct.h.'>LDP_NOTIF_NONE</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L250' name='L250'></a>      retval = <a href='../S/383.html#L22' title='Defined at 22 in ldpd/mpls_struct.h.'>MPLS_FATAL</a>;
+<a id='L251' name='L251'></a>      <strong class='reserved'>goto</strong> LWd_13;
+<a id='L252' name='L252'></a>    <em class='brace'>}</em>
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a>    <strong class='reserved'>if</strong> (g-&gt;lsp_control_mode == <a href='../S/409.html#L44' title='Defined at 44 in ldpd/ldp_struct.h.'>LDP_CONTROL_ORDERED</a>) <em class='brace'>{</em> <em class='comment'>/* LWd.5 */</em>
+<a id='L255' name='L255'></a>      <strong class='reserved'>goto</strong> LWd_8;
+<a id='L256' name='L256'></a>    <em class='brace'>}</em>
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a>    <strong class='reserved'>if</strong> (s-&gt;oper_distribution_mode != <a href='../S/409.html#L73' title='Defined at 73 in ldpd/ldp_struct.h.'>LDP_DISTRIBUTION_ONDEMAND</a>) <em class='brace'>{</em> <em class='comment'>/* LWd.6 */</em>
+<a id='L259' name='L259'></a>      <strong class='reserved'>goto</strong> LWd_13;
+<a id='L260' name='L260'></a>    <em class='brace'>}</em>
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>    <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>((nh = <a href='../S/348.html#L38' title='Defined at 38 in ldpd/ldp_nexthop.c.'>ldp_nexthop_for_fec_session</a>(f, s)));
+<a id='L263' name='L263'></a>    retval = <a href='../S/350.html#L322' title='Defined at 322 in ldpd/ldp_fec.c.'>ldp_fec_process_add</a>(g, f, nh, s);  <em class='comment'>/* LWd.7 */</em>
+<a id='L264' name='L264'></a>    <strong class='reserved'>goto</strong> LWd_13;
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a>  LWd_8:
+<a id='L267' name='L267'></a>    <em class='comment'>/* I can only propogate a label withdraw to the upstreams attached</em>
+<a id='L268' name='L268'></a><em class='comment'>       to the downstream found above */</em>
+<a id='L269' name='L269'></a>
+<a id='L270' name='L270'></a>    us_temp = <a href='../S/373.html#L108' title='Defined at 108 in ldpd/mpls_list.h.'>MPLS_LIST_HEAD</a>(&amp;ds_attr-&gt;us_attr_root);
+<a id='L271' name='L271'></a>    <strong class='reserved'>while</strong> (us_temp) <em class='brace'>{</em>
+<a id='L272' name='L272'></a>      <strong class='reserved'>if</strong> (us_temp-&gt;state == <a href='../S/409.html#L121' title='Defined at 121 in ldpd/ldp_struct.h.'>LDP_LSP_STATE_MAP_SENT</a>) <em class='brace'>{</em>
+<a id='L273' name='L273'></a>        <strong class='reserved'>if</strong> (<a href='../S/397.html#L109' title='Defined at 109 in ldpd/ldp_label_rel_with.c.'>ldp_label_withdraw_send</a>(g, us_temp-&gt;session, us_temp,
+<a id='L274' name='L274'></a>            <a href='../S/409.html#L156' title='Defined at 156 in ldpd/ldp_struct.h.'>LDP_NOTIF_NONE</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em> <em class='comment'>/* LWd.11 */</em>
+<a id='L275' name='L275'></a>          retval = <a href='../S/383.html#L22' title='Defined at 22 in ldpd/mpls_struct.h.'>MPLS_FATAL</a>;
+<a id='L276' name='L276'></a>          <strong class='reserved'>goto</strong> LWd_13;
+<a id='L277' name='L277'></a>        <em class='brace'>}</em>
+<a id='L278' name='L278'></a>      <em class='brace'>}</em>
+<a id='L279' name='L279'></a>      us_temp = <a href='../S/373.html#L109' title='Defined at 109 in ldpd/mpls_list.h.'>MPLS_LIST_NEXT</a>(&amp;ds_attr-&gt;us_attr_root, us_temp, _ds_attr);
+<a id='L280' name='L280'></a>    <em class='brace'>}</em>
+<a id='L281' name='L281'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L282' name='L282'></a>    <em class='comment'>/* JLEU: process wildcard FEC stuff here */</em>
+<a id='L283' name='L283'></a>    <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L284' name='L284'></a>  <em class='brace'>}</em>
+<a id='L285' name='L285'></a>
+<a id='L286' name='L286'></a>LWd_13:
+<a id='L287' name='L287'></a>  <strong class='reserved'>if</strong> (ds_attr) <em class='brace'>{</em>
+<a id='L288' name='L288'></a>    <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(ds_attr, <a href='../S/420.html#L358' title='Defined at 358 in ldpd/ldp_attr.c.'>ldp_attr_delete</a>);
+<a id='L289' name='L289'></a>  <em class='brace'>}</em>
+<a id='L290' name='L290'></a>
+<a id='L291' name='L291'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_label_withdraw_process");
+<a id='L292' name='L292'></a>
+<a id='L293' name='L293'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L294' name='L294'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L26'>[^]</a><a href='#L196'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

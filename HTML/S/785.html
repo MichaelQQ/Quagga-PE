@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_api.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_api.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/444.html' title='Multiple included from 4 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * API message handling module for OSPF daemon and client.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 2001, 2002 Ralph Keller</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> * </em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify</em>
+<a id='L8' name='L8'></a><em class='comment'> * it under the terms of the GNU General Public License as published</em>
+<a id='L9' name='L9'></a><em class='comment'> * by the Free Software Foundation; either version 2, or (at your</em>
+<a id='L10' name='L10'></a><em class='comment'> * option) any later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the</em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330,</em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='comment'>/* This file is used both by the OSPFd and client applications to</em>
+<a id='L25' name='L25'></a><em class='comment'>   define message formats used for communication. */</em>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#ifndef</em> <a href='../S/785.html#L28' title='Defined at 28 in ospfd/ospf_api.h.'>_OSPF_API_H</a>
+<a id='L28' name='L28'></a><em class='sharp'>#define</em> <a href='../S/785.html#L27' title='Referred from 27 in ospfd/ospf_api.h.'>_OSPF_API_H</a>
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><em class='sharp'>#define</em> <a href='../R/2547.html' title='Multiple referred from 2 places.'>OSPF_API_VERSION</a>           1
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='comment'>/* MTYPE definition is not reflected to "memory.h". */</em>
+<a id='L33' name='L33'></a><em class='sharp'>#define</em> <a href='../R/1937.html' title='Multiple referred from 2 places.'>MTYPE_OSPF_API_MSG</a>      MTYPE_TMP
+<a id='L34' name='L34'></a><em class='sharp'>#define</em> <a href='../R/1936.html' title='Multiple referred from 2 places.'>MTYPE_OSPF_API_FIFO</a>     MTYPE_TMP
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><em class='comment'>/* Default API server port to accept connection request from client-side. */</em>
+<a id='L37' name='L37'></a><em class='comment'>/* This value could be overridden by "ospfapi" entry in "/etc/services". */</em>
+<a id='L38' name='L38'></a><em class='sharp'>#define</em> <a href='../R/2545.html' title='Multiple referred from 2 places.'>OSPF_API_SYNC_PORT</a>      2607
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='comment'>/* -----------------------------------------------------------</em>
+<a id='L41' name='L41'></a><em class='comment'> * Generic messages </em>
+<a id='L42' name='L42'></a><em class='comment'> * -----------------------------------------------------------</em>
+<a id='L43' name='L43'></a><em class='comment'> */</em>
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='comment'>/* Message header structure, fields are in network byte order and</em>
+<a id='L46' name='L46'></a><em class='comment'>   aligned to four octets. */</em>
+<a id='L47' name='L47'></a><strong class='reserved'>struct</strong> <a href='../R/4432.html' title='Multiple referred from 8 places.'>apimsghdr</a>
+<a id='L48' name='L48'></a><em class='brace'>{</em>
+<a id='L49' name='L49'></a>  u_char version;               <em class='comment'>/* OSPF API protocol version */</em>
+<a id='L50' name='L50'></a>  u_char msgtype;               <em class='comment'>/* Type of message */</em>
+<a id='L51' name='L51'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> msglen;             <em class='comment'>/* Length of message w/o header */</em>
+<a id='L52' name='L52'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> msgseq;             <em class='comment'>/* Sequence number */</em>
+<a id='L53' name='L53'></a><em class='brace'>}</em>;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='comment'>/* Message representation with header and body */</em>
+<a id='L56' name='L56'></a><strong class='reserved'>struct</strong> <a href='../R/7251.html' title='Multiple referred from 720 places.'>msg</a>
+<a id='L57' name='L57'></a><em class='brace'>{</em>
+<a id='L58' name='L58'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *next;             <em class='comment'>/* to link into fifo */</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a>  <em class='comment'>/* Message header */</em>
+<a id='L61' name='L61'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L47' title='Defined at 47 in ospfd/ospf_api.h.'>apimsghdr</a> hdr;
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a>  <em class='comment'>/* Message body */</em>
+<a id='L64' name='L64'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L65' name='L65'></a><em class='brace'>}</em>;
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a><em class='comment'>/* Prototypes for generic messages. */</em>
+<a id='L68' name='L68'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L98' title='Defined at 98 in ospfd/ospf_api.c.'>msg_new</a> (u_char msgtype, <strong class='reserved'>void</strong> *msgbody,
+<a id='L69' name='L69'></a>                     <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> msglen);
+<a id='L70' name='L70'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L119' title='Defined at 119 in ospfd/ospf_api.c.'>msg_dup</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L71' name='L71'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L206' title='Defined at 206 in ospfd/ospf_api.c.'>msg_print</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);        <em class='comment'>/* XXX debug only */</em>
+<a id='L72' name='L72'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L240' title='Defined at 240 in ospfd/ospf_api.c.'>msg_free</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L73' name='L73'></a><strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L343' title='Defined at 343 in ospfd/ospf_api.c.'>msg_read</a> (<strong class='reserved'>int</strong> fd);
+<a id='L74' name='L74'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/758.html#L408' title='Defined at 408 in ospfd/ospf_api.c.'>msg_write</a> (<strong class='reserved'>int</strong> fd, <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><em class='comment'>/* For requests, the message sequence number is between MIN_SEQ and</em>
+<a id='L77' name='L77'></a><em class='comment'>   MAX_SEQ. For notifications, the sequence number is 0. */</em>
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><em class='sharp'>#define</em> <a href='../R/1629.html' title='Multiple referred from 2 places.'>MIN_SEQ</a>          1
+<a id='L80' name='L80'></a><em class='sharp'>#define</em> <a href='../S/323.html#L346' title='Referred from 346 in ospfclient/ospf_apiclient.c.'>MAX_SEQ</a> 2147483647
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L251' title='Defined at 251 in ospfd/ospf_api.c.'>msg_set_seq</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnr);
+<a id='L83' name='L83'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/758.html#L259' title='Defined at 259 in ospfd/ospf_api.c.'>msg_get_seq</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><em class='comment'>/* -----------------------------------------------------------</em>
+<a id='L86' name='L86'></a><em class='comment'> * Message fifo queues</em>
+<a id='L87' name='L87'></a><em class='comment'> * -----------------------------------------------------------</em>
+<a id='L88' name='L88'></a><em class='comment'> */</em>
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><em class='comment'>/* Message queue structure. */</em>
+<a id='L91' name='L91'></a><strong class='reserved'>struct</strong> <a href='../R/7255.html' title='Multiple referred from 16 places.'>msg_fifo</a>
+<a id='L92' name='L92'></a><em class='brace'>{</em>
+<a id='L93' name='L93'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> count;
+<a id='L94' name='L94'></a>
+<a id='L95' name='L95'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *head;
+<a id='L96' name='L96'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *tail;
+<a id='L97' name='L97'></a><em class='brace'>}</em>;
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><em class='comment'>/* Prototype for message fifo queues. */</em>
+<a id='L100' name='L100'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L91' title='Defined at 91 in ospfd/ospf_api.h.'>msg_fifo</a> *<a href='../S/758.html#L271' title='Defined at 271 in ospfd/ospf_api.c.'>msg_fifo_new</a> (<strong class='reserved'>void</strong>);
+<a id='L101' name='L101'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L278' title='Defined at 278 in ospfd/ospf_api.c.'>msg_fifo_push</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L91' title='Defined at 91 in ospfd/ospf_api.h.'>msg_fifo</a> *, <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L102' name='L102'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L292' title='Defined at 292 in ospfd/ospf_api.c.'>msg_fifo_pop</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L91' title='Defined at 91 in ospfd/ospf_api.h.'>msg_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L103' name='L103'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L311' title='Defined at 311 in ospfd/ospf_api.c.'>msg_fifo_head</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L91' title='Defined at 91 in ospfd/ospf_api.h.'>msg_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L104' name='L104'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L318' title='Defined at 318 in ospfd/ospf_api.c.'>msg_fifo_flush</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L91' title='Defined at 91 in ospfd/ospf_api.h.'>msg_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L105' name='L105'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L335' title='Defined at 335 in ospfd/ospf_api.c.'>msg_fifo_free</a> (<strong class='reserved'>struct</strong> <a href='../S/785.html#L91' title='Defined at 91 in ospfd/ospf_api.h.'>msg_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><em class='comment'>/* -----------------------------------------------------------</em>
+<a id='L108' name='L108'></a><em class='comment'> * Specific message type and format definitions</em>
+<a id='L109' name='L109'></a><em class='comment'> * -----------------------------------------------------------</em>
+<a id='L110' name='L110'></a><em class='comment'> */</em>
+<a id='L111' name='L111'></a>
+<a id='L112' name='L112'></a><em class='comment'>/* Messages to OSPF daemon. */</em>
+<a id='L113' name='L113'></a><em class='sharp'>#define</em> <a href='../R/1923.html' title='Multiple referred from 3 places.'>MSG_REGISTER_OPAQUETYPE</a>   1
+<a id='L114' name='L114'></a><em class='sharp'>#define</em> <a href='../R/1929.html' title='Multiple referred from 2 places.'>MSG_UNREGISTER_OPAQUETYPE</a> 2
+<a id='L115' name='L115'></a><em class='sharp'>#define</em> <a href='../R/1922.html' title='Multiple referred from 3 places.'>MSG_REGISTER_EVENT</a>        3
+<a id='L116' name='L116'></a><em class='sharp'>#define</em> <a href='../R/1925.html' title='Multiple referred from 3 places.'>MSG_SYNC_LSDB</a>             4
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> <a href='../R/1919.html' title='Multiple referred from 3 places.'>MSG_ORIGINATE_REQUEST</a>     5
+<a id='L118' name='L118'></a><em class='sharp'>#define</em> <a href='../R/1910.html' title='Multiple referred from 3 places.'>MSG_DELETE_REQUEST</a>        6
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a><em class='comment'>/* Messages from OSPF daemon. */</em>
+<a id='L121' name='L121'></a><em class='sharp'>#define</em> <a href='../R/1924.html' title='Multiple referred from 4 places.'>MSG_REPLY</a>                10
+<a id='L122' name='L122'></a><em class='sharp'>#define</em> <a href='../R/1921.html' title='Multiple referred from 4 places.'>MSG_READY_NOTIFY</a>         11
+<a id='L123' name='L123'></a><em class='sharp'>#define</em> <a href='../R/1914.html' title='Multiple referred from 6 places.'>MSG_LSA_UPDATE_NOTIFY</a>    12
+<a id='L124' name='L124'></a><em class='sharp'>#define</em> <a href='../R/1913.html' title='Multiple referred from 4 places.'>MSG_LSA_DELETE_NOTIFY</a>    13
+<a id='L125' name='L125'></a><em class='sharp'>#define</em> <a href='../R/1915.html' title='Multiple referred from 4 places.'>MSG_NEW_IF</a>               14
+<a id='L126' name='L126'></a><em class='sharp'>#define</em> <a href='../R/1911.html' title='Multiple referred from 4 places.'>MSG_DEL_IF</a>               15
+<a id='L127' name='L127'></a><em class='sharp'>#define</em> <a href='../R/1912.html' title='Multiple referred from 4 places.'>MSG_ISM_CHANGE</a>           16
+<a id='L128' name='L128'></a><em class='sharp'>#define</em> <a href='../R/1917.html' title='Multiple referred from 4 places.'>MSG_NSM_CHANGE</a>           17
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><strong class='reserved'>struct</strong> <a href='../R/7274.html' title='Multiple referred from 5 places.'>msg_register_opaque_type</a>
+<a id='L131' name='L131'></a><em class='brace'>{</em>
+<a id='L132' name='L132'></a>  u_char lsatype;
+<a id='L133' name='L133'></a>  u_char opaquetype;
+<a id='L134' name='L134'></a>  u_char pad[2];                <em class='comment'>/* padding */</em>
+<a id='L135' name='L135'></a><em class='brace'>}</em>;
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a><strong class='reserved'>struct</strong> <a href='../R/7278.html' title='Multiple referred from 2 places.'>msg_unregister_opaque_type</a>
+<a id='L138' name='L138'></a><em class='brace'>{</em>
+<a id='L139' name='L139'></a>  u_char lsatype;
+<a id='L140' name='L140'></a>  u_char opaquetype;
+<a id='L141' name='L141'></a>  u_char pad[2];                <em class='comment'>/* padding */</em>
+<a id='L142' name='L142'></a><em class='brace'>}</em>;
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a><em class='comment'>/* Power2 is needed to convert LSA types into bit positions,</em>
+<a id='L145' name='L145'></a><em class='comment'> * see typemask below. Type definition starts at 1, so</em>
+<a id='L146' name='L146'></a><em class='comment'> * Power2[0] is not used. */</em>
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a><em class='sharp'>#ifdef</em> ORIGINAL_CODING
+<a id='L150' name='L150'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>
+<a id='L151' name='L151'></a>  Power2[] = <em class='brace'>{</em> 0x0, 0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+<a id='L152' name='L152'></a>  0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000, 0x8000
+<a id='L153' name='L153'></a><em class='brace'>}</em>;
+<a id='L154' name='L154'></a><em class='sharp'>#else</em>
+<a id='L155' name='L155'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>
+<a id='L156' name='L156'></a>  Power2[] = <em class='brace'>{</em> 0, (1 &lt;&lt; 0), (1 &lt;&lt; 1), (1 &lt;&lt; 2), (1 &lt;&lt; 3), (1 &lt;&lt; 4),
+<a id='L157' name='L157'></a>  (1 &lt;&lt; 5), (1 &lt;&lt; 6), (1 &lt;&lt; 7), (1 &lt;&lt; 8), (1 &lt;&lt; 9),
+<a id='L158' name='L158'></a>  (1 &lt;&lt; 10), (1 &lt;&lt; 11), (1 &lt;&lt; 12), (1 &lt;&lt; 13), (1 &lt;&lt; 14),
+<a id='L159' name='L159'></a>  (1 &lt;&lt; 15)
+<a id='L160' name='L160'></a><em class='brace'>}</em>;
+<a id='L161' name='L161'></a><em class='sharp'>#endif</em> <em class='comment'>/* ORIGINAL_CODING */</em>
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><strong class='reserved'>struct</strong> <a href='../R/6831.html' title='Multiple referred from 12 places.'>lsa_filter_type</a>
+<a id='L164' name='L164'></a><em class='brace'>{</em>
+<a id='L165' name='L165'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> typemask;           <em class='comment'>/* bitmask for selecting LSA types (1..16) */</em>
+<a id='L166' name='L166'></a>  u_char origin;                <em class='comment'>/* selects according to origin. */</em>
+<a id='L167' name='L167'></a><em class='sharp'>#define</em> NON_SELF_ORIGINATED     0
+<a id='L168' name='L168'></a><em class='sharp'>#define</em> SELF_ORIGINATED  (<a href='../S/733.html#L77' title='Defined at 77 in ospfd/ospf_lsa.h.'>OSPF_LSA_SELF</a>)
+<a id='L169' name='L169'></a><em class='sharp'>#define</em> <a href='../R/30.html' title='Multiple referred from 4 places.'>ANY_ORIGIN</a> 2
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a>  u_char num_areas;             <em class='comment'>/* number of areas in the filter. */</em>
+<a id='L172' name='L172'></a>  <em class='comment'>/* areas, if any, go here. */</em>
+<a id='L173' name='L173'></a><em class='brace'>}</em>;
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a><strong class='reserved'>struct</strong> <a href='../R/7273.html' title='Multiple referred from 6 places.'>msg_register_event</a>
+<a id='L176' name='L176'></a><em class='brace'>{</em>
+<a id='L177' name='L177'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L163' title='Defined at 163 in ospfd/ospf_api.h.'>lsa_filter_type</a> <a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>;
+<a id='L178' name='L178'></a><em class='brace'>}</em>;
+<a id='L179' name='L179'></a>
+<a id='L180' name='L180'></a><strong class='reserved'>struct</strong> <a href='../R/7277.html' title='Multiple referred from 6 places.'>msg_sync_lsdb</a>
+<a id='L181' name='L181'></a><em class='brace'>{</em>
+<a id='L182' name='L182'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L163' title='Defined at 163 in ospfd/ospf_api.h.'>lsa_filter_type</a> <a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>;
+<a id='L183' name='L183'></a><em class='brace'>}</em>;
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a><strong class='reserved'>struct</strong> <a href='../R/7269.html' title='Multiple referred from 8 places.'>msg_originate_request</a>
+<a id='L186' name='L186'></a><em class='brace'>{</em>
+<a id='L187' name='L187'></a>  <em class='comment'>/* Used for LSA type 9 otherwise ignored */</em>
+<a id='L188' name='L188'></a>  <strong class='reserved'>struct</strong> in_addr ifaddr;
+<a id='L189' name='L189'></a>
+<a id='L190' name='L190'></a>  <em class='comment'>/* Used for LSA type 10 otherwise ignored */</em>
+<a id='L191' name='L191'></a>  <strong class='reserved'>struct</strong> in_addr area_id;
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a>  <em class='comment'>/* LSA header and LSA-specific part */</em>
+<a id='L194' name='L194'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L195' name='L195'></a><em class='brace'>}</em>;
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a><strong class='reserved'>struct</strong> <a href='../R/7253.html' title='Multiple referred from 5 places.'>msg_delete_request</a>
+<a id='L198' name='L198'></a><em class='brace'>{</em>
+<a id='L199' name='L199'></a>  <strong class='reserved'>struct</strong> in_addr area_id;       <em class='comment'>/* "0.0.0.0" for AS-external opaque LSAs */</em>
+<a id='L200' name='L200'></a>  u_char lsa_type;
+<a id='L201' name='L201'></a>  u_char opaque_type;
+<a id='L202' name='L202'></a>  u_char pad[2];                <em class='comment'>/* padding */</em>
+<a id='L203' name='L203'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> opaque_id;
+<a id='L204' name='L204'></a><em class='brace'>}</em>;
+<a id='L205' name='L205'></a>
+<a id='L206' name='L206'></a><strong class='reserved'>struct</strong> <a href='../R/7275.html' title='Multiple referred from 5 places.'>msg_reply</a>
+<a id='L207' name='L207'></a><em class='brace'>{</em>
+<a id='L208' name='L208'></a>  <strong class='reserved'>signed</strong> <strong class='reserved'>char</strong> errcode;
+<a id='L209' name='L209'></a><em class='sharp'>#define</em> <a href='../R/2542.html' title='Multiple referred from 2 places.'>OSPF_API_OK</a>                         0
+<a id='L210' name='L210'></a><em class='sharp'>#define</em> <a href='../R/2539.html' title='Multiple referred from 2 places.'>OSPF_API_NOSUCHINTERFACE</a>          (-1)
+<a id='L211' name='L211'></a><em class='sharp'>#define</em> <a href='../R/2538.html' title='Multiple referred from 3 places.'>OSPF_API_NOSUCHAREA</a>               (-2)
+<a id='L212' name='L212'></a><em class='sharp'>#define</em> <a href='../R/2540.html' title='Multiple referred from 2 places.'>OSPF_API_NOSUCHLSA</a>                (-3)
+<a id='L213' name='L213'></a><em class='sharp'>#define</em> <a href='../R/2535.html' title='Multiple referred from 6 places.'>OSPF_API_ILLEGALLSATYPE</a>           (-4)
+<a id='L214' name='L214'></a><em class='sharp'>#define</em> <a href='../R/2543.html' title='Multiple referred from 2 places.'>OSPF_API_OPAQUETYPEINUSE</a>          (-5)
+<a id='L215' name='L215'></a><em class='sharp'>#define</em> <a href='../R/2544.html' title='Multiple referred from 4 places.'>OSPF_API_OPAQUETYPENOTREGISTERED</a>  (-6)
+<a id='L216' name='L216'></a><em class='sharp'>#define</em> <a href='../R/2541.html' title='Multiple referred from 2 places.'>OSPF_API_NOTREADY</a>                 (-7)
+<a id='L217' name='L217'></a><em class='sharp'>#define</em> <a href='../R/2537.html' title='Multiple referred from 4 places.'>OSPF_API_NOMEMORY</a>                 (-8)
+<a id='L218' name='L218'></a><em class='sharp'>#define</em> <a href='../S/758.html#L186' title='Referred from 186 in ospfd/ospf_api.c.'>OSPF_API_ERROR</a>                    (-9)
+<a id='L219' name='L219'></a><em class='sharp'>#define</em> <a href='../S/758.html#L187' title='Referred from 187 in ospfd/ospf_api.c.'>OSPF_API_UNDEF</a>                   (-10)
+<a id='L220' name='L220'></a>  u_char pad[3];                <em class='comment'>/* padding to four byte alignment */</em>
+<a id='L221' name='L221'></a><em class='brace'>}</em>;
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a><em class='comment'>/* Message to tell client application that it ospf daemon is </em>
+<a id='L224' name='L224'></a><em class='comment'> * ready to accept opaque LSAs for a given interface or area. */</em>
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a><strong class='reserved'>struct</strong> <a href='../R/7272.html' title='Multiple referred from 5 places.'>msg_ready_notify</a>
+<a id='L227' name='L227'></a><em class='brace'>{</em>
+<a id='L228' name='L228'></a>  u_char lsa_type;
+<a id='L229' name='L229'></a>  u_char opaque_type;
+<a id='L230' name='L230'></a>  u_char pad[2];                <em class='comment'>/* padding */</em>
+<a id='L231' name='L231'></a>  <strong class='reserved'>struct</strong> in_addr addr;          <em class='comment'>/* interface address or area address */</em>
+<a id='L232' name='L232'></a><em class='brace'>}</em>;
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a><em class='comment'>/* These messages have a dynamic length depending on the embodied LSA.</em>
+<a id='L235' name='L235'></a><em class='comment'>   They are aligned to four octets. msg_lsa_change_notify is used for</em>
+<a id='L236' name='L236'></a><em class='comment'>   both LSA update and LSAs delete. */</em>
+<a id='L237' name='L237'></a>
+<a id='L238' name='L238'></a><strong class='reserved'>struct</strong> <a href='../R/7265.html' title='Multiple referred from 10 places.'>msg_lsa_change_notify</a>
+<a id='L239' name='L239'></a><em class='brace'>{</em>
+<a id='L240' name='L240'></a>  <em class='comment'>/* Used for LSA type 9 otherwise ignored */</em>
+<a id='L241' name='L241'></a>  <strong class='reserved'>struct</strong> in_addr ifaddr;
+<a id='L242' name='L242'></a>  <em class='comment'>/* Area ID. Not valid for AS-External and Opaque11 LSAs. */</em>
+<a id='L243' name='L243'></a>  <strong class='reserved'>struct</strong> in_addr area_id;
+<a id='L244' name='L244'></a>  u_char is_self_originated;    <em class='comment'>/* 1 if self originated. */</em>
+<a id='L245' name='L245'></a>  u_char pad[3];
+<a id='L246' name='L246'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L247' name='L247'></a><em class='brace'>}</em>;
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a><strong class='reserved'>struct</strong> <a href='../R/7267.html' title='Multiple referred from 5 places.'>msg_new_if</a>
+<a id='L250' name='L250'></a><em class='brace'>{</em>
+<a id='L251' name='L251'></a>  <strong class='reserved'>struct</strong> in_addr ifaddr;        <em class='comment'>/* interface IP address */</em>
+<a id='L252' name='L252'></a>  <strong class='reserved'>struct</strong> in_addr area_id;       <em class='comment'>/* area this interface belongs to */</em>
+<a id='L253' name='L253'></a><em class='brace'>}</em>;
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a><strong class='reserved'>struct</strong> <a href='../R/7252.html' title='Multiple referred from 5 places.'>msg_del_if</a>
+<a id='L256' name='L256'></a><em class='brace'>{</em>
+<a id='L257' name='L257'></a>  <strong class='reserved'>struct</strong> in_addr ifaddr;        <em class='comment'>/* interface IP address */</em>
+<a id='L258' name='L258'></a><em class='brace'>}</em>;
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a><strong class='reserved'>struct</strong> <a href='../R/7264.html' title='Multiple referred from 5 places.'>msg_ism_change</a>
+<a id='L261' name='L261'></a><em class='brace'>{</em>
+<a id='L262' name='L262'></a>  <strong class='reserved'>struct</strong> in_addr ifaddr;        <em class='comment'>/* interface IP address */</em>
+<a id='L263' name='L263'></a>  <strong class='reserved'>struct</strong> in_addr area_id;       <em class='comment'>/* area this interface belongs to */</em>
+<a id='L264' name='L264'></a>  u_char status;                <em class='comment'>/* interface status (up/down) */</em>
+<a id='L265' name='L265'></a>  u_char pad[3];                <em class='comment'>/* not used */</em>
+<a id='L266' name='L266'></a><em class='brace'>}</em>;
+<a id='L267' name='L267'></a>
+<a id='L268' name='L268'></a><strong class='reserved'>struct</strong> <a href='../R/7268.html' title='Multiple referred from 5 places.'>msg_nsm_change</a>
+<a id='L269' name='L269'></a><em class='brace'>{</em>
+<a id='L270' name='L270'></a>  <strong class='reserved'>struct</strong> in_addr ifaddr;        <em class='comment'>/* attached interface */</em>
+<a id='L271' name='L271'></a>  <strong class='reserved'>struct</strong> in_addr nbraddr;       <em class='comment'>/* Neighbor interface address */</em>
+<a id='L272' name='L272'></a>  <strong class='reserved'>struct</strong> in_addr router_id;     <em class='comment'>/* Router ID of neighbor */</em>
+<a id='L273' name='L273'></a>  u_char status;                <em class='comment'>/* NSM status */</em>
+<a id='L274' name='L274'></a>  u_char pad[3];
+<a id='L275' name='L275'></a><em class='brace'>}</em>;
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a><em class='comment'>/* We make use of a union to define a structure that covers all</em>
+<a id='L278' name='L278'></a><em class='comment'>   possible API messages. This allows us to find out how much memory</em>
+<a id='L279' name='L279'></a><em class='comment'>   needs to be reserved for the largest API message. */</em>
+<a id='L280' name='L280'></a><strong class='reserved'>struct</strong> <a href='../S/785.html#L301' title='Referred from 301 in ospfd/ospf_api.h.'>apimsg</a>
+<a id='L281' name='L281'></a><em class='brace'>{</em>
+<a id='L282' name='L282'></a>  <strong class='reserved'>struct</strong> <a href='../S/785.html#L47' title='Defined at 47 in ospfd/ospf_api.h.'>apimsghdr</a> hdr;
+<a id='L283' name='L283'></a>  <strong class='reserved'>union</strong>
+<a id='L284' name='L284'></a>  <em class='brace'>{</em>
+<a id='L285' name='L285'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L130' title='Defined at 130 in ospfd/ospf_api.h.'>msg_register_opaque_type</a> register_opaque_type;
+<a id='L286' name='L286'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L175' title='Defined at 175 in ospfd/ospf_api.h.'>msg_register_event</a> register_event;
+<a id='L287' name='L287'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L180' title='Defined at 180 in ospfd/ospf_api.h.'>msg_sync_lsdb</a> sync_lsdb;
+<a id='L288' name='L288'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L185' title='Defined at 185 in ospfd/ospf_api.h.'>msg_originate_request</a> originate_request;
+<a id='L289' name='L289'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L197' title='Defined at 197 in ospfd/ospf_api.h.'>msg_delete_request</a> delete_request;
+<a id='L290' name='L290'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L206' title='Defined at 206 in ospfd/ospf_api.h.'>msg_reply</a> reply;
+<a id='L291' name='L291'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L226' title='Defined at 226 in ospfd/ospf_api.h.'>msg_ready_notify</a> ready_notify;
+<a id='L292' name='L292'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L249' title='Defined at 249 in ospfd/ospf_api.h.'>msg_new_if</a> new_if;
+<a id='L293' name='L293'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L255' title='Defined at 255 in ospfd/ospf_api.h.'>msg_del_if</a> <a href='../S/905.html#L96' title='Defined at 96 in vpnmd/vpnm_via_brctl.c.'>del_if</a>;
+<a id='L294' name='L294'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L260' title='Defined at 260 in ospfd/ospf_api.h.'>msg_ism_change</a> ism_change;
+<a id='L295' name='L295'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L268' title='Defined at 268 in ospfd/ospf_api.h.'>msg_nsm_change</a> nsm_change;
+<a id='L296' name='L296'></a>    <strong class='reserved'>struct</strong> <a href='../S/785.html#L238' title='Defined at 238 in ospfd/ospf_api.h.'>msg_lsa_change_notify</a> lsa_change_notify;
+<a id='L297' name='L297'></a>  <em class='brace'>}</em>
+<a id='L298' name='L298'></a>  u;
+<a id='L299' name='L299'></a><em class='brace'>}</em>;
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a><em class='sharp'>#define</em> <a href='../R/2536.html' title='Multiple referred from 6 places.'>OSPF_API_MAX_MSG_SIZE</a> (<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/785.html#L280' title='Defined at 280 in ospfd/ospf_api.h.'>apimsg</a>) + <a href='../S/733.html#L53' title='Defined at 53 in ospfd/ospf_lsa.h.'>OSPF_MAX_LSA_SIZE</a>)
+<a id='L302' name='L302'></a>
+<a id='L303' name='L303'></a><em class='comment'>/* -----------------------------------------------------------</em>
+<a id='L304' name='L304'></a><em class='comment'> * Prototypes for specific messages</em>
+<a id='L305' name='L305'></a><em class='comment'> * -----------------------------------------------------------</em>
+<a id='L306' name='L306'></a><em class='comment'> */</em>
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a><em class='comment'>/* For debugging only. */</em>
+<a id='L309' name='L309'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/758.html#L66' title='Defined at 66 in ospfd/ospf_api.c.'>api_opaque_lsa_print</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a><em class='comment'>/* Messages sent by client */</em>
+<a id='L312' name='L312'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L450' title='Defined at 450 in ospfd/ospf_api.c.'>new_msg_register_opaque_type</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum,
+<a id='L313' name='L313'></a>                                                 u_char ltype, u_char otype);
+<a id='L314' name='L314'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L463' title='Defined at 463 in ospfd/ospf_api.c.'>new_msg_register_event</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum,
+<a id='L315' name='L315'></a>                                           <strong class='reserved'>struct</strong> <a href='../S/785.html#L163' title='Defined at 163 in ospfd/ospf_api.h.'>lsa_filter_type</a> *<a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>);
+<a id='L316' name='L316'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L482' title='Defined at 482 in ospfd/ospf_api.c.'>new_msg_sync_lsdb</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum,
+<a id='L317' name='L317'></a>                                      <strong class='reserved'>struct</strong> <a href='../S/785.html#L163' title='Defined at 163 in ospfd/ospf_api.h.'>lsa_filter_type</a> *<a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>);
+<a id='L318' name='L318'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L502' title='Defined at 502 in ospfd/ospf_api.c.'>new_msg_originate_request</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum,
+<a id='L319' name='L319'></a>                                              <strong class='reserved'>struct</strong> in_addr ifaddr,
+<a id='L320' name='L320'></a>                                              <strong class='reserved'>struct</strong> in_addr area_id,
+<a id='L321' name='L321'></a>                                              <strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L322' name='L322'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L524' title='Defined at 524 in ospfd/ospf_api.c.'>new_msg_delete_request</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum,
+<a id='L323' name='L323'></a>                                           <strong class='reserved'>struct</strong> in_addr area_id,
+<a id='L324' name='L324'></a>                                           u_char lsa_type,
+<a id='L325' name='L325'></a>                                           u_char opaque_type,
+<a id='L326' name='L326'></a>                                           <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> opaque_id);
+<a id='L327' name='L327'></a>
+<a id='L328' name='L328'></a><em class='comment'>/* Messages sent by OSPF daemon */</em>
+<a id='L329' name='L329'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L541' title='Defined at 541 in ospfd/ospf_api.c.'>new_msg_reply</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum, u_char rc);
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L556' title='Defined at 556 in ospfd/ospf_api.c.'>new_msg_ready_notify</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnr, u_char lsa_type,
+<a id='L332' name='L332'></a>                                         u_char opaque_type,
+<a id='L333' name='L333'></a>                                         <strong class='reserved'>struct</strong> in_addr addr);
+<a id='L334' name='L334'></a>
+<a id='L335' name='L335'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L571' title='Defined at 571 in ospfd/ospf_api.c.'>new_msg_new_if</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnr,
+<a id='L336' name='L336'></a>                                   <strong class='reserved'>struct</strong> in_addr ifaddr,
+<a id='L337' name='L337'></a>                                   <strong class='reserved'>struct</strong> in_addr area);
+<a id='L338' name='L338'></a>
+<a id='L339' name='L339'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L583' title='Defined at 583 in ospfd/ospf_api.c.'>new_msg_del_if</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnr, <strong class='reserved'>struct</strong> in_addr ifaddr);
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L593' title='Defined at 593 in ospfd/ospf_api.c.'>new_msg_ism_change</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnr, <strong class='reserved'>struct</strong> in_addr ifaddr,
+<a id='L342' name='L342'></a>                                       <strong class='reserved'>struct</strong> in_addr area, u_char status);
+<a id='L343' name='L343'></a>
+<a id='L344' name='L344'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L608' title='Defined at 608 in ospfd/ospf_api.c.'>new_msg_nsm_change</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnr, <strong class='reserved'>struct</strong> in_addr ifaddr,
+<a id='L345' name='L345'></a>                                       <strong class='reserved'>struct</strong> in_addr nbraddr,
+<a id='L346' name='L346'></a>                                       <strong class='reserved'>struct</strong> in_addr router_id,
+<a id='L347' name='L347'></a>                                       u_char status);
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a><em class='comment'>/* msgtype is MSG_LSA_UPDATE_NOTIFY or MSG_LSA_DELETE_NOTIFY */</em>
+<a id='L350' name='L350'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a> *<a href='../S/758.html#L625' title='Defined at 625 in ospfd/ospf_api.c.'>new_msg_lsa_change_notify</a> (u_char msgtype,
+<a id='L351' name='L351'></a>                                              <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seqnum,
+<a id='L352' name='L352'></a>                                              <strong class='reserved'>struct</strong> in_addr ifaddr,
+<a id='L353' name='L353'></a>                                              <strong class='reserved'>struct</strong> in_addr area_id,
+<a id='L354' name='L354'></a>                                              u_char is_self_originated,
+<a id='L355' name='L355'></a>                                              <strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a><em class='comment'>/* string printing functions */</em>
+<a id='L358' name='L358'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/758.html#L174' title='Defined at 174 in ospfd/ospf_api.c.'>ospf_api_errname</a> (<strong class='reserved'>int</strong> errcode);
+<a id='L359' name='L359'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/758.html#L139' title='Defined at 139 in ospfd/ospf_api.c.'>ospf_api_typename</a> (<strong class='reserved'>int</strong> msgtype);
+<a id='L360' name='L360'></a>
+<a id='L361' name='L361'></a><em class='sharp'>#endif</em> <em class='comment'>/* _OSPF_API_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

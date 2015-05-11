@@ -1,0 +1,469 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_pfpacket.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_pfpacket.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L68'>[^]</a><a href='#L405'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L68' title='Defined at 68.'>isis_multicast_join</a></li>
+<li><a href='#L115' title='Defined at 115.'>open_packet_socket</a></li>
+<li><a href='#L205' title='Defined at 205.'>isis_sock_init</a></li>
+<li><a href='#L246' title='Defined at 246.'>llc_check</a></li>
+<li><a href='#L255' title='Defined at 255.'>isis_recv_pdu_bcast</a></li>
+<li><a href='#L313' title='Defined at 313.'>isis_recv_pdu_p2p</a></li>
+<li><a href='#L354' title='Defined at 354.'>isis_send_pdu_bcast</a></li>
+<li><a href='#L405' title='Defined at 405.'>isis_send_pdu_p2p</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_pfpacket.c</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (C) 2001,2002    Sampo Saaristo</em>
+<a id='L5' name='L5'></a><em class='comment'> *                            Tampere University of Technology      </em>
+<a id='L6' name='L6'></a><em class='comment'> *                            Institute of Communications Engineering</em>
+<a id='L7' name='L7'></a><em class='comment'> *</em>
+<a id='L8' name='L8'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L9' name='L9'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L10' name='L10'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L11' name='L11'></a><em class='comment'> * any later version.</em>
+<a id='L12' name='L12'></a><em class='comment'> *</em>
+<a id='L13' name='L13'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L14' name='L14'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L15' name='L15'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L16' name='L16'></a><em class='comment'> * more details.</em>
+<a id='L17' name='L17'></a><em class='comment'></em>
+<a id='L18' name='L18'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L19' name='L19'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L20' name='L20'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a><em class='sharp'>#if</em> <a href='../S/665.html#L591' title='Defined at 591 in config.h.'>ISIS_METHOD</a> == <a href='../S/665.html#L600' title='Defined at 600 in config.h.'>ISIS_METHOD_PFPACKET</a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;net/ethernet.h&gt;       <em class='comment'>/* the L2 protocols */</em>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;netpacket/packet.h&gt;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='480.html'>isisd/dict.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='504.html'>isisd/include-netbsd/iso.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='488.html'>isisd/isis_common.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='524.html'>isisd/isis_circuit.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='497.html'>isisd/isis_flags.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='510.html'>isisd/isisd.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='524.html'>isisd/isis_circuit.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='463.html'>isisd/isis_network.h</a>"
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> isisd_privs;
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><em class='comment'>/*</em>
+<a id='L48' name='L48'></a><em class='comment'> * Table 9 - Architectural constants for use with ISO 8802 subnetworks</em>
+<a id='L49' name='L49'></a><em class='comment'> * ISO 10589 - 8.4.8</em>
+<a id='L50' name='L50'></a><em class='comment'> */</em>
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a>u_char ALL_L1_ISS[6] = <em class='brace'>{</em> 0x01, 0x80, 0xC2, 0x00, 0x00, 0x14 <em class='brace'>}</em>;
+<a id='L53' name='L53'></a>u_char ALL_L2_ISS[6] = <em class='brace'>{</em> 0x01, 0x80, 0xC2, 0x00, 0x00, 0x15 <em class='brace'>}</em>;
+<a id='L54' name='L54'></a>u_char ALL_ISS[6] = <em class='brace'>{</em> 0x09, 0x00, 0x2B, 0x00, 0x00, 0x05 <em class='brace'>}</em>;
+<a id='L55' name='L55'></a>u_char ALL_ESS[6] = <em class='brace'>{</em> 0x09, 0x00, 0x2B, 0x00, 0x00, 0x04 <em class='brace'>}</em>;
+<a id='L56' name='L56'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L57' name='L57'></a>u_char ALL_L1_RB[6] = <em class='brace'>{</em> 0x01, 0x80, 0xC2, 0x00, 0x00, 0x40 <em class='brace'>}</em>;
+<a id='L58' name='L58'></a><em class='sharp'>#endif</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> discard_buff[8192];
+<a id='L61' name='L61'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> sock_buff[8192];
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='comment'>/*</em>
+<a id='L64' name='L64'></a><em class='comment'> * if level is 0 we are joining p2p multicast</em>
+<a id='L65' name='L65'></a><em class='comment'> * FIXME: and the p2p multicast being ???</em>
+<a id='L66' name='L66'></a><em class='comment'> */</em>
+<a id='L67' name='L67'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L68' name='L68'></a><a href='../R/6183.html' title='Multiple referred from 5 places.'>isis_multicast_join</a> (<strong class='reserved'>int</strong> fd, <strong class='reserved'>int</strong> registerto, <strong class='reserved'>int</strong> if_num)
+<a id='L69' name='L69'></a><em class='brace'>{</em>
+<a id='L70' name='L70'></a>  <strong class='reserved'>struct</strong> packet_mreq mreq;
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>  memset (&amp;mreq, 0, <strong class='reserved'>sizeof</strong> (mreq));
+<a id='L73' name='L73'></a>  mreq.mr_ifindex = if_num;
+<a id='L74' name='L74'></a>  <strong class='reserved'>if</strong> (registerto)
+<a id='L75' name='L75'></a>    <em class='brace'>{</em>
+<a id='L76' name='L76'></a>      mreq.mr_type = PACKET_MR_MULTICAST;
+<a id='L77' name='L77'></a>      mreq.mr_alen = <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>;
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a>      <strong class='reserved'>if</strong> (registerto == 1)
+<a id='L80' name='L80'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;mreq.mr_address, ALL_L1_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L81' name='L81'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (registerto == 2)
+<a id='L82' name='L82'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;mreq.mr_address, ALL_L2_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L83' name='L83'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (registerto == 3)
+<a id='L84' name='L84'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;mreq.mr_address, ALL_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L85' name='L85'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L86' name='L86'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (registerto == 4)
+<a id='L87' name='L87'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;mreq.mr_address, ALL_L1_RB, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L88' name='L88'></a><em class='sharp'>#endif</em>
+<a id='L89' name='L89'></a>      <strong class='reserved'>else</strong>
+<a id='L90' name='L90'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;mreq.mr_address, ALL_ESS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a>    <em class='brace'>}</em>
+<a id='L93' name='L93'></a>  <strong class='reserved'>else</strong>
+<a id='L94' name='L94'></a>    <em class='brace'>{</em>
+<a id='L95' name='L95'></a>      mreq.mr_type = PACKET_MR_ALLMULTI;
+<a id='L96' name='L96'></a>    <em class='brace'>}</em>
+<a id='L97' name='L97'></a><em class='sharp'>#ifdef</em> EXTREME_DEBUG
+<a id='L98' name='L98'></a>  zlog_debug ("isis_multicast_join(): fd=%d, reg_to=%d, if_num=%d, "
+<a id='L99' name='L99'></a>              "address = %02x:%02x:%02x:%02x:%02x:%02x",
+<a id='L100' name='L100'></a>              fd, registerto, if_num, mreq.mr_address[0], mreq.mr_address[1],
+<a id='L101' name='L101'></a>              mreq.mr_address[2], mreq.mr_address[3], mreq.mr_address[4],
+<a id='L102' name='L102'></a>              mreq.mr_address[5]);
+<a id='L103' name='L103'></a><em class='sharp'>#endif</em> <em class='comment'>/* EXTREME_DEBUG */</em>
+<a id='L104' name='L104'></a>  <strong class='reserved'>if</strong> (setsockopt (fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &amp;mreq,
+<a id='L105' name='L105'></a>                  <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> packet_mreq)))
+<a id='L106' name='L106'></a>    <em class='brace'>{</em>
+<a id='L107' name='L107'></a>      zlog_warn ("isis_multicast_join(): setsockopt(): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L108' name='L108'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L109' name='L109'></a>    <em class='brace'>}</em>
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L112' name='L112'></a><em class='brace'>}</em>
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L115' name='L115'></a><a href='../S/466.html#L212' title='Referred from 212 in isisd/isis_pfpacket.c.'>open_packet_socket</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit)
+<a id='L116' name='L116'></a><em class='brace'>{</em>
+<a id='L117' name='L117'></a>  <strong class='reserved'>struct</strong> sockaddr_ll s_addr;
+<a id='L118' name='L118'></a>  <strong class='reserved'>int</strong> fd, retval = <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>  <em class='comment'>/* create a socket filter to catch only llc like packet</em>
+<a id='L121' name='L121'></a><em class='comment'>   * otherwise socket will capture all packet and call isis_receive</em>
+<a id='L122' name='L122'></a><em class='comment'>   * thread.</em>
+<a id='L123' name='L123'></a><em class='comment'>   * do not modify this part unless you REALLY know what you do</em>
+<a id='L124' name='L124'></a><em class='comment'>   * if this filter is removed the daemon cpu usage will be proportional</em>
+<a id='L125' name='L125'></a><em class='comment'>   * to received packets on interface</em>
+<a id='L126' name='L126'></a><em class='comment'>   */</em>
+<a id='L127' name='L127'></a>  <strong class='reserved'>struct</strong> sock_fprog <a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>;
+<a id='L128' name='L128'></a>  <strong class='reserved'>struct</strong> sock_filter trill_code[4];
+<a id='L129' name='L129'></a>  trill_code[0] = (<strong class='reserved'>struct</strong> sock_filter) <em class='brace'>{</em> 0x28, 0, 0, 0x00000000 <em class='brace'>}</em>;
+<a id='L130' name='L130'></a>  trill_code[1] = (<strong class='reserved'>struct</strong> sock_filter) <em class='brace'>{</em> 0x15, 0, 1, 0xFEFE <em class='brace'>}</em>;
+<a id='L131' name='L131'></a>  trill_code[2] = (<strong class='reserved'>struct</strong> sock_filter) <em class='brace'>{</em> 0x6, 0, 0, 0x0000ffff <em class='brace'>}</em>;
+<a id='L132' name='L132'></a>  trill_code[3] = (<strong class='reserved'>struct</strong> sock_filter) <em class='brace'>{</em> 0x6, 0, 0, 0x00000000 <em class='brace'>}</em>;
+<a id='L133' name='L133'></a>  <a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>.len = 4;
+<a id='L134' name='L134'></a>  <a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>.<a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a> = trill_code;
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  fd = socket (PF_PACKET, SOCK_DGRAM, htons (ETH_P_ALL));
+<a id='L137' name='L137'></a>  <strong class='reserved'>if</strong> (fd &lt; 0)
+<a id='L138' name='L138'></a>    <em class='brace'>{</em>
+<a id='L139' name='L139'></a>      zlog_warn ("open_packet_socket(): socket() failed %s",
+<a id='L140' name='L140'></a>                 <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L141' name='L141'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L142' name='L142'></a>    <em class='brace'>}</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a>    <strong class='reserved'>if</strong>(setsockopt(fd, SOL_SOCKET, SO_ATTACH_FILTER, &amp;<a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>, <strong class='reserved'>sizeof</strong>(<a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>)) &lt; 0) <em class='brace'>{</em>
+<a id='L145' name='L145'></a>      zlog_err("setsockopt error: %s", strerror(errno));
+<a id='L146' name='L146'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L147' name='L147'></a>    <em class='brace'>}</em>
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>  <em class='comment'>/*</em>
+<a id='L150' name='L150'></a><em class='comment'>   * Bind to the physical interface</em>
+<a id='L151' name='L151'></a><em class='comment'>   */</em>
+<a id='L152' name='L152'></a>  memset (&amp;s_addr, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll));
+<a id='L153' name='L153'></a>  s_addr.sll_family = AF_PACKET;
+<a id='L154' name='L154'></a>  s_addr.sll_protocol = htons (ETH_P_ALL);
+<a id='L155' name='L155'></a>  s_addr.sll_ifindex = circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex;
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a>  <strong class='reserved'>if</strong> (bind (fd, (<strong class='reserved'>struct</strong> sockaddr *) (&amp;s_addr),
+<a id='L158' name='L158'></a>            <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll)) &lt; 0)
+<a id='L159' name='L159'></a>    <em class='brace'>{</em>
+<a id='L160' name='L160'></a>      zlog_warn ("open_packet_socket(): bind() failed: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L161' name='L161'></a>      close (fd);
+<a id='L162' name='L162'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L163' name='L163'></a>    <em class='brace'>}</em>
+<a id='L164' name='L164'></a>
+<a id='L165' name='L165'></a>  circuit-&gt;fd = fd;
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a>  <strong class='reserved'>if</strong> (<a href='../S/240.html#L362' title='Defined at 362 in lib/if.c.'>if_is_broadcast</a> (circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>))
+<a id='L168' name='L168'></a>    <em class='brace'>{</em>
+<a id='L169' name='L169'></a>      <em class='comment'>/*</em>
+<a id='L170' name='L170'></a><em class='comment'>       * Join to multicast groups</em>
+<a id='L171' name='L171'></a><em class='comment'>       * according to</em>
+<a id='L172' name='L172'></a><em class='comment'>       * 8.4.2 - Broadcast subnetwork IIH PDUs</em>
+<a id='L173' name='L173'></a><em class='comment'>       * FIXME: is there a case only one will fail??</em>
+<a id='L174' name='L174'></a><em class='comment'>       */</em>
+<a id='L175' name='L175'></a>      <em class='comment'>/* joining ALL_L1_ISS */</em>
+<a id='L176' name='L176'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L177' name='L177'></a>
+<a id='L178' name='L178'></a>      retval |= <a href='../S/466.html#L68' title='Defined at 68 in isisd/isis_pfpacket.c.'>isis_multicast_join</a> (circuit-&gt;fd, 4,
+<a id='L179' name='L179'></a>                                      circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex);
+<a id='L180' name='L180'></a><em class='sharp'>#else</em>
+<a id='L181' name='L181'></a>      retval |= <a href='../S/466.html#L68' title='Defined at 68 in isisd/isis_pfpacket.c.'>isis_multicast_join</a> (circuit-&gt;fd, 1,
+<a id='L182' name='L182'></a>                                      circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex);
+<a id='L183' name='L183'></a>      <em class='comment'>/* joining ALL_L2_ISS */</em>
+<a id='L184' name='L184'></a>      retval |= <a href='../S/466.html#L68' title='Defined at 68 in isisd/isis_pfpacket.c.'>isis_multicast_join</a> (circuit-&gt;fd, 2,
+<a id='L185' name='L185'></a>                                      circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex);
+<a id='L186' name='L186'></a>      <em class='comment'>/* joining ALL_ISS (used in RFC 5309 p2p-over-lan as well) */</em>
+<a id='L187' name='L187'></a>      retval |= <a href='../S/466.html#L68' title='Defined at 68 in isisd/isis_pfpacket.c.'>isis_multicast_join</a> (circuit-&gt;fd, 3,
+<a id='L188' name='L188'></a>                                    circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex);
+<a id='L189' name='L189'></a><em class='sharp'>#endif</em>
+<a id='L190' name='L190'></a>
+<a id='L191' name='L191'></a>    <em class='brace'>}</em>
+<a id='L192' name='L192'></a>  <strong class='reserved'>else</strong>
+<a id='L193' name='L193'></a>    <em class='brace'>{</em>
+<a id='L194' name='L194'></a>      retval =
+<a id='L195' name='L195'></a>        <a href='../S/466.html#L68' title='Defined at 68 in isisd/isis_pfpacket.c.'>isis_multicast_join</a> (circuit-&gt;fd, 0, circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex);
+<a id='L196' name='L196'></a>    <em class='brace'>}</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L199' name='L199'></a><em class='brace'>}</em>
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a><em class='comment'>/*</em>
+<a id='L202' name='L202'></a><em class='comment'> * Create the socket and set the tx/rx funcs</em>
+<a id='L203' name='L203'></a><em class='comment'> */</em>
+<a id='L204' name='L204'></a><strong class='reserved'>int</strong>
+<a id='L205' name='L205'></a><a href='../R/6227.html' title='Multiple referred from 2 places.'>isis_sock_init</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit)
+<a id='L206' name='L206'></a><em class='brace'>{</em>
+<a id='L207' name='L207'></a>  <strong class='reserved'>int</strong> retval = <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a>  <strong class='reserved'>if</strong> (isisd_privs.change (<a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>))
+<a id='L210' name='L210'></a>    zlog_err ("%s: could not raise privs, %s", __func__, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  retval = <a href='../S/466.html#L115' title='Defined at 115 in isisd/isis_pfpacket.c.'>open_packet_socket</a> (circuit);
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a>  <strong class='reserved'>if</strong> (retval != <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>)
+<a id='L215' name='L215'></a>    <em class='brace'>{</em>
+<a id='L216' name='L216'></a>      zlog_warn ("%s: could not initialize the socket", __func__);
+<a id='L217' name='L217'></a>      <strong class='reserved'>goto</strong> end;
+<a id='L218' name='L218'></a>    <em class='brace'>}</em>
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a>  <em class='comment'>/* Assign Rx and Tx callbacks are based on real if type */</em>
+<a id='L221' name='L221'></a>  <strong class='reserved'>if</strong> (<a href='../S/240.html#L362' title='Defined at 362 in lib/if.c.'>if_is_broadcast</a> (circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>))
+<a id='L222' name='L222'></a>    <em class='brace'>{</em>
+<a id='L223' name='L223'></a>      circuit-&gt;tx = <a href='../D/7006.html' title='Multiple defined in 3 places.'>isis_send_pdu_bcast</a>;
+<a id='L224' name='L224'></a>      circuit-&gt;rx = <a href='../D/6979.html' title='Multiple defined in 3 places.'>isis_recv_pdu_bcast</a>;
+<a id='L225' name='L225'></a>    <em class='brace'>}</em>
+<a id='L226' name='L226'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/240.html#L369' title='Defined at 369 in lib/if.c.'>if_is_pointopoint</a> (circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>))
+<a id='L227' name='L227'></a>    <em class='brace'>{</em>
+<a id='L228' name='L228'></a>      circuit-&gt;tx = <a href='../D/7007.html' title='Multiple defined in 2 places.'>isis_send_pdu_p2p</a>;
+<a id='L229' name='L229'></a>      circuit-&gt;rx = <a href='../D/6980.html' title='Multiple defined in 2 places.'>isis_recv_pdu_p2p</a>;
+<a id='L230' name='L230'></a>    <em class='brace'>}</em>
+<a id='L231' name='L231'></a>  <strong class='reserved'>else</strong>
+<a id='L232' name='L232'></a>    <em class='brace'>{</em>
+<a id='L233' name='L233'></a>      zlog_warn ("isis_sock_init(): unknown circuit type");
+<a id='L234' name='L234'></a>      retval = <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L235' name='L235'></a>      <strong class='reserved'>goto</strong> end;
+<a id='L236' name='L236'></a>    <em class='brace'>}</em>
+<a id='L237' name='L237'></a>
+<a id='L238' name='L238'></a>end:
+<a id='L239' name='L239'></a>  <strong class='reserved'>if</strong> (isisd_privs.change (<a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>))
+<a id='L240' name='L240'></a>    zlog_err ("%s: could not lower privs, %s", __func__, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L243' name='L243'></a><em class='brace'>}</em>
+<a id='L244' name='L244'></a>
+<a id='L245' name='L245'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>int</strong>
+<a id='L246' name='L246'></a><a href='../S/466.html#L284' title='Referred from 284 in isisd/isis_pfpacket.c.'>llc_check</a> (u_char * llc)
+<a id='L247' name='L247'></a><em class='brace'>{</em>
+<a id='L248' name='L248'></a>  <strong class='reserved'>if</strong> (*llc != <a href='../S/518.html#L34' title='Defined at 34 in isisd/isis_constants.h.'>ISO_SAP</a> || *(llc + 1) != <a href='../S/518.html#L34' title='Defined at 34 in isisd/isis_constants.h.'>ISO_SAP</a> || *(llc + 2) != 3)
+<a id='L249' name='L249'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L252' name='L252'></a><em class='brace'>}</em>
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a><strong class='reserved'>int</strong>
+<a id='L255' name='L255'></a><a href='../R/6199.html' title='Multiple referred from 4 places.'>isis_recv_pdu_bcast</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, u_char * ssnpa)
+<a id='L256' name='L256'></a><em class='brace'>{</em>
+<a id='L257' name='L257'></a>  <strong class='reserved'>int</strong> bytesread, addr_len;
+<a id='L258' name='L258'></a>  <strong class='reserved'>struct</strong> sockaddr_ll s_addr;
+<a id='L259' name='L259'></a>  u_char llc[<a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>];
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>  addr_len = <strong class='reserved'>sizeof</strong> (s_addr);
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a>  memset (&amp;s_addr, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll));
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a>  bytesread = recvfrom (circuit-&gt;fd, (<strong class='reserved'>void</strong> *) &amp;llc,
+<a id='L266' name='L266'></a>                        <a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>, MSG_PEEK,
+<a id='L267' name='L267'></a>                        (<strong class='reserved'>struct</strong> sockaddr *) &amp;s_addr, (<a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *) &amp;addr_len);
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a>  <strong class='reserved'>if</strong> (bytesread &lt; 0)
+<a id='L270' name='L270'></a>    <em class='brace'>{</em>
+<a id='L271' name='L271'></a>      zlog_warn ("isis_recv_packet_bcast(): ifname %s, fd %d, bytesread %d, "
+<a id='L272' name='L272'></a>                 "recvfrom(): %s",
+<a id='L273' name='L273'></a>                 circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, circuit-&gt;fd, bytesread,
+<a id='L274' name='L274'></a>                 <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L275' name='L275'></a>      <em class='comment'>/* get rid of the packet */</em>
+<a id='L276' name='L276'></a>      bytesread = recvfrom (circuit-&gt;fd, discard_buff, <strong class='reserved'>sizeof</strong> (discard_buff),
+<a id='L277' name='L277'></a>                            MSG_DONTWAIT, (<strong class='reserved'>struct</strong> sockaddr *) &amp;s_addr,
+<a id='L278' name='L278'></a>                            (<a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *) &amp;addr_len);
+<a id='L279' name='L279'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L280' name='L280'></a>    <em class='brace'>}</em>
+<a id='L281' name='L281'></a>  <em class='comment'>/*</em>
+<a id='L282' name='L282'></a><em class='comment'>   * Filtering by llc field, discard packets sent by this host (other circuit)</em>
+<a id='L283' name='L283'></a><em class='comment'>   */</em>
+<a id='L284' name='L284'></a>  <strong class='reserved'>if</strong> (!<a href='../S/466.html#L246' title='Defined at 246 in isisd/isis_pfpacket.c.'>llc_check</a> (llc) || s_addr.sll_pkttype == PACKET_OUTGOING)
+<a id='L285' name='L285'></a>    <em class='brace'>{</em>
+<a id='L286' name='L286'></a>      <em class='comment'>/*  Read the packet into discard buff */</em>
+<a id='L287' name='L287'></a>      bytesread = recvfrom (circuit-&gt;fd, discard_buff, <strong class='reserved'>sizeof</strong> (discard_buff),
+<a id='L288' name='L288'></a>                            MSG_DONTWAIT, (<strong class='reserved'>struct</strong> sockaddr *) &amp;s_addr,
+<a id='L289' name='L289'></a>                            (<a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *) &amp;addr_len);
+<a id='L290' name='L290'></a>      <strong class='reserved'>if</strong> (bytesread &lt; 0)
+<a id='L291' name='L291'></a>        zlog_warn ("isis_recv_pdu_bcast(): recvfrom() failed");
+<a id='L292' name='L292'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L293' name='L293'></a>    <em class='brace'>}</em>
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a>  <em class='comment'>/* on lan we have to read to the static buff first */</em>
+<a id='L296' name='L296'></a>  bytesread = recvfrom (circuit-&gt;fd, sock_buff, <strong class='reserved'>sizeof</strong> (sock_buff), MSG_DONTWAIT,
+<a id='L297' name='L297'></a>                        (<strong class='reserved'>struct</strong> sockaddr *) &amp;s_addr, (<a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *) &amp;addr_len);
+<a id='L298' name='L298'></a>  <strong class='reserved'>if</strong> (bytesread &lt; 0)
+<a id='L299' name='L299'></a>    <em class='brace'>{</em>
+<a id='L300' name='L300'></a>      zlog_warn ("isis_recv_pdu_bcast(): recvfrom() failed");
+<a id='L301' name='L301'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L302' name='L302'></a>    <em class='brace'>}</em>
+<a id='L303' name='L303'></a>
+<a id='L304' name='L304'></a>  <em class='comment'>/* then we lose the LLC */</em>
+<a id='L305' name='L305'></a>  <a href='../D/10972.html' title='Multiple defined in 2 places.'>stream_write</a> (circuit-&gt;rcv_stream, sock_buff + <a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>, bytesread - <a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>);
+<a id='L306' name='L306'></a>
+<a id='L307' name='L307'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (ssnpa, &amp;s_addr.sll_addr, s_addr.sll_halen);
+<a id='L308' name='L308'></a>
+<a id='L309' name='L309'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L310' name='L310'></a><em class='brace'>}</em>
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a><strong class='reserved'>int</strong>
+<a id='L313' name='L313'></a><a href='../R/6200.html' title='Multiple referred from 3 places.'>isis_recv_pdu_p2p</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, u_char * ssnpa)
+<a id='L314' name='L314'></a><em class='brace'>{</em>
+<a id='L315' name='L315'></a>  <strong class='reserved'>int</strong> bytesread, addr_len;
+<a id='L316' name='L316'></a>  <strong class='reserved'>struct</strong> sockaddr_ll s_addr;
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a>  memset (&amp;s_addr, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll));
+<a id='L319' name='L319'></a>  addr_len = <strong class='reserved'>sizeof</strong> (s_addr);
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a>  <em class='comment'>/* we can read directly to the stream */</em>
+<a id='L322' name='L322'></a>  bytesread = <a href='../S/296.html#L795' title='Defined at 795 in lib/stream.c.'>stream_recvfrom</a> (circuit-&gt;rcv_stream, circuit-&gt;fd,
+<a id='L323' name='L323'></a>                               circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;mtu, 0,
+<a id='L324' name='L324'></a>                               (<strong class='reserved'>struct</strong> sockaddr *) &amp;s_addr, 
+<a id='L325' name='L325'></a>                               (<a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *) &amp;addr_len);
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a>  <strong class='reserved'>if</strong> (s_addr.sll_pkttype == PACKET_OUTGOING)
+<a id='L328' name='L328'></a>    <em class='brace'>{</em>
+<a id='L329' name='L329'></a>      <em class='comment'>/*  Read the packet into discard buff */</em>
+<a id='L330' name='L330'></a>      bytesread = recvfrom (circuit-&gt;fd, discard_buff, <strong class='reserved'>sizeof</strong> (discard_buff),
+<a id='L331' name='L331'></a>                            MSG_DONTWAIT, (<strong class='reserved'>struct</strong> sockaddr *) &amp;s_addr,
+<a id='L332' name='L332'></a>                            (<a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *) &amp;addr_len);
+<a id='L333' name='L333'></a>      <strong class='reserved'>if</strong> (bytesread &lt; 0)
+<a id='L334' name='L334'></a>        zlog_warn ("isis_recv_pdu_p2p(): recvfrom() failed");
+<a id='L335' name='L335'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L336' name='L336'></a>    <em class='brace'>}</em>
+<a id='L337' name='L337'></a>
+<a id='L338' name='L338'></a>  <em class='comment'>/* If we don't have protocol type 0x00FE which is</em>
+<a id='L339' name='L339'></a><em class='comment'>   * ISO over GRE we exit with pain :)</em>
+<a id='L340' name='L340'></a><em class='comment'>   */</em>
+<a id='L341' name='L341'></a>  <strong class='reserved'>if</strong> (ntohs (s_addr.sll_protocol) != 0x00FE)
+<a id='L342' name='L342'></a>    <em class='brace'>{</em>
+<a id='L343' name='L343'></a>      zlog_warn ("isis_recv_pdu_p2p(): protocol mismatch(): %X",
+<a id='L344' name='L344'></a>                 ntohs (s_addr.sll_protocol));
+<a id='L345' name='L345'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L346' name='L346'></a>    <em class='brace'>}</em>
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (ssnpa, &amp;s_addr.sll_addr, s_addr.sll_halen);
+<a id='L349' name='L349'></a>
+<a id='L350' name='L350'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L351' name='L351'></a><em class='brace'>}</em>
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a><strong class='reserved'>int</strong>
+<a id='L354' name='L354'></a><a href='../R/6225.html' title='Multiple referred from 4 places.'>isis_send_pdu_bcast</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level)
+<a id='L355' name='L355'></a><em class='brace'>{</em>
+<a id='L356' name='L356'></a>  <strong class='reserved'>struct</strong> msghdr <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>;
+<a id='L357' name='L357'></a>  <strong class='reserved'>struct</strong> iovec iov[2];
+<a id='L358' name='L358'></a>
+<a id='L359' name='L359'></a>  <em class='comment'>/* we need to do the LLC in here because of P2P circuits, which will</em>
+<a id='L360' name='L360'></a><em class='comment'>   * not need it</em>
+<a id='L361' name='L361'></a><em class='comment'>   */</em>
+<a id='L362' name='L362'></a>  <strong class='reserved'>int</strong> written = 1;
+<a id='L363' name='L363'></a>  <strong class='reserved'>struct</strong> sockaddr_ll sa;
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a>  <a href='../S/296.html#L204' title='Defined at 204 in lib/stream.c.'>stream_set_getp</a> (circuit-&gt;snd_stream, 0);
+<a id='L366' name='L366'></a>  memset (&amp;sa, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll));
+<a id='L367' name='L367'></a>  sa.sll_family = AF_PACKET;
+<a id='L368' name='L368'></a>  sa.sll_protocol = htons (<a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (circuit-&gt;snd_stream) + <a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>);
+<a id='L369' name='L369'></a>  sa.sll_ifindex = circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex;
+<a id='L370' name='L370'></a>  sa.sll_halen = <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>;
+<a id='L371' name='L371'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L372' name='L372'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_L1_RB, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L373' name='L373'></a><em class='sharp'>#else</em>
+<a id='L374' name='L374'></a>  <em class='comment'>/* RFC5309 section 4.1 recommends ALL_ISS */</em>
+<a id='L375' name='L375'></a>  <strong class='reserved'>if</strong> (circuit-&gt;circ_type == <a href='../S/524.html#L91' title='Defined at 91 in isisd/isis_circuit.h.'>CIRCUIT_T_P2P</a>)
+<a id='L376' name='L376'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L377' name='L377'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (level == 1)
+<a id='L378' name='L378'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_L1_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L379' name='L379'></a>  <strong class='reserved'>else</strong>
+<a id='L380' name='L380'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_L2_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L381' name='L381'></a><em class='sharp'>#endif</em>
+<a id='L382' name='L382'></a>
+<a id='L383' name='L383'></a>  <em class='comment'>/* on a broadcast circuit */</em>
+<a id='L384' name='L384'></a>  <em class='comment'>/* first we put the LLC in */</em>
+<a id='L385' name='L385'></a>  sock_buff[0] = 0xFE;
+<a id='L386' name='L386'></a>  sock_buff[1] = 0xFE;
+<a id='L387' name='L387'></a>  sock_buff[2] = 0x03;
+<a id='L388' name='L388'></a>
+<a id='L389' name='L389'></a>  memset (&amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, 0, <strong class='reserved'>sizeof</strong> (<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>));
+<a id='L390' name='L390'></a>  <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_name = &amp;sa;
+<a id='L391' name='L391'></a>  <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_namelen = <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll);
+<a id='L392' name='L392'></a>  <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_iov = iov;
+<a id='L393' name='L393'></a>  <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_iovlen = 2;
+<a id='L394' name='L394'></a>  iov[0].iov_base = sock_buff;
+<a id='L395' name='L395'></a>  iov[0].iov_len = <a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>;
+<a id='L396' name='L396'></a>  iov[1].iov_base = circuit-&gt;snd_stream-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L397' name='L397'></a>  iov[1].iov_len = <a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (circuit-&gt;snd_stream);
+<a id='L398' name='L398'></a>
+<a id='L399' name='L399'></a>  written = sendmsg (circuit-&gt;fd, &amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, 0);
+<a id='L400' name='L400'></a>
+<a id='L401' name='L401'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L402' name='L402'></a><em class='brace'>}</em>
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a><strong class='reserved'>int</strong>
+<a id='L405' name='L405'></a><a href='../R/6226.html' title='Multiple referred from 3 places.'>isis_send_pdu_p2p</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level)
+<a id='L406' name='L406'></a><em class='brace'>{</em>
+<a id='L407' name='L407'></a>  <strong class='reserved'>int</strong> written = 1;
+<a id='L408' name='L408'></a>  <strong class='reserved'>struct</strong> sockaddr_ll sa;
+<a id='L409' name='L409'></a>
+<a id='L410' name='L410'></a>  <a href='../S/296.html#L204' title='Defined at 204 in lib/stream.c.'>stream_set_getp</a> (circuit-&gt;snd_stream, 0);
+<a id='L411' name='L411'></a>  memset (&amp;sa, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll));
+<a id='L412' name='L412'></a>  sa.sll_family = AF_PACKET;
+<a id='L413' name='L413'></a>  sa.sll_protocol = htons (<a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (circuit-&gt;snd_stream) + <a href='../S/518.html#L165' title='Defined at 165 in isisd/isis_constants.h.'>LLC_LEN</a>);
+<a id='L414' name='L414'></a>  sa.sll_ifindex = circuit-&gt;<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;ifindex;
+<a id='L415' name='L415'></a>  sa.sll_halen = <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>;
+<a id='L416' name='L416'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L417' name='L417'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_L1_RB, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L418' name='L418'></a><em class='sharp'>#else</em>
+<a id='L419' name='L419'></a>  <strong class='reserved'>if</strong> (level == 1)
+<a id='L420' name='L420'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_L1_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L421' name='L421'></a>  <strong class='reserved'>else</strong>
+<a id='L422' name='L422'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;sa.sll_addr, ALL_L2_ISS, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L423' name='L423'></a><em class='sharp'>#endif</em>
+<a id='L424' name='L424'></a>
+<a id='L425' name='L425'></a>
+<a id='L426' name='L426'></a>  <em class='comment'>/* lets try correcting the protocol */</em>
+<a id='L427' name='L427'></a>  sa.sll_protocol = htons (0x00FE);
+<a id='L428' name='L428'></a>  written = sendto (circuit-&gt;fd, circuit-&gt;snd_stream-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>,
+<a id='L429' name='L429'></a>                    <a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (circuit-&gt;snd_stream), 0, 
+<a id='L430' name='L430'></a>                    (<strong class='reserved'>struct</strong> sockaddr *) &amp;sa,
+<a id='L431' name='L431'></a>                    <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_ll));
+<a id='L432' name='L432'></a>
+<a id='L433' name='L433'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L434' name='L434'></a><em class='brace'>}</em>
+<a id='L435' name='L435'></a>
+<a id='L436' name='L436'></a><em class='sharp'>#endif</em> <em class='comment'>/* ISIS_METHOD == ISIS_METHOD_PFPACKET */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L68'>[^]</a><a href='#L405'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

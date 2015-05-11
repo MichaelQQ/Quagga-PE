@@ -1,0 +1,1376 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_zebra.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_zebra.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L61'>[^]</a><a href='#L1296'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L61' title='Defined at 61.'>ospf_router_id_update_zebra</a></li>
+<li><a href='#L87' title='Defined at 87.'>ospf_interface_add</a></li>
+<li><a href='#L116' title='Defined at 116.'>ospf_interface_delete</a></li>
+<li><a href='#L152' title='Defined at 152.'>zebra_interface_if_lookup</a></li>
+<li><a href='#L165' title='Defined at 165.'>ospf_interface_state_up</a></li>
+<li><a href='#L227' title='Defined at 227.'>ospf_interface_state_down</a></li>
+<li><a href='#L253' title='Defined at 253.'>ospf_interface_address_add</a></li>
+<li><a href='#L280' title='Defined at 280.'>ospf_interface_address_delete</a></li>
+<li><a href='#L328' title='Defined at 328.'>ospf_zebra_add</a></li>
+<li><a href='#L426' title='Defined at 426.'>ospf_zebra_delete</a></li>
+<li><a href='#L513' title='Defined at 513.'>ospf_zebra_add_discard</a></li>
+<li><a href='#L536' title='Defined at 536.'>ospf_zebra_delete_discard</a></li>
+<li><a href='#L560' title='Defined at 560.'>ospf_is_type_redistributed</a></li>
+<li><a href='#L567' title='Defined at 567.'>ospf_redistribute_set</a></li>
+<li><a href='#L610' title='Defined at 610.'>ospf_redistribute_unset</a></li>
+<li><a href='#L636' title='Defined at 636.'>ospf_redistribute_default_set</a></li>
+<li><a href='#L676' title='Defined at 676.'>ospf_redistribute_default_unset</a></li>
+<li><a href='#L696' title='Defined at 696.'>ospf_external_lsa_originate_check</a></li>
+<li><a href='#L721' title='Defined at 721.'>ospf_distribute_check_connected</a></li>
+<li><a href='#L735' title='Defined at 735.'>ospf_redistribute_check</a></li>
+<li><a href='#L797' title='Defined at 797.'>ospf_routemap_set</a></li>
+<li><a href='#L807' title='Defined at 807.'>ospf_routemap_unset</a></li>
+<li><a href='#L818' title='Defined at 818.'>ospf_zebra_read_ipv4</a></li>
+<li><a href='#L924' title='Defined at 924.'>ospf_distribute_list_out_set</a></li>
+<li><a href='#L944' title='Defined at 944.'>ospf_distribute_list_out_unset</a></li>
+<li><a href='#L964' title='Defined at 964.'>ospf_distribute_list_update_timer</a></li>
+<li><a href='#L1007' title='Defined at 1007.'>ospf_distribute_list_update</a></li>
+<li><a href='#L1027' title='Defined at 1027.'>ospf_filter_update</a></li>
+<li><a href='#L1098' title='Defined at 1098.'>ospf_prefix_list_update</a></li>
+<li><a href='#L1152' title='Defined at 1152.'>ospf_distance_new</a></li>
+<li><a href='#L1158' title='Defined at 1158.'>ospf_distance_free</a></li>
+<li><a href='#L1164' title='Defined at 1164.'>ospf_distance_set</a></li>
+<li><a href='#L1213' title='Defined at 1213.'>ospf_distance_unset</a></li>
+<li><a href='#L1251' title='Defined at 1251.'>ospf_distance_reset</a></li>
+<li><a href='#L1268' title='Defined at 1268.'>ospf_distance_apply</a></li>
+<li><a href='#L1296' title='Defined at 1296.'>ospf_zebra_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Zebra connect library for OSPFd</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1997, 98, 99, 2000 Kunihiro Ishiguro, Toshiaki Takada</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the</em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330,</em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA. </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='301.html'>network.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='235.html'>routemap.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='210.html'>zclient.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='199.html'>filter.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='302.html'>plist.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='790.html'>ospfd/ospfd.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='791.html'>ospfd/ospf_interface.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='807.html'>ospfd/ospf_ism.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='814.html'>ospfd/ospf_asbr.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='814.html'>ospfd/ospf_asbr.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='803.html'>ospfd/ospf_abr.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='733.html'>ospfd/ospf_lsa.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='776.html'>ospfd/ospf_dump.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='759.html'>ospfd/ospf_route.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='762.html'>ospfd/ospf_zebra.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='777.html'>ospfd/ospf_snmp.h</a>"
+<a id='L50' name='L50'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><em class='comment'>/* Zebra structure to hold current status. */</em>
+<a id='L53' name='L53'></a><strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='comment'>/* For registering threads. */</em>
+<a id='L56' name='L56'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L57' name='L57'></a><strong class='reserved'>struct</strong> in_addr router_id_zebra;
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><em class='comment'>/* Router-id update message from zebra. */</em>
+<a id='L60' name='L60'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L61' name='L61'></a><a href='../S/773.html#L1301' title='Referred from 1301 in ospfd/ospf_zebra.c.'>ospf_router_id_update_zebra</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L62' name='L62'></a>                             <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L63' name='L63'></a><em class='brace'>{</em>
+<a id='L64' name='L64'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>;
+<a id='L65' name='L65'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> router_id;
+<a id='L66' name='L66'></a>  <a href='../S/255.html#L601' title='Defined at 601 in lib/zclient.c.'>zebra_router_id_update_read</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf,&amp;router_id);
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L69' name='L69'></a>    <em class='brace'>{</em>
+<a id='L70' name='L70'></a>      <strong class='reserved'>char</strong> buf[128];
+<a id='L71' name='L71'></a>      <a href='../S/250.html#L764' title='Defined at 764 in lib/prefix.c.'>prefix2str</a>(&amp;router_id, buf, <strong class='reserved'>sizeof</strong>(buf));
+<a id='L72' name='L72'></a>      zlog_debug("Zebra rcvd: router id update %s", buf);
+<a id='L73' name='L73'></a>    <em class='brace'>}</em>
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a>  router_id_zebra = router_id.u.prefix4;
+<a id='L76' name='L76'></a>
+<a id='L77' name='L77'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/794.html#L241' title='Defined at 241 in ospfd/ospfd.c.'>ospf_lookup</a> ();
+<a id='L78' name='L78'></a>  
+<a id='L79' name='L79'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L80' name='L80'></a>    <a href='../S/794.html#L81' title='Defined at 81 in ospfd/ospfd.c.'>ospf_router_id_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L81' name='L81'></a>  
+<a id='L82' name='L82'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L83' name='L83'></a><em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><em class='comment'>/* Inteface addition message from zebra. */</em>
+<a id='L86' name='L86'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L87' name='L87'></a><a href='../S/773.html#L1302' title='Referred from 1302 in ospfd/ospf_zebra.c.'>ospf_interface_add</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L88' name='L88'></a><em class='brace'>{</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a>  ifp = <a href='../S/255.html#L646' title='Defined at 646 in lib/zclient.c.'>zebra_interface_add_read</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L94' name='L94'></a>    zlog_debug ("Zebra: interface add %s index %d flags %llx metric %d mtu %d",
+<a id='L95' name='L95'></a>               ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, ifp-&gt;ifindex, (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <strong class='reserved'>long</strong>)ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>,
+<a id='L96' name='L96'></a>               ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>, ifp-&gt;mtu);
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (ifp-&gt;info);
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a>  <strong class='reserved'>if</strong> (!<a href='../S/791.html#L34' title='Defined at 34 in ospfd/ospf_interface.h.'>OSPF_IF_PARAM_CONFIGURED</a> (<a href='../S/791.html#L30' title='Defined at 30 in ospfd/ospf_interface.h.'>IF_DEF_PARAMS</a> (ifp), type))
+<a id='L101' name='L101'></a>    <em class='brace'>{</em>
+<a id='L102' name='L102'></a>      <a href='../S/791.html#L41' title='Defined at 41 in ospfd/ospf_interface.h.'>SET_IF_PARAM</a> (<a href='../S/791.html#L30' title='Defined at 30 in ospfd/ospf_interface.h.'>IF_DEF_PARAMS</a> (ifp), type);
+<a id='L103' name='L103'></a>      <a href='../S/791.html#L30' title='Defined at 30 in ospfd/ospf_interface.h.'>IF_DEF_PARAMS</a> (ifp)-&gt;type = <a href='../S/788.html#L1243' title='Defined at 1243 in ospfd/ospf_interface.c.'>ospf_default_iftype</a>(ifp);
+<a id='L104' name='L104'></a>    <em class='brace'>}</em>
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>  <a href='../S/794.html#L956' title='Defined at 956 in ospfd/ospfd.c.'>ospf_if_update</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, ifp);
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L109' name='L109'></a>  <a href='../S/742.html#L1450' title='Defined at 1450 in ospfd/ospf_snmp.c.'>ospf_snmp_if_update</a> (ifp);
+<a id='L110' name='L110'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L111' name='L111'></a>
+<a id='L112' name='L112'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L113' name='L113'></a><em class='brace'>}</em>
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L116' name='L116'></a><a href='../S/773.html#L1303' title='Referred from 1303 in ospfd/ospf_zebra.c.'>ospf_interface_delete</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L117' name='L117'></a>                       <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L118' name='L118'></a><em class='brace'>{</em>
+<a id='L119' name='L119'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L120' name='L120'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L121' name='L121'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>  s = <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf;
+<a id='L124' name='L124'></a>  <em class='comment'>/* zebra_interface_state_read() updates interface structure in iflist */</em>
+<a id='L125' name='L125'></a>  ifp = <a href='../S/255.html#L670' title='Defined at 670 in lib/zclient.c.'>zebra_interface_state_read</a> (s);
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a>  <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L128' name='L128'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a>  <strong class='reserved'>if</strong> (<a href='../S/240.html#L329' title='Defined at 329 in lib/if.c.'>if_is_up</a> (ifp))
+<a id='L131' name='L131'></a>    zlog_warn ("Zebra: got delete of %s, but interface is still up",
+<a id='L132' name='L132'></a>               ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L135' name='L135'></a>    zlog_debug
+<a id='L136' name='L136'></a>      ("Zebra: interface delete %s index %d flags %llx metric %d mtu %d",
+<a id='L137' name='L137'></a>       ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, ifp-&gt;ifindex, (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <strong class='reserved'>long</strong>)ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>, ifp-&gt;mtu);
+<a id='L138' name='L138'></a>
+<a id='L139' name='L139'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L140' name='L140'></a>  <a href='../S/742.html#L1433' title='Defined at 1433 in ospfd/ospf_snmp.c.'>ospf_snmp_if_delete</a> (ifp);
+<a id='L141' name='L141'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (<a href='../S/791.html#L31' title='Defined at 31 in ospfd/ospf_interface.h.'>IF_OIFS</a> (ifp)); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L144' name='L144'></a>    <strong class='reserved'>if</strong> (rn-&gt;info)
+<a id='L145' name='L145'></a>      <a href='../S/788.html#L304' title='Defined at 304 in ospfd/ospf_interface.c.'>ospf_if_free</a> ((<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *) rn-&gt;info);
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a>  ifp-&gt;ifindex = <a href='../S/252.html#L86' title='Defined at 86 in lib/if.h.'>IFINDEX_INTERNAL</a>;
+<a id='L148' name='L148'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L149' name='L149'></a><em class='brace'>}</em>
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *
+<a id='L152' name='L152'></a><a href='../R/10595.html' title='Multiple referred from 2 places.'>zebra_interface_if_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s)
+<a id='L153' name='L153'></a><em class='brace'>{</em>
+<a id='L154' name='L154'></a>  <strong class='reserved'>char</strong> ifname_tmp[<a href='../D/1122.html' title='Multiple defined in 2 places.'>INTERFACE_NAMSIZ</a>];
+<a id='L155' name='L155'></a>
+<a id='L156' name='L156'></a>  <em class='comment'>/* Read interface name. */</em>
+<a id='L157' name='L157'></a>  <a href='../S/296.html#L272' title='Defined at 272 in lib/stream.c.'>stream_get</a> (ifname_tmp, s, <a href='../D/1122.html' title='Multiple defined in 2 places.'>INTERFACE_NAMSIZ</a>);
+<a id='L158' name='L158'></a>
+<a id='L159' name='L159'></a>  <em class='comment'>/* And look it up. */</em>
+<a id='L160' name='L160'></a>  <strong class='reserved'>return</strong> <a href='../S/240.html#L231' title='Defined at 231 in lib/if.c.'>if_lookup_by_name_len</a>(ifname_tmp,
+<a id='L161' name='L161'></a>                               <a href='../S/305.html#L89' title='Defined at 89 in lib/str.c.'>strnlen</a>(ifname_tmp, <a href='../D/1122.html' title='Multiple defined in 2 places.'>INTERFACE_NAMSIZ</a>));
+<a id='L162' name='L162'></a><em class='brace'>}</em>
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L165' name='L165'></a><a href='../S/773.html#L1304' title='Referred from 1304 in ospfd/ospf_zebra.c.'>ospf_interface_state_up</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L166' name='L166'></a>                         <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L167' name='L167'></a><em class='brace'>{</em>
+<a id='L168' name='L168'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L169' name='L169'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L170' name='L170'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>  ifp = <a href='../D/11525.html' title='Multiple defined in 2 places.'>zebra_interface_if_lookup</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L173' name='L173'></a>
+<a id='L174' name='L174'></a>  <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L175' name='L175'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a>  <em class='comment'>/* Interface is already up. */</em>
+<a id='L178' name='L178'></a>  <strong class='reserved'>if</strong> (<a href='../S/240.html#L344' title='Defined at 344 in lib/if.c.'>if_is_operative</a> (ifp))
+<a id='L179' name='L179'></a>    <em class='brace'>{</em>
+<a id='L180' name='L180'></a>      <em class='comment'>/* Temporarily keep ifp values. */</em>
+<a id='L181' name='L181'></a>      <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> if_tmp;
+<a id='L182' name='L182'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;if_tmp, ifp, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>));
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>      <a href='../S/255.html#L724' title='Defined at 724 in lib/zclient.c.'>zebra_interface_if_set_value</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf, ifp);
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L187' name='L187'></a>        zlog_debug ("Zebra: Interface[%s] state update.", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a>      <strong class='reserved'>if</strong> (if_tmp.bandwidth != ifp-&gt;bandwidth)
+<a id='L190' name='L190'></a>        <em class='brace'>{</em>
+<a id='L191' name='L191'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L192' name='L192'></a>            zlog_debug ("Zebra: Interface[%s] bandwidth change %d -&gt; %d.",
+<a id='L193' name='L193'></a>                       ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, if_tmp.bandwidth, ifp-&gt;bandwidth);
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a>          <a href='../S/788.html#L82' title='Defined at 82 in ospfd/ospf_interface.c.'>ospf_if_recalculate_output_cost</a> (ifp);
+<a id='L196' name='L196'></a>        <em class='brace'>}</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>      <strong class='reserved'>if</strong> (if_tmp.mtu != ifp-&gt;mtu)
+<a id='L199' name='L199'></a>        <em class='brace'>{</em>
+<a id='L200' name='L200'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L201' name='L201'></a>            zlog_debug ("Zebra: Interface[%s] MTU change %u -&gt; %u.",
+<a id='L202' name='L202'></a>                       ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, if_tmp.mtu, ifp-&gt;mtu);
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a>          <em class='comment'>/* Must reset the interface (simulate down/up) when MTU changes. */</em>
+<a id='L205' name='L205'></a>          <a href='../S/788.html#L108' title='Defined at 108 in ospfd/ospf_interface.c.'>ospf_if_reset</a>(ifp);
+<a id='L206' name='L206'></a>        <em class='brace'>}</em>
+<a id='L207' name='L207'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L208' name='L208'></a>    <em class='brace'>}</em>
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a>  <a href='../S/255.html#L724' title='Defined at 724 in lib/zclient.c.'>zebra_interface_if_set_value</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf, ifp);
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L213' name='L213'></a>    zlog_debug ("Zebra: Interface[%s] state change to up.", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (<a href='../S/791.html#L31' title='Defined at 31 in ospfd/ospf_interface.h.'>IF_OIFS</a> (ifp)); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L216' name='L216'></a>    <em class='brace'>{</em>
+<a id='L217' name='L217'></a>      <strong class='reserved'>if</strong> ((oi = rn-&gt;info) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L218' name='L218'></a>        <strong class='reserved'>continue</strong>;
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a>      <a href='../S/788.html#L791' title='Defined at 791 in ospfd/ospf_interface.c.'>ospf_if_up</a> (oi);
+<a id='L221' name='L221'></a>    <em class='brace'>}</em>
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L224' name='L224'></a><em class='brace'>}</em>
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L227' name='L227'></a><a href='../S/773.html#L1305' title='Referred from 1305 in ospfd/ospf_zebra.c.'>ospf_interface_state_down</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L228' name='L228'></a>                           <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L229' name='L229'></a><em class='brace'>{</em>
+<a id='L230' name='L230'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L231' name='L231'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L232' name='L232'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a>  ifp = <a href='../S/255.html#L670' title='Defined at 670 in lib/zclient.c.'>zebra_interface_state_read</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a>  <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L237' name='L237'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L240' name='L240'></a>    zlog_debug ("Zebra: Interface[%s] state change to down.", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>  <strong class='reserved'>for</strong> (node = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (<a href='../S/791.html#L31' title='Defined at 31 in ospfd/ospf_interface.h.'>IF_OIFS</a> (ifp)); node; node = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (node))
+<a id='L243' name='L243'></a>    <em class='brace'>{</em>
+<a id='L244' name='L244'></a>      <strong class='reserved'>if</strong> ((oi = node-&gt;info) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L245' name='L245'></a>        <strong class='reserved'>continue</strong>;
+<a id='L246' name='L246'></a>      <a href='../S/788.html#L813' title='Defined at 813 in ospfd/ospf_interface.c.'>ospf_if_down</a> (oi);
+<a id='L247' name='L247'></a>    <em class='brace'>}</em>
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L250' name='L250'></a><em class='brace'>}</em>
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L253' name='L253'></a><a href='../S/773.html#L1306' title='Referred from 1306 in ospfd/ospf_zebra.c.'>ospf_interface_address_add</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L254' name='L254'></a>                            <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L255' name='L255'></a><em class='brace'>{</em>
+<a id='L256' name='L256'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *c;
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a>  c = <a href='../S/255.html#L851' title='Defined at 851 in lib/zclient.c.'>zebra_interface_address_read</a> (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a>  <strong class='reserved'>if</strong> (c == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L261' name='L261'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L264' name='L264'></a>    <em class='brace'>{</em>
+<a id='L265' name='L265'></a>      <strong class='reserved'>char</strong> buf[128];
+<a id='L266' name='L266'></a>      <a href='../S/250.html#L764' title='Defined at 764 in lib/prefix.c.'>prefix2str</a>(c-&gt;address, buf, <strong class='reserved'>sizeof</strong>(buf));
+<a id='L267' name='L267'></a>      zlog_debug("Zebra: interface %s address add %s", c-&gt;ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, buf);
+<a id='L268' name='L268'></a>    <em class='brace'>}</em>
+<a id='L269' name='L269'></a>
+<a id='L270' name='L270'></a>  <a href='../S/794.html#L956' title='Defined at 956 in ospfd/ospfd.c.'>ospf_if_update</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, c-&gt;ifp);
+<a id='L271' name='L271'></a>
+<a id='L272' name='L272'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L273' name='L273'></a>  <a href='../S/742.html#L1450' title='Defined at 1450 in ospfd/ospf_snmp.c.'>ospf_snmp_if_update</a> (c-&gt;ifp);
+<a id='L274' name='L274'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L277' name='L277'></a><em class='brace'>}</em>
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L280' name='L280'></a><a href='../S/773.html#L1307' title='Referred from 1307 in ospfd/ospf_zebra.c.'>ospf_interface_address_delete</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L281' name='L281'></a>                               <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L282' name='L282'></a><em class='brace'>{</em>
+<a id='L283' name='L283'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *c;
+<a id='L284' name='L284'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L285' name='L285'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L286' name='L286'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L287' name='L287'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> p;
+<a id='L288' name='L288'></a>
+<a id='L289' name='L289'></a>  c = <a href='../S/255.html#L851' title='Defined at 851 in lib/zclient.c.'>zebra_interface_address_read</a> (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L290' name='L290'></a>
+<a id='L291' name='L291'></a>  <strong class='reserved'>if</strong> (c == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L292' name='L292'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L293' name='L293'></a>
+<a id='L294' name='L294'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_INTERFACE))
+<a id='L295' name='L295'></a>    <em class='brace'>{</em>
+<a id='L296' name='L296'></a>      <strong class='reserved'>char</strong> buf[128];
+<a id='L297' name='L297'></a>      <a href='../S/250.html#L764' title='Defined at 764 in lib/prefix.c.'>prefix2str</a>(c-&gt;address, buf, <strong class='reserved'>sizeof</strong>(buf));
+<a id='L298' name='L298'></a>      zlog_debug("Zebra: interface %s address delete %s", c-&gt;ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, buf);
+<a id='L299' name='L299'></a>    <em class='brace'>}</em>
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a>  ifp = c-&gt;ifp;
+<a id='L302' name='L302'></a>  p = *c-&gt;address;
+<a id='L303' name='L303'></a>  p.prefixlen = <a href='../S/249.html#L107' title='Defined at 107 in lib/prefix.h.'>IPV4_MAX_PREFIXLEN</a>;
+<a id='L304' name='L304'></a>
+<a id='L305' name='L305'></a>  rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (<a href='../S/791.html#L31' title='Defined at 31 in ospfd/ospf_interface.h.'>IF_OIFS</a> (ifp), &amp;p);
+<a id='L306' name='L306'></a>  <strong class='reserved'>if</strong> (!rn)
+<a id='L307' name='L307'></a>    <em class='brace'>{</em>
+<a id='L308' name='L308'></a>      <a href='../S/240.html#L630' title='Defined at 630 in lib/if.c.'>connected_free</a> (c);
+<a id='L309' name='L309'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L310' name='L310'></a>    <em class='brace'>}</em>
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (rn-&gt;info);
+<a id='L313' name='L313'></a>  oi = rn-&gt;info;
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a>  <em class='comment'>/* Call interface hook functions to clean up */</em>
+<a id='L316' name='L316'></a>  <a href='../S/788.html#L304' title='Defined at 304 in ospfd/ospf_interface.c.'>ospf_if_free</a> (oi);
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L319' name='L319'></a>  <a href='../S/742.html#L1450' title='Defined at 1450 in ospfd/ospf_snmp.c.'>ospf_snmp_if_update</a> (c-&gt;ifp);
+<a id='L320' name='L320'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a>  <a href='../S/240.html#L630' title='Defined at 630 in lib/if.c.'>connected_free</a> (c);
+<a id='L323' name='L323'></a>
+<a id='L324' name='L324'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L325' name='L325'></a><em class='brace'>}</em>
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a><strong class='reserved'>void</strong>
+<a id='L328' name='L328'></a><a href='../R/8576.html' title='Multiple referred from 3 places.'>ospf_zebra_add</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or)
+<a id='L329' name='L329'></a><em class='brace'>{</em>
+<a id='L330' name='L330'></a>  u_char <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>;
+<a id='L331' name='L331'></a>  u_char distance;
+<a id='L332' name='L332'></a>  u_char <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L333' name='L333'></a>  <strong class='reserved'>int</strong> psize;
+<a id='L334' name='L334'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L335' name='L335'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L336' name='L336'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L337' name='L337'></a>
+<a id='L338' name='L338'></a>  <strong class='reserved'>if</strong> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[<a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>])
+<a id='L339' name='L339'></a>    <em class='brace'>{</em>
+<a id='L340' name='L340'></a>      <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L341' name='L341'></a>      <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = 0;
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a>      <em class='comment'>/* OSPF pass nexthop and metric */</em>
+<a id='L344' name='L344'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>);
+<a id='L345' name='L345'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>);
+<a id='L346' name='L346'></a>
+<a id='L347' name='L347'></a>      <em class='comment'>/* Distance value. */</em>
+<a id='L348' name='L348'></a>      distance = <a href='../S/773.html#L1268' title='Defined at 1268 in ospfd/ospf_zebra.c.'>ospf_distance_apply</a> (p, or);
+<a id='L349' name='L349'></a>      <strong class='reserved'>if</strong> (distance)
+<a id='L350' name='L350'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L90' title='Defined at 90 in lib/zclient.h.'>ZAPI_MESSAGE_DISTANCE</a>);
+<a id='L351' name='L351'></a>
+<a id='L352' name='L352'></a>      <em class='comment'>/* Make packet. */</em>
+<a id='L353' name='L353'></a>      s = <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;obuf;
+<a id='L354' name='L354'></a>      <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (s);
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a>      <em class='comment'>/* Put command, type, flags, message. */</em>
+<a id='L357' name='L357'></a>      <a href='../S/255.html#L296' title='Defined at 296 in lib/zclient.c.'>zclient_create_header</a> (s, <a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>);
+<a id='L358' name='L358'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>);
+<a id='L359' name='L359'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L360' name='L360'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>);
+<a id='L361' name='L361'></a>      <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (s, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>);
+<a id='L362' name='L362'></a>
+<a id='L363' name='L363'></a>      <em class='comment'>/* Put prefix information. */</em>
+<a id='L364' name='L364'></a>      psize = <a href='../D/3540.html' title='Multiple defined in 4 places.'>PSIZE</a> (p-&gt;prefixlen);
+<a id='L365' name='L365'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, p-&gt;prefixlen);
+<a id='L366' name='L366'></a>      <a href='../D/10972.html' title='Multiple defined in 2 places.'>stream_write</a> (s, (u_char *) &amp; p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, psize);
+<a id='L367' name='L367'></a>
+<a id='L368' name='L368'></a>      <em class='comment'>/* Nexthop count. */</em>
+<a id='L369' name='L369'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, or-&gt;paths-&gt;count);
+<a id='L370' name='L370'></a>
+<a id='L371' name='L371'></a>      <em class='comment'>/* Nexthop, ifindex, distance and metric information. */</em>
+<a id='L372' name='L372'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (or-&gt;paths, node, path))
+<a id='L373' name='L373'></a>        <em class='brace'>{</em>
+<a id='L374' name='L374'></a>          <strong class='reserved'>if</strong> (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr != INADDR_ANY &amp;&amp;
+<a id='L375' name='L375'></a>              path-&gt;ifindex != 0)
+<a id='L376' name='L376'></a>            <em class='brace'>{</em>
+<a id='L377' name='L377'></a>              <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/191.html#L485' title='Defined at 485 in lib/zebra.h.'>ZEBRA_NEXTHOP_IPV4_IFINDEX</a>);
+<a id='L378' name='L378'></a>              <a href='../S/296.html#L677' title='Defined at 677 in lib/stream.c.'>stream_put_in_addr</a> (s, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L379' name='L379'></a>              <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, path-&gt;ifindex);
+<a id='L380' name='L380'></a>            <em class='brace'>}</em>
+<a id='L381' name='L381'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr != INADDR_ANY)
+<a id='L382' name='L382'></a>            <em class='brace'>{</em>
+<a id='L383' name='L383'></a>              <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/191.html#L484' title='Defined at 484 in lib/zebra.h.'>ZEBRA_NEXTHOP_IPV4</a>);
+<a id='L384' name='L384'></a>              <a href='../S/296.html#L677' title='Defined at 677 in lib/stream.c.'>stream_put_in_addr</a> (s, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L385' name='L385'></a>            <em class='brace'>}</em>
+<a id='L386' name='L386'></a>          <strong class='reserved'>else</strong>
+<a id='L387' name='L387'></a>            <em class='brace'>{</em>
+<a id='L388' name='L388'></a>              <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/191.html#L482' title='Defined at 482 in lib/zebra.h.'>ZEBRA_NEXTHOP_IFINDEX</a>);
+<a id='L389' name='L389'></a>              <strong class='reserved'>if</strong> (path-&gt;ifindex)
+<a id='L390' name='L390'></a>                <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, path-&gt;ifindex);
+<a id='L391' name='L391'></a>              <strong class='reserved'>else</strong>
+<a id='L392' name='L392'></a>                <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, 0);
+<a id='L393' name='L393'></a>            <em class='brace'>}</em>
+<a id='L394' name='L394'></a>
+<a id='L395' name='L395'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L396' name='L396'></a>            <em class='brace'>{</em>
+<a id='L397' name='L397'></a>              <strong class='reserved'>char</strong> buf[2][<a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a>];
+<a id='L398' name='L398'></a>              zlog_debug("Zebra: Route add %s/%d nexthop %s",
+<a id='L399' name='L399'></a>                         <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L400' name='L400'></a>                                   buf[0], <strong class='reserved'>sizeof</strong>(buf[0])),
+<a id='L401' name='L401'></a>                         p-&gt;prefixlen,
+<a id='L402' name='L402'></a>                         <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L403' name='L403'></a>                                   buf[1], <strong class='reserved'>sizeof</strong>(buf[1])));
+<a id='L404' name='L404'></a>            <em class='brace'>}</em>
+<a id='L405' name='L405'></a>        <em class='brace'>}</em>
+<a id='L406' name='L406'></a>
+<a id='L407' name='L407'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L90' title='Defined at 90 in lib/zclient.h.'>ZAPI_MESSAGE_DISTANCE</a>))
+<a id='L408' name='L408'></a>        <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, distance);
+<a id='L409' name='L409'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>))
+<a id='L410' name='L410'></a>        <em class='brace'>{</em>
+<a id='L411' name='L411'></a>          <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L33' title='Defined at 33 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE1_EXTERNAL</a>)
+<a id='L412' name='L412'></a>            <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, or-&gt;cost + or-&gt;u.ext.type2_cost);
+<a id='L413' name='L413'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L34' title='Defined at 34 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE2_EXTERNAL</a>)
+<a id='L414' name='L414'></a>            <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, or-&gt;u.ext.type2_cost);
+<a id='L415' name='L415'></a>          <strong class='reserved'>else</strong>
+<a id='L416' name='L416'></a>            <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, or-&gt;cost);
+<a id='L417' name='L417'></a>        <em class='brace'>}</em>
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a>      <a href='../S/296.html#L602' title='Defined at 602 in lib/stream.c.'>stream_putw_at</a> (s, 0, <a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (s));
+<a id='L420' name='L420'></a>
+<a id='L421' name='L421'></a>      <a href='../S/255.html#L272' title='Defined at 272 in lib/zclient.c.'>zclient_send_message</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>);
+<a id='L422' name='L422'></a>    <em class='brace'>}</em>
+<a id='L423' name='L423'></a><em class='brace'>}</em>
+<a id='L424' name='L424'></a>
+<a id='L425' name='L425'></a><strong class='reserved'>void</strong>
+<a id='L426' name='L426'></a><a href='../R/8578.html' title='Multiple referred from 7 places.'>ospf_zebra_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or)
+<a id='L427' name='L427'></a><em class='brace'>{</em>
+<a id='L428' name='L428'></a>  u_char <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>;
+<a id='L429' name='L429'></a>  u_char distance;
+<a id='L430' name='L430'></a>  u_char <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L431' name='L431'></a>  <strong class='reserved'>int</strong> psize;
+<a id='L432' name='L432'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L433' name='L433'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L434' name='L434'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L435' name='L435'></a>
+<a id='L436' name='L436'></a>  <strong class='reserved'>if</strong> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[<a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>])
+<a id='L437' name='L437'></a>    <em class='brace'>{</em>
+<a id='L438' name='L438'></a>      <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L439' name='L439'></a>      <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = 0;
+<a id='L440' name='L440'></a>      <em class='comment'>/* Distance value. */</em>
+<a id='L441' name='L441'></a>      distance = <a href='../S/773.html#L1268' title='Defined at 1268 in ospfd/ospf_zebra.c.'>ospf_distance_apply</a> (p, or);
+<a id='L442' name='L442'></a>      <em class='comment'>/* Make packet. */</em>
+<a id='L443' name='L443'></a>      s = <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;obuf;
+<a id='L444' name='L444'></a>      <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (s);
+<a id='L445' name='L445'></a>
+<a id='L446' name='L446'></a>      <em class='comment'>/* Put command, type, flags, message. */</em>
+<a id='L447' name='L447'></a>      <a href='../S/255.html#L296' title='Defined at 296 in lib/zclient.c.'>zclient_create_header</a> (s, <a href='../S/191.html#L412' title='Defined at 412 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_DELETE</a>);
+<a id='L448' name='L448'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>);
+<a id='L449' name='L449'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L450' name='L450'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>);
+<a id='L451' name='L451'></a>      <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (s, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>);
+<a id='L452' name='L452'></a>
+<a id='L453' name='L453'></a>      <em class='comment'>/* Put prefix information. */</em>
+<a id='L454' name='L454'></a>      psize = <a href='../D/3540.html' title='Multiple defined in 4 places.'>PSIZE</a> (p-&gt;prefixlen);
+<a id='L455' name='L455'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, p-&gt;prefixlen);
+<a id='L456' name='L456'></a>      <a href='../D/10972.html' title='Multiple defined in 2 places.'>stream_write</a> (s, (u_char *) &amp; p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, psize);
+<a id='L457' name='L457'></a>
+<a id='L458' name='L458'></a>      <em class='comment'>/* Nexthop count. */</em>
+<a id='L459' name='L459'></a>      <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, or-&gt;paths-&gt;count);
+<a id='L460' name='L460'></a>
+<a id='L461' name='L461'></a>      <em class='comment'>/* Nexthop, ifindex, distance and metric information. */</em>
+<a id='L462' name='L462'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (or-&gt;paths, node, path))
+<a id='L463' name='L463'></a>        <em class='brace'>{</em>
+<a id='L464' name='L464'></a>          <strong class='reserved'>if</strong> (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr != INADDR_ANY &amp;&amp;
+<a id='L465' name='L465'></a>              path-&gt;ifindex != 0)
+<a id='L466' name='L466'></a>            <em class='brace'>{</em>
+<a id='L467' name='L467'></a>              <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/191.html#L485' title='Defined at 485 in lib/zebra.h.'>ZEBRA_NEXTHOP_IPV4_IFINDEX</a>);
+<a id='L468' name='L468'></a>              <a href='../S/296.html#L677' title='Defined at 677 in lib/stream.c.'>stream_put_in_addr</a> (s, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L469' name='L469'></a>              <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, path-&gt;ifindex);
+<a id='L470' name='L470'></a>            <em class='brace'>}</em>
+<a id='L471' name='L471'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr != INADDR_ANY)
+<a id='L472' name='L472'></a>            <em class='brace'>{</em>
+<a id='L473' name='L473'></a>              <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/191.html#L484' title='Defined at 484 in lib/zebra.h.'>ZEBRA_NEXTHOP_IPV4</a>);
+<a id='L474' name='L474'></a>              <a href='../S/296.html#L677' title='Defined at 677 in lib/stream.c.'>stream_put_in_addr</a> (s, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L475' name='L475'></a>            <em class='brace'>}</em>
+<a id='L476' name='L476'></a>          <strong class='reserved'>else</strong>
+<a id='L477' name='L477'></a>            <em class='brace'>{</em>
+<a id='L478' name='L478'></a>              <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, <a href='../S/191.html#L482' title='Defined at 482 in lib/zebra.h.'>ZEBRA_NEXTHOP_IFINDEX</a>);
+<a id='L479' name='L479'></a>              <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, path-&gt;ifindex);
+<a id='L480' name='L480'></a>            <em class='brace'>}</em>
+<a id='L481' name='L481'></a>
+<a id='L482' name='L482'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L483' name='L483'></a>            <em class='brace'>{</em>
+<a id='L484' name='L484'></a>              <strong class='reserved'>char</strong> buf[2][<a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a>];
+<a id='L485' name='L485'></a>              zlog_debug("Zebra: Route add %s/%d nexthop %s",
+<a id='L486' name='L486'></a>                         <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L487' name='L487'></a>                                   buf[0], <strong class='reserved'>sizeof</strong>(buf[0])),
+<a id='L488' name='L488'></a>                         p-&gt;prefixlen,
+<a id='L489' name='L489'></a>                         <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L490' name='L490'></a>                                   buf[1], <strong class='reserved'>sizeof</strong>(buf[1])));
+<a id='L491' name='L491'></a>            <em class='brace'>}</em>
+<a id='L492' name='L492'></a>        <em class='brace'>}</em>
+<a id='L493' name='L493'></a>
+<a id='L494' name='L494'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L90' title='Defined at 90 in lib/zclient.h.'>ZAPI_MESSAGE_DISTANCE</a>))
+<a id='L495' name='L495'></a>        <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (s, distance);
+<a id='L496' name='L496'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>))
+<a id='L497' name='L497'></a>        <em class='brace'>{</em>
+<a id='L498' name='L498'></a>          <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L33' title='Defined at 33 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE1_EXTERNAL</a>)
+<a id='L499' name='L499'></a>            <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, or-&gt;cost + or-&gt;u.ext.type2_cost);
+<a id='L500' name='L500'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L34' title='Defined at 34 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE2_EXTERNAL</a>)
+<a id='L501' name='L501'></a>            <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, or-&gt;u.ext.type2_cost);
+<a id='L502' name='L502'></a>          <strong class='reserved'>else</strong>
+<a id='L503' name='L503'></a>            <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, or-&gt;cost);
+<a id='L504' name='L504'></a>        <em class='brace'>}</em>
+<a id='L505' name='L505'></a>
+<a id='L506' name='L506'></a>      <a href='../S/296.html#L602' title='Defined at 602 in lib/stream.c.'>stream_putw_at</a> (s, 0, <a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (s));
+<a id='L507' name='L507'></a>
+<a id='L508' name='L508'></a>      <a href='../S/255.html#L272' title='Defined at 272 in lib/zclient.c.'>zclient_send_message</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>);
+<a id='L509' name='L509'></a>    <em class='brace'>}</em>
+<a id='L510' name='L510'></a><em class='brace'>}</em>
+<a id='L511' name='L511'></a>
+<a id='L512' name='L512'></a><strong class='reserved'>void</strong>
+<a id='L513' name='L513'></a><a href='../R/8577.html' title='Multiple referred from 3 places.'>ospf_zebra_add_discard</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p)
+<a id='L514' name='L514'></a><em class='brace'>{</em>
+<a id='L515' name='L515'></a>  <strong class='reserved'>struct</strong> <a href='../S/210.html#L106' title='Defined at 106 in lib/zclient.h.'>zapi_ipv4</a> api;
+<a id='L516' name='L516'></a>
+<a id='L517' name='L517'></a>  <strong class='reserved'>if</strong> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[<a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>])
+<a id='L518' name='L518'></a>    <em class='brace'>{</em>
+<a id='L519' name='L519'></a>      api.type = <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>;
+<a id='L520' name='L520'></a>      api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/191.html#L474' title='Defined at 474 in lib/zebra.h.'>ZEBRA_FLAG_BLACKHOLE</a>;
+<a id='L521' name='L521'></a>      api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L522' name='L522'></a>      api.safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>;
+<a id='L523' name='L523'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>);
+<a id='L524' name='L524'></a>      api.nexthop_num = 0;
+<a id='L525' name='L525'></a>      api.ifindex_num = 0;
+<a id='L526' name='L526'></a>
+<a id='L527' name='L527'></a>      <a href='../S/255.html#L462' title='Defined at 462 in lib/zclient.c.'>zapi_ipv4_route</a> (<a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, p, &amp;api);
+<a id='L528' name='L528'></a>
+<a id='L529' name='L529'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L530' name='L530'></a>        zlog_debug ("Zebra: Route add discard %s/%d",
+<a id='L531' name='L531'></a>                   inet_ntoa (p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p-&gt;prefixlen);
+<a id='L532' name='L532'></a>    <em class='brace'>}</em>
+<a id='L533' name='L533'></a><em class='brace'>}</em>
+<a id='L534' name='L534'></a>
+<a id='L535' name='L535'></a><strong class='reserved'>void</strong>
+<a id='L536' name='L536'></a><a href='../R/8579.html' title='Multiple referred from 4 places.'>ospf_zebra_delete_discard</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p)
+<a id='L537' name='L537'></a><em class='brace'>{</em>
+<a id='L538' name='L538'></a>  <strong class='reserved'>struct</strong> <a href='../S/210.html#L106' title='Defined at 106 in lib/zclient.h.'>zapi_ipv4</a> api;
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a>  <strong class='reserved'>if</strong> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[<a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>])
+<a id='L541' name='L541'></a>    <em class='brace'>{</em>
+<a id='L542' name='L542'></a>      api.type = <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>;
+<a id='L543' name='L543'></a>      api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/191.html#L474' title='Defined at 474 in lib/zebra.h.'>ZEBRA_FLAG_BLACKHOLE</a>;
+<a id='L544' name='L544'></a>      api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L545' name='L545'></a>      api.safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>;
+<a id='L546' name='L546'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>);
+<a id='L547' name='L547'></a>      api.nexthop_num = 0;
+<a id='L548' name='L548'></a>      api.ifindex_num = 0;
+<a id='L549' name='L549'></a>
+<a id='L550' name='L550'></a>      <a href='../S/255.html#L462' title='Defined at 462 in lib/zclient.c.'>zapi_ipv4_route</a> (<a href='../S/191.html#L412' title='Defined at 412 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_DELETE</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, p, &amp;api);
+<a id='L551' name='L551'></a>
+<a id='L552' name='L552'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L553' name='L553'></a>        zlog_debug ("Zebra: Route delete discard %s/%d",
+<a id='L554' name='L554'></a>                   inet_ntoa (p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p-&gt;prefixlen);
+<a id='L555' name='L555'></a>
+<a id='L556' name='L556'></a>    <em class='brace'>}</em>
+<a id='L557' name='L557'></a><em class='brace'>}</em>
+<a id='L558' name='L558'></a>
+<a id='L559' name='L559'></a><strong class='reserved'>int</strong>
+<a id='L560' name='L560'></a><a href='../R/8174.html' title='Multiple referred from 8 places.'>ospf_is_type_redistributed</a> (<strong class='reserved'>int</strong> type)
+<a id='L561' name='L561'></a><em class='brace'>{</em>
+<a id='L562' name='L562'></a>  <strong class='reserved'>return</strong> (<a href='../S/762.html#L32' title='Defined at 32 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE_TYPE</a> (type)) ?
+<a id='L563' name='L563'></a>    <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;default_information : <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[type];
+<a id='L564' name='L564'></a><em class='brace'>}</em>
+<a id='L565' name='L565'></a>
+<a id='L566' name='L566'></a><strong class='reserved'>int</strong>
+<a id='L567' name='L567'></a><a href='../R/8438.html' title='Multiple referred from 6 places.'>ospf_redistribute_set</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> type, <strong class='reserved'>int</strong> mtype, <strong class='reserved'>int</strong> mvalue)
+<a id='L568' name='L568'></a><em class='brace'>{</em>
+<a id='L569' name='L569'></a>  <strong class='reserved'>int</strong> force = 0;
+<a id='L570' name='L570'></a>
+<a id='L571' name='L571'></a>  <strong class='reserved'>if</strong> (<a href='../S/773.html#L560' title='Defined at 560 in ospfd/ospf_zebra.c.'>ospf_is_type_redistributed</a> (type))
+<a id='L572' name='L572'></a>    <em class='brace'>{</em>
+<a id='L573' name='L573'></a>      <strong class='reserved'>if</strong> (mtype != <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].type)
+<a id='L574' name='L574'></a>        <em class='brace'>{</em>
+<a id='L575' name='L575'></a>          <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].type = mtype;
+<a id='L576' name='L576'></a>          force = <a href='../S/733.html#L57' title='Defined at 57 in ospfd/ospf_lsa.h.'>LSA_REFRESH_FORCE</a>;
+<a id='L577' name='L577'></a>        <em class='brace'>}</em>
+<a id='L578' name='L578'></a>      <strong class='reserved'>if</strong> (mvalue != <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].value)
+<a id='L579' name='L579'></a>        <em class='brace'>{</em>
+<a id='L580' name='L580'></a>          <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].value = mvalue;
+<a id='L581' name='L581'></a>          force = <a href='../S/733.html#L57' title='Defined at 57 in ospfd/ospf_lsa.h.'>LSA_REFRESH_FORCE</a>;
+<a id='L582' name='L582'></a>        <em class='brace'>}</em>
+<a id='L583' name='L583'></a>
+<a id='L584' name='L584'></a>      <a href='../S/747.html#L2277' title='Defined at 2277 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh_type</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type, force);
+<a id='L585' name='L585'></a>
+<a id='L586' name='L586'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L587' name='L587'></a>        zlog_debug ("Redistribute[%s]: Refresh  Type[%d], Metric[%d]",
+<a id='L588' name='L588'></a>                   <a href='../S/743.html#L149' title='Defined at 149 in ospfd/ospf_dump.c.'>ospf_redist_string</a>(type),
+<a id='L589' name='L589'></a>                   <a href='../S/747.html#L1569' title='Defined at 1569 in ospfd/ospf_lsa.c.'>metric_type</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type), <a href='../S/747.html#L1576' title='Defined at 1576 in ospfd/ospf_lsa.c.'>metric_value</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L590' name='L590'></a>
+<a id='L591' name='L591'></a>      <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L592' name='L592'></a>    <em class='brace'>}</em>
+<a id='L593' name='L593'></a>
+<a id='L594' name='L594'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].type = mtype;
+<a id='L595' name='L595'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].value = mvalue;
+<a id='L596' name='L596'></a>
+<a id='L597' name='L597'></a>  <a href='../S/255.html#L1070' title='Defined at 1070 in lib/zclient.c.'>zclient_redistribute</a> (<a href='../S/191.html#L415' title='Defined at 415 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_ADD</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, type);
+<a id='L598' name='L598'></a>
+<a id='L599' name='L599'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L600' name='L600'></a>    zlog_debug ("Redistribute[%s]: Start  Type[%d], Metric[%d]",
+<a id='L601' name='L601'></a>               <a href='../S/743.html#L149' title='Defined at 149 in ospfd/ospf_dump.c.'>ospf_redist_string</a>(type),
+<a id='L602' name='L602'></a>               <a href='../S/747.html#L1569' title='Defined at 1569 in ospfd/ospf_lsa.c.'>metric_type</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type), <a href='../S/747.html#L1576' title='Defined at 1576 in ospfd/ospf_lsa.c.'>metric_value</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L603' name='L603'></a>
+<a id='L604' name='L604'></a>  <a href='../S/746.html#L239' title='Defined at 239 in ospfd/ospf_asbr.c.'>ospf_asbr_status_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, ++<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;redistribute);
+<a id='L605' name='L605'></a>
+<a id='L606' name='L606'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L607' name='L607'></a><em class='brace'>}</em>
+<a id='L608' name='L608'></a>
+<a id='L609' name='L609'></a><strong class='reserved'>int</strong>
+<a id='L610' name='L610'></a><a href='../R/8439.html' title='Multiple referred from 3 places.'>ospf_redistribute_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> type)
+<a id='L611' name='L611'></a><em class='brace'>{</em>
+<a id='L612' name='L612'></a>  <strong class='reserved'>if</strong> (type == <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist_default)
+<a id='L613' name='L613'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L614' name='L614'></a>
+<a id='L615' name='L615'></a>  <strong class='reserved'>if</strong> (!<a href='../S/773.html#L560' title='Defined at 560 in ospfd/ospf_zebra.c.'>ospf_is_type_redistributed</a> (type))
+<a id='L616' name='L616'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L617' name='L617'></a>
+<a id='L618' name='L618'></a>  <a href='../S/255.html#L1070' title='Defined at 1070 in lib/zclient.c.'>zclient_redistribute</a> (<a href='../S/191.html#L416' title='Defined at 416 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_DELETE</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, type);
+<a id='L619' name='L619'></a>
+<a id='L620' name='L620'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L621' name='L621'></a>    zlog_debug ("Redistribute[%s]: Stop",
+<a id='L622' name='L622'></a>               <a href='../S/743.html#L149' title='Defined at 149 in ospfd/ospf_dump.c.'>ospf_redist_string</a>(type));
+<a id='L623' name='L623'></a>
+<a id='L624' name='L624'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].type = -1;
+<a id='L625' name='L625'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[type].value = -1;
+<a id='L626' name='L626'></a>
+<a id='L627' name='L627'></a>  <em class='comment'>/* Remove the routes from OSPF table. */</em>
+<a id='L628' name='L628'></a>  <a href='../S/746.html#L271' title='Defined at 271 in ospfd/ospf_asbr.c.'>ospf_redistribute_withdraw</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L629' name='L629'></a>
+<a id='L630' name='L630'></a>  <a href='../S/746.html#L239' title='Defined at 239 in ospfd/ospf_asbr.c.'>ospf_asbr_status_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, --<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;redistribute);
+<a id='L631' name='L631'></a>
+<a id='L632' name='L632'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L633' name='L633'></a><em class='brace'>}</em>
+<a id='L634' name='L634'></a>
+<a id='L635' name='L635'></a><strong class='reserved'>int</strong>
+<a id='L636' name='L636'></a><a href='../R/8436.html' title='Multiple referred from 11 places.'>ospf_redistribute_default_set</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> originate,
+<a id='L637' name='L637'></a>                               <strong class='reserved'>int</strong> mtype, <strong class='reserved'>int</strong> mvalue)
+<a id='L638' name='L638'></a><em class='brace'>{</em>
+<a id='L639' name='L639'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;default_originate = originate;
+<a id='L640' name='L640'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>].type = mtype;
+<a id='L641' name='L641'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>].value = mvalue;
+<a id='L642' name='L642'></a>
+<a id='L643' name='L643'></a>  <strong class='reserved'>if</strong> (<a href='../S/773.html#L560' title='Defined at 560 in ospfd/ospf_zebra.c.'>ospf_is_type_redistributed</a> (<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>))
+<a id='L644' name='L644'></a>    <em class='brace'>{</em>
+<a id='L645' name='L645'></a>      <em class='comment'>/* if ospf-&gt;default_originate changes value, is calling</em>
+<a id='L646' name='L646'></a><em class='comment'>         ospf_external_lsa_refresh_default sufficient to implement</em>
+<a id='L647' name='L647'></a><em class='comment'>         the change? */</em>
+<a id='L648' name='L648'></a>      <a href='../S/747.html#L2236' title='Defined at 2236 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh_default</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L649' name='L649'></a>
+<a id='L650' name='L650'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L651' name='L651'></a>        zlog_debug ("Redistribute[%s]: Refresh  Type[%d], Metric[%d]",
+<a id='L652' name='L652'></a>                   <a href='../S/743.html#L149' title='Defined at 149 in ospfd/ospf_dump.c.'>ospf_redist_string</a>(<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>),
+<a id='L653' name='L653'></a>                   <a href='../S/747.html#L1569' title='Defined at 1569 in ospfd/ospf_lsa.c.'>metric_type</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>),
+<a id='L654' name='L654'></a>                   <a href='../S/747.html#L1576' title='Defined at 1576 in ospfd/ospf_lsa.c.'>metric_value</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>));
+<a id='L655' name='L655'></a>      <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L656' name='L656'></a>    <em class='brace'>}</em>
+<a id='L657' name='L657'></a>
+<a id='L658' name='L658'></a>  <a href='../S/255.html#L1092' title='Defined at 1092 in lib/zclient.c.'>zclient_redistribute_default</a> (<a href='../S/191.html#L417' title='Defined at 417 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_DEFAULT_ADD</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>);
+<a id='L659' name='L659'></a>
+<a id='L660' name='L660'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L661' name='L661'></a>    zlog_debug ("Redistribute[DEFAULT]: Start  Type[%d], Metric[%d]",
+<a id='L662' name='L662'></a>               <a href='../S/747.html#L1569' title='Defined at 1569 in ospfd/ospf_lsa.c.'>metric_type</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>),
+<a id='L663' name='L663'></a>               <a href='../S/747.html#L1576' title='Defined at 1576 in ospfd/ospf_lsa.c.'>metric_value</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>));
+<a id='L664' name='L664'></a>
+<a id='L665' name='L665'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;router_id.s_addr == 0)
+<a id='L666' name='L666'></a>    <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;external_origin |= (1 &lt;&lt; <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>);
+<a id='L667' name='L667'></a>  <strong class='reserved'>else</strong>
+<a id='L668' name='L668'></a>    <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/747.html#L2128' title='Defined at 2128 in ospfd/ospf_lsa.c.'>ospf_default_originate_timer</a>, <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, 1);
+<a id='L669' name='L669'></a>
+<a id='L670' name='L670'></a>  <a href='../S/746.html#L239' title='Defined at 239 in ospfd/ospf_asbr.c.'>ospf_asbr_status_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, ++<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;redistribute);
+<a id='L671' name='L671'></a>
+<a id='L672' name='L672'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L673' name='L673'></a><em class='brace'>}</em>
+<a id='L674' name='L674'></a>
+<a id='L675' name='L675'></a><strong class='reserved'>int</strong>
+<a id='L676' name='L676'></a><a href='../R/8437.html' title='Multiple referred from 3 places.'>ospf_redistribute_default_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>)
+<a id='L677' name='L677'></a><em class='brace'>{</em>
+<a id='L678' name='L678'></a>  <strong class='reserved'>if</strong> (!<a href='../S/773.html#L560' title='Defined at 560 in ospfd/ospf_zebra.c.'>ospf_is_type_redistributed</a> (<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>))
+<a id='L679' name='L679'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L680' name='L680'></a>
+<a id='L681' name='L681'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;default_originate = <a href='../S/790.html#L211' title='Defined at 211 in ospfd/ospfd.h.'>DEFAULT_ORIGINATE_NONE</a>;
+<a id='L682' name='L682'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>].type = -1;
+<a id='L683' name='L683'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;dmetric[<a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a>].value = -1;
+<a id='L684' name='L684'></a>
+<a id='L685' name='L685'></a>  <a href='../S/255.html#L1092' title='Defined at 1092 in lib/zclient.c.'>zclient_redistribute_default</a> (<a href='../S/191.html#L418' title='Defined at 418 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_DEFAULT_DELETE</a>, <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>);
+<a id='L686' name='L686'></a>
+<a id='L687' name='L687'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L688' name='L688'></a>    zlog_debug ("Redistribute[DEFAULT]: Stop");
+<a id='L689' name='L689'></a>
+<a id='L690' name='L690'></a>  <a href='../S/746.html#L239' title='Defined at 239 in ospfd/ospf_asbr.c.'>ospf_asbr_status_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, --<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;redistribute);
+<a id='L691' name='L691'></a>
+<a id='L692' name='L692'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L693' name='L693'></a><em class='brace'>}</em>
+<a id='L694' name='L694'></a>
+<a id='L695' name='L695'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L696' name='L696'></a><a href='../S/773.html#L745' title='Referred from 745 in ospfd/ospf_zebra.c.'>ospf_external_lsa_originate_check</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>,
+<a id='L697' name='L697'></a>                                   <strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *ei)
+<a id='L698' name='L698'></a><em class='brace'>{</em>
+<a id='L699' name='L699'></a>  <em class='comment'>/* If prefix is multicast, then do not originate LSA. */</em>
+<a id='L700' name='L700'></a>  <strong class='reserved'>if</strong> (IN_MULTICAST (htonl (ei-&gt;p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.s_addr)))
+<a id='L701' name='L701'></a>    <em class='brace'>{</em>
+<a id='L702' name='L702'></a>      zlog_info ("LSA[Type5:%s]: Not originate AS-external-LSA, "
+<a id='L703' name='L703'></a>                 "Prefix belongs multicast", inet_ntoa (ei-&gt;p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>));
+<a id='L704' name='L704'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L705' name='L705'></a>    <em class='brace'>}</em>
+<a id='L706' name='L706'></a>
+<a id='L707' name='L707'></a>  <em class='comment'>/* Take care of default-originate. */</em>
+<a id='L708' name='L708'></a>  <strong class='reserved'>if</strong> (<a href='../S/747.html#L1985' title='Defined at 1985 in ospfd/ospf_lsa.c.'>is_prefix_default</a> (&amp;ei-&gt;p))
+<a id='L709' name='L709'></a>    <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;default_originate == <a href='../S/790.html#L211' title='Defined at 211 in ospfd/ospfd.h.'>DEFAULT_ORIGINATE_NONE</a>)
+<a id='L710' name='L710'></a>      <em class='brace'>{</em>
+<a id='L711' name='L711'></a>        zlog_info ("LSA[Type5:0.0.0.0]: Not originate AS-external-LSA "
+<a id='L712' name='L712'></a>                   "for default");
+<a id='L713' name='L713'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L714' name='L714'></a>      <em class='brace'>}</em>
+<a id='L715' name='L715'></a>
+<a id='L716' name='L716'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L717' name='L717'></a><em class='brace'>}</em>
+<a id='L718' name='L718'></a>
+<a id='L719' name='L719'></a><em class='comment'>/* If connected prefix is OSPF enable interface, then do not announce. */</em>
+<a id='L720' name='L720'></a><strong class='reserved'>int</strong>
+<a id='L721' name='L721'></a><a href='../R/8053.html' title='Multiple referred from 4 places.'>ospf_distribute_check_connected</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *ei)
+<a id='L722' name='L722'></a><em class='brace'>{</em>
+<a id='L723' name='L723'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L724' name='L724'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L725' name='L725'></a>
+<a id='L726' name='L726'></a>
+<a id='L727' name='L727'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;oiflist, node, oi))
+<a id='L728' name='L728'></a>      <strong class='reserved'>if</strong> (<a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (oi-&gt;address, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;ei-&gt;p))
+<a id='L729' name='L729'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L730' name='L730'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L731' name='L731'></a><em class='brace'>}</em>
+<a id='L732' name='L732'></a>
+<a id='L733' name='L733'></a><em class='comment'>/* return 1 if external LSA must be originated, 0 otherwise */</em>
+<a id='L734' name='L734'></a><strong class='reserved'>int</strong>
+<a id='L735' name='L735'></a><a href='../R/8435.html' title='Multiple referred from 4 places.'>ospf_redistribute_check</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>,
+<a id='L736' name='L736'></a>                         <strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *ei, <strong class='reserved'>int</strong> *changed)
+<a id='L737' name='L737'></a><em class='brace'>{</em>
+<a id='L738' name='L738'></a>  <strong class='reserved'>struct</strong> <a href='../S/814.html#L26' title='Defined at 26 in ospfd/ospf_asbr.h.'>route_map_set_values</a> save_values;
+<a id='L739' name='L739'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p = &amp;ei-&gt;p;
+<a id='L740' name='L740'></a>  u_char type = <a href='../S/747.html#L1985' title='Defined at 1985 in ospfd/ospf_lsa.c.'>is_prefix_default</a> (&amp;ei-&gt;p) ? <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a> : ei-&gt;type;
+<a id='L741' name='L741'></a>
+<a id='L742' name='L742'></a>  <strong class='reserved'>if</strong> (changed)
+<a id='L743' name='L743'></a>    *changed = 0;
+<a id='L744' name='L744'></a>
+<a id='L745' name='L745'></a>  <strong class='reserved'>if</strong> (!<a href='../S/773.html#L696' title='Defined at 696 in ospfd/ospf_zebra.c.'>ospf_external_lsa_originate_check</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, ei))
+<a id='L746' name='L746'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L747' name='L747'></a>
+<a id='L748' name='L748'></a>  <em class='comment'>/* Take care connected route. */</em>
+<a id='L749' name='L749'></a>  <strong class='reserved'>if</strong> (type == <a href='../S/280.html#L10' title='Defined at 10 in lib/route_types.h.'>ZEBRA_ROUTE_CONNECT</a> &amp;&amp;
+<a id='L750' name='L750'></a>      !<a href='../S/773.html#L721' title='Defined at 721 in ospfd/ospf_zebra.c.'>ospf_distribute_check_connected</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, ei))
+<a id='L751' name='L751'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L752' name='L752'></a>
+<a id='L753' name='L753'></a>  <strong class='reserved'>if</strong> (!<a href='../S/762.html#L32' title='Defined at 32 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE_TYPE</a> (type) &amp;&amp; <a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L754' name='L754'></a>    <em class='comment'>/* distirbute-list exists, but access-list may not? */</em>
+<a id='L755' name='L755'></a>    <strong class='reserved'>if</strong> (<a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L756' name='L756'></a>      <strong class='reserved'>if</strong> (<a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (<a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type), p) == FILTER_DENY)
+<a id='L757' name='L757'></a>        <em class='brace'>{</em>
+<a id='L758' name='L758'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L759' name='L759'></a>            zlog_debug ("Redistribute[%s]: %s/%d filtered by ditribute-list.",
+<a id='L760' name='L760'></a>                       <a href='../S/743.html#L149' title='Defined at 149 in ospfd/ospf_dump.c.'>ospf_redist_string</a>(type),
+<a id='L761' name='L761'></a>                       inet_ntoa (p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p-&gt;prefixlen);
+<a id='L762' name='L762'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L763' name='L763'></a>        <em class='brace'>}</em>
+<a id='L764' name='L764'></a>
+<a id='L765' name='L765'></a>  save_values = ei-&gt;route_map_set;
+<a id='L766' name='L766'></a>  <a href='../S/746.html#L121' title='Defined at 121 in ospfd/ospf_asbr.c.'>ospf_reset_route_map_set_values</a> (&amp;ei-&gt;route_map_set);
+<a id='L767' name='L767'></a>
+<a id='L768' name='L768'></a>  <em class='comment'>/* apply route-map if needed */</em>
+<a id='L769' name='L769'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L770' name='L770'></a>    <em class='brace'>{</em>
+<a id='L771' name='L771'></a>      <strong class='reserved'>int</strong> ret;
+<a id='L772' name='L772'></a>
+<a id='L773' name='L773'></a>      ret = <a href='../S/259.html#L774' title='Defined at 774 in lib/routemap.c.'>route_map_apply</a> (<a href='../S/790.html#L304' title='Defined at 304 in ospfd/ospfd.h.'>ROUTEMAP</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type), (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) p,
+<a id='L774' name='L774'></a>                             <a href='../S/235.html#L47' title='Defined at 47 in lib/routemap.h.'>RMAP_OSPF</a>, ei);
+<a id='L775' name='L775'></a>
+<a id='L776' name='L776'></a>      <strong class='reserved'>if</strong> (ret == <a href='../S/235.html#L36' title='Defined at 36 in lib/routemap.h.'>RMAP_DENYMATCH</a>)
+<a id='L777' name='L777'></a>        <em class='brace'>{</em>
+<a id='L778' name='L778'></a>          ei-&gt;route_map_set = save_values;
+<a id='L779' name='L779'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (zebra, ZEBRA_REDISTRIBUTE))
+<a id='L780' name='L780'></a>            zlog_debug ("Redistribute[%s]: %s/%d filtered by route-map.",
+<a id='L781' name='L781'></a>                       <a href='../S/743.html#L149' title='Defined at 149 in ospfd/ospf_dump.c.'>ospf_redist_string</a>(type),
+<a id='L782' name='L782'></a>                       inet_ntoa (p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p-&gt;prefixlen);
+<a id='L783' name='L783'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L784' name='L784'></a>        <em class='brace'>}</em>
+<a id='L785' name='L785'></a>
+<a id='L786' name='L786'></a>      <em class='comment'>/* check if 'route-map set' changed something */</em>
+<a id='L787' name='L787'></a>      <strong class='reserved'>if</strong> (changed)
+<a id='L788' name='L788'></a>        *changed = !<a href='../S/746.html#L128' title='Defined at 128 in ospfd/ospf_asbr.c.'>ospf_route_map_set_compare</a> (&amp;ei-&gt;route_map_set,
+<a id='L789' name='L789'></a>                                                &amp;save_values);
+<a id='L790' name='L790'></a>    <em class='brace'>}</em>
+<a id='L791' name='L791'></a>
+<a id='L792' name='L792'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L793' name='L793'></a><em class='brace'>}</em>
+<a id='L794' name='L794'></a>
+<a id='L795' name='L795'></a><em class='comment'>/* OSPF route-map set for redistribution */</em>
+<a id='L796' name='L796'></a><strong class='reserved'>void</strong>
+<a id='L797' name='L797'></a><a href='../R/8471.html' title='Multiple referred from 16 places.'>ospf_routemap_set</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L798' name='L798'></a><em class='brace'>{</em>
+<a id='L799' name='L799'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L800' name='L800'></a>    free (<a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L801' name='L801'></a>
+<a id='L802' name='L802'></a>  <a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = strdup (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L803' name='L803'></a>  <a href='../S/790.html#L304' title='Defined at 304 in ospfd/ospfd.h.'>ROUTEMAP</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = <a href='../S/259.html#L151' title='Defined at 151 in lib/routemap.c.'>route_map_lookup_by_name</a> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L804' name='L804'></a><em class='brace'>}</em>
+<a id='L805' name='L805'></a>
+<a id='L806' name='L806'></a><strong class='reserved'>void</strong>
+<a id='L807' name='L807'></a><a href='../R/8472.html' title='Multiple referred from 18 places.'>ospf_routemap_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> type)
+<a id='L808' name='L808'></a><em class='brace'>{</em>
+<a id='L809' name='L809'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L810' name='L810'></a>    free (<a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L811' name='L811'></a>
+<a id='L812' name='L812'></a>  <a href='../S/790.html#L303' title='Defined at 303 in ospfd/ospfd.h.'>ROUTEMAP_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L813' name='L813'></a>  <a href='../S/790.html#L304' title='Defined at 304 in ospfd/ospfd.h.'>ROUTEMAP</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L814' name='L814'></a><em class='brace'>}</em>
+<a id='L815' name='L815'></a>
+<a id='L816' name='L816'></a><em class='comment'>/* Zebra route add and delete treatment. */</em>
+<a id='L817' name='L817'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L818' name='L818'></a><a href='../R/8581.html' title='Multiple referred from 2 places.'>ospf_zebra_read_ipv4</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L819' name='L819'></a>                      <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length)
+<a id='L820' name='L820'></a><em class='brace'>{</em>
+<a id='L821' name='L821'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L822' name='L822'></a>  <strong class='reserved'>struct</strong> <a href='../S/210.html#L106' title='Defined at 106 in lib/zclient.h.'>zapi_ipv4</a> api;
+<a id='L823' name='L823'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ifindex;
+<a id='L824' name='L824'></a>  <strong class='reserved'>struct</strong> in_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L825' name='L825'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L826' name='L826'></a>  <strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *ei;
+<a id='L827' name='L827'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>;
+<a id='L828' name='L828'></a>
+<a id='L829' name='L829'></a>  s = <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf;
+<a id='L830' name='L830'></a>  ifindex = 0;
+<a id='L831' name='L831'></a>  <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr = 0;
+<a id='L832' name='L832'></a>
+<a id='L833' name='L833'></a>  <em class='comment'>/* Type, flags, message. */</em>
+<a id='L834' name='L834'></a>  api.type = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L835' name='L835'></a>  api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L836' name='L836'></a>  api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L837' name='L837'></a>
+<a id='L838' name='L838'></a>  <em class='comment'>/* IPv4 prefix. */</em>
+<a id='L839' name='L839'></a>  memset (&amp;p, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a>));
+<a id='L840' name='L840'></a>  p.family = AF_INET;
+<a id='L841' name='L841'></a>  p.prefixlen = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L842' name='L842'></a>  <a href='../S/296.html#L272' title='Defined at 272 in lib/stream.c.'>stream_get</a> (&amp;p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, s, <a href='../D/3540.html' title='Multiple defined in 4 places.'>PSIZE</a> (p.prefixlen));
+<a id='L843' name='L843'></a>
+<a id='L844' name='L844'></a>  <strong class='reserved'>if</strong> (<a href='../S/249.html#L113' title='Defined at 113 in lib/prefix.h.'>IPV4_NET127</a>(ntohl(p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.s_addr)))
+<a id='L845' name='L845'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L846' name='L846'></a>
+<a id='L847' name='L847'></a>  <em class='comment'>/* Nexthop, ifindex, distance, metric. */</em>
+<a id='L848' name='L848'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>))
+<a id='L849' name='L849'></a>    <em class='brace'>{</em>
+<a id='L850' name='L850'></a>      api.nexthop_num = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L851' name='L851'></a>      <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr = <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (s);
+<a id='L852' name='L852'></a>    <em class='brace'>}</em>
+<a id='L853' name='L853'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L89' title='Defined at 89 in lib/zclient.h.'>ZAPI_MESSAGE_IFINDEX</a>))
+<a id='L854' name='L854'></a>    <em class='brace'>{</em>
+<a id='L855' name='L855'></a>      api.ifindex_num = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L856' name='L856'></a>      <em class='comment'>/* XXX assert(api.ifindex_num == 1); */</em>
+<a id='L857' name='L857'></a>      ifindex = <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a> (s);
+<a id='L858' name='L858'></a>    <em class='brace'>}</em>
+<a id='L859' name='L859'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L90' title='Defined at 90 in lib/zclient.h.'>ZAPI_MESSAGE_DISTANCE</a>))
+<a id='L860' name='L860'></a>    api.distance = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L861' name='L861'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>))
+<a id='L862' name='L862'></a>    api.<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a> (s);
+<a id='L863' name='L863'></a>
+<a id='L864' name='L864'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/794.html#L241' title='Defined at 241 in ospfd/ospfd.c.'>ospf_lookup</a> ();
+<a id='L865' name='L865'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L866' name='L866'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L867' name='L867'></a>
+<a id='L868' name='L868'></a>  <strong class='reserved'>if</strong> (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a> == <a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>)
+<a id='L869' name='L869'></a>    <em class='brace'>{</em>
+<a id='L870' name='L870'></a>      <em class='comment'>/* XXX|HACK|TODO|FIXME:</em>
+<a id='L871' name='L871'></a><em class='comment'>       * Maybe we should ignore reject/blackhole routes? Testing shows that</em>
+<a id='L872' name='L872'></a><em class='comment'>       * there is no problems though and this is only way to "summarize"</em>
+<a id='L873' name='L873'></a><em class='comment'>       * routes in ASBR at the moment. Maybe we need just a better generalised</em>
+<a id='L874' name='L874'></a><em class='comment'>       * solution for these types?</em>
+<a id='L875' name='L875'></a><em class='comment'>       *</em>
+<a id='L876' name='L876'></a><em class='comment'>       * if ( CHECK_FLAG (api.flags, ZEBRA_FLAG_BLACKHOLE)</em>
+<a id='L877' name='L877'></a><em class='comment'>       *     || CHECK_FLAG (api.flags, ZEBRA_FLAG_REJECT))</em>
+<a id='L878' name='L878'></a><em class='comment'>       * return 0;</em>
+<a id='L879' name='L879'></a><em class='comment'>       */</em>
+<a id='L880' name='L880'></a>        
+<a id='L881' name='L881'></a>      ei = <a href='../S/746.html#L137' title='Defined at 137 in ospfd/ospf_asbr.c.'>ospf_external_info_add</a> (api.type, p, ifindex, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L882' name='L882'></a>
+<a id='L883' name='L883'></a>      <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;router_id.s_addr == 0)
+<a id='L884' name='L884'></a>        <em class='comment'>/* Set flags to generate AS-external-LSA originate event</em>
+<a id='L885' name='L885'></a><em class='comment'>           for each redistributed protocols later. */</em>
+<a id='L886' name='L886'></a>        <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;external_origin |= (1 &lt;&lt; api.type);
+<a id='L887' name='L887'></a>      <strong class='reserved'>else</strong>
+<a id='L888' name='L888'></a>        <em class='brace'>{</em>
+<a id='L889' name='L889'></a>          <strong class='reserved'>if</strong> (ei)
+<a id='L890' name='L890'></a>            <em class='brace'>{</em>
+<a id='L891' name='L891'></a>              <strong class='reserved'>if</strong> (<a href='../S/747.html#L1985' title='Defined at 1985 in ospfd/ospf_lsa.c.'>is_prefix_default</a> (&amp;p))
+<a id='L892' name='L892'></a>                <a href='../S/747.html#L2236' title='Defined at 2236 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh_default</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L893' name='L893'></a>              <strong class='reserved'>else</strong>
+<a id='L894' name='L894'></a>                <em class='brace'>{</em>
+<a id='L895' name='L895'></a>                  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *current;
+<a id='L896' name='L896'></a>
+<a id='L897' name='L897'></a>                  current = <a href='../S/746.html#L207' title='Defined at 207 in ospfd/ospf_asbr.c.'>ospf_external_info_find_lsa</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, &amp;ei-&gt;p);
+<a id='L898' name='L898'></a>                  <strong class='reserved'>if</strong> (!current)
+<a id='L899' name='L899'></a>                    <a href='../S/747.html#L1998' title='Defined at 1998 in ospfd/ospf_lsa.c.'>ospf_external_lsa_originate</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, ei);
+<a id='L900' name='L900'></a>                  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/733.html#L226' title='Defined at 226 in ospfd/ospf_lsa.h.'>IS_LSA_MAXAGE</a> (current))
+<a id='L901' name='L901'></a>                    <a href='../S/747.html#L2300' title='Defined at 2300 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, current,
+<a id='L902' name='L902'></a>                                               ei, <a href='../S/733.html#L57' title='Defined at 57 in ospfd/ospf_lsa.h.'>LSA_REFRESH_FORCE</a>);
+<a id='L903' name='L903'></a>                  <strong class='reserved'>else</strong>
+<a id='L904' name='L904'></a>                    zlog_warn ("ospf_zebra_read_ipv4() : %s already exists",
+<a id='L905' name='L905'></a>                               inet_ntoa (p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>));
+<a id='L906' name='L906'></a>                <em class='brace'>}</em>
+<a id='L907' name='L907'></a>            <em class='brace'>}</em>
+<a id='L908' name='L908'></a>        <em class='brace'>}</em>
+<a id='L909' name='L909'></a>    <em class='brace'>}</em>
+<a id='L910' name='L910'></a>  <strong class='reserved'>else</strong>                          <em class='comment'>/* if (command == ZEBRA_IPV4_ROUTE_DELETE) */</em>
+<a id='L911' name='L911'></a>    <em class='brace'>{</em>
+<a id='L912' name='L912'></a>      <a href='../S/746.html#L177' title='Defined at 177 in ospfd/ospf_asbr.c.'>ospf_external_info_delete</a> (api.type, p);
+<a id='L913' name='L913'></a>      <strong class='reserved'>if</strong> (<a href='../S/747.html#L1985' title='Defined at 1985 in ospfd/ospf_lsa.c.'>is_prefix_default</a> (&amp;p))
+<a id='L914' name='L914'></a>        <a href='../S/747.html#L2236' title='Defined at 2236 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh_default</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L915' name='L915'></a>      <strong class='reserved'>else</strong>
+<a id='L916' name='L916'></a>        <a href='../S/747.html#L2187' title='Defined at 2187 in ospfd/ospf_lsa.c.'>ospf_external_lsa_flush</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, api.type, &amp;p, ifindex <em class='comment'>/*, nexthop */</em>);
+<a id='L917' name='L917'></a>    <em class='brace'>}</em>
+<a id='L918' name='L918'></a>
+<a id='L919' name='L919'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L920' name='L920'></a><em class='brace'>}</em>
+<a id='L921' name='L921'></a>
+<a id='L922' name='L922'></a>
+<a id='L923' name='L923'></a><strong class='reserved'>int</strong>
+<a id='L924' name='L924'></a><a href='../R/8054.html' title='Multiple referred from 2 places.'>ospf_distribute_list_out_set</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L925' name='L925'></a><em class='brace'>{</em>
+<a id='L926' name='L926'></a>  <em class='comment'>/* Lookup access-list for distribute-list. */</em>
+<a id='L927' name='L927'></a>  <a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L928' name='L928'></a>
+<a id='L929' name='L929'></a>  <em class='comment'>/* Clear previous distribute-name. */</em>
+<a id='L930' name='L930'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L931' name='L931'></a>    free (<a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L932' name='L932'></a>
+<a id='L933' name='L933'></a>  <em class='comment'>/* Set distribute-name. */</em>
+<a id='L934' name='L934'></a>  <a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = strdup (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L935' name='L935'></a>
+<a id='L936' name='L936'></a>  <em class='comment'>/* If access-list have been set, schedule update timer. */</em>
+<a id='L937' name='L937'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L938' name='L938'></a>    <a href='../S/773.html#L1007' title='Defined at 1007 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L939' name='L939'></a>
+<a id='L940' name='L940'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L941' name='L941'></a><em class='brace'>}</em>
+<a id='L942' name='L942'></a>
+<a id='L943' name='L943'></a><strong class='reserved'>int</strong>
+<a id='L944' name='L944'></a><a href='../R/8055.html' title='Multiple referred from 2 places.'>ospf_distribute_list_out_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L945' name='L945'></a><em class='brace'>{</em>
+<a id='L946' name='L946'></a>  <em class='comment'>/* Schedule update timer. */</em>
+<a id='L947' name='L947'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L948' name='L948'></a>    <a href='../S/773.html#L1007' title='Defined at 1007 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L949' name='L949'></a>
+<a id='L950' name='L950'></a>  <em class='comment'>/* Unset distribute-list. */</em>
+<a id='L951' name='L951'></a>  <a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L952' name='L952'></a>
+<a id='L953' name='L953'></a>  <em class='comment'>/* Clear distribute-name. */</em>
+<a id='L954' name='L954'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L955' name='L955'></a>    free (<a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L956' name='L956'></a>
+<a id='L957' name='L957'></a>  <a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L958' name='L958'></a>
+<a id='L959' name='L959'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L960' name='L960'></a><em class='brace'>}</em>
+<a id='L961' name='L961'></a>
+<a id='L962' name='L962'></a><em class='comment'>/* distribute-list update timer. */</em>
+<a id='L963' name='L963'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L964' name='L964'></a><a href='../S/773.html#L1021' title='Referred from 1021 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L965' name='L965'></a><em class='brace'>{</em>
+<a id='L966' name='L966'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L967' name='L967'></a>  <strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *ei;
+<a id='L968' name='L968'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt;
+<a id='L969' name='L969'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa;
+<a id='L970' name='L970'></a>  <strong class='reserved'>int</strong> type, default_refresh = 0;
+<a id='L971' name='L971'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>;
+<a id='L972' name='L972'></a>
+<a id='L973' name='L973'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/794.html#L241' title='Defined at 241 in ospfd/ospfd.c.'>ospf_lookup</a> ();
+<a id='L974' name='L974'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L975' name='L975'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L976' name='L976'></a>
+<a id='L977' name='L977'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_distribute_update = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L978' name='L978'></a>
+<a id='L979' name='L979'></a>  zlog_info ("Zebra[Redistribute]: distribute-list update timer fired!");
+<a id='L980' name='L980'></a>
+<a id='L981' name='L981'></a>  <em class='comment'>/* foreach all external info. */</em>
+<a id='L982' name='L982'></a>  <strong class='reserved'>for</strong> (type = 0; type &lt;= <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>; type++)
+<a id='L983' name='L983'></a>    <em class='brace'>{</em>
+<a id='L984' name='L984'></a>      rt = <a href='../S/790.html#L144' title='Defined at 144 in ospfd/ospfd.h.'>EXTERNAL_INFO</a> (type);
+<a id='L985' name='L985'></a>      <strong class='reserved'>if</strong> (!rt)
+<a id='L986' name='L986'></a>        <strong class='reserved'>continue</strong>;
+<a id='L987' name='L987'></a>      <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L988' name='L988'></a>        <strong class='reserved'>if</strong> ((ei = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L989' name='L989'></a>          <em class='brace'>{</em>
+<a id='L990' name='L990'></a>            <strong class='reserved'>if</strong> (<a href='../S/747.html#L1985' title='Defined at 1985 in ospfd/ospf_lsa.c.'>is_prefix_default</a> (&amp;ei-&gt;p))
+<a id='L991' name='L991'></a>              default_refresh = 1;
+<a id='L992' name='L992'></a>            <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> ((lsa = <a href='../S/746.html#L207' title='Defined at 207 in ospfd/ospf_asbr.c.'>ospf_external_info_find_lsa</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, &amp;ei-&gt;p)))
+<a id='L993' name='L993'></a>              <a href='../S/747.html#L2300' title='Defined at 2300 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, lsa, ei, <a href='../S/733.html#L56' title='Defined at 56 in ospfd/ospf_lsa.h.'>LSA_REFRESH_IF_CHANGED</a>);
+<a id='L994' name='L994'></a>            <strong class='reserved'>else</strong>
+<a id='L995' name='L995'></a>              <a href='../S/747.html#L1998' title='Defined at 1998 in ospfd/ospf_lsa.c.'>ospf_external_lsa_originate</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, ei);
+<a id='L996' name='L996'></a>          <em class='brace'>}</em>
+<a id='L997' name='L997'></a>    <em class='brace'>}</em>
+<a id='L998' name='L998'></a>  <strong class='reserved'>if</strong> (default_refresh)
+<a id='L999' name='L999'></a>    <a href='../S/747.html#L2236' title='Defined at 2236 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh_default</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1000' name='L1000'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1001' name='L1001'></a><em class='brace'>}</em>
+<a id='L1002' name='L1002'></a>
+<a id='L1003' name='L1003'></a><em class='sharp'>#define</em> <a href='../S/773.html#L1022' title='Referred from 1022 in ospfd/ospf_zebra.c.'>OSPF_DISTRIBUTE_UPDATE_DELAY</a> 5
+<a id='L1004' name='L1004'></a>
+<a id='L1005' name='L1005'></a><em class='comment'>/* Update distribute-list and set timer to apply access-list. */</em>
+<a id='L1006' name='L1006'></a><strong class='reserved'>void</strong>
+<a id='L1007' name='L1007'></a><a href='../R/8056.html' title='Multiple referred from 8 places.'>ospf_distribute_list_update</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, uintptr_t type)
+<a id='L1008' name='L1008'></a><em class='brace'>{</em>
+<a id='L1009' name='L1009'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt;
+<a id='L1010' name='L1010'></a>
+<a id='L1011' name='L1011'></a>  <em class='comment'>/* External info does not exist. */</em>
+<a id='L1012' name='L1012'></a>  <strong class='reserved'>if</strong> (!(rt = <a href='../S/790.html#L144' title='Defined at 144 in ospfd/ospfd.h.'>EXTERNAL_INFO</a> (type)))
+<a id='L1013' name='L1013'></a>    <strong class='reserved'>return</strong>;
+<a id='L1014' name='L1014'></a>
+<a id='L1015' name='L1015'></a>  <em class='comment'>/* If exists previously invoked thread, then let it continue. */</em>
+<a id='L1016' name='L1016'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_distribute_update)
+<a id='L1017' name='L1017'></a>    <strong class='reserved'>return</strong>;
+<a id='L1018' name='L1018'></a>
+<a id='L1019' name='L1019'></a>  <em class='comment'>/* Set timer. */</em>
+<a id='L1020' name='L1020'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_distribute_update =
+<a id='L1021' name='L1021'></a>    <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/773.html#L964' title='Defined at 964 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update_timer</a>,
+<a id='L1022' name='L1022'></a>                      (<strong class='reserved'>void</strong> *) type, <a href='../S/773.html#L1003' title='Defined at 1003 in ospfd/ospf_zebra.c.'>OSPF_DISTRIBUTE_UPDATE_DELAY</a>);
+<a id='L1023' name='L1023'></a><em class='brace'>}</em>
+<a id='L1024' name='L1024'></a>
+<a id='L1025' name='L1025'></a><em class='comment'>/* If access-list is updated, apply some check. */</em>
+<a id='L1026' name='L1026'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L1027' name='L1027'></a><a href='../R/8095.html' title='Multiple referred from 2 places.'>ospf_filter_update</a> (<strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *access)
+<a id='L1028' name='L1028'></a><em class='brace'>{</em>
+<a id='L1029' name='L1029'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>;
+<a id='L1030' name='L1030'></a>  <strong class='reserved'>int</strong> type;
+<a id='L1031' name='L1031'></a>  <strong class='reserved'>int</strong> abr_inv = 0;
+<a id='L1032' name='L1032'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area;
+<a id='L1033' name='L1033'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L1034' name='L1034'></a>
+<a id='L1035' name='L1035'></a>  <em class='comment'>/* If OSPF instatnce does not exist, return right now. */</em>
+<a id='L1036' name='L1036'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/794.html#L241' title='Defined at 241 in ospfd/ospfd.c.'>ospf_lookup</a> ();
+<a id='L1037' name='L1037'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1038' name='L1038'></a>    <strong class='reserved'>return</strong>;
+<a id='L1039' name='L1039'></a>
+<a id='L1040' name='L1040'></a>  <em class='comment'>/* Update distribute-list, and apply filter. */</em>
+<a id='L1041' name='L1041'></a>  <strong class='reserved'>for</strong> (type = 0; type &lt;= <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>; type++)
+<a id='L1042' name='L1042'></a>    <em class='brace'>{</em>
+<a id='L1043' name='L1043'></a>      <strong class='reserved'>if</strong> (<a href='../S/790.html#L304' title='Defined at 304 in ospfd/ospfd.h.'>ROUTEMAP</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1044' name='L1044'></a>        <em class='brace'>{</em>
+<a id='L1045' name='L1045'></a>          <em class='comment'>/* if route-map is not NULL it may be using this access list */</em>
+<a id='L1046' name='L1046'></a>          <a href='../S/773.html#L1007' title='Defined at 1007 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L1047' name='L1047'></a>          <strong class='reserved'>continue</strong>;
+<a id='L1048' name='L1048'></a>        <em class='brace'>}</em>
+<a id='L1049' name='L1049'></a>
+<a id='L1050' name='L1050'></a>      <em class='comment'>/* There is place for route-map for default-information (ZEBRA_ROUTE_MAX),</em>
+<a id='L1051' name='L1051'></a><em class='comment'>       * but no distribute list. */</em>
+<a id='L1052' name='L1052'></a>      <strong class='reserved'>if</strong> (type == <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>)
+<a id='L1053' name='L1053'></a>        <strong class='reserved'>break</strong>;
+<a id='L1054' name='L1054'></a>
+<a id='L1055' name='L1055'></a>      <strong class='reserved'>if</strong> (<a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type))
+<a id='L1056' name='L1056'></a>        <em class='brace'>{</em>
+<a id='L1057' name='L1057'></a>          <em class='comment'>/* Keep old access-list for distribute-list. */</em>
+<a id='L1058' name='L1058'></a>          <strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *old = <a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L1059' name='L1059'></a>
+<a id='L1060' name='L1060'></a>          <em class='comment'>/* Update access-list for distribute-list. */</em>
+<a id='L1061' name='L1061'></a>          <a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) =
+<a id='L1062' name='L1062'></a>            <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type));
+<a id='L1063' name='L1063'></a>
+<a id='L1064' name='L1064'></a>          <em class='comment'>/* No update for this distribute type. */</em>
+<a id='L1065' name='L1065'></a>          <strong class='reserved'>if</strong> (old == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; <a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1066' name='L1066'></a>            <strong class='reserved'>continue</strong>;
+<a id='L1067' name='L1067'></a>
+<a id='L1068' name='L1068'></a>          <em class='comment'>/* Schedule distribute-list update timer. */</em>
+<a id='L1069' name='L1069'></a>          <strong class='reserved'>if</strong> (<a href='../S/790.html#L287' title='Defined at 287 in ospfd/ospfd.h.'>DISTRIBUTE_LIST</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> ||
+<a id='L1070' name='L1070'></a>              strcmp (<a href='../S/790.html#L286' title='Defined at 286 in ospfd/ospfd.h.'>DISTRIBUTE_NAME</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type), access-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>) == 0)
+<a id='L1071' name='L1071'></a>            <a href='../S/773.html#L1007' title='Defined at 1007 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L1072' name='L1072'></a>        <em class='brace'>}</em>
+<a id='L1073' name='L1073'></a>    <em class='brace'>}</em>
+<a id='L1074' name='L1074'></a>
+<a id='L1075' name='L1075'></a>  <em class='comment'>/* Update Area access-list. */</em>
+<a id='L1076' name='L1076'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;areas, node, area))
+<a id='L1077' name='L1077'></a>    <em class='brace'>{</em>
+<a id='L1078' name='L1078'></a>      <strong class='reserved'>if</strong> (<a href='../D/837.html' title='Multiple defined in 2 places.'>EXPORT_NAME</a> (area))
+<a id='L1079' name='L1079'></a>        <em class='brace'>{</em>
+<a id='L1080' name='L1080'></a>          <a href='../D/836.html' title='Multiple defined in 2 places.'>EXPORT_LIST</a> (area) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1081' name='L1081'></a>          abr_inv++;
+<a id='L1082' name='L1082'></a>        <em class='brace'>}</em>
+<a id='L1083' name='L1083'></a>
+<a id='L1084' name='L1084'></a>      <strong class='reserved'>if</strong> (<a href='../D/1094.html' title='Multiple defined in 2 places.'>IMPORT_NAME</a> (area))
+<a id='L1085' name='L1085'></a>        <em class='brace'>{</em>
+<a id='L1086' name='L1086'></a>          <a href='../D/1093.html' title='Multiple defined in 2 places.'>IMPORT_LIST</a> (area) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1087' name='L1087'></a>          abr_inv++;
+<a id='L1088' name='L1088'></a>        <em class='brace'>}</em>
+<a id='L1089' name='L1089'></a>    <em class='brace'>}</em>
+<a id='L1090' name='L1090'></a>
+<a id='L1091' name='L1091'></a>  <em class='comment'>/* Schedule ABR tasks -- this will be changed -- takada. */</em>
+<a id='L1092' name='L1092'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L496' title='Defined at 496 in ospfd/ospfd.h.'>IS_OSPF_ABR</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>) &amp;&amp; abr_inv)
+<a id='L1093' name='L1093'></a>    <a href='../S/800.html#L1879' title='Defined at 1879 in ospfd/ospf_abr.c.'>ospf_schedule_abr_task</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1094' name='L1094'></a><em class='brace'>}</em>
+<a id='L1095' name='L1095'></a>
+<a id='L1096' name='L1096'></a><em class='comment'>/* If prefix-list is updated, do some updates. */</em>
+<a id='L1097' name='L1097'></a><strong class='reserved'>void</strong>
+<a id='L1098' name='L1098'></a><a href='../R/8428.html' title='Multiple referred from 3 places.'>ospf_prefix_list_update</a> (<strong class='reserved'>struct</strong> <a href='../S/302.html#L40' title='Defined at 40 in lib/plist.h.'>prefix_list</a> *plist)
+<a id='L1099' name='L1099'></a><em class='brace'>{</em>
+<a id='L1100' name='L1100'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>;
+<a id='L1101' name='L1101'></a>  <strong class='reserved'>int</strong> type;
+<a id='L1102' name='L1102'></a>  <strong class='reserved'>int</strong> abr_inv = 0;
+<a id='L1103' name='L1103'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area;
+<a id='L1104' name='L1104'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L1105' name='L1105'></a>
+<a id='L1106' name='L1106'></a>  <em class='comment'>/* If OSPF instatnce does not exist, return right now. */</em>
+<a id='L1107' name='L1107'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/794.html#L241' title='Defined at 241 in ospfd/ospfd.c.'>ospf_lookup</a> ();
+<a id='L1108' name='L1108'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1109' name='L1109'></a>    <strong class='reserved'>return</strong>;
+<a id='L1110' name='L1110'></a>
+<a id='L1111' name='L1111'></a>  <em class='comment'>/* Update all route-maps which are used as redistribution filters.</em>
+<a id='L1112' name='L1112'></a><em class='comment'>   * They might use prefix-list.</em>
+<a id='L1113' name='L1113'></a><em class='comment'>   */</em>
+<a id='L1114' name='L1114'></a>  <strong class='reserved'>for</strong> (type = 0; type &lt;= <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>; type++)
+<a id='L1115' name='L1115'></a>    <em class='brace'>{</em>
+<a id='L1116' name='L1116'></a>      <strong class='reserved'>if</strong> (<a href='../S/790.html#L304' title='Defined at 304 in ospfd/ospfd.h.'>ROUTEMAP</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1117' name='L1117'></a>        <em class='brace'>{</em>
+<a id='L1118' name='L1118'></a>          <em class='comment'>/* If route-map is not NULL it may be using this prefix list */</em>
+<a id='L1119' name='L1119'></a>          <a href='../S/773.html#L1007' title='Defined at 1007 in ospfd/ospf_zebra.c.'>ospf_distribute_list_update</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, type);
+<a id='L1120' name='L1120'></a>          <strong class='reserved'>continue</strong>;
+<a id='L1121' name='L1121'></a>        <em class='brace'>}</em>
+<a id='L1122' name='L1122'></a>    <em class='brace'>}</em>
+<a id='L1123' name='L1123'></a>
+<a id='L1124' name='L1124'></a>  <em class='comment'>/* Update area filter-lists. */</em>
+<a id='L1125' name='L1125'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;areas, node, area))
+<a id='L1126' name='L1126'></a>    <em class='brace'>{</em>
+<a id='L1127' name='L1127'></a>      <em class='comment'>/* Update filter-list in. */</em>
+<a id='L1128' name='L1128'></a>      <strong class='reserved'>if</strong> (<a href='../D/3525.html' title='Multiple defined in 2 places.'>PREFIX_NAME_IN</a> (area))
+<a id='L1129' name='L1129'></a>        <strong class='reserved'>if</strong> (strcmp (<a href='../D/3525.html' title='Multiple defined in 2 places.'>PREFIX_NAME_IN</a> (area), plist-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>) == 0)
+<a id='L1130' name='L1130'></a>          <em class='brace'>{</em>
+<a id='L1131' name='L1131'></a>            <a href='../D/3520.html' title='Multiple defined in 3 places.'>PREFIX_LIST_IN</a> (area) =
+<a id='L1132' name='L1132'></a>              <a href='../S/181.html#L130' title='Defined at 130 in lib/plist.c.'>prefix_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/3525.html' title='Multiple defined in 2 places.'>PREFIX_NAME_IN</a> (area));
+<a id='L1133' name='L1133'></a>            abr_inv++;
+<a id='L1134' name='L1134'></a>          <em class='brace'>}</em>
+<a id='L1135' name='L1135'></a>
+<a id='L1136' name='L1136'></a>      <em class='comment'>/* Update filter-list out. */</em>
+<a id='L1137' name='L1137'></a>      <strong class='reserved'>if</strong> (<a href='../D/3526.html' title='Multiple defined in 2 places.'>PREFIX_NAME_OUT</a> (area))
+<a id='L1138' name='L1138'></a>        <strong class='reserved'>if</strong> (strcmp (<a href='../D/3526.html' title='Multiple defined in 2 places.'>PREFIX_NAME_OUT</a> (area), plist-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>) == 0)
+<a id='L1139' name='L1139'></a>          <em class='brace'>{</em>
+<a id='L1140' name='L1140'></a>            <a href='../D/3520.html' title='Multiple defined in 3 places.'>PREFIX_LIST_IN</a> (area) =
+<a id='L1141' name='L1141'></a>              <a href='../S/181.html#L130' title='Defined at 130 in lib/plist.c.'>prefix_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/3526.html' title='Multiple defined in 2 places.'>PREFIX_NAME_OUT</a> (area));
+<a id='L1142' name='L1142'></a>            abr_inv++;
+<a id='L1143' name='L1143'></a>          <em class='brace'>}</em>
+<a id='L1144' name='L1144'></a>    <em class='brace'>}</em>
+<a id='L1145' name='L1145'></a>
+<a id='L1146' name='L1146'></a>  <em class='comment'>/* Schedule ABR task. */</em>
+<a id='L1147' name='L1147'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L496' title='Defined at 496 in ospfd/ospfd.h.'>IS_OSPF_ABR</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>) &amp;&amp; abr_inv)
+<a id='L1148' name='L1148'></a>    <a href='../S/800.html#L1879' title='Defined at 1879 in ospfd/ospf_abr.c.'>ospf_schedule_abr_task</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1149' name='L1149'></a><em class='brace'>}</em>
+<a id='L1150' name='L1150'></a>
+<a id='L1151' name='L1151'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/762.html#L35' title='Defined at 35 in ospfd/ospf_zebra.h.'>ospf_distance</a> *
+<a id='L1152' name='L1152'></a><a href='../S/773.html#L1193' title='Referred from 1193 in ospfd/ospf_zebra.c.'>ospf_distance_new</a> (<strong class='reserved'>void</strong>)
+<a id='L1153' name='L1153'></a><em class='brace'>{</em>
+<a id='L1154' name='L1154'></a>  <strong class='reserved'>return</strong> <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF_DISTANCE, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/762.html#L35' title='Defined at 35 in ospfd/ospf_zebra.h.'>ospf_distance</a>));
+<a id='L1155' name='L1155'></a><em class='brace'>}</em>
+<a id='L1156' name='L1156'></a>
+<a id='L1157' name='L1157'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L1158' name='L1158'></a><a href='../R/8048.html' title='Multiple referred from 2 places.'>ospf_distance_free</a> (<strong class='reserved'>struct</strong> <a href='../S/762.html#L35' title='Defined at 35 in ospfd/ospf_zebra.h.'>ospf_distance</a> *odistance)
+<a id='L1159' name='L1159'></a><em class='brace'>{</em>
+<a id='L1160' name='L1160'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF_DISTANCE, odistance);
+<a id='L1161' name='L1161'></a><em class='brace'>}</em>
+<a id='L1162' name='L1162'></a>
+<a id='L1163' name='L1163'></a><strong class='reserved'>int</strong>
+<a id='L1164' name='L1164'></a><a href='../R/8051.html' title='Multiple referred from 3 places.'>ospf_distance_set</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, 
+<a id='L1165' name='L1165'></a>                   <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *distance_str,
+<a id='L1166' name='L1166'></a>                   <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ip_str, 
+<a id='L1167' name='L1167'></a>                   <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *access_list_str)
+<a id='L1168' name='L1168'></a><em class='brace'>{</em>
+<a id='L1169' name='L1169'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L1170' name='L1170'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L1171' name='L1171'></a>  u_char distance;
+<a id='L1172' name='L1172'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L1173' name='L1173'></a>  <strong class='reserved'>struct</strong> <a href='../S/762.html#L35' title='Defined at 35 in ospfd/ospf_zebra.h.'>ospf_distance</a> *odistance;
+<a id='L1174' name='L1174'></a>
+<a id='L1175' name='L1175'></a>  ret = <a href='../S/250.html#L408' title='Defined at 408 in lib/prefix.c.'>str2prefix_ipv4</a> (ip_str, &amp;p);
+<a id='L1176' name='L1176'></a>  <strong class='reserved'>if</strong> (ret == 0)
+<a id='L1177' name='L1177'></a>    <em class='brace'>{</em>
+<a id='L1178' name='L1178'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Malformed prefix%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1179' name='L1179'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1180' name='L1180'></a>    <em class='brace'>}</em>
+<a id='L1181' name='L1181'></a>
+<a id='L1182' name='L1182'></a>  distance = atoi (distance_str);
+<a id='L1183' name='L1183'></a>
+<a id='L1184' name='L1184'></a>  <em class='comment'>/* Get OSPF distance node. */</em>
+<a id='L1185' name='L1185'></a>  rn = <a href='../S/236.html#L321' title='Defined at 321 in lib/table.c.'>route_node_get</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_table, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L1186' name='L1186'></a>  <strong class='reserved'>if</strong> (rn-&gt;info)
+<a id='L1187' name='L1187'></a>    <em class='brace'>{</em>
+<a id='L1188' name='L1188'></a>      odistance = rn-&gt;info;
+<a id='L1189' name='L1189'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1190' name='L1190'></a>    <em class='brace'>}</em>
+<a id='L1191' name='L1191'></a>  <strong class='reserved'>else</strong>
+<a id='L1192' name='L1192'></a>    <em class='brace'>{</em>
+<a id='L1193' name='L1193'></a>      odistance = <a href='../S/773.html#L1152' title='Defined at 1152 in ospfd/ospf_zebra.c.'>ospf_distance_new</a> ();
+<a id='L1194' name='L1194'></a>      rn-&gt;info = odistance;
+<a id='L1195' name='L1195'></a>    <em class='brace'>}</em>
+<a id='L1196' name='L1196'></a>
+<a id='L1197' name='L1197'></a>  <em class='comment'>/* Set distance value. */</em>
+<a id='L1198' name='L1198'></a>  odistance-&gt;distance = distance;
+<a id='L1199' name='L1199'></a>
+<a id='L1200' name='L1200'></a>  <em class='comment'>/* Reset access-list configuration. */</em>
+<a id='L1201' name='L1201'></a>  <strong class='reserved'>if</strong> (odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a>)
+<a id='L1202' name='L1202'></a>    <em class='brace'>{</em>
+<a id='L1203' name='L1203'></a>      free (odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a>);
+<a id='L1204' name='L1204'></a>      odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1205' name='L1205'></a>    <em class='brace'>}</em>
+<a id='L1206' name='L1206'></a>  <strong class='reserved'>if</strong> (access_list_str)
+<a id='L1207' name='L1207'></a>    odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> = strdup (access_list_str);
+<a id='L1208' name='L1208'></a>
+<a id='L1209' name='L1209'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1210' name='L1210'></a><em class='brace'>}</em>
+<a id='L1211' name='L1211'></a>
+<a id='L1212' name='L1212'></a><strong class='reserved'>int</strong>
+<a id='L1213' name='L1213'></a><a href='../R/8052.html' title='Multiple referred from 3 places.'>ospf_distance_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, 
+<a id='L1214' name='L1214'></a>                     <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *distance_str,
+<a id='L1215' name='L1215'></a>                     <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ip_str, <strong class='reserved'>char</strong> 
+<a id='L1216' name='L1216'></a>                     <strong class='reserved'>const</strong> *access_list_str)
+<a id='L1217' name='L1217'></a><em class='brace'>{</em>
+<a id='L1218' name='L1218'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L1219' name='L1219'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L1220' name='L1220'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L1221' name='L1221'></a>  <strong class='reserved'>struct</strong> <a href='../S/762.html#L35' title='Defined at 35 in ospfd/ospf_zebra.h.'>ospf_distance</a> *odistance;
+<a id='L1222' name='L1222'></a>
+<a id='L1223' name='L1223'></a>  ret = <a href='../S/250.html#L408' title='Defined at 408 in lib/prefix.c.'>str2prefix_ipv4</a> (ip_str, &amp;p);
+<a id='L1224' name='L1224'></a>  <strong class='reserved'>if</strong> (ret == 0)
+<a id='L1225' name='L1225'></a>    <em class='brace'>{</em>
+<a id='L1226' name='L1226'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Malformed prefix%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1227' name='L1227'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1228' name='L1228'></a>    <em class='brace'>}</em>
+<a id='L1229' name='L1229'></a>
+<a id='L1230' name='L1230'></a>  rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_table, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L1231' name='L1231'></a>  <strong class='reserved'>if</strong> (!rn)
+<a id='L1232' name='L1232'></a>    <em class='brace'>{</em>
+<a id='L1233' name='L1233'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Can't find specified prefix%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1234' name='L1234'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1235' name='L1235'></a>    <em class='brace'>}</em>
+<a id='L1236' name='L1236'></a>
+<a id='L1237' name='L1237'></a>  odistance = rn-&gt;info;
+<a id='L1238' name='L1238'></a>
+<a id='L1239' name='L1239'></a>  <strong class='reserved'>if</strong> (odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a>)
+<a id='L1240' name='L1240'></a>    free (odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a>);
+<a id='L1241' name='L1241'></a>  <a href='../S/773.html#L1158' title='Defined at 1158 in ospfd/ospf_zebra.c.'>ospf_distance_free</a> (odistance);
+<a id='L1242' name='L1242'></a>
+<a id='L1243' name='L1243'></a>  rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1244' name='L1244'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1245' name='L1245'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1246' name='L1246'></a>
+<a id='L1247' name='L1247'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1248' name='L1248'></a><em class='brace'>}</em>
+<a id='L1249' name='L1249'></a>
+<a id='L1250' name='L1250'></a><strong class='reserved'>void</strong>
+<a id='L1251' name='L1251'></a><a href='../R/8050.html' title='Multiple referred from 2 places.'>ospf_distance_reset</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>)
+<a id='L1252' name='L1252'></a><em class='brace'>{</em>
+<a id='L1253' name='L1253'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L1254' name='L1254'></a>  <strong class='reserved'>struct</strong> <a href='../S/762.html#L35' title='Defined at 35 in ospfd/ospf_zebra.h.'>ospf_distance</a> *odistance;
+<a id='L1255' name='L1255'></a>
+<a id='L1256' name='L1256'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_table); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L1257' name='L1257'></a>    <strong class='reserved'>if</strong> ((odistance = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1258' name='L1258'></a>      <em class='brace'>{</em>
+<a id='L1259' name='L1259'></a>        <strong class='reserved'>if</strong> (odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a>)
+<a id='L1260' name='L1260'></a>          free (odistance-&gt;<a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a>);
+<a id='L1261' name='L1261'></a>        <a href='../S/773.html#L1158' title='Defined at 1158 in ospfd/ospf_zebra.c.'>ospf_distance_free</a> (odistance);
+<a id='L1262' name='L1262'></a>        rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1263' name='L1263'></a>        <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1264' name='L1264'></a>      <em class='brace'>}</em>
+<a id='L1265' name='L1265'></a><em class='brace'>}</em>
+<a id='L1266' name='L1266'></a>
+<a id='L1267' name='L1267'></a>u_char
+<a id='L1268' name='L1268'></a><a href='../R/8047.html' title='Multiple referred from 3 places.'>ospf_distance_apply</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or)
+<a id='L1269' name='L1269'></a><em class='brace'>{</em>
+<a id='L1270' name='L1270'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>;
+<a id='L1271' name='L1271'></a>
+<a id='L1272' name='L1272'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/794.html#L241' title='Defined at 241 in ospfd/ospfd.c.'>ospf_lookup</a> ();
+<a id='L1273' name='L1273'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1274' name='L1274'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L1275' name='L1275'></a>
+<a id='L1276' name='L1276'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_intra)
+<a id='L1277' name='L1277'></a>    <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>)
+<a id='L1278' name='L1278'></a>      <strong class='reserved'>return</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_intra;
+<a id='L1279' name='L1279'></a>
+<a id='L1280' name='L1280'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_inter)
+<a id='L1281' name='L1281'></a>    <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>)
+<a id='L1282' name='L1282'></a>      <strong class='reserved'>return</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_inter;
+<a id='L1283' name='L1283'></a>
+<a id='L1284' name='L1284'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_external)
+<a id='L1285' name='L1285'></a>    <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L33' title='Defined at 33 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE1_EXTERNAL</a>
+<a id='L1286' name='L1286'></a>        || or-&gt;path_type == <a href='../S/759.html#L34' title='Defined at 34 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE2_EXTERNAL</a>)
+<a id='L1287' name='L1287'></a>      <strong class='reserved'>return</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_external;
+<a id='L1288' name='L1288'></a>
+<a id='L1289' name='L1289'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_all)
+<a id='L1290' name='L1290'></a>    <strong class='reserved'>return</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;distance_all;
+<a id='L1291' name='L1291'></a>
+<a id='L1292' name='L1292'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1293' name='L1293'></a><em class='brace'>}</em>
+<a id='L1294' name='L1294'></a>
+<a id='L1295' name='L1295'></a><strong class='reserved'>void</strong>
+<a id='L1296' name='L1296'></a><a href='../R/8580.html' title='Multiple referred from 2 places.'>ospf_zebra_init</a> ()
+<a id='L1297' name='L1297'></a><em class='brace'>{</em>
+<a id='L1298' name='L1298'></a>  <em class='comment'>/* Allocate zebra structure. */</em>
+<a id='L1299' name='L1299'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> = <a href='../S/255.html#L51' title='Defined at 51 in lib/zclient.c.'>zclient_new</a> ();
+<a id='L1300' name='L1300'></a>  <a href='../S/255.html#L84' title='Defined at 84 in lib/zclient.c.'>zclient_init</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>);
+<a id='L1301' name='L1301'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;router_id_update = <a href='../S/773.html#L61' title='Defined at 61 in ospfd/ospf_zebra.c.'>ospf_router_id_update_zebra</a>;
+<a id='L1302' name='L1302'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_add = <a href='../S/773.html#L87' title='Defined at 87 in ospfd/ospf_zebra.c.'>ospf_interface_add</a>;
+<a id='L1303' name='L1303'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_delete = <a href='../S/773.html#L116' title='Defined at 116 in ospfd/ospf_zebra.c.'>ospf_interface_delete</a>;
+<a id='L1304' name='L1304'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;<a href='../S/28.html#L597' title='Defined at 597 in ospf6d/ospf6_interface.c.'>interface_up</a> = <a href='../S/773.html#L165' title='Defined at 165 in ospfd/ospf_zebra.c.'>ospf_interface_state_up</a>;
+<a id='L1305' name='L1305'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;<a href='../S/28.html#L707' title='Defined at 707 in ospf6d/ospf6_interface.c.'>interface_down</a> = <a href='../S/773.html#L227' title='Defined at 227 in ospfd/ospf_zebra.c.'>ospf_interface_state_down</a>;
+<a id='L1306' name='L1306'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_address_add = <a href='../S/773.html#L253' title='Defined at 253 in ospfd/ospf_zebra.c.'>ospf_interface_address_add</a>;
+<a id='L1307' name='L1307'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_address_delete = <a href='../S/773.html#L280' title='Defined at 280 in ospfd/ospf_zebra.c.'>ospf_interface_address_delete</a>;
+<a id='L1308' name='L1308'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ipv4_route_add = <a href='../S/773.html#L818' title='Defined at 818 in ospfd/ospf_zebra.c.'>ospf_zebra_read_ipv4</a>;
+<a id='L1309' name='L1309'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ipv4_route_delete = <a href='../S/773.html#L818' title='Defined at 818 in ospfd/ospf_zebra.c.'>ospf_zebra_read_ipv4</a>;
+<a id='L1310' name='L1310'></a>
+<a id='L1311' name='L1311'></a>  <a href='../S/203.html#L429' title='Defined at 429 in lib/filter.c.'>access_list_add_hook</a> (<a href='../S/773.html#L1027' title='Defined at 1027 in ospfd/ospf_zebra.c.'>ospf_filter_update</a>);
+<a id='L1312' name='L1312'></a>  <a href='../S/203.html#L439' title='Defined at 439 in lib/filter.c.'>access_list_delete_hook</a> (<a href='../S/773.html#L1027' title='Defined at 1027 in ospfd/ospf_zebra.c.'>ospf_filter_update</a>);
+<a id='L1313' name='L1313'></a>  <a href='../S/181.html#L359' title='Defined at 359 in lib/plist.c.'>prefix_list_add_hook</a> (<a href='../S/773.html#L1098' title='Defined at 1098 in ospfd/ospf_zebra.c.'>ospf_prefix_list_update</a>);
+<a id='L1314' name='L1314'></a>  <a href='../S/181.html#L369' title='Defined at 369 in lib/plist.c.'>prefix_list_delete_hook</a> (<a href='../S/773.html#L1098' title='Defined at 1098 in ospfd/ospf_zebra.c.'>ospf_prefix_list_update</a>);
+<a id='L1315' name='L1315'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L61'>[^]</a><a href='#L1296'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

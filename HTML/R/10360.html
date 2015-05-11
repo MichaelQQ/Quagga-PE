@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vrf</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/981.html#L301'>vrf</a>               301 zebra/rib.h      struct vrf *vrf;</span>
+<span class='curline'><a href='../S/981.html#L350'>vrf</a>               350 zebra/rib.h    extern struct vrf *vrf_lookup (u_int32_t);</span>
+<span class='curline'><a href='../S/981.html#L489'>vrf</a>               489 zebra/rib.h    static inline struct vrf *</span>
+<span class='curline'><a href='../S/981.html#L492'>vrf</a>               492 zebra/rib.h      return rib_table_info (rib_dest_table (dest))-&gt;vrf;</span>
+<span class='curline'><a href='../S/976.html#L333'>vrf</a>               333 zebra/zebra_fpm.c   if (info-&gt;vrf-&gt;id != 0)</span>
+<span class='curline'><a href='../S/940.html#L82'>vrf</a>                82 zebra/zebra_rib.c vrf_table_create (struct vrf *vrf, afi_t afi, safi_t safi)</span>
+<span class='curline'><a href='../S/940.html#L87'>vrf</a>                87 zebra/zebra_rib.c   assert (!vrf-&gt;table[afi][safi]);</span>
+<span class='curline'><a href='../S/940.html#L90'>vrf</a>                90 zebra/zebra_rib.c   vrf-&gt;table[afi][safi] = table;</span>
+<span class='curline'><a href='../S/940.html#L93'>vrf</a>                93 zebra/zebra_rib.c   info-&gt;vrf = vrf;</span>
+<span class='curline'><a href='../S/940.html#L100'>vrf</a>               100 zebra/zebra_rib.c static struct vrf *</span>
+<span class='curline'><a href='../S/940.html#L103'>vrf</a>               103 zebra/zebra_rib.c   struct vrf *vrf;</span>
+<span class='curline'><a href='../S/940.html#L105'>vrf</a>               105 zebra/zebra_rib.c   vrf = XCALLOC (MTYPE_VRF, sizeof (struct vrf));</span>
+<span class='curline'><a href='../S/940.html#L109'>vrf</a>               109 zebra/zebra_rib.c     vrf-&gt;name = XSTRDUP (MTYPE_VRF_NAME, name);</span>
+<span class='curline'><a href='../S/940.html#L112'>vrf</a>               112 zebra/zebra_rib.c   vrf_table_create (vrf, AFI_IP, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/940.html#L113'>vrf</a>               113 zebra/zebra_rib.c   vrf_table_create (vrf, AFI_IP6, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/940.html#L114'>vrf</a>               114 zebra/zebra_rib.c   vrf-&gt;stable[AFI_IP][SAFI_UNICAST] = route_table_init ();</span>
+<span class='curline'><a href='../S/940.html#L115'>vrf</a>               115 zebra/zebra_rib.c   vrf-&gt;stable[AFI_IP6][SAFI_UNICAST] = route_table_init ();</span>
+<span class='curline'><a href='../S/940.html#L116'>vrf</a>               116 zebra/zebra_rib.c   vrf_table_create (vrf, AFI_IP, SAFI_MULTICAST);</span>
+<span class='curline'><a href='../S/940.html#L117'>vrf</a>               117 zebra/zebra_rib.c   vrf_table_create (vrf, AFI_IP6, SAFI_MULTICAST);</span>
+<span class='curline'><a href='../S/940.html#L118'>vrf</a>               118 zebra/zebra_rib.c   vrf-&gt;stable[AFI_IP][SAFI_MULTICAST] = route_table_init ();</span>
+<span class='curline'><a href='../S/940.html#L119'>vrf</a>               119 zebra/zebra_rib.c   vrf-&gt;stable[AFI_IP6][SAFI_MULTICAST] = route_table_init ();</span>
+<span class='curline'><a href='../S/940.html#L122'>vrf</a>               122 zebra/zebra_rib.c   return vrf;</span>
+<span class='curline'><a href='../S/940.html#L126'>vrf</a>               126 zebra/zebra_rib.c struct vrf *</span>
+<span class='curline'><a href='../S/940.html#L136'>vrf</a>               136 zebra/zebra_rib.c   struct vrf *default_table;</span>
+<span class='curline'><a href='../S/940.html#L152'>vrf</a>               152 zebra/zebra_rib.c   struct vrf *vrf;</span>
+<span class='curline'><a href='../S/940.html#L154'>vrf</a>               154 zebra/zebra_rib.c   vrf = vrf_lookup (id);</span>
+<span class='curline'><a href='../S/940.html#L155'>vrf</a>               155 zebra/zebra_rib.c   if (! vrf)</span>
+<span class='curline'><a href='../S/940.html#L161'>vrf</a>               161 zebra/zebra_rib.c   return vrf-&gt;table[afi][safi];</span>
+<span class='curline'><a href='../S/940.html#L168'>vrf</a>               168 zebra/zebra_rib.c   struct vrf *vrf;</span>
+<span class='curline'><a href='../S/940.html#L170'>vrf</a>               170 zebra/zebra_rib.c   vrf = vrf_lookup (id);</span>
+<span class='curline'><a href='../S/940.html#L171'>vrf</a>               171 zebra/zebra_rib.c   if (! vrf)</span>
+<span class='curline'><a href='../S/940.html#L177'>vrf</a>               177 zebra/zebra_rib.c   return vrf-&gt;stable[afi][safi];</span>
+</pre>
+</body>
+</html>

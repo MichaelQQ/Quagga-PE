@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isisd.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isisd.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/153.html' title='Multiple included from 23 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isisd.h   </em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L5' name='L5'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L7' name='L7'></a><em class='comment'> *</em>
+<a id='L8' name='L8'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L9' name='L9'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L10' name='L10'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L11' name='L11'></a><em class='comment'> * any later version.</em>
+<a id='L12' name='L12'></a><em class='comment'> *</em>
+<a id='L13' name='L13'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L14' name='L14'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L15' name='L15'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L16' name='L16'></a><em class='comment'> * more details.</em>
+<a id='L17' name='L17'></a><em class='comment'></em>
+<a id='L18' name='L18'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L19' name='L19'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L20' name='L20'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/510.html#L24' title='Defined at 24 in isisd/isisd.h.'>ISISD_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/510.html#L23' title='Referred from 23 in isisd/isisd.h.'>ISISD_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#define</em> <a href='../S/478.html#L301' title='Referred from 301 in isisd/isis_main.c.'>ISISD_VERSION</a> "0.0.7"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='comment'>/* uncomment if you are a developer in bug hunt */</em>
+<a id='L29' name='L29'></a><em class='comment'>/* #define EXTREME_DEBUG  */</em>
+<a id='L30' name='L30'></a><em class='comment'>/* #define EXTREME_TLV_DEBUG */</em>
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><strong class='reserved'>struct</strong> <a href='../R/9384.html' title='Multiple referred from 126 places.'>rmap</a>
+<a id='L33' name='L33'></a><em class='brace'>{</em>
+<a id='L34' name='L34'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L35' name='L35'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L36' name='L36'></a><em class='brace'>}</em>;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><strong class='reserved'>struct</strong> <a href='../R/6116.html' title='Multiple referred from 273 places.'>isis</a>
+<a id='L39' name='L39'></a><em class='brace'>{</em>
+<a id='L40' name='L40'></a>  u_long process_id;
+<a id='L41' name='L41'></a>  <strong class='reserved'>int</strong> sysid_set;
+<a id='L42' name='L42'></a>  u_char sysid[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>];        <em class='comment'>/* SystemID for this IS */</em>
+<a id='L43' name='L43'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> router_id;          <em class='comment'>/* Router ID from zebra */</em>
+<a id='L44' name='L44'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *area_list;       <em class='comment'>/* list of IS-IS areas */</em>
+<a id='L45' name='L45'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *init_circ_list;
+<a id='L46' name='L46'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *nexthops;        <em class='comment'>/* IPv4 next hops from this IS */</em>
+<a id='L47' name='L47'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L48' name='L48'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *nexthops6;       <em class='comment'>/* IPv6 next hops from this IS */</em>
+<a id='L49' name='L49'></a><em class='sharp'>#endif</em>                          <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L50' name='L50'></a>  u_char max_area_addrs;        <em class='comment'>/* maximumAreaAdresses */</em>
+<a id='L51' name='L51'></a>  <strong class='reserved'>struct</strong> <a href='../S/488.html#L30' title='Defined at 30 in isisd/isis_common.h.'>area_addr</a> *man_area_addrs;     <em class='comment'>/* manualAreaAddresses */</em>
+<a id='L52' name='L52'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> debugs;             <em class='comment'>/* bitmap for debug */</em>
+<a id='L53' name='L53'></a>  time_t uptime;                <em class='comment'>/* when did we start */</em>
+<a id='L54' name='L54'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_dync_clean;  <em class='comment'>/* dynamic hostname cache cleanup thread */</em>
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a>  <em class='comment'>/* Redistributed external information. */</em>
+<a id='L57' name='L57'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *<a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a>[<a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a> + 1];
+<a id='L58' name='L58'></a>  <em class='comment'>/* Redistribute metric info. */</em>
+<a id='L59' name='L59'></a>  <strong class='reserved'>struct</strong>
+<a id='L60' name='L60'></a>  <em class='brace'>{</em>
+<a id='L61' name='L61'></a>    <strong class='reserved'>int</strong> type;                   <em class='comment'>/* Internal or External  */</em>
+<a id='L62' name='L62'></a>    <strong class='reserved'>int</strong> value;                  <em class='comment'>/* metric value */</em>
+<a id='L63' name='L63'></a>  <em class='brace'>}</em> dmetric[<a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a> + 1];
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a>  <strong class='reserved'>struct</strong>
+<a id='L66' name='L66'></a>  <em class='brace'>{</em>
+<a id='L67' name='L67'></a>    <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L68' name='L68'></a>    <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L69' name='L69'></a>  <em class='brace'>}</em> <a href='../S/510.html#L32' title='Defined at 32 in isisd/isisd.h.'>rmap</a>[<a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a> + 1];
+<a id='L70' name='L70'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L71' name='L71'></a>  <strong class='reserved'>struct</strong>
+<a id='L72' name='L72'></a>  <em class='brace'>{</em>
+<a id='L73' name='L73'></a>    <strong class='reserved'>struct</strong>
+<a id='L74' name='L74'></a>    <em class='brace'>{</em>
+<a id='L75' name='L75'></a>      <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L76' name='L76'></a>      <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L77' name='L77'></a>    <em class='brace'>}</em> <a href='../S/510.html#L32' title='Defined at 32 in isisd/isisd.h.'>rmap</a>[<a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a> + 1];
+<a id='L78' name='L78'></a>  <em class='brace'>}</em> inet6_afmode;
+<a id='L79' name='L79'></a><em class='sharp'>#endif</em>
+<a id='L80' name='L80'></a><em class='brace'>}</em>;
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a> *<a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a>;
+<a id='L83' name='L83'></a>
+<a id='L84' name='L84'></a><strong class='reserved'>struct</strong> <a href='../R/6128.html' title='Multiple referred from 224 places.'>isis_area</a>
+<a id='L85' name='L85'></a><em class='brace'>{</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>struct</strong> <a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a> *<a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a>;                              <em class='comment'>/* back pointer */</em>
+<a id='L87' name='L87'></a>  <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *lspdb[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];                     <em class='comment'>/* link-state dbs */</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> <a href='../S/486.html#L64' title='Defined at 64 in isisd/isis_spf.h.'>isis_spftree</a> *spftree[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];      <em class='comment'>/* The v4 SPTs */</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *<a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a>[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];   <em class='comment'>/* IPv4 routes */</em>
+<a id='L90' name='L90'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L91' name='L91'></a>  <strong class='reserved'>struct</strong> <a href='../S/486.html#L64' title='Defined at 64 in isisd/isis_spf.h.'>isis_spftree</a> *spftree6[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];     <em class='comment'>/* The v6 SPTs */</em>
+<a id='L92' name='L92'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *route_table6[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];  <em class='comment'>/* IPv6 routes */</em>
+<a id='L93' name='L93'></a><em class='sharp'>#endif</em>
+<a id='L94' name='L94'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> min_bcast_mtu;
+<a id='L95' name='L95'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *circuit_list;    <em class='comment'>/* IS-IS circuits */</em>
+<a id='L96' name='L96'></a>  <strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L97' name='L97'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_tick;        <em class='comment'>/* LSP walker */</em>
+<a id='L98' name='L98'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L99' name='L99'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *nl_tick; <em class='comment'>/*netlink recev tick*/</em>
+<a id='L100' name='L100'></a><em class='sharp'>#endif</em>
+<a id='L101' name='L101'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_lsp_refresh[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];
+<a id='L102' name='L102'></a>  <strong class='reserved'>int</strong> lsp_regenerate_pending[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>  <em class='comment'>/*</em>
+<a id='L105' name='L105'></a><em class='comment'>   * Configurables </em>
+<a id='L106' name='L106'></a><em class='comment'>   */</em>
+<a id='L107' name='L107'></a>  <strong class='reserved'>struct</strong> <a href='../S/488.html#L36' title='Defined at 36 in isisd/isis_common.h.'>isis_passwd</a> area_passwd;
+<a id='L108' name='L108'></a>  <strong class='reserved'>struct</strong> <a href='../S/488.html#L36' title='Defined at 36 in isisd/isis_common.h.'>isis_passwd</a> domain_passwd;
+<a id='L109' name='L109'></a>  <em class='comment'>/* do we support dynamic hostnames?  */</em>
+<a id='L110' name='L110'></a>  <strong class='reserved'>char</strong> dynhostname;
+<a id='L111' name='L111'></a>  <em class='comment'>/* do we support new style metrics?  */</em>
+<a id='L112' name='L112'></a>  <strong class='reserved'>char</strong> newmetric;
+<a id='L113' name='L113'></a>  <strong class='reserved'>char</strong> oldmetric;
+<a id='L114' name='L114'></a>  <em class='comment'>/* identifies the routing instance   */</em>
+<a id='L115' name='L115'></a>  <strong class='reserved'>char</strong> *area_tag;
+<a id='L116' name='L116'></a>  <em class='comment'>/* area addresses for this area      */</em>
+<a id='L117' name='L117'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *area_addrs;
+<a id='L118' name='L118'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> max_lsp_lifetime[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];
+<a id='L119' name='L119'></a>  <strong class='reserved'>char</strong> is_type;                 <em class='comment'>/* level-1 level-1-2 or level-2-only */</em>
+<a id='L120' name='L120'></a>  <em class='comment'>/* are we overloaded? */</em>
+<a id='L121' name='L121'></a>  <strong class='reserved'>char</strong> overload_bit;
+<a id='L122' name='L122'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> lsp_refresh[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];
+<a id='L123' name='L123'></a>  <em class='comment'>/* minimum time allowed before lsp retransmission */</em>
+<a id='L124' name='L124'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> lsp_gen_interval[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];
+<a id='L125' name='L125'></a>  <em class='comment'>/* min interval between between consequtive SPFs */</em>
+<a id='L126' name='L126'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> min_spf_interval[<a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>];
+<a id='L127' name='L127'></a>  <em class='comment'>/* the percentage of LSP mtu size used, before generating a new frag */</em>
+<a id='L128' name='L128'></a>  <strong class='reserved'>int</strong> lsp_frag_threshold;
+<a id='L129' name='L129'></a>  <strong class='reserved'>int</strong> ip_circuits;
+<a id='L130' name='L130'></a>  <em class='comment'>/* logging adjacency changes? */</em>
+<a id='L131' name='L131'></a>  u_char log_adj_changes;
+<a id='L132' name='L132'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L133' name='L133'></a>  <strong class='reserved'>int</strong> ipv6_circuits;
+<a id='L134' name='L134'></a><em class='sharp'>#endif</em>                          <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L135' name='L135'></a>  <em class='comment'>/* Counters */</em>
+<a id='L136' name='L136'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> circuit_state_changes;
+<a id='L137' name='L137'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L138' name='L138'></a>  <strong class='reserved'>struct</strong> <a href='../S/485.html#L66' title='Defined at 66 in isisd/trilld.h.'>trill</a> *<a href='../S/485.html#L66' title='Defined at 66 in isisd/trilld.h.'>trill</a>;     <em class='comment'>/* TRILL structure */</em>
+<a id='L139' name='L139'></a><em class='sharp'>#endif</em>
+<a id='L140' name='L140'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L779' title='Defined at 779 in config.h.'>TOPOLOGY_GENERATE</a>
+<a id='L141' name='L141'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *topology;
+<a id='L142' name='L142'></a>  u_char topology_baseis[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>];  <em class='comment'>/* IS for the first IS emulated. */</em>
+<a id='L143' name='L143'></a>  <strong class='reserved'>char</strong> *topology_basedynh;                <em class='comment'>/* Dynamic hostname base. */</em>
+<a id='L144' name='L144'></a>  <strong class='reserved'>char</strong> top_params[200];                   <em class='comment'>/* FIXME: what is reasonable? */</em>
+<a id='L145' name='L145'></a><em class='sharp'>#endif</em> <em class='comment'>/* TOPOLOGY_GENERATE */</em>
+<a id='L146' name='L146'></a><em class='brace'>}</em>;
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a><strong class='reserved'>void</strong> <a href='../S/499.html#L3103' title='Defined at 3103 in isisd/isisd.c.'>isis_init</a> (<strong class='reserved'>void</strong>);
+<a id='L149' name='L149'></a><strong class='reserved'>void</strong> <a href='../S/499.html#L80' title='Defined at 80 in isisd/isisd.c.'>isis_new</a>(<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>);
+<a id='L150' name='L150'></a><strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *<a href='../S/499.html#L109' title='Defined at 109 in isisd/isisd.c.'>isis_area_create</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L151' name='L151'></a><strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *<a href='../S/499.html#L189' title='Defined at 189 in isisd/isisd.c.'>isis_area_lookup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L152' name='L152'></a><strong class='reserved'>int</strong> <a href='../S/499.html#L204' title='Defined at 204 in isisd/isisd.c.'>isis_area_get</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *area_tag);
+<a id='L153' name='L153'></a><strong class='reserved'>void</strong> <a href='../S/499.html#L753' title='Defined at 753 in isisd/isisd.c.'>print_debug</a>(<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>);
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a><em class='comment'>/* Master of threads. */</em>
+<a id='L156' name='L156'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a><em class='sharp'>#define</em> <a href='../R/579.html' title='Multiple referred from 16 places.'>DEBUG_ADJ_PACKETS</a>                (1&lt;&lt;0)
+<a id='L159' name='L159'></a><em class='sharp'>#define</em> <a href='../R/580.html' title='Multiple referred from 6 places.'>DEBUG_CHECKSUM_ERRORS</a>            (1&lt;&lt;1)
+<a id='L160' name='L160'></a><em class='sharp'>#define</em> <a href='../R/582.html' title='Multiple referred from 6 places.'>DEBUG_LOCAL_UPDATES</a>              (1&lt;&lt;2)
+<a id='L161' name='L161'></a><em class='sharp'>#define</em> <a href='../R/595.html' title='Multiple referred from 6 places.'>DEBUG_PROTOCOL_ERRORS</a>            (1&lt;&lt;3)
+<a id='L162' name='L162'></a><em class='sharp'>#define</em> <a href='../R/598.html' title='Multiple referred from 15 places.'>DEBUG_SNP_PACKETS</a>                (1&lt;&lt;4)
+<a id='L163' name='L163'></a><em class='sharp'>#define</em> <a href='../R/605.html' title='Multiple referred from 17 places.'>DEBUG_UPDATE_PACKETS</a>             (1&lt;&lt;5)
+<a id='L164' name='L164'></a><em class='sharp'>#define</em> <a href='../R/599.html' title='Multiple referred from 22 places.'>DEBUG_SPF_EVENTS</a>                 (1&lt;&lt;6)
+<a id='L165' name='L165'></a><em class='sharp'>#define</em> <a href='../R/600.html' title='Multiple referred from 6 places.'>DEBUG_SPF_STATS</a>                  (1&lt;&lt;7)
+<a id='L166' name='L166'></a><em class='sharp'>#define</em> <a href='../R/601.html' title='Multiple referred from 6 places.'>DEBUG_SPF_TRIGGERS</a>               (1&lt;&lt;8)
+<a id='L167' name='L167'></a><em class='sharp'>#define</em> <a href='../R/597.html' title='Multiple referred from 13 places.'>DEBUG_RTE_EVENTS</a>                 (1&lt;&lt;9)
+<a id='L168' name='L168'></a><em class='sharp'>#define</em> <a href='../R/581.html' title='Multiple referred from 20 places.'>DEBUG_EVENTS</a>                     (1&lt;&lt;10)
+<a id='L169' name='L169'></a><em class='sharp'>#define</em> <a href='../R/606.html' title='Multiple referred from 3 places.'>DEBUG_ZEBRA</a>                      (1&lt;&lt;11)
+<a id='L170' name='L170'></a><em class='sharp'>#define</em> <a href='../R/585.html' title='Multiple referred from 17 places.'>DEBUG_PACKET_DUMP</a>                (1&lt;&lt;12)
+<a id='L171' name='L171'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L172' name='L172'></a><em class='sharp'>#define</em> <a href='../R/604.html' title='Multiple referred from 8 places.'>DEBUG_TRILL_EVENTS</a>               (1&lt;&lt;13)
+<a id='L173' name='L173'></a><em class='sharp'>#endif</em>
+<a id='L174' name='L174'></a><em class='sharp'>#endif</em> <em class='comment'>/* ISISD_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

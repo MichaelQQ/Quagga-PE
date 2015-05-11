@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>mplsadmd/dnet_pton.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1024.html'>mplsadmd</a>/dnet_pton.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L7'>[^]</a><a href='#L56'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L7' title='Defined at 7.'>dn_htons</a></li>
+<li><a href='#L19' title='Defined at 19.'>dnet_num</a></li>
+<li><a href='#L38' title='Defined at 38.'>dnet_pton1</a></li>
+<li><a href='#L56' title='Defined at 56.'>dnet_pton</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;errno.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L4' name='L4'></a>
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='844.html'>utils.h</a>"
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a><strong class='reserved'>static</strong> <strong class='reserved'>__inline__</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/851.html#L51' title='Referred from 51 in mplsadmd/dnet_pton.c.'>dn_htons</a>(<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> addr)
+<a id='L8' name='L8'></a><em class='brace'>{</em>
+<a id='L9' name='L9'></a>        <strong class='reserved'>union</strong> <em class='brace'>{</em>
+<a id='L10' name='L10'></a>                <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> byte[2];
+<a id='L11' name='L11'></a>                <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> word;
+<a id='L12' name='L12'></a>        <em class='brace'>}</em> u;
+<a id='L13' name='L13'></a>
+<a id='L14' name='L14'></a>        u.word = addr;
+<a id='L15' name='L15'></a>        <strong class='reserved'>return</strong> ((<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>)u.byte[0]) | (((<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>)u.byte[1]) &lt;&lt; 8);
+<a id='L16' name='L16'></a><em class='brace'>}</em>
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5615.html' title='Multiple referred from 2 places.'>dnet_num</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *src, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> * dst)
+<a id='L20' name='L20'></a><em class='brace'>{</em>
+<a id='L21' name='L21'></a>        <strong class='reserved'>int</strong> rv = 0;
+<a id='L22' name='L22'></a>        <strong class='reserved'>int</strong> tmp;
+<a id='L23' name='L23'></a>        *dst = 0;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a>        <strong class='reserved'>while</strong> ((tmp = *src++) != 0) <em class='brace'>{</em>
+<a id='L26' name='L26'></a>                tmp -= '0';
+<a id='L27' name='L27'></a>                <strong class='reserved'>if</strong> ((tmp &lt; 0) || (tmp &gt; 9))
+<a id='L28' name='L28'></a>                        <strong class='reserved'>return</strong> rv;
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a>                rv++;
+<a id='L31' name='L31'></a>                (*dst) *= 10;
+<a id='L32' name='L32'></a>                (*dst) += tmp;
+<a id='L33' name='L33'></a>        <em class='brace'>}</em>
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a>        <strong class='reserved'>return</strong> rv;
+<a id='L36' name='L36'></a><em class='brace'>}</em>
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/851.html#L63' title='Referred from 63 in mplsadmd/dnet_pton.c.'>dnet_pton1</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *src, <strong class='reserved'>struct</strong> <a href='../S/844.html#L57' title='Defined at 57 in mplsadmd/utils.h.'>dn_naddr</a> *dna)
+<a id='L39' name='L39'></a><em class='brace'>{</em>
+<a id='L40' name='L40'></a>        <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> area = 0;
+<a id='L41' name='L41'></a>        <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> node = 0;
+<a id='L42' name='L42'></a>        <strong class='reserved'>int</strong> pos;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a>        pos = <a href='../S/851.html#L19' title='Defined at 19 in mplsadmd/dnet_pton.c.'>dnet_num</a>(src, &amp;area);
+<a id='L45' name='L45'></a>        <strong class='reserved'>if</strong> ((pos == 0) || (area &gt; 63) || (*(src + pos) != '.'))
+<a id='L46' name='L46'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L47' name='L47'></a>        pos = <a href='../S/851.html#L19' title='Defined at 19 in mplsadmd/dnet_pton.c.'>dnet_num</a>(src + pos + 1, &amp;node);
+<a id='L48' name='L48'></a>        <strong class='reserved'>if</strong> ((pos == 0) || (node &gt; 1023))
+<a id='L49' name='L49'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L50' name='L50'></a>        dna-&gt;a_len = 2;
+<a id='L51' name='L51'></a>        *(<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> *)dna-&gt;a_addr = <a href='../S/851.html#L7' title='Defined at 7 in mplsadmd/dnet_pton.c.'>dn_htons</a>((area &lt;&lt; 10) | node);
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L54' name='L54'></a><em class='brace'>}</em>
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><strong class='reserved'>int</strong> <a href='../R/5616.html' title='Multiple referred from 2 places.'>dnet_pton</a>(<strong class='reserved'>int</strong> af, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *src, <strong class='reserved'>void</strong> *addr)
+<a id='L57' name='L57'></a><em class='brace'>{</em>
+<a id='L58' name='L58'></a>        <strong class='reserved'>int</strong> err;
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a>        <strong class='reserved'>switch</strong> (af) <em class='brace'>{</em>
+<a id='L61' name='L61'></a>        <strong class='reserved'>case</strong> <a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>:
+<a id='L62' name='L62'></a>                errno = 0;
+<a id='L63' name='L63'></a>                err = <a href='../S/851.html#L38' title='Defined at 38 in mplsadmd/dnet_pton.c.'>dnet_pton1</a>(src, (<strong class='reserved'>struct</strong> <a href='../S/844.html#L57' title='Defined at 57 in mplsadmd/utils.h.'>dn_naddr</a> *)addr);
+<a id='L64' name='L64'></a>                <strong class='reserved'>break</strong>;
+<a id='L65' name='L65'></a>        <strong class='reserved'>default</strong>:
+<a id='L66' name='L66'></a>                errno = EAFNOSUPPORT;
+<a id='L67' name='L67'></a>                err = -1;
+<a id='L68' name='L68'></a>        <em class='brace'>}</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a>        <strong class='reserved'>return</strong> err;
+<a id='L71' name='L71'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L7'>[^]</a><a href='#L56'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

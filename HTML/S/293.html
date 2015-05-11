@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/sockunion.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/sockunion.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/341.html' title='Multiple included from 55 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Socket union header.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (c) 1997 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/293.html#L24' title='Defined at 24 in lib/sockunion.h.'>_ZEBRA_SOCKUNION_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/293.html#L23' title='Referred from 23 in lib/sockunion.h.'>_ZEBRA_SOCKUNION_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#if</em> 0
+<a id='L27' name='L27'></a><strong class='reserved'>union</strong> <a href='../R/9941.html' title='Multiple referred from 165 places.'>sockunion</a> <em class='brace'>{</em>
+<a id='L28' name='L28'></a>  <strong class='reserved'>struct</strong> sockinet <em class='brace'>{</em>
+<a id='L29' name='L29'></a>    u_char si_len;
+<a id='L30' name='L30'></a>    u_char si_family;
+<a id='L31' name='L31'></a>    u_short si_port;
+<a id='L32' name='L32'></a>  <em class='brace'>}</em> su_si;
+<a id='L33' name='L33'></a>  <strong class='reserved'>struct</strong> sockaddr_in  su_sin;
+<a id='L34' name='L34'></a>  <strong class='reserved'>struct</strong> sockaddr_in6 su_sin6;
+<a id='L35' name='L35'></a><em class='brace'>}</em>;
+<a id='L36' name='L36'></a><em class='sharp'>#define</em> su_len                su_si.si_len
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> su_family     su_si.si_family
+<a id='L38' name='L38'></a><em class='sharp'>#define</em> su_port               su_si.si_port
+<a id='L39' name='L39'></a><em class='sharp'>#endif</em> <em class='comment'>/* 0 */</em>
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><strong class='reserved'>union</strong> <a href='../R/9941.html' title='Multiple referred from 165 places.'>sockunion</a> 
+<a id='L42' name='L42'></a><em class='brace'>{</em>
+<a id='L43' name='L43'></a>  <strong class='reserved'>struct</strong> sockaddr sa;
+<a id='L44' name='L44'></a>  <strong class='reserved'>struct</strong> sockaddr_in sin;
+<a id='L45' name='L45'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L46' name='L46'></a>  <strong class='reserved'>struct</strong> sockaddr_in6 sin6;
+<a id='L47' name='L47'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L48' name='L48'></a><em class='brace'>}</em>;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>enum</strong> <a href='../R/5455.html' title='Multiple referred from 2 places.'>connect_result</a>
+<a id='L51' name='L51'></a><em class='brace'>{</em>
+<a id='L52' name='L52'></a>  connect_error,
+<a id='L53' name='L53'></a>  connect_success,
+<a id='L54' name='L54'></a>  connect_in_progress
+<a id='L55' name='L55'></a><em class='brace'>}</em>;
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><em class='comment'>/* Default address family. */</em>
+<a id='L58' name='L58'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L59' name='L59'></a><em class='sharp'>#define</em> <a href='../S/213.html#L359' title='Referred from 359 in lib/sockunion.c.'>AF_INET_UNION</a> AF_INET6
+<a id='L60' name='L60'></a><em class='sharp'>#else</em>
+<a id='L61' name='L61'></a><em class='sharp'>#define</em> <a href='../S/213.html#L359' title='Referred from 359 in lib/sockunion.c.'>AF_INET_UNION</a> AF_INET
+<a id='L62' name='L62'></a><em class='sharp'>#endif</em>
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='comment'>/* Sockunion address string length.  Same as INET6_ADDRSTRLEN. */</em>
+<a id='L65' name='L65'></a><em class='sharp'>#define</em> <a href='../R/3558.html' title='Multiple referred from 58 places.'>SU_ADDRSTRLEN</a> 46
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a><em class='comment'>/* Macro to set link local index to the IPv6 address.  For KAME IPv6</em>
+<a id='L68' name='L68'></a><em class='comment'>   stack. */</em>
+<a id='L69' name='L69'></a><em class='sharp'>#ifdef</em> KAME
+<a id='L70' name='L70'></a><em class='sharp'>#define</em> <a href='../R/905.html' title='Multiple referred from 3 places.'>IN6_LINKLOCAL_IFINDEX</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)  ((<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>).s6_addr[2] &lt;&lt; 8 | (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>).s6_addr[3])
+<a id='L71' name='L71'></a><em class='sharp'>#define</em> <a href='../R/3444.html' title='Multiple referred from 7 places.'>SET_IN6_LINKLOCAL_IFINDEX</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, i) \
+<a id='L72' name='L72'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L73' name='L73'></a>    (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>).s6_addr[2] = ((i) &gt;&gt; 8) &amp; 0xff; \
+<a id='L74' name='L74'></a>    (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>).s6_addr[3] = (i) &amp; 0xff; \
+<a id='L75' name='L75'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L76' name='L76'></a><em class='sharp'>#else</em>
+<a id='L77' name='L77'></a><em class='sharp'>#define</em> <a href='../R/905.html' title='Multiple referred from 3 places.'>IN6_LINKLOCAL_IFINDEX</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L78' name='L78'></a><em class='sharp'>#define</em> <a href='../R/3444.html' title='Multiple referred from 7 places.'>SET_IN6_LINKLOCAL_IFINDEX</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, i)
+<a id='L79' name='L79'></a><em class='sharp'>#endif</em> <em class='comment'>/* KAME */</em>
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a><em class='sharp'>#define</em> <a href='../R/9951.html' title='Multiple referred from 12 places.'>sockunion_family</a>(X)  (X)-&gt;sa.sa_family
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='sharp'>#define</em> <a href='../R/9943.html' title='Multiple referred from 8 places.'>sockunion2ip</a>(X)      (X)-&gt;sin.sin_addr.s_addr
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L86' name='L86'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L136' title='Defined at 136 in lib/sockunion.c.'>str2sockunion</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L87' name='L87'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/213.html#L166' title='Defined at 166 in lib/sockunion.c.'>sockunion2str</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *, <strong class='reserved'>char</strong> *, size_t);
+<a id='L88' name='L88'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L733' title='Defined at 733 in lib/sockunion.c.'>sockunion_cmp</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L89' name='L89'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L555' title='Defined at 555 in lib/sockunion.c.'>sockunion_same</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><strong class='reserved'>extern</strong> <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *<a href='../S/213.html#L178' title='Defined at 178 in lib/sockunion.c.'>sockunion_str2su</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str);
+<a id='L92' name='L92'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L226' title='Defined at 226 in lib/sockunion.c.'>sockunion_accept</a> (<strong class='reserved'>int</strong> sock, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L93' name='L93'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L354' title='Defined at 354 in lib/sockunion.c.'>sockunion_stream_socket</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L94' name='L94'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L415' title='Defined at 415 in lib/sockunion.c.'>sockopt_reuseaddr</a> (<strong class='reserved'>int</strong>);
+<a id='L95' name='L95'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/10848.html' title='Multiple defined in 2 places.'>sockopt_reuseport</a> (<strong class='reserved'>int</strong>);
+<a id='L96' name='L96'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L530' title='Defined at 530 in lib/sockunion.c.'>sockopt_v6only</a> (<strong class='reserved'>int</strong> family, <strong class='reserved'>int</strong> sock);
+<a id='L97' name='L97'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L371' title='Defined at 371 in lib/sockunion.c.'>sockunion_bind</a> (<strong class='reserved'>int</strong> sock, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *, 
+<a id='L98' name='L98'></a>                           <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L99' name='L99'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L455' title='Defined at 455 in lib/sockunion.c.'>sockopt_ttl</a> (<strong class='reserved'>int</strong> family, <strong class='reserved'>int</strong> sock, <strong class='reserved'>int</strong> ttl);
+<a id='L100' name='L100'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L500' title='Defined at 500 in lib/sockunion.c.'>sockopt_minttl</a> (<strong class='reserved'>int</strong> family, <strong class='reserved'>int</strong> sock, <strong class='reserved'>int</strong> minttl);
+<a id='L101' name='L101'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L490' title='Defined at 490 in lib/sockunion.c.'>sockopt_cork</a> (<strong class='reserved'>int</strong> sock, <strong class='reserved'>int</strong> onoff);
+<a id='L102' name='L102'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L210' title='Defined at 210 in lib/sockunion.c.'>sockunion_socket</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *su);
+<a id='L103' name='L103'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/213.html#L119' title='Defined at 119 in lib/sockunion.c.'>inet_sutop</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *su, <strong class='reserved'>char</strong> *str);
+<a id='L104' name='L104'></a><strong class='reserved'>extern</strong> <strong class='reserved'>enum</strong> <a href='../S/293.html#L50' title='Defined at 50 in lib/sockunion.h.'>connect_result</a> <a href='../S/213.html#L285' title='Defined at 285 in lib/sockunion.c.'>sockunion_connect</a> (<strong class='reserved'>int</strong> fd, <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *su, 
+<a id='L105' name='L105'></a>                                              <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> port,
+<a id='L106' name='L106'></a>                                              <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>);
+<a id='L107' name='L107'></a><strong class='reserved'>extern</strong> <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *<a href='../S/213.html#L583' title='Defined at 583 in lib/sockunion.c.'>sockunion_getsockname</a> (<strong class='reserved'>int</strong>);
+<a id='L108' name='L108'></a><strong class='reserved'>extern</strong> <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *<a href='../S/213.html#L629' title='Defined at 629 in lib/sockunion.c.'>sockunion_getpeername</a> (<strong class='reserved'>int</strong>);
+<a id='L109' name='L109'></a><strong class='reserved'>extern</strong> <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *<a href='../S/213.html#L758' title='Defined at 758 in lib/sockunion.c.'>sockunion_dup</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L110' name='L110'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/213.html#L766' title='Defined at 766 in lib/sockunion.c.'>sockunion_free</a> (<strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *);
+<a id='L111' name='L111'></a>
+<a id='L112' name='L112'></a><em class='sharp'>#ifndef</em> <a href='../S/665.html#L144' title='Defined at 144 in config.h.'>HAVE_INET_NTOP</a>
+<a id='L113' name='L113'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> * <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (<strong class='reserved'>int</strong> family, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *addrptr, 
+<a id='L114' name='L114'></a>                               <strong class='reserved'>char</strong> *strptr, size_t len);
+<a id='L115' name='L115'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_INET_NTOP */</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='sharp'>#ifndef</em> <a href='../S/665.html#L147' title='Defined at 147 in config.h.'>HAVE_INET_PTON</a>
+<a id='L118' name='L118'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L74' title='Defined at 74 in lib/sockunion.c.'>inet_pton</a> (<strong class='reserved'>int</strong> family, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *strptr, <strong class='reserved'>void</strong> *addrptr);
+<a id='L119' name='L119'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_INET_PTON */</em>
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a><em class='sharp'>#ifndef</em> <a href='../S/665.html#L135' title='Defined at 135 in config.h.'>HAVE_INET_ATON</a>
+<a id='L122' name='L122'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/213.html#L33' title='Defined at 33 in lib/sockunion.c.'>inet_aton</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *cp, <strong class='reserved'>struct</strong> in_addr *inaddr);
+<a id='L123' name='L123'></a><em class='sharp'>#endif</em>
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_SOCKUNION_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>mplsadmd/netlink.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1024.html'>mplsadmd</a>/netlink.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/157.html' title='Multiple included from 4 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#ifndef</em> <a href='../S/839.html#L2' title='Defined at 2 in mplsadmd/netlink.h.'>__LINUX_NETLINK_H</a>
+<a id='L2' name='L2'></a><em class='sharp'>#define</em> <a href='../S/839.html#L1' title='Referred from 1 in mplsadmd/netlink.h.'>__LINUX_NETLINK_H</a>
+<a id='L3' name='L3'></a>
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;linux/socket.h&gt; <em class='comment'>/* for sa_family_t */</em>
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> &lt;linux/types.h&gt;
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a><em class='sharp'>#define</em> <a href='../R/2037.html' title='Multiple referred from 2 places.'>NETLINK_ROUTE</a>           0       <em class='comment'>/* Routing/device hook                          */</em>
+<a id='L8' name='L8'></a><em class='sharp'>#define</em> NETLINK_W1              1       <em class='comment'>/* 1-wire subsystem                             */</em>
+<a id='L9' name='L9'></a><em class='sharp'>#define</em> NETLINK_USERSOCK        2       <em class='comment'>/* Reserved for user mode socket protocols      */</em>
+<a id='L10' name='L10'></a><em class='sharp'>#define</em> NETLINK_FIREWALL        3       <em class='comment'>/* Firewalling hook                             */</em>
+<a id='L11' name='L11'></a><em class='sharp'>#define</em> NETLINK_INET_DIAG       4       <em class='comment'>/* INET socket monitoring                       */</em>
+<a id='L12' name='L12'></a><em class='sharp'>#define</em> NETLINK_NFLOG           5       <em class='comment'>/* netfilter/iptables ULOG */</em>
+<a id='L13' name='L13'></a><em class='sharp'>#define</em> NETLINK_XFRM            6       <em class='comment'>/* ipsec */</em>
+<a id='L14' name='L14'></a><em class='sharp'>#define</em> NETLINK_SELINUX         7       <em class='comment'>/* SELinux event notifications */</em>
+<a id='L15' name='L15'></a><em class='sharp'>#define</em> NETLINK_ISCSI           8       <em class='comment'>/* Open-iSCSI */</em>
+<a id='L16' name='L16'></a><em class='sharp'>#define</em> NETLINK_AUDIT           9       <em class='comment'>/* auditing */</em>
+<a id='L17' name='L17'></a><em class='sharp'>#define</em> NETLINK_FIB_LOOKUP      10      
+<a id='L18' name='L18'></a><em class='sharp'>#define</em> NETLINK_CONNECTOR       11
+<a id='L19' name='L19'></a><em class='sharp'>#define</em> NETLINK_NETFILTER       12      <em class='comment'>/* netfilter subsystem */</em>
+<a id='L20' name='L20'></a><em class='sharp'>#define</em> NETLINK_IP6_FW          13
+<a id='L21' name='L21'></a><em class='sharp'>#define</em> NETLINK_DNRTMSG         14      <em class='comment'>/* DECnet routing messages */</em>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> NETLINK_KOBJECT_UEVENT  15      <em class='comment'>/* Kernel messages to userspace */</em>
+<a id='L23' name='L23'></a><em class='sharp'>#define</em> <a href='../R/2036.html' title='Multiple referred from 4 places.'>NETLINK_GENERIC</a>         16
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> MAX_LINKS 32            
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>struct</strong> <a href='../R/9929.html' title='Multiple referred from 34 places.'>sockaddr_nl</a>
+<a id='L28' name='L28'></a><em class='brace'>{</em>
+<a id='L29' name='L29'></a>        <a href='../D/10591.html' title='Multiple defined in 2 places.'>sa_family_t</a>     nl_family;      <em class='comment'>/* AF_NETLINK   */</em>
+<a id='L30' name='L30'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>  nl_pad;         <em class='comment'>/* zero         */</em>
+<a id='L31' name='L31'></a>        __u32           nl_pid;         <em class='comment'>/* process pid  */</em>
+<a id='L32' name='L32'></a>        __u32           nl_groups;      <em class='comment'>/* multicast groups mask */</em>
+<a id='L33' name='L33'></a><em class='brace'>}</em>;
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><strong class='reserved'>struct</strong> <a href='../R/7394.html' title='Multiple referred from 74 places.'>nlmsghdr</a>
+<a id='L36' name='L36'></a><em class='brace'>{</em>
+<a id='L37' name='L37'></a>        __u32           nlmsg_len;      <em class='comment'>/* Length of message including header */</em>
+<a id='L38' name='L38'></a>        __u16           nlmsg_type;     <em class='comment'>/* Message content */</em>
+<a id='L39' name='L39'></a>        __u16           nlmsg_flags;    <em class='comment'>/* Additional flags */</em>
+<a id='L40' name='L40'></a>        __u32           nlmsg_seq;      <em class='comment'>/* Sequence number */</em>
+<a id='L41' name='L41'></a>        __u32           nlmsg_pid;      <em class='comment'>/* Sending process PID */</em>
+<a id='L42' name='L42'></a><em class='brace'>}</em>;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a><em class='comment'>/* Flags values */</em>
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a><em class='sharp'>#define</em> <a href='../R/2070.html' title='Multiple referred from 18 places.'>NLM_F_REQUEST</a>           1       <em class='comment'>/* It is request message.       */</em>
+<a id='L47' name='L47'></a><em class='sharp'>#define</em> <a href='../S/1006.html#L330' title='Referred from 330 in zebra/rt_netlink.c.'>NLM_F_MULTI</a>             2       <em class='comment'>/* Multipart message, terminated by NLMSG_DONE */</em>
+<a id='L48' name='L48'></a><em class='sharp'>#define</em> <a href='../R/2066.html' title='Multiple referred from 2 places.'>NLM_F_ACK</a>               4       <em class='comment'>/* Reply with ack, with zero or error code */</em>
+<a id='L49' name='L49'></a><em class='sharp'>#define</em> NLM_F_ECHO              8       <em class='comment'>/* Echo this request            */</em>
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><em class='comment'>/* Modifiers to GET request */</em>
+<a id='L52' name='L52'></a><em class='sharp'>#define</em> <a href='../R/2071.html' title='Multiple referred from 5 places.'>NLM_F_ROOT</a>      0x100   <em class='comment'>/* specify tree root    */</em>
+<a id='L53' name='L53'></a><em class='sharp'>#define</em> <a href='../R/2068.html' title='Multiple referred from 5 places.'>NLM_F_MATCH</a>     0x200   <em class='comment'>/* return all matching  */</em>
+<a id='L54' name='L54'></a><em class='sharp'>#define</em> NLM_F_ATOMIC    0x400   <em class='comment'>/* atomic GET           */</em>
+<a id='L55' name='L55'></a><em class='sharp'>#define</em> NLM_F_DUMP      (<a href='../S/839.html#L52' title='Defined at 52 in mplsadmd/netlink.h.'>NLM_F_ROOT</a>|<a href='../S/839.html#L53' title='Defined at 53 in mplsadmd/netlink.h.'>NLM_F_MATCH</a>)
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><em class='comment'>/* Modifiers to NEW request */</em>
+<a id='L58' name='L58'></a><em class='sharp'>#define</em> NLM_F_REPLACE   0x100   <em class='comment'>/* Override existing            */</em>
+<a id='L59' name='L59'></a><em class='sharp'>#define</em> NLM_F_EXCL      0x200   <em class='comment'>/* Do not touch, if it exists   */</em>
+<a id='L60' name='L60'></a><em class='sharp'>#define</em> <a href='../R/2067.html' title='Multiple referred from 7 places.'>NLM_F_CREATE</a>    0x400   <em class='comment'>/* Create, if it does not exist */</em>
+<a id='L61' name='L61'></a><em class='sharp'>#define</em> NLM_F_APPEND    0x800   <em class='comment'>/* Add to end of list           */</em>
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='comment'>/*</em>
+<a id='L64' name='L64'></a><em class='comment'>   4.4BSD ADD           NLM_F_CREATE|NLM_F_EXCL</em>
+<a id='L65' name='L65'></a><em class='comment'>   4.4BSD CHANGE        NLM_F_REPLACE</em>
+<a id='L66' name='L66'></a><em class='comment'></em>
+<a id='L67' name='L67'></a><em class='comment'>   True CHANGE          NLM_F_CREATE|NLM_F_REPLACE</em>
+<a id='L68' name='L68'></a><em class='comment'>   Append               NLM_F_CREATE</em>
+<a id='L69' name='L69'></a><em class='comment'>   Check                NLM_F_EXCL</em>
+<a id='L70' name='L70'></a><em class='comment'> */</em>
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a><em class='sharp'>#define</em> <a href='../S/839.html#L73' title='Referred from 73 in mplsadmd/netlink.h.'>NLMSG_ALIGNTO</a>   4
+<a id='L73' name='L73'></a><em class='sharp'>#define</em> <a href='../R/2054.html' title='Multiple referred from 29 places.'>NLMSG_ALIGN</a>(len) ( ((len)+<a href='../S/839.html#L72' title='Defined at 72 in mplsadmd/netlink.h.'>NLMSG_ALIGNTO</a>-1) &amp; ~(<a href='../S/839.html#L72' title='Defined at 72 in mplsadmd/netlink.h.'>NLMSG_ALIGNTO</a>-1) )
+<a id='L74' name='L74'></a><em class='sharp'>#define</em> <a href='../S/839.html#L75' title='Referred from 75 in mplsadmd/netlink.h.'>NLMSG_HDRLEN</a>     ((<strong class='reserved'>int</strong>) <a href='../S/839.html#L73' title='Defined at 73 in mplsadmd/netlink.h.'>NLMSG_ALIGN</a>(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a>)))
+<a id='L75' name='L75'></a><em class='sharp'>#define</em> <a href='../R/2060.html' title='Multiple referred from 23 places.'>NLMSG_LENGTH</a>(len) ((len)+<a href='../S/839.html#L73' title='Defined at 73 in mplsadmd/netlink.h.'>NLMSG_ALIGN</a>(<a href='../S/839.html#L74' title='Defined at 74 in mplsadmd/netlink.h.'>NLMSG_HDRLEN</a>))
+<a id='L76' name='L76'></a><em class='sharp'>#define</em> <a href='../S/839.html#L83' title='Referred from 83 in mplsadmd/netlink.h.'>NLMSG_SPACE</a>(len) <a href='../S/839.html#L73' title='Defined at 73 in mplsadmd/netlink.h.'>NLMSG_ALIGN</a>(<a href='../S/839.html#L75' title='Defined at 75 in mplsadmd/netlink.h.'>NLMSG_LENGTH</a>(len))
+<a id='L77' name='L77'></a><em class='sharp'>#define</em> <a href='../R/2056.html' title='Multiple referred from 23 places.'>NLMSG_DATA</a>(nlh)  ((<strong class='reserved'>void</strong>*)(((<strong class='reserved'>char</strong>*)nlh) + <a href='../S/839.html#L75' title='Defined at 75 in mplsadmd/netlink.h.'>NLMSG_LENGTH</a>(0)))
+<a id='L78' name='L78'></a><em class='sharp'>#define</em> <a href='../R/2061.html' title='Multiple referred from 2 places.'>NLMSG_NEXT</a>(nlh,len)      ((len) -= <a href='../S/839.html#L73' title='Defined at 73 in mplsadmd/netlink.h.'>NLMSG_ALIGN</a>((nlh)-&gt;nlmsg_len), \
+<a id='L79' name='L79'></a>                                  (<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a>*)(((<strong class='reserved'>char</strong>*)(nlh)) + <a href='../S/839.html#L73' title='Defined at 73 in mplsadmd/netlink.h.'>NLMSG_ALIGN</a>((nlh)-&gt;nlmsg_len)))
+<a id='L80' name='L80'></a><em class='sharp'>#define</em> <a href='../R/2063.html' title='Multiple referred from 2 places.'>NLMSG_OK</a>(nlh,len) ((len) &gt;= (<strong class='reserved'>int</strong>)<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a>) &amp;&amp; \
+<a id='L81' name='L81'></a>                           (nlh)-&gt;nlmsg_len &gt;= <strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a>) &amp;&amp; \
+<a id='L82' name='L82'></a>                           (nlh)-&gt;nlmsg_len &lt;= (len))
+<a id='L83' name='L83'></a><em class='sharp'>#define</em> NLMSG_PAYLOAD(nlh,len) ((nlh)-&gt;nlmsg_len - <a href='../S/839.html#L76' title='Defined at 76 in mplsadmd/netlink.h.'>NLMSG_SPACE</a>((len)))
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><em class='sharp'>#define</em> <a href='../S/836.html#L85' title='Referred from 85 in mplsadmd/mpls_monitor.c.'>NLMSG_NOOP</a>              0x1     <em class='comment'>/* Nothing.             */</em>
+<a id='L86' name='L86'></a><em class='sharp'>#define</em> <a href='../R/2058.html' title='Multiple referred from 4 places.'>NLMSG_ERROR</a>             0x2     <em class='comment'>/* Error                */</em>
+<a id='L87' name='L87'></a><em class='sharp'>#define</em> <a href='../R/2057.html' title='Multiple referred from 3 places.'>NLMSG_DONE</a>              0x3     <em class='comment'>/* End of a dump        */</em>
+<a id='L88' name='L88'></a><em class='sharp'>#define</em> NLMSG_OVERRUN           0x4     <em class='comment'>/* Data lost            */</em>
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><em class='sharp'>#define</em> NLMSG_MIN_TYPE          0x10    <em class='comment'>/* &lt; 0x10: reserved control messages */</em>
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><strong class='reserved'>struct</strong> <a href='../R/7393.html' title='Multiple referred from 6 places.'>nlmsgerr</a>
+<a id='L93' name='L93'></a><em class='brace'>{</em>
+<a id='L94' name='L94'></a>        <strong class='reserved'>int</strong>             error;
+<a id='L95' name='L95'></a>        <strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>;
+<a id='L96' name='L96'></a><em class='brace'>}</em>;
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a><em class='sharp'>#define</em> NETLINK_ADD_MEMBERSHIP  1
+<a id='L99' name='L99'></a><em class='sharp'>#define</em> NETLINK_DROP_MEMBERSHIP 2
+<a id='L100' name='L100'></a><em class='sharp'>#define</em> NETLINK_PKTINFO         3
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><strong class='reserved'>struct</strong> nl_pktinfo
+<a id='L103' name='L103'></a><em class='brace'>{</em>
+<a id='L104' name='L104'></a>        __u32   group;
+<a id='L105' name='L105'></a><em class='brace'>}</em>;
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><em class='sharp'>#define</em> NET_MAJOR 36            <em class='comment'>/* Major 36 is reserved for networking                                          */</em>
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><strong class='reserved'>enum</strong> <em class='brace'>{</em>
+<a id='L110' name='L110'></a>        NETLINK_UNCONNECTED = 0,
+<a id='L111' name='L111'></a>        NETLINK_CONNECTED,
+<a id='L112' name='L112'></a><em class='brace'>}</em>;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a><em class='comment'>/*</em>
+<a id='L115' name='L115'></a><em class='comment'> *  &lt;------- NLA_HDRLEN ------&gt; &lt;-- NLA_ALIGN(payload)--&gt;</em>
+<a id='L116' name='L116'></a><em class='comment'> * +---------------------+- - -+- - - - - - - - - -+- - -+</em>
+<a id='L117' name='L117'></a><em class='comment'> * |        Header       | Pad |     Payload       | Pad |</em>
+<a id='L118' name='L118'></a><em class='comment'> * |   (struct nlattr)   | ing |                   | ing |</em>
+<a id='L119' name='L119'></a><em class='comment'> * +---------------------+- - -+- - - - - - - - - -+- - -+</em>
+<a id='L120' name='L120'></a><em class='comment'> *  &lt;-------------- nlattr-&gt;nla_len --------------&gt;</em>
+<a id='L121' name='L121'></a><em class='comment'> */</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a><strong class='reserved'>struct</strong> <a href='../R/7392.html' title='Multiple referred from 2 places.'>nlattr</a>
+<a id='L124' name='L124'></a><em class='brace'>{</em>
+<a id='L125' name='L125'></a>        __u16           nla_len;
+<a id='L126' name='L126'></a>        __u16           nla_type;
+<a id='L127' name='L127'></a><em class='brace'>}</em>;
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a><em class='sharp'>#define</em> <a href='../S/839.html#L130' title='Referred from 130 in mplsadmd/netlink.h.'>NLA_ALIGNTO</a>             4
+<a id='L130' name='L130'></a><em class='sharp'>#define</em> <a href='../S/839.html#L131' title='Referred from 131 in mplsadmd/netlink.h.'>NLA_ALIGN</a>(len)          (((len) + <a href='../S/839.html#L129' title='Defined at 129 in mplsadmd/netlink.h.'>NLA_ALIGNTO</a> - 1) &amp; ~(<a href='../S/839.html#L129' title='Defined at 129 in mplsadmd/netlink.h.'>NLA_ALIGNTO</a> - 1))
+<a id='L131' name='L131'></a><em class='sharp'>#define</em> NLA_HDRLEN              ((<strong class='reserved'>int</strong>) <a href='../S/839.html#L130' title='Defined at 130 in mplsadmd/netlink.h.'>NLA_ALIGN</a>(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L123' title='Defined at 123 in mplsadmd/netlink.h.'>nlattr</a>)))
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a><em class='sharp'>#endif</em>  <em class='comment'>/* __LINUX_NETLINK_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

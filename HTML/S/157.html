@@ -1,0 +1,571 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>babeld/babel_main.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1012.html'>babeld</a>/babel_main.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L141'>[^]</a><a href='#L505'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L141' title='Defined at 141.'>main</a></li>
+<li><a href='#L153' title='Defined at 153.'>babel_usage</a></li>
+<li><a href='#L179' title='Defined at 179.'>babel_init</a></li>
+<li><a href='#L302' title='Defined at 302.'>babel_get_progname</a></li>
+<li><a href='#L308' title='Defined at 308.'>babel_fail</a></li>
+<li><a href='#L315' title='Defined at 315.'>babel_init_random</a></li>
+<li><a href='#L336' title='Defined at 336.'>babel_replace_by_null</a></li>
+<li><a href='#L361' title='Defined at 361.'>babel_load_state_file</a></li>
+<li><a href='#L415' title='Defined at 415.'>babel_sigexit</a></li>
+<li><a href='#L423' title='Defined at 423.'>babel_sigusr1</a></li>
+<li><a href='#L429' title='Defined at 429.'>babel_init_signals</a></li>
+<li><a href='#L451' title='Defined at 451.'>babel_exit_properly</a></li>
+<li><a href='#L472' title='Defined at 472.'>babel_save_state_file</a></li>
+<li><a href='#L505' title='Defined at 505.'>show_babel_main_configuration</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*  </em>
+<a id='L2' name='L2'></a><em class='comment'> *  This file is free software: you may copy, redistribute and/or modify it  </em>
+<a id='L3' name='L3'></a><em class='comment'> *  under the terms of the GNU General Public License as published by the  </em>
+<a id='L4' name='L4'></a><em class='comment'> *  Free Software Foundation, either version 2 of the License, or (at your  </em>
+<a id='L5' name='L5'></a><em class='comment'> *  option) any later version.  </em>
+<a id='L6' name='L6'></a><em class='comment'> *  </em>
+<a id='L7' name='L7'></a><em class='comment'> *  This file is distributed in the hope that it will be useful, but  </em>
+<a id='L8' name='L8'></a><em class='comment'> *  WITHOUT ANY WARRANTY; without even the implied warranty of  </em>
+<a id='L9' name='L9'></a><em class='comment'> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  </em>
+<a id='L10' name='L10'></a><em class='comment'> *  General Public License for more details.  </em>
+<a id='L11' name='L11'></a><em class='comment'> *  </em>
+<a id='L12' name='L12'></a><em class='comment'> *  You should have received a copy of the GNU General Public License  </em>
+<a id='L13' name='L13'></a><em class='comment'> *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.  </em>
+<a id='L14' name='L14'></a><em class='comment'> *  </em>
+<a id='L15' name='L15'></a><em class='comment'> * This file incorporates work covered by the following copyright and  </em>
+<a id='L16' name='L16'></a><em class='comment'> * permission notice:  </em>
+<a id='L17' name='L17'></a><em class='comment'> *  </em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'>Copyright 2011 by Matthieu Boutier and Juliusz Chroboczek</em>
+<a id='L20' name='L20'></a><em class='comment'></em>
+<a id='L21' name='L21'></a><em class='comment'>Permission is hereby granted, free of charge, to any person obtaining a copy</em>
+<a id='L22' name='L22'></a><em class='comment'>of this software and associated documentation files (the "Software"), to deal</em>
+<a id='L23' name='L23'></a><em class='comment'>in the Software without restriction, including without limitation the rights</em>
+<a id='L24' name='L24'></a><em class='comment'>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</em>
+<a id='L25' name='L25'></a><em class='comment'>copies of the Software, and to permit persons to whom the Software is</em>
+<a id='L26' name='L26'></a><em class='comment'>furnished to do so, subject to the following conditions:</em>
+<a id='L27' name='L27'></a><em class='comment'></em>
+<a id='L28' name='L28'></a><em class='comment'>The above copyright notice and this permission notice shall be included in</em>
+<a id='L29' name='L29'></a><em class='comment'>all copies or substantial portions of the Software.</em>
+<a id='L30' name='L30'></a><em class='comment'></em>
+<a id='L31' name='L31'></a><em class='comment'>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</em>
+<a id='L32' name='L32'></a><em class='comment'>IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</em>
+<a id='L33' name='L33'></a><em class='comment'>FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE</em>
+<a id='L34' name='L34'></a><em class='comment'>AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</em>
+<a id='L35' name='L35'></a><em class='comment'>LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</em>
+<a id='L36' name='L36'></a><em class='comment'>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</em>
+<a id='L37' name='L37'></a><em class='comment'>THE SOFTWARE.</em>
+<a id='L38' name='L38'></a><em class='comment'>*/</em>
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='comment'>/* include zebra library */</em>
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='196.html'>getopt.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='254.html'>sigevent.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='237.html'>version.h</a>"
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L50' name='L50'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L51' name='L51'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><em class='sharp'>#include</em> "<a href='144.html'>babel_main.h</a>"
+<a id='L54' name='L54'></a><em class='sharp'>#include</em> "<a href='165.html'>babeld.h</a>"
+<a id='L55' name='L55'></a><em class='sharp'>#include</em> "<a href='168.html'>util.h</a>"
+<a id='L56' name='L56'></a><em class='sharp'>#include</em> "<a href='169.html'>kernel.h</a>"
+<a id='L57' name='L57'></a><em class='sharp'>#include</em> "<a href='159.html'>babel_interface.h</a>"
+<a id='L58' name='L58'></a><em class='sharp'>#include</em> "<a href='172.html'>neighbour.h</a>"
+<a id='L59' name='L59'></a><em class='sharp'>#include</em> "<a href='147.html'>route.h</a>"
+<a id='L60' name='L60'></a><em class='sharp'>#include</em> "<a href='149.html'>xroute.h</a>"
+<a id='L61' name='L61'></a><em class='sharp'>#include</em> "<a href='176.html'>message.h</a>"
+<a id='L62' name='L62'></a><em class='sharp'>#include</em> "<a href='143.html'>resend.h</a>"
+<a id='L63' name='L63'></a><em class='sharp'>#include</em> "<a href='145.html'>babel_zebra.h</a>"
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L179' title='Defined at 179 in babeld/babel_main.c.'>babel_init</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> **argv);
+<a id='L67' name='L67'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *<a href='../S/157.html#L302' title='Defined at 302 in babeld/babel_main.c.'>babel_get_progname</a>(<strong class='reserved'>char</strong> *argv_0);
+<a id='L68' name='L68'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L308' title='Defined at 308 in babeld/babel_main.c.'>babel_fail</a>(<strong class='reserved'>void</strong>);
+<a id='L69' name='L69'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L315' title='Defined at 315 in babeld/babel_main.c.'>babel_init_random</a>(<strong class='reserved'>void</strong>);
+<a id='L70' name='L70'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L336' title='Defined at 336 in babeld/babel_main.c.'>babel_replace_by_null</a>(<strong class='reserved'>int</strong> fd);
+<a id='L71' name='L71'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L429' title='Defined at 429 in babeld/babel_main.c.'>babel_init_signals</a>(<strong class='reserved'>void</strong>);
+<a id='L72' name='L72'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L451' title='Defined at 451 in babeld/babel_main.c.'>babel_exit_properly</a>(<strong class='reserved'>void</strong>);
+<a id='L73' name='L73'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/157.html#L472' title='Defined at 472 in babeld/babel_main.c.'>babel_save_state_file</a>(<strong class='reserved'>void</strong>);
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;     <em class='comment'>/* quagga's threads handler */</em>
+<a id='L77' name='L77'></a><strong class='reserved'>struct</strong> timeval babel_now;         <em class='comment'>/* current time             */</em>
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> myid[8];            <em class='comment'>/* unique id (mac address of an interface) */</em>
+<a id='L80' name='L80'></a><strong class='reserved'>int</strong> <a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a> = 0;
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a><strong class='reserved'>int</strong> resend_delay = -1;
+<a id='L83' name='L83'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *pidfile = <a href='../S/665.html#L671' title='Defined at 671 in config.h.'>PATH_BABELD_PID</a>;
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> zeroes[16] = <em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L86' name='L86'></a><strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> ones[16] =
+<a id='L87' name='L87'></a>    <em class='brace'>{</em>0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+<a id='L88' name='L88'></a>     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF<em class='brace'>}</em>;
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *state_file = <a href='../S/665.html#L26' title='Defined at 26 in config.h.'>DAEMON_VTY_DIR</a> "/babel-state";
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> protocol_group[16]; <em class='comment'>/* babel's link-local multicast address */</em>
+<a id='L93' name='L93'></a><strong class='reserved'>int</strong> protocol_port;                <em class='comment'>/* babel's port */</em>
+<a id='L94' name='L94'></a><strong class='reserved'>int</strong> protocol_socket = -1;         <em class='comment'>/* socket: communicate with others babeld */</em>
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> babel_config_default[] = SYSCONFDIR <a href='../S/165.html#L108' title='Defined at 108 in babeld/babeld.h.'>BABEL_DEFAULT_CONFIG</a>;
+<a id='L97' name='L97'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *babel_config_file = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L98' name='L98'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *babel_vty_addr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L99' name='L99'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> babel_vty_port = <a href='../S/165.html#L107' title='Defined at 107 in babeld/babeld.h.'>BABEL_VTY_PORT</a>;
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a><em class='comment'>/* Babeld options. */</em>
+<a id='L102' name='L102'></a><strong class='reserved'>struct</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a> longopts[] =
+<a id='L103' name='L103'></a><em class='brace'>{</em>
+<a id='L104' name='L104'></a>    <em class='brace'>{</em> "daemon",      <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'd'<em class='brace'>}</em>,
+<a id='L105' name='L105'></a>    <em class='brace'>{</em> "config_file", <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'f'<em class='brace'>}</em>,
+<a id='L106' name='L106'></a>    <em class='brace'>{</em> "pid_file",    <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'i'<em class='brace'>}</em>,
+<a id='L107' name='L107'></a>    <em class='brace'>{</em> "socket",      <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'z'<em class='brace'>}</em>,
+<a id='L108' name='L108'></a>    <em class='brace'>{</em> "help",        <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'h'<em class='brace'>}</em>,
+<a id='L109' name='L109'></a>    <em class='brace'>{</em> "vty_addr",    <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'A'<em class='brace'>}</em>,
+<a id='L110' name='L110'></a>    <em class='brace'>{</em> "vty_port",    <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'P'<em class='brace'>}</em>,
+<a id='L111' name='L111'></a>    <em class='brace'>{</em> "user",        <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'u'<em class='brace'>}</em>,
+<a id='L112' name='L112'></a>    <em class='brace'>{</em> "group",       <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'g'<em class='brace'>}</em>,
+<a id='L113' name='L113'></a>    <em class='brace'>{</em> "version",     <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'v'<em class='brace'>}</em>,
+<a id='L114' name='L114'></a>    <em class='brace'>{</em> 0 <em class='brace'>}</em>
+<a id='L115' name='L115'></a><em class='brace'>}</em>;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='comment'>/* babeld privileges */</em>
+<a id='L118' name='L118'></a><strong class='reserved'>static</strong> <a href='../S/217.html#L42' title='Defined at 42 in lib/privs.h.'>zebra_capabilities_t</a> _caps_p [] =
+<a id='L119' name='L119'></a><em class='brace'>{</em>
+<a id='L120' name='L120'></a>    <a href='../S/217.html#L34' title='Defined at 34 in lib/privs.h.'>ZCAP_NET_RAW</a>,
+<a id='L121' name='L121'></a>    <a href='../S/217.html#L31' title='Defined at 31 in lib/privs.h.'>ZCAP_BIND</a>
+<a id='L122' name='L122'></a><em class='brace'>}</em>;
+<a id='L123' name='L123'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> babeld_privs =
+<a id='L124' name='L124'></a><em class='brace'>{</em>
+<a id='L125' name='L125'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong>(<a href='../S/665.html#L725' title='Defined at 725 in config.h.'>QUAGGA_USER</a>)
+<a id='L126' name='L126'></a>    .user = <a href='../S/665.html#L725' title='Defined at 725 in config.h.'>QUAGGA_USER</a>,
+<a id='L127' name='L127'></a><em class='sharp'>#endif</em>
+<a id='L128' name='L128'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong> <a href='../S/665.html#L719' title='Defined at 719 in config.h.'>QUAGGA_GROUP</a>
+<a id='L129' name='L129'></a>    .group = <a href='../S/665.html#L719' title='Defined at 719 in config.h.'>QUAGGA_GROUP</a>,
+<a id='L130' name='L130'></a><em class='sharp'>#endif</em>
+<a id='L131' name='L131'></a><em class='sharp'>#ifdef</em> VTY_GROUP
+<a id='L132' name='L132'></a>    .vty_group = VTY_GROUP,
+<a id='L133' name='L133'></a><em class='sharp'>#endif</em>
+<a id='L134' name='L134'></a>    .caps_p = _caps_p,
+<a id='L135' name='L135'></a>    .cap_num_p = 2,
+<a id='L136' name='L136'></a>    .cap_num_i = 0
+<a id='L137' name='L137'></a><em class='brace'>}</em>;
+<a id='L138' name='L138'></a>
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a><strong class='reserved'>int</strong>
+<a id='L141' name='L141'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a>(<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> **argv)
+<a id='L142' name='L142'></a><em class='brace'>{</em>
+<a id='L143' name='L143'></a>    <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>;
+<a id='L144' name='L144'></a>    <em class='comment'>/* and print banner too */</em>
+<a id='L145' name='L145'></a>    <a href='../S/157.html#L179' title='Defined at 179 in babeld/babel_main.c.'>babel_init</a>(argc, argv);
+<a id='L146' name='L146'></a>    <strong class='reserved'>while</strong> (<a href='../S/208.html#L1050' title='Defined at 1050 in lib/thread.c.'>thread_fetch</a> (master, &amp;<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)) <em class='brace'>{</em>
+<a id='L147' name='L147'></a>        <a href='../S/208.html#L1233' title='Defined at 1233 in lib/thread.c.'>thread_call</a> (&amp;<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L148' name='L148'></a>    <em class='brace'>}</em>
+<a id='L149' name='L149'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L150' name='L150'></a><em class='brace'>}</em>
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L153' name='L153'></a><a href='../R/4629.html' title='Multiple referred from 2 places.'>babel_usage</a> (<strong class='reserved'>char</strong> *progname, <strong class='reserved'>int</strong> status)
+<a id='L154' name='L154'></a><em class='brace'>{</em>
+<a id='L155' name='L155'></a>  <strong class='reserved'>if</strong> (status != 0)
+<a id='L156' name='L156'></a>    fprintf (stderr, "Try `%s --help' for more information.\n", progname);
+<a id='L157' name='L157'></a>  <strong class='reserved'>else</strong>
+<a id='L158' name='L158'></a>    <em class='brace'>{</em>
+<a id='L159' name='L159'></a>      printf ("Usage : %s [OPTION...]\n\
+<a id='L160' name='L160'></a>Daemon which manages Babel routing protocol.\n\n\
+<a id='L161' name='L161'></a>-d, --daemon       Runs in daemon mode\n\
+<a id='L162' name='L162'></a>-f, --config_file  Set configuration file name\n\
+<a id='L163' name='L163'></a>-i, --pid_file     Set process identifier file name\n\
+<a id='L164' name='L164'></a>-z, --socket       Set path of zebra socket\n\
+<a id='L165' name='L165'></a>-A, --vty_addr     Set vty's bind address\n\
+<a id='L166' name='L166'></a>-P, --vty_port     Set vty's port number\n\
+<a id='L167' name='L167'></a>-u, --user         User to run as\n\
+<a id='L168' name='L168'></a>-g, --group        Group to run as\n\
+<a id='L169' name='L169'></a>-v, --version      Print program version\n\
+<a id='L170' name='L170'></a>-h, --help         Display this help and exit\n\
+<a id='L171' name='L171'></a>\n\
+<a id='L172' name='L172'></a>Report bugs to %s\n", progname, <a href='../S/237.html#L42' title='Defined at 42 in lib/version.h.'>ZEBRA_BUG_ADDRESS</a>);
+<a id='L173' name='L173'></a>    <em class='brace'>}</em>
+<a id='L174' name='L174'></a>  exit (status);
+<a id='L175' name='L175'></a><em class='brace'>}</em>
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a><em class='comment'>/* make initialisations witch don't need infos about kernel(interfaces, etc.) */</em>
+<a id='L178' name='L178'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L179' name='L179'></a><a href='../R/4596.html' title='Multiple referred from 2 places.'>babel_init</a>(<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> **argv)
+<a id='L180' name='L180'></a><em class='brace'>{</em>
+<a id='L181' name='L181'></a>    <strong class='reserved'>int</strong> rc, opt;
+<a id='L182' name='L182'></a>    <strong class='reserved'>int</strong> do_daemonise = 0;
+<a id='L183' name='L183'></a>    <strong class='reserved'>char</strong> *progname = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a>    <em class='comment'>/* Set umask before anything for security */</em>
+<a id='L186' name='L186'></a>    umask (0027);
+<a id='L187' name='L187'></a>    progname = <a href='../S/157.html#L302' title='Defined at 302 in babeld/babel_main.c.'>babel_get_progname</a>(argv[0]);
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a>    <em class='comment'>/* set default log (lib/log.h) */</em>
+<a id='L190' name='L190'></a>    zlog_default = <a href='../S/205.html#L625' title='Defined at 625 in lib/log.c.'>openzlog</a>(progname, <a href='../S/263.html#L53' title='Defined at 53 in lib/log.h.'>ZLOG_BABEL</a>,
+<a id='L191' name='L191'></a>                            LOG_CONS|LOG_NDELAY|LOG_PID, LOG_DAEMON);
+<a id='L192' name='L192'></a>    <em class='comment'>/* set log destination as stdout until the config file is read */</em>
+<a id='L193' name='L193'></a>    <a href='../S/205.html#L665' title='Defined at 665 in lib/log.c.'>zlog_set_level</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/263.html#L72' title='Defined at 72 in lib/log.h.'>ZLOG_DEST_STDOUT</a>, LOG_WARNING);
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a>    <a href='../S/157.html#L315' title='Defined at 315 in babeld/babel_main.c.'>babel_init_random</a>();
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a>    <em class='comment'>/* set the Babel's default link-local multicast address and Babel's port */</em>
+<a id='L198' name='L198'></a>    <a href='../S/151.html#L295' title='Defined at 295 in babeld/util.c.'>parse_address</a>("ff02:0:0:0:0:0:1:6", protocol_group, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L199' name='L199'></a>    protocol_port = 6696;
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>    <em class='comment'>/* get options */</em>
+<a id='L202' name='L202'></a>    <strong class='reserved'>while</strong>(1) <em class='brace'>{</em>
+<a id='L203' name='L203'></a>        opt = <a href='../S/245.html#L70' title='Defined at 70 in lib/getopt1.c.'>getopt_long</a>(argc, argv, "df:i:z:hA:P:u:g:v", longopts, 0);
+<a id='L204' name='L204'></a>        <strong class='reserved'>if</strong>(opt &lt; 0)
+<a id='L205' name='L205'></a>            <strong class='reserved'>break</strong>;
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a>        <strong class='reserved'>switch</strong>(opt) <em class='brace'>{</em>
+<a id='L208' name='L208'></a>            <strong class='reserved'>case</strong> 0:
+<a id='L209' name='L209'></a>                <strong class='reserved'>break</strong>;
+<a id='L210' name='L210'></a>            <strong class='reserved'>case</strong> 'd':
+<a id='L211' name='L211'></a>                do_daemonise = -1;
+<a id='L212' name='L212'></a>                <strong class='reserved'>break</strong>;
+<a id='L213' name='L213'></a>            <strong class='reserved'>case</strong> 'f':
+<a id='L214' name='L214'></a>                babel_config_file = optarg;
+<a id='L215' name='L215'></a>                <strong class='reserved'>break</strong>;
+<a id='L216' name='L216'></a>            <strong class='reserved'>case</strong> 'i':
+<a id='L217' name='L217'></a>                pidfile = optarg;
+<a id='L218' name='L218'></a>                <strong class='reserved'>break</strong>;
+<a id='L219' name='L219'></a>            <strong class='reserved'>case</strong> 'z':
+<a id='L220' name='L220'></a>                <a href='../S/255.html#L1141' title='Defined at 1141 in lib/zclient.c.'>zclient_serv_path_set</a> (optarg);
+<a id='L221' name='L221'></a>                <strong class='reserved'>break</strong>;
+<a id='L222' name='L222'></a>            <strong class='reserved'>case</strong> 'A':
+<a id='L223' name='L223'></a>                babel_vty_addr = optarg;
+<a id='L224' name='L224'></a>                <strong class='reserved'>break</strong>;
+<a id='L225' name='L225'></a>            <strong class='reserved'>case</strong> 'P':
+<a id='L226' name='L226'></a>                babel_vty_port = atoi (optarg);
+<a id='L227' name='L227'></a>                <strong class='reserved'>if</strong> (babel_vty_port &lt;= 0 || babel_vty_port &gt; 0xffff)
+<a id='L228' name='L228'></a>                    babel_vty_port = <a href='../S/165.html#L107' title='Defined at 107 in babeld/babeld.h.'>BABEL_VTY_PORT</a>;
+<a id='L229' name='L229'></a>                <strong class='reserved'>break</strong>;
+<a id='L230' name='L230'></a>            <strong class='reserved'>case</strong> 'u':
+<a id='L231' name='L231'></a>                babeld_privs.user = optarg;
+<a id='L232' name='L232'></a>                <strong class='reserved'>break</strong>;
+<a id='L233' name='L233'></a>            <strong class='reserved'>case</strong> 'g':
+<a id='L234' name='L234'></a>                babeld_privs.group = optarg;
+<a id='L235' name='L235'></a>                <strong class='reserved'>break</strong>;
+<a id='L236' name='L236'></a>            <strong class='reserved'>case</strong> 'v':
+<a id='L237' name='L237'></a>                <a href='../S/264.html#L155' title='Defined at 155 in lib/command.c.'>print_version</a> (progname);
+<a id='L238' name='L238'></a>                exit (0);
+<a id='L239' name='L239'></a>                <strong class='reserved'>break</strong>;
+<a id='L240' name='L240'></a>            <strong class='reserved'>case</strong> 'h':
+<a id='L241' name='L241'></a>                <a href='../S/157.html#L153' title='Defined at 153 in babeld/babel_main.c.'>babel_usage</a> (progname, 0);
+<a id='L242' name='L242'></a>                <strong class='reserved'>break</strong>;
+<a id='L243' name='L243'></a>            <strong class='reserved'>default</strong>:
+<a id='L244' name='L244'></a>                <a href='../S/157.html#L153' title='Defined at 153 in babeld/babel_main.c.'>babel_usage</a> (progname, 1);
+<a id='L245' name='L245'></a>                <strong class='reserved'>break</strong>;
+<a id='L246' name='L246'></a>        <em class='brace'>}</em>
+<a id='L247' name='L247'></a>    <em class='brace'>}</em>
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a>    <em class='comment'>/* create the threads handler */</em>
+<a id='L250' name='L250'></a>    master = <a href='../S/208.html#L530' title='Defined at 530 in lib/thread.c.'>thread_master_create</a> ();
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a>    <em class='comment'>/* Library inits. */</em>
+<a id='L253' name='L253'></a>    <a href='../S/189.html#L591' title='Defined at 591 in lib/privs.c.'>zprivs_init</a> (&amp;babeld_privs);
+<a id='L254' name='L254'></a>    <a href='../S/157.html#L429' title='Defined at 429 in babeld/babel_main.c.'>babel_init_signals</a>();
+<a id='L255' name='L255'></a>    <a href='../S/264.html#L3462' title='Defined at 3462 in lib/command.c.'>cmd_init</a> (1);
+<a id='L256' name='L256'></a>    <a href='../S/200.html#L2952' title='Defined at 2952 in lib/vty.c.'>vty_init</a> (master);
+<a id='L257' name='L257'></a>    <a href='../S/220.html#L525' title='Defined at 525 in lib/memory.c.'>memory_init</a> ();
+<a id='L258' name='L258'></a>
+<a id='L259' name='L259'></a>    resend_delay = <a href='../S/165.html#L114' title='Defined at 114 in babeld/babeld.h.'>BABEL_DEFAULT_RESEND_DELAY</a>;
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>    <a href='../S/157.html#L336' title='Defined at 336 in babeld/babel_main.c.'>babel_replace_by_null</a>(STDIN_FILENO);
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a>    <strong class='reserved'>if</strong> (do_daemonise &amp;&amp; <a href='../S/151.html#L426' title='Defined at 426 in babeld/util.c.'>daemonise</a>() &lt; 0) <em class='brace'>{</em>
+<a id='L264' name='L264'></a>        zlog_err("daemonise: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L265' name='L265'></a>        exit (1);
+<a id='L266' name='L266'></a>    <em class='brace'>}</em>
+<a id='L267' name='L267'></a>
+<a id='L268' name='L268'></a>    <em class='comment'>/* write pid file */</em>
+<a id='L269' name='L269'></a>    <strong class='reserved'>if</strong> (<a href='../D/9626.html' title='Multiple defined in 2 places.'>pid_output</a>(pidfile) &lt; 0) <em class='brace'>{</em>
+<a id='L270' name='L270'></a>        zlog_err("error while writing pidfile");
+<a id='L271' name='L271'></a>        exit (1);
+<a id='L272' name='L272'></a>    <em class='brace'>}</em>;
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a>    <em class='comment'>/* init some quagga's dependencies, and babeld's commands */</em>
+<a id='L275' name='L275'></a>    <a href='../S/171.html#L674' title='Defined at 674 in babeld/babeld.c.'>babeld_quagga_init</a>();
+<a id='L276' name='L276'></a>    <em class='comment'>/* init zebra client's structure and it's commands */</em>
+<a id='L277' name='L277'></a>    <em class='comment'>/* this replace kernel_setup &amp;&amp; kernel_setup_socket */</em>
+<a id='L278' name='L278'></a>    <a href='../S/170.html#L332' title='Defined at 332 in babeld/babel_zebra.c.'>babelz_zebra_init</a> ();
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a>    <em class='comment'>/* Sort all installed commands. */</em>
+<a id='L281' name='L281'></a>    <a href='../S/264.html#L220' title='Defined at 220 in lib/command.c.'>sort_node</a> ();
+<a id='L282' name='L282'></a>
+<a id='L283' name='L283'></a>    <em class='comment'>/* Get zebra configuration file. */</em>
+<a id='L284' name='L284'></a>    <a href='../S/205.html#L665' title='Defined at 665 in lib/log.c.'>zlog_set_level</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/263.html#L72' title='Defined at 72 in lib/log.h.'>ZLOG_DEST_STDOUT</a>, <a href='../S/263.html#L67' title='Defined at 67 in lib/log.h.'>ZLOG_DISABLED</a>);
+<a id='L285' name='L285'></a>    <a href='../S/200.html#L2325' title='Defined at 2325 in lib/vty.c.'>vty_read_config</a> (babel_config_file, babel_config_default);
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>    <em class='comment'>/* Create VTY socket */</em>
+<a id='L288' name='L288'></a>    <a href='../S/200.html#L2135' title='Defined at 2135 in lib/vty.c.'>vty_serv_sock</a> (babel_vty_addr, babel_vty_port, <a href='../S/665.html#L8' title='Defined at 8 in config.h.'>BABEL_VTYSH_PATH</a>);
+<a id='L289' name='L289'></a>
+<a id='L290' name='L290'></a>    <em class='comment'>/* init buffer */</em>
+<a id='L291' name='L291'></a>    rc = <a href='../S/171.html#L507' title='Defined at 507 in babeld/babeld.c.'>resize_receive_buffer</a>(1500);
+<a id='L292' name='L292'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L293' name='L293'></a>        <a href='../S/157.html#L308' title='Defined at 308 in babeld/babel_main.c.'>babel_fail</a>();
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a>    <a href='../S/171.html#L495' title='Defined at 495 in babeld/babeld.c.'>schedule_neighbours_check</a>(5000, 1);
+<a id='L296' name='L296'></a>
+<a id='L297' name='L297'></a>    zlog_notice ("BABELd %s starting: vty@%d", <a href='../S/165.html#L109' title='Defined at 109 in babeld/babeld.h.'>BABEL_VERSION</a>, babel_vty_port);
+<a id='L298' name='L298'></a><em class='brace'>}</em>
+<a id='L299' name='L299'></a>
+<a id='L300' name='L300'></a><em class='comment'>/* return the progname (without path, example: "./x/progname" --&gt; "progname") */</em>
+<a id='L301' name='L301'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *
+<a id='L302' name='L302'></a><a href='../R/4592.html' title='Multiple referred from 2 places.'>babel_get_progname</a>(<strong class='reserved'>char</strong> *argv_0) <em class='brace'>{</em>
+<a id='L303' name='L303'></a>    <strong class='reserved'>char</strong> *p = strrchr (argv_0, '/');
+<a id='L304' name='L304'></a>    <strong class='reserved'>return</strong> (p ? ++p : argv_0);
+<a id='L305' name='L305'></a><em class='brace'>}</em>
+<a id='L306' name='L306'></a>
+<a id='L307' name='L307'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L308' name='L308'></a><a href='../R/4587.html' title='Multiple referred from 2 places.'>babel_fail</a>(<strong class='reserved'>void</strong>)
+<a id='L309' name='L309'></a><em class='brace'>{</em>
+<a id='L310' name='L310'></a>    exit(1);
+<a id='L311' name='L311'></a><em class='brace'>}</em>
+<a id='L312' name='L312'></a>
+<a id='L313' name='L313'></a><em class='comment'>/* initialize random value, and set 'babel_now' by the way. */</em>
+<a id='L314' name='L314'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L315' name='L315'></a><a href='../R/4597.html' title='Multiple referred from 2 places.'>babel_init_random</a>(<strong class='reserved'>void</strong>)
+<a id='L316' name='L316'></a><em class='brace'>{</em>
+<a id='L317' name='L317'></a>    <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L318' name='L318'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L319' name='L319'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> seed;
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a>    rc = <a href='../S/174.html#L313' title='Defined at 313 in babeld/kernel.c.'>read_random_bytes</a>(&amp;seed, <strong class='reserved'>sizeof</strong>(seed));
+<a id='L322' name='L322'></a>    <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L323' name='L323'></a>        zlog_err("read(random): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L324' name='L324'></a>        seed = 42;
+<a id='L325' name='L325'></a>    <em class='brace'>}</em>
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a>    seed ^= (babel_now.tv_sec ^ babel_now.tv_usec);
+<a id='L328' name='L328'></a>    srandom(seed);
+<a id='L329' name='L329'></a><em class='brace'>}</em>
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a><em class='comment'>/*</em>
+<a id='L332' name='L332'></a><em class='comment'> close fd, and replace it by "/dev/null"</em>
+<a id='L333' name='L333'></a><em class='comment'> exit if error</em>
+<a id='L334' name='L334'></a><em class='comment'> */</em>
+<a id='L335' name='L335'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L336' name='L336'></a><a href='../R/4620.html' title='Multiple referred from 2 places.'>babel_replace_by_null</a>(<strong class='reserved'>int</strong> fd)
+<a id='L337' name='L337'></a><em class='brace'>{</em>
+<a id='L338' name='L338'></a>    <strong class='reserved'>int</strong> fd_null;
+<a id='L339' name='L339'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a>    fd_null = open("/dev/null", O_RDONLY);
+<a id='L342' name='L342'></a>    <strong class='reserved'>if</strong>(fd_null &lt; 0) <em class='brace'>{</em>
+<a id='L343' name='L343'></a>        zlog_err("open(null): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L344' name='L344'></a>        exit(1);
+<a id='L345' name='L345'></a>    <em class='brace'>}</em>
+<a id='L346' name='L346'></a>
+<a id='L347' name='L347'></a>    rc = dup2(fd_null, fd);
+<a id='L348' name='L348'></a>    <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L349' name='L349'></a>        zlog_err("dup2(null, 0): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L350' name='L350'></a>        exit(1);
+<a id='L351' name='L351'></a>    <em class='brace'>}</em>
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a>    close(fd_null);
+<a id='L354' name='L354'></a><em class='brace'>}</em>
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a><em class='comment'>/*</em>
+<a id='L357' name='L357'></a><em class='comment'> Load the state file: check last babeld's running state, usefull in case of</em>
+<a id='L358' name='L358'></a><em class='comment'> "/etc/init.d/babeld restart"</em>
+<a id='L359' name='L359'></a><em class='comment'> */</em>
+<a id='L360' name='L360'></a><strong class='reserved'>void</strong>
+<a id='L361' name='L361'></a><a href='../R/4616.html' title='Multiple referred from 2 places.'>babel_load_state_file</a>(<strong class='reserved'>void</strong>)
+<a id='L362' name='L362'></a><em class='brace'>{</em>
+<a id='L363' name='L363'></a>    <strong class='reserved'>int</strong> fd;
+<a id='L364' name='L364'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L365' name='L365'></a>
+<a id='L366' name='L366'></a>    fd = open(state_file, O_RDONLY);
+<a id='L367' name='L367'></a>    <strong class='reserved'>if</strong>(fd &lt; 0 &amp;&amp; errno != ENOENT)
+<a id='L368' name='L368'></a>        zlog_err("open(babel-state: %s)", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L369' name='L369'></a>    rc = unlink(state_file);
+<a id='L370' name='L370'></a>    <strong class='reserved'>if</strong>(fd &gt;= 0 &amp;&amp; rc &lt; 0) <em class='brace'>{</em>
+<a id='L371' name='L371'></a>        zlog_err("unlink(babel-state): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L372' name='L372'></a>        <em class='comment'>/* If we couldn't unlink it, it's probably stale. */</em>
+<a id='L373' name='L373'></a>        close(fd);
+<a id='L374' name='L374'></a>        fd = -1;
+<a id='L375' name='L375'></a>    <em class='brace'>}</em>
+<a id='L376' name='L376'></a>    <strong class='reserved'>if</strong>(fd &gt;= 0) <em class='brace'>{</em>
+<a id='L377' name='L377'></a>        <strong class='reserved'>char</strong> buf[100];
+<a id='L378' name='L378'></a>        <strong class='reserved'>char</strong> buf2[100];
+<a id='L379' name='L379'></a>        <strong class='reserved'>int</strong> s;
+<a id='L380' name='L380'></a>        <strong class='reserved'>long</strong> t;
+<a id='L381' name='L381'></a>        rc = read(fd, buf, 99);
+<a id='L382' name='L382'></a>        <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L383' name='L383'></a>            zlog_err("read(babel-state): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L384' name='L384'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L385' name='L385'></a>            buf[rc] = '\0';
+<a id='L386' name='L386'></a>            rc = sscanf(buf, "%99s %d %ld\n", buf2, &amp;s, &amp;t);
+<a id='L387' name='L387'></a>            <strong class='reserved'>if</strong>(rc == 3 &amp;&amp; s &gt;= 0 &amp;&amp; s &lt;= 0xFFFF) <em class='brace'>{</em>
+<a id='L388' name='L388'></a>                <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> sid[8];
+<a id='L389' name='L389'></a>                rc = <a href='../S/151.html#L320' title='Defined at 320 in babeld/util.c.'>parse_eui64</a>(buf2, sid);
+<a id='L390' name='L390'></a>                <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L391' name='L391'></a>                    zlog_err("Couldn't parse babel-state.");
+<a id='L392' name='L392'></a>                <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L393' name='L393'></a>                    <strong class='reserved'>struct</strong> timeval realnow;
+<a id='L394' name='L394'></a>                    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>,
+<a id='L395' name='L395'></a>                           "Got %s %d %ld from babel-state.",
+<a id='L396' name='L396'></a>                           <a href='../S/151.html#L279' title='Defined at 279 in babeld/util.c.'>format_eui64</a>(sid), s, t);
+<a id='L397' name='L397'></a>                    gettimeofday(&amp;realnow, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L398' name='L398'></a>                    <strong class='reserved'>if</strong>(<a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(sid, myid, 8) == 0)
+<a id='L399' name='L399'></a>                        myseqno = <a href='../S/168.html#L85' title='Defined at 85 in babeld/util.h.'>seqno_plus</a>(s, 1);
+<a id='L400' name='L400'></a>                    <strong class='reserved'>else</strong>
+<a id='L401' name='L401'></a>                        zlog_err("ID mismatch in babel-state. id=%s; old=%s",
+<a id='L402' name='L402'></a>                                 <a href='../S/151.html#L279' title='Defined at 279 in babeld/util.c.'>format_eui64</a>(myid),
+<a id='L403' name='L403'></a>                                 <a href='../S/151.html#L279' title='Defined at 279 in babeld/util.c.'>format_eui64</a>(sid));
+<a id='L404' name='L404'></a>                <em class='brace'>}</em>
+<a id='L405' name='L405'></a>            <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L406' name='L406'></a>                zlog_err("Couldn't parse babel-state.");
+<a id='L407' name='L407'></a>            <em class='brace'>}</em>
+<a id='L408' name='L408'></a>        <em class='brace'>}</em>
+<a id='L409' name='L409'></a>        close(fd);
+<a id='L410' name='L410'></a>        fd = -1;
+<a id='L411' name='L411'></a>    <em class='brace'>}</em>
+<a id='L412' name='L412'></a><em class='brace'>}</em>
+<a id='L413' name='L413'></a>
+<a id='L414' name='L414'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L415' name='L415'></a><a href='../R/4626.html' title='Multiple referred from 2 places.'>babel_sigexit</a>(<strong class='reserved'>void</strong>)
+<a id='L416' name='L416'></a><em class='brace'>{</em>
+<a id='L417' name='L417'></a>    zlog_notice("Terminating on signal");
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a>    <a href='../S/157.html#L451' title='Defined at 451 in babeld/babel_main.c.'>babel_exit_properly</a>();
+<a id='L420' name='L420'></a><em class='brace'>}</em>
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L423' name='L423'></a><a href='../S/157.html#L435' title='Referred from 435 in babeld/babel_main.c.'>babel_sigusr1</a> (<strong class='reserved'>void</strong>)
+<a id='L424' name='L424'></a><em class='brace'>{</em>
+<a id='L425' name='L425'></a>    <a href='../S/205.html#L724' title='Defined at 724 in lib/log.c.'>zlog_rotate</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L426' name='L426'></a><em class='brace'>}</em>
+<a id='L427' name='L427'></a>
+<a id='L428' name='L428'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L429' name='L429'></a><a href='../R/4599.html' title='Multiple referred from 2 places.'>babel_init_signals</a>(<strong class='reserved'>void</strong>)
+<a id='L430' name='L430'></a><em class='brace'>{</em>
+<a id='L431' name='L431'></a>    <strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/254.html#L31' title='Defined at 31 in lib/sigevent.h.'>quagga_signal_t</a> babel_signals[] =
+<a id='L432' name='L432'></a>    <em class='brace'>{</em>
+<a id='L433' name='L433'></a>        <em class='brace'>{</em>
+<a id='L434' name='L434'></a>            .signal = SIGUSR1,
+<a id='L435' name='L435'></a>            .handler = &amp;<a href='../S/157.html#L423' title='Defined at 423 in babeld/babel_main.c.'>babel_sigusr1</a>,
+<a id='L436' name='L436'></a>        <em class='brace'>}</em>,
+<a id='L437' name='L437'></a>        <em class='brace'>{</em>
+<a id='L438' name='L438'></a>            .signal = SIGINT,
+<a id='L439' name='L439'></a>            .handler = &amp;<a href='../S/157.html#L415' title='Defined at 415 in babeld/babel_main.c.'>babel_sigexit</a>,
+<a id='L440' name='L440'></a>        <em class='brace'>}</em>,
+<a id='L441' name='L441'></a>        <em class='brace'>{</em>
+<a id='L442' name='L442'></a>            .signal = SIGTERM,
+<a id='L443' name='L443'></a>            .handler = &amp;<a href='../S/157.html#L415' title='Defined at 415 in babeld/babel_main.c.'>babel_sigexit</a>,
+<a id='L444' name='L444'></a>        <em class='brace'>}</em>,
+<a id='L445' name='L445'></a>    <em class='brace'>}</em>;
+<a id='L446' name='L446'></a>
+<a id='L447' name='L447'></a>    <a href='../D/10791.html' title='Multiple defined in 2 places.'>signal_init</a> (master, <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(babel_signals), babel_signals);
+<a id='L448' name='L448'></a><em class='brace'>}</em>
+<a id='L449' name='L449'></a>
+<a id='L450' name='L450'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L451' name='L451'></a><a href='../R/4586.html' title='Multiple referred from 2 places.'>babel_exit_properly</a>(<strong class='reserved'>void</strong>)
+<a id='L452' name='L452'></a><em class='brace'>{</em>
+<a id='L453' name='L453'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>, "Exiting...");
+<a id='L454' name='L454'></a>    usleep(<a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(10000));
+<a id='L455' name='L455'></a>    <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L456' name='L456'></a>
+<a id='L457' name='L457'></a>    <em class='comment'>/* Uninstall and flush all routes. */</em>
+<a id='L458' name='L458'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>, "Uninstall routes.");
+<a id='L459' name='L459'></a>    <a href='../S/154.html#L263' title='Defined at 263 in babeld/route.c.'>flush_all_routes</a>();
+<a id='L460' name='L460'></a>    <a href='../S/164.html#L639' title='Defined at 639 in babeld/babel_interface.c.'>babel_interface_close_all</a>();
+<a id='L461' name='L461'></a>    <a href='../S/170.html#L376' title='Defined at 376 in babeld/babel_zebra.c.'>babel_zebra_close_connexion</a>();
+<a id='L462' name='L462'></a>    <a href='../S/157.html#L472' title='Defined at 472 in babeld/babel_main.c.'>babel_save_state_file</a>();
+<a id='L463' name='L463'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>, "Remove pid file.");
+<a id='L464' name='L464'></a>    <strong class='reserved'>if</strong>(pidfile)
+<a id='L465' name='L465'></a>        unlink(pidfile);
+<a id='L466' name='L466'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>, "Done.");
+<a id='L467' name='L467'></a>
+<a id='L468' name='L468'></a>    exit(0);
+<a id='L469' name='L469'></a><em class='brace'>}</em>
+<a id='L470' name='L470'></a>
+<a id='L471' name='L471'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L472' name='L472'></a><a href='../R/4622.html' title='Multiple referred from 2 places.'>babel_save_state_file</a>(<strong class='reserved'>void</strong>)
+<a id='L473' name='L473'></a><em class='brace'>{</em>
+<a id='L474' name='L474'></a>    <strong class='reserved'>int</strong> fd;
+<a id='L475' name='L475'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L476' name='L476'></a>
+<a id='L477' name='L477'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>, "Save state file.");
+<a id='L478' name='L478'></a>    fd = open(state_file, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+<a id='L479' name='L479'></a>    <strong class='reserved'>if</strong>(fd &lt; 0) <em class='brace'>{</em>
+<a id='L480' name='L480'></a>        zlog_err("creat(babel-state): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L481' name='L481'></a>        unlink(state_file);
+<a id='L482' name='L482'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L483' name='L483'></a>        <strong class='reserved'>struct</strong> timeval realnow;
+<a id='L484' name='L484'></a>        <strong class='reserved'>char</strong> buf[100];
+<a id='L485' name='L485'></a>        gettimeofday(&amp;realnow, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L486' name='L486'></a>        rc = <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(buf, 100, "%s %d %ld\n",
+<a id='L487' name='L487'></a>                      <a href='../S/151.html#L279' title='Defined at 279 in babeld/util.c.'>format_eui64</a>(myid), (<strong class='reserved'>int</strong>)myseqno,
+<a id='L488' name='L488'></a>                      (<strong class='reserved'>long</strong>)realnow.tv_sec);
+<a id='L489' name='L489'></a>        <strong class='reserved'>if</strong>(rc &lt; 0 || rc &gt;= 100) <em class='brace'>{</em>
+<a id='L490' name='L490'></a>            zlog_err("write(babel-state): overflow.");
+<a id='L491' name='L491'></a>            unlink(state_file);
+<a id='L492' name='L492'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L493' name='L493'></a>            rc = write(fd, buf, rc);
+<a id='L494' name='L494'></a>            <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L495' name='L495'></a>                zlog_err("write(babel-state): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L496' name='L496'></a>                unlink(state_file);
+<a id='L497' name='L497'></a>            <em class='brace'>}</em>
+<a id='L498' name='L498'></a>            fsync(fd);
+<a id='L499' name='L499'></a>        <em class='brace'>}</em>
+<a id='L500' name='L500'></a>        close(fd);
+<a id='L501' name='L501'></a>    <em class='brace'>}</em>
+<a id='L502' name='L502'></a><em class='brace'>}</em>
+<a id='L503' name='L503'></a>
+<a id='L504' name='L504'></a><strong class='reserved'>void</strong>
+<a id='L505' name='L505'></a><a href='../R/9817.html' title='Multiple referred from 2 places.'>show_babel_main_configuration</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L506' name='L506'></a><em class='brace'>{</em>
+<a id='L507' name='L507'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,
+<a id='L508' name='L508'></a>            "pid file                = %s%s"
+<a id='L509' name='L509'></a>            "state file              = %s%s"
+<a id='L510' name='L510'></a>            "configuration file      = %s%s"
+<a id='L511' name='L511'></a>            "protocol informations:%s"
+<a id='L512' name='L512'></a>            "  multicast address     = %s%s"
+<a id='L513' name='L513'></a>            "  port                  = %d%s"
+<a id='L514' name='L514'></a>            "vty address             = %s%s"
+<a id='L515' name='L515'></a>            "vty port                = %d%s"
+<a id='L516' name='L516'></a>            "id                      = %s%s"
+<a id='L517' name='L517'></a>            "allow_duplicates        = %s%s"
+<a id='L518' name='L518'></a>            "kernel_metric           = %d%s",
+<a id='L519' name='L519'></a>            pidfile, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L520' name='L520'></a>            state_file, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L521' name='L521'></a>            babel_config_file ? babel_config_file : babel_config_default,
+<a id='L522' name='L522'></a>            <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L523' name='L523'></a>            <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L524' name='L524'></a>            <a href='../S/151.html#L247' title='Defined at 247 in babeld/util.c.'>format_address</a>(protocol_group), <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L525' name='L525'></a>            protocol_port, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L526' name='L526'></a>            babel_vty_addr ? babel_vty_addr : "None",
+<a id='L527' name='L527'></a>            <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L528' name='L528'></a>            babel_vty_port, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L529' name='L529'></a>            <a href='../S/151.html#L279' title='Defined at 279 in babeld/util.c.'>format_eui64</a>(myid), <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L530' name='L530'></a>            <a href='../S/151.html#L290' title='Defined at 290 in babeld/util.c.'>format_bool</a>(allow_duplicates), <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L531' name='L531'></a>            kernel_metric, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L532' name='L532'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L141'>[^]</a><a href='#L505'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

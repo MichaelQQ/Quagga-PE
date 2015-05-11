@@ -1,0 +1,471 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>zebra/ioctl_solaris.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1038.html'>zebra</a>/ioctl_solaris.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L40'>[^]</a><a href='#L421'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L40' title='Defined at 40.'>lifreq_set_name</a></li>
+<li><a href='#L47' title='Defined at 47.'>if_ioctl</a></li>
+<li><a href='#L84' title='Defined at 84.'>if_ioctl_ipv6</a></li>
+<li><a href='#L128' title='Defined at 128.'>if_get_metric</a></li>
+<li><a href='#L155' title='Defined at 155.'>if_get_mtu</a></li>
+<li><a href='#L205' title='Defined at 205.'>if_set_prefix</a></li>
+<li><a href='#L261' title='Defined at 261.'>if_unset_prefix</a></li>
+<li><a href='#L290' title='Defined at 290.'>if_get_flags_direct</a></li>
+<li><a href='#L310' title='Defined at 310.'>if_get_flags</a></li>
+<li><a href='#L351' title='Defined at 351.'>if_set_flags</a></li>
+<li><a href='#L379' title='Defined at 379.'>if_unset_flags</a></li>
+<li><a href='#L408' title='Defined at 408.'>if_prefix_add_ipv6</a></li>
+<li><a href='#L421' title='Defined at 421.'>if_prefix_delete_ipv6</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Common ioctl functions for Solaris.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1997, 98 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='1008.html'>ioctl.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='981.html'>zebra/rib.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='983.html'>zebra/rt.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='997.html'>zebra/interface.h</a>"
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> zserv_privs;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><em class='comment'>/* clear and set interface name string */</em>
+<a id='L39' name='L39'></a><strong class='reserved'>void</strong>
+<a id='L40' name='L40'></a><a href='../R/6770.html' title='Multiple referred from 8 places.'>lifreq_set_name</a> (<strong class='reserved'>struct</strong> lifreq *lifreq, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L41' name='L41'></a><em class='brace'>{</em>
+<a id='L42' name='L42'></a>  strncpy (lifreq-&gt;lifr_name, ifname, IFNAMSIZ);
+<a id='L43' name='L43'></a><em class='brace'>}</em>
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='comment'>/* call ioctl system call */</em>
+<a id='L46' name='L46'></a><strong class='reserved'>int</strong>
+<a id='L47' name='L47'></a><a href='../R/5929.html' title='Multiple referred from 29 places.'>if_ioctl</a> (u_long request, caddr_t <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>)
+<a id='L48' name='L48'></a><em class='brace'>{</em>
+<a id='L49' name='L49'></a>  <strong class='reserved'>int</strong> sock;
+<a id='L50' name='L50'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L51' name='L51'></a>  <strong class='reserved'>int</strong> err;
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a>  <strong class='reserved'>if</strong> (zserv_privs.change(<a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>))
+<a id='L54' name='L54'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_ERR, "Can't raise privileges");
+<a id='L55' name='L55'></a>    
+<a id='L56' name='L56'></a>  sock = socket (AF_INET, SOCK_DGRAM, 0);
+<a id='L57' name='L57'></a>  <strong class='reserved'>if</strong> (sock &lt; 0)
+<a id='L58' name='L58'></a>    <em class='brace'>{</em>
+<a id='L59' name='L59'></a>      <strong class='reserved'>int</strong> save_errno = errno;
+<a id='L60' name='L60'></a>      <strong class='reserved'>if</strong> (zserv_privs.change(<a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>))
+<a id='L61' name='L61'></a>        <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_ERR, "Can't lower privileges");
+<a id='L62' name='L62'></a>      zlog_err("Cannot create UDP socket: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(save_errno));
+<a id='L63' name='L63'></a>      exit (1);
+<a id='L64' name='L64'></a>    <em class='brace'>}</em>
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>  <strong class='reserved'>if</strong> ((ret = ioctl (sock, request, <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>)) &lt; 0)
+<a id='L67' name='L67'></a>    err = errno;
+<a id='L68' name='L68'></a>  
+<a id='L69' name='L69'></a>  <strong class='reserved'>if</strong> (zserv_privs.change(<a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>))
+<a id='L70' name='L70'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_ERR, "Can't lower privileges");
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>  close (sock);
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L75' name='L75'></a>    <em class='brace'>{</em>
+<a id='L76' name='L76'></a>      errno = err;
+<a id='L77' name='L77'></a>      <strong class='reserved'>return</strong> ret;
+<a id='L78' name='L78'></a>    <em class='brace'>}</em>
+<a id='L79' name='L79'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L80' name='L80'></a><em class='brace'>}</em>
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><strong class='reserved'>int</strong>
+<a id='L84' name='L84'></a><a href='../R/5930.html' title='Multiple referred from 8 places.'>if_ioctl_ipv6</a> (u_long request, caddr_t <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>)
+<a id='L85' name='L85'></a><em class='brace'>{</em>
+<a id='L86' name='L86'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L87' name='L87'></a>  <strong class='reserved'>int</strong> sock;
+<a id='L88' name='L88'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L89' name='L89'></a>  <strong class='reserved'>int</strong> err;
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a>  <strong class='reserved'>if</strong> (zserv_privs.change(<a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>))
+<a id='L92' name='L92'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_ERR, "Can't raise privileges");
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  sock = socket (AF_INET6, SOCK_DGRAM, 0);
+<a id='L95' name='L95'></a>  <strong class='reserved'>if</strong> (sock &lt; 0)
+<a id='L96' name='L96'></a>    <em class='brace'>{</em>
+<a id='L97' name='L97'></a>      <strong class='reserved'>int</strong> save_errno = errno;
+<a id='L98' name='L98'></a>      <strong class='reserved'>if</strong> (zserv_privs.change(<a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>))
+<a id='L99' name='L99'></a>        <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_ERR, "Can't lower privileges");
+<a id='L100' name='L100'></a>      zlog_err("Cannot create IPv6 datagram socket: %s",
+<a id='L101' name='L101'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(save_errno));
+<a id='L102' name='L102'></a>      exit (1);
+<a id='L103' name='L103'></a>    <em class='brace'>}</em>
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a>  <strong class='reserved'>if</strong> ((ret = ioctl (sock, request, <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>)) &lt; 0)
+<a id='L106' name='L106'></a>    err = errno;
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a>  <strong class='reserved'>if</strong> (zserv_privs.change(<a href='../S/217.html#L54' title='Defined at 54 in lib/privs.h.'>ZPRIVS_LOWER</a>))
+<a id='L109' name='L109'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_ERR, "Can't lower privileges");
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>  close (sock);
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L114' name='L114'></a>    <em class='brace'>{</em>
+<a id='L115' name='L115'></a>      errno = err;
+<a id='L116' name='L116'></a>      <strong class='reserved'>return</strong> ret;
+<a id='L117' name='L117'></a>    <em class='brace'>}</em>
+<a id='L118' name='L118'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L121' name='L121'></a><em class='brace'>}</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a><em class='comment'>/*</em>
+<a id='L124' name='L124'></a><em class='comment'> * get interface metric</em>
+<a id='L125' name='L125'></a><em class='comment'> *   -- if value is not avaliable set -1</em>
+<a id='L126' name='L126'></a><em class='comment'> */</em>
+<a id='L127' name='L127'></a><strong class='reserved'>void</strong>
+<a id='L128' name='L128'></a><a href='../R/5920.html' title='Multiple referred from 6 places.'>if_get_metric</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp)
+<a id='L129' name='L129'></a><em class='brace'>{</em>
+<a id='L130' name='L130'></a>  <strong class='reserved'>struct</strong> lifreq lifreq;
+<a id='L131' name='L131'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <a href='../S/1003.html#L40' title='Defined at 40 in zebra/ioctl_solaris.c.'>lifreq_set_name</a> (&amp;lifreq, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L134' name='L134'></a>
+<a id='L135' name='L135'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L228' title='Defined at 228 in lib/if.h.'>IFF_IPV4</a>)
+<a id='L136' name='L136'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET, SIOCGLIFMETRIC, (caddr_t) &amp; lifreq);
+<a id='L137' name='L137'></a><em class='sharp'>#ifdef</em> SOLARIS_IPV6
+<a id='L138' name='L138'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L231' title='Defined at 231 in lib/if.h.'>IFF_IPV6</a>)
+<a id='L139' name='L139'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET6, SIOCGLIFMETRIC, (caddr_t) &amp; lifreq);
+<a id='L140' name='L140'></a><em class='sharp'>#endif</em> <em class='comment'>/* SOLARIS_IPV6 */</em>
+<a id='L141' name='L141'></a>  <strong class='reserved'>else</strong>
+<a id='L142' name='L142'></a>    ret = -1;
+<a id='L143' name='L143'></a>    
+<a id='L144' name='L144'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L145' name='L145'></a>    <strong class='reserved'>return</strong>;
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a>  ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = lifreq.lifr_metric;
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> == 0)
+<a id='L150' name='L150'></a>    ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = 1;
+<a id='L151' name='L151'></a><em class='brace'>}</em>
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a><em class='comment'>/* get interface MTU */</em>
+<a id='L154' name='L154'></a><strong class='reserved'>void</strong>
+<a id='L155' name='L155'></a><a href='../R/5921.html' title='Multiple referred from 6 places.'>if_get_mtu</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp)
+<a id='L156' name='L156'></a><em class='brace'>{</em>
+<a id='L157' name='L157'></a>  <strong class='reserved'>struct</strong> lifreq lifreq;
+<a id='L158' name='L158'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L159' name='L159'></a>  u_char changed = 0;
+<a id='L160' name='L160'></a>  
+<a id='L161' name='L161'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L228' title='Defined at 228 in lib/if.h.'>IFF_IPV4</a>)
+<a id='L162' name='L162'></a>    <em class='brace'>{</em>
+<a id='L163' name='L163'></a>      <a href='../S/1003.html#L40' title='Defined at 40 in zebra/ioctl_solaris.c.'>lifreq_set_name</a> (&amp;lifreq, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L164' name='L164'></a>      ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET, SIOCGLIFMTU, (caddr_t) &amp; lifreq);
+<a id='L165' name='L165'></a>      <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L166' name='L166'></a>        <em class='brace'>{</em>
+<a id='L167' name='L167'></a>          zlog_info ("Can't lookup mtu on %s by ioctl(SIOCGLIFMTU)",
+<a id='L168' name='L168'></a>                     ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L169' name='L169'></a>          ifp-&gt;mtu = -1;
+<a id='L170' name='L170'></a>        <em class='brace'>}</em>
+<a id='L171' name='L171'></a>      <strong class='reserved'>else</strong>
+<a id='L172' name='L172'></a>        <em class='brace'>{</em>
+<a id='L173' name='L173'></a>          ifp-&gt;mtu = lifreq.lifr_metric;
+<a id='L174' name='L174'></a>          changed = 1;
+<a id='L175' name='L175'></a>        <em class='brace'>}</em>
+<a id='L176' name='L176'></a>    <em class='brace'>}</em>
+<a id='L177' name='L177'></a>
+<a id='L178' name='L178'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L179' name='L179'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L231' title='Defined at 231 in lib/if.h.'>IFF_IPV6</a>)
+<a id='L180' name='L180'></a>  <em class='brace'>{</em>
+<a id='L181' name='L181'></a>    memset(&amp;lifreq, 0, <strong class='reserved'>sizeof</strong>(lifreq));
+<a id='L182' name='L182'></a>    <a href='../S/1003.html#L40' title='Defined at 40 in zebra/ioctl_solaris.c.'>lifreq_set_name</a> (&amp;lifreq, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET6, SIOCGLIFMTU, (caddr_t) &amp; lifreq);
+<a id='L185' name='L185'></a>    <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L186' name='L186'></a>    <em class='brace'>{</em>
+<a id='L187' name='L187'></a>      zlog_info ("Can't lookup mtu6 on %s by ioctl(SIOCGIFMTU)", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L188' name='L188'></a>      ifp-&gt;mtu6 = -1;
+<a id='L189' name='L189'></a>    <em class='brace'>}</em>
+<a id='L190' name='L190'></a>    <strong class='reserved'>else</strong>
+<a id='L191' name='L191'></a>    <em class='brace'>{</em>
+<a id='L192' name='L192'></a>      ifp-&gt;mtu6 = lifreq.lifr_metric;
+<a id='L193' name='L193'></a>      changed = 1;
+<a id='L194' name='L194'></a>    <em class='brace'>}</em>
+<a id='L195' name='L195'></a>  <em class='brace'>}</em>
+<a id='L196' name='L196'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>  <strong class='reserved'>if</strong> (changed)
+<a id='L199' name='L199'></a>    <a href='../D/11528.html' title='Multiple defined in 2 places.'>zebra_interface_up_update</a>(ifp);
+<a id='L200' name='L200'></a><em class='brace'>}</em>
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a><em class='comment'>/* Set up interface's address, netmask (and broadcast? ).</em>
+<a id='L203' name='L203'></a><em class='comment'>   Solaris uses ifname:number semantics to set IP address aliases. */</em>
+<a id='L204' name='L204'></a><strong class='reserved'>int</strong>
+<a id='L205' name='L205'></a><a href='../R/5973.html' title='Multiple referred from 3 places.'>if_set_prefix</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp, <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *ifc)
+<a id='L206' name='L206'></a><em class='brace'>{</em>
+<a id='L207' name='L207'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L208' name='L208'></a>  <strong class='reserved'>struct</strong> ifreq ifreq;
+<a id='L209' name='L209'></a>  <strong class='reserved'>struct</strong> sockaddr_in addr;
+<a id='L210' name='L210'></a>  <strong class='reserved'>struct</strong> sockaddr_in broad;
+<a id='L211' name='L211'></a>  <strong class='reserved'>struct</strong> sockaddr_in mask;
+<a id='L212' name='L212'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> ifaddr;
+<a id='L213' name='L213'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p;
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a>  p = (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) ifc-&gt;address;
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  ifaddr = *p;
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>  strncpy (ifreq.ifr_name, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, IFNAMSIZ);
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a>  addr.sin_addr = p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L222' name='L222'></a>  addr.sin_family = p-&gt;family;
+<a id='L223' name='L223'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;ifreq.ifr_addr, &amp;addr, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a>  ret = <a href='../D/6703.html' title='Multiple defined in 3 places.'>if_ioctl</a> (SIOCSIFADDR, (caddr_t) &amp; ifreq);
+<a id='L226' name='L226'></a>
+<a id='L227' name='L227'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L228' name='L228'></a>    <strong class='reserved'>return</strong> ret;
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a>  <em class='comment'>/* We need mask for make broadcast addr. */</em>
+<a id='L231' name='L231'></a>  <a href='../S/250.html#L454' title='Defined at 454 in lib/prefix.c.'>masklen2ip</a> (p-&gt;prefixlen, &amp;mask.sin_addr);
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>  <strong class='reserved'>if</strong> (<a href='../S/240.html#L362' title='Defined at 362 in lib/if.c.'>if_is_broadcast</a> (ifp))
+<a id='L234' name='L234'></a>    <em class='brace'>{</em>
+<a id='L235' name='L235'></a>      <a href='../S/250.html#L484' title='Defined at 484 in lib/prefix.c.'>apply_mask_ipv4</a> (&amp;ifaddr);
+<a id='L236' name='L236'></a>      addr.sin_addr = ifaddr.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L237' name='L237'></a>
+<a id='L238' name='L238'></a>      broad.sin_addr.s_addr = (addr.sin_addr.s_addr | ~mask.sin_addr.s_addr);
+<a id='L239' name='L239'></a>      broad.sin_family = p-&gt;family;
+<a id='L240' name='L240'></a>
+<a id='L241' name='L241'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;ifreq.ifr_broadaddr, &amp;broad, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L242' name='L242'></a>      ret = <a href='../D/6703.html' title='Multiple defined in 3 places.'>if_ioctl</a> (SIOCSIFBRDADDR, (caddr_t) &amp; ifreq);
+<a id='L243' name='L243'></a>      <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L244' name='L244'></a>        <strong class='reserved'>return</strong> ret;
+<a id='L245' name='L245'></a>    <em class='brace'>}</em>
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a>  mask.sin_family = p-&gt;family;
+<a id='L248' name='L248'></a><em class='sharp'>#ifdef</em> SUNOS_5
+<a id='L249' name='L249'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;mask, &amp;ifreq.ifr_addr, <strong class='reserved'>sizeof</strong> (mask));
+<a id='L250' name='L250'></a><em class='sharp'>#else</em>
+<a id='L251' name='L251'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;ifreq.ifr_netmask, &amp;mask, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L252' name='L252'></a><em class='sharp'>#endif</em> <em class='comment'>/* SUNOS_5 */</em>
+<a id='L253' name='L253'></a>  ret = <a href='../D/6703.html' title='Multiple defined in 3 places.'>if_ioctl</a> (SIOCSIFNETMASK, (caddr_t) &amp; ifreq);
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a>  <strong class='reserved'>return</strong> ((ret &lt; 0) ? ret : 0);
+<a id='L256' name='L256'></a><em class='brace'>}</em>
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a><em class='comment'>/* Set up interface's address, netmask (and broadcast).</em>
+<a id='L259' name='L259'></a><em class='comment'>   Solaris uses ifname:number semantics to set IP address aliases. */</em>
+<a id='L260' name='L260'></a><strong class='reserved'>int</strong>
+<a id='L261' name='L261'></a><a href='../R/5980.html' title='Multiple referred from 2 places.'>if_unset_prefix</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp, <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *ifc)
+<a id='L262' name='L262'></a><em class='brace'>{</em>
+<a id='L263' name='L263'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L264' name='L264'></a>  <strong class='reserved'>struct</strong> ifreq ifreq;
+<a id='L265' name='L265'></a>  <strong class='reserved'>struct</strong> sockaddr_in addr;
+<a id='L266' name='L266'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p;
+<a id='L267' name='L267'></a>
+<a id='L268' name='L268'></a>  p = (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) ifc-&gt;address;
+<a id='L269' name='L269'></a>
+<a id='L270' name='L270'></a>  strncpy (ifreq.ifr_name, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, IFNAMSIZ);
+<a id='L271' name='L271'></a>
+<a id='L272' name='L272'></a>  memset (&amp;addr, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L273' name='L273'></a>  addr.sin_family = p-&gt;family;
+<a id='L274' name='L274'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;ifreq.ifr_addr, &amp;addr, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> sockaddr_in));
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>  ret = <a href='../D/6703.html' title='Multiple defined in 3 places.'>if_ioctl</a> (SIOCSIFADDR, (caddr_t) &amp; ifreq);
+<a id='L277' name='L277'></a>  
+<a id='L278' name='L278'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L279' name='L279'></a>    <strong class='reserved'>return</strong> ret;
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L282' name='L282'></a><em class='brace'>}</em>
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a><em class='comment'>/* Get just the flags for the given name.</em>
+<a id='L285' name='L285'></a><em class='comment'> * Used by the normal 'if_get_flags' function, as well</em>
+<a id='L286' name='L286'></a><em class='comment'> * as the bootup interface-list code, which has to peek at per-address</em>
+<a id='L287' name='L287'></a><em class='comment'> * flags in order to figure out which ones should be ignored..</em>
+<a id='L288' name='L288'></a><em class='comment'> */</em>
+<a id='L289' name='L289'></a><strong class='reserved'>int</strong>
+<a id='L290' name='L290'></a><a href='../R/5915.html' title='Multiple referred from 4 places.'>if_get_flags_direct</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname, uint64_t *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> af)
+<a id='L291' name='L291'></a><em class='brace'>{</em>
+<a id='L292' name='L292'></a>  <strong class='reserved'>struct</strong> lifreq lifreq;
+<a id='L293' name='L293'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L294' name='L294'></a>    
+<a id='L295' name='L295'></a>  <a href='../S/1003.html#L40' title='Defined at 40 in zebra/ioctl_solaris.c.'>lifreq_set_name</a> (&amp;lifreq, ifname);
+<a id='L296' name='L296'></a>  
+<a id='L297' name='L297'></a>  ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (af, SIOCGLIFFLAGS, (caddr_t) &amp;lifreq);
+<a id='L298' name='L298'></a>  
+<a id='L299' name='L299'></a>  <strong class='reserved'>if</strong> (ret)
+<a id='L300' name='L300'></a>    zlog_debug ("%s: ifname %s, error %s (%d)",
+<a id='L301' name='L301'></a>                __func__, ifname, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno), errno);
+<a id='L302' name='L302'></a>  
+<a id='L303' name='L303'></a>  *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = lifreq.lifr_flags;
+<a id='L304' name='L304'></a>  
+<a id='L305' name='L305'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L306' name='L306'></a><em class='brace'>}</em>
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a><em class='comment'>/* get interface flags */</em>
+<a id='L309' name='L309'></a><strong class='reserved'>void</strong>
+<a id='L310' name='L310'></a><a href='../R/5914.html' title='Multiple referred from 5 places.'>if_get_flags</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp)
+<a id='L311' name='L311'></a><em class='brace'>{</em>
+<a id='L312' name='L312'></a>  <strong class='reserved'>int</strong> ret4, ret6;
+<a id='L313' name='L313'></a>  uint64_t newflags = 0;
+<a id='L314' name='L314'></a>  uint64_t tmpflags;
+<a id='L315' name='L315'></a>
+<a id='L316' name='L316'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L228' title='Defined at 228 in lib/if.h.'>IFF_IPV4</a>)
+<a id='L317' name='L317'></a>    <em class='brace'>{</em>
+<a id='L318' name='L318'></a>      ret4 = <a href='../S/1003.html#L290' title='Defined at 290 in zebra/ioctl_solaris.c.'>if_get_flags_direct</a> (ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, &amp;tmpflags, AF_INET);
+<a id='L319' name='L319'></a>      
+<a id='L320' name='L320'></a>      <strong class='reserved'>if</strong> (!ret4)
+<a id='L321' name='L321'></a>        newflags |= tmpflags;
+<a id='L322' name='L322'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (errno == ENXIO)
+<a id='L323' name='L323'></a>        <em class='brace'>{</em>
+<a id='L324' name='L324'></a>          <em class='comment'>/* it's gone */</em>
+<a id='L325' name='L325'></a>          <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, IFF_UP);
+<a id='L326' name='L326'></a>          <a href='../S/965.html#L242' title='Defined at 242 in zebra/interface.c.'>if_flags_update</a> (ifp, ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L327' name='L327'></a>        <em class='brace'>}</em>
+<a id='L328' name='L328'></a>    <em class='brace'>}</em>
+<a id='L329' name='L329'></a>
+<a id='L330' name='L330'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L231' title='Defined at 231 in lib/if.h.'>IFF_IPV6</a>)
+<a id='L331' name='L331'></a>    <em class='brace'>{</em>
+<a id='L332' name='L332'></a>      ret6 = <a href='../S/1003.html#L290' title='Defined at 290 in zebra/ioctl_solaris.c.'>if_get_flags_direct</a> (ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, &amp;tmpflags, AF_INET6);
+<a id='L333' name='L333'></a>      
+<a id='L334' name='L334'></a>      <strong class='reserved'>if</strong> (!ret6)
+<a id='L335' name='L335'></a>        newflags |= tmpflags;
+<a id='L336' name='L336'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (errno == ENXIO)
+<a id='L337' name='L337'></a>        <em class='brace'>{</em>
+<a id='L338' name='L338'></a>          <em class='comment'>/* it's gone */</em>
+<a id='L339' name='L339'></a>          <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, IFF_UP);
+<a id='L340' name='L340'></a>          <a href='../S/965.html#L242' title='Defined at 242 in zebra/interface.c.'>if_flags_update</a> (ifp, ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L341' name='L341'></a>        <em class='brace'>}</em>
+<a id='L342' name='L342'></a>    <em class='brace'>}</em>
+<a id='L343' name='L343'></a>  
+<a id='L344' name='L344'></a>  <em class='comment'>/* only update flags if one of above succeeded */</em>
+<a id='L345' name='L345'></a>  <strong class='reserved'>if</strong> ( !(ret4 &amp;&amp; ret6) )
+<a id='L346' name='L346'></a>    <a href='../S/965.html#L242' title='Defined at 242 in zebra/interface.c.'>if_flags_update</a> (ifp, newflags);
+<a id='L347' name='L347'></a><em class='brace'>}</em>
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a><em class='comment'>/* Set interface flags */</em>
+<a id='L350' name='L350'></a><strong class='reserved'>int</strong>
+<a id='L351' name='L351'></a><a href='../R/5972.html' title='Multiple referred from 8 places.'>if_set_flags</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp, uint64_t <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>)
+<a id='L352' name='L352'></a><em class='brace'>{</em>
+<a id='L353' name='L353'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L354' name='L354'></a>  <strong class='reserved'>struct</strong> lifreq lifreq;
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a>  <a href='../S/1003.html#L40' title='Defined at 40 in zebra/ioctl_solaris.c.'>lifreq_set_name</a> (&amp;lifreq, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L357' name='L357'></a>
+<a id='L358' name='L358'></a>  lifreq.lifr_flags = ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L359' name='L359'></a>  lifreq.lifr_flags |= <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L360' name='L360'></a>
+<a id='L361' name='L361'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L228' title='Defined at 228 in lib/if.h.'>IFF_IPV4</a>)
+<a id='L362' name='L362'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET, SIOCSLIFFLAGS, (caddr_t) &amp; lifreq);
+<a id='L363' name='L363'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L231' title='Defined at 231 in lib/if.h.'>IFF_IPV6</a>)
+<a id='L364' name='L364'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET6, SIOCSLIFFLAGS, (caddr_t) &amp; lifreq);
+<a id='L365' name='L365'></a>  <strong class='reserved'>else</strong>
+<a id='L366' name='L366'></a>    ret = -1;
+<a id='L367' name='L367'></a>
+<a id='L368' name='L368'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L369' name='L369'></a>    zlog_info ("can't set interface flags on %s: %s", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>,
+<a id='L370' name='L370'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L371' name='L371'></a>  <strong class='reserved'>else</strong>
+<a id='L372' name='L372'></a>    ret = 0;
+<a id='L373' name='L373'></a>    
+<a id='L374' name='L374'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L375' name='L375'></a><em class='brace'>}</em>
+<a id='L376' name='L376'></a>
+<a id='L377' name='L377'></a><em class='comment'>/* Unset interface's flag. */</em>
+<a id='L378' name='L378'></a><strong class='reserved'>int</strong>
+<a id='L379' name='L379'></a><a href='../R/5979.html' title='Multiple referred from 4 places.'>if_unset_flags</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp, uint64_t <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>)
+<a id='L380' name='L380'></a><em class='brace'>{</em>
+<a id='L381' name='L381'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L382' name='L382'></a>  <strong class='reserved'>struct</strong> lifreq lifreq;
+<a id='L383' name='L383'></a>
+<a id='L384' name='L384'></a>  <a href='../S/1003.html#L40' title='Defined at 40 in zebra/ioctl_solaris.c.'>lifreq_set_name</a> (&amp;lifreq, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a>  lifreq.lifr_flags = ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L387' name='L387'></a>  lifreq.lifr_flags &amp;= ~<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L388' name='L388'></a>
+<a id='L389' name='L389'></a>  <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L228' title='Defined at 228 in lib/if.h.'>IFF_IPV4</a>)
+<a id='L390' name='L390'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET, SIOCSLIFFLAGS, (caddr_t) &amp; lifreq);
+<a id='L391' name='L391'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/252.html#L231' title='Defined at 231 in lib/if.h.'>IFF_IPV6</a>)
+<a id='L392' name='L392'></a>    ret = <a href='../D/20.html' title='Multiple defined in 4 places.'>AF_IOCTL</a> (AF_INET6, SIOCSLIFFLAGS, (caddr_t) &amp; lifreq);
+<a id='L393' name='L393'></a>  <strong class='reserved'>else</strong>
+<a id='L394' name='L394'></a>    ret = -1;
+<a id='L395' name='L395'></a>
+<a id='L396' name='L396'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L397' name='L397'></a>    zlog_info ("can't unset interface flags");
+<a id='L398' name='L398'></a>  <strong class='reserved'>else</strong>
+<a id='L399' name='L399'></a>    ret = 0;
+<a id='L400' name='L400'></a>  
+<a id='L401' name='L401'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L402' name='L402'></a><em class='brace'>}</em>
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L405' name='L405'></a>
+<a id='L406' name='L406'></a><em class='comment'>/* Interface's address add/delete functions. */</em>
+<a id='L407' name='L407'></a><strong class='reserved'>int</strong>
+<a id='L408' name='L408'></a><a href='../R/5953.html' title='Multiple referred from 3 places.'>if_prefix_add_ipv6</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp, <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *ifc)
+<a id='L409' name='L409'></a><em class='brace'>{</em>
+<a id='L410' name='L410'></a>  <strong class='reserved'>char</strong> addrbuf[<a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a>];
+<a id='L411' name='L411'></a>
+<a id='L412' name='L412'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET6, &amp;(((<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *) (ifc-&gt;address))-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>),
+<a id='L413' name='L413'></a>             addrbuf, <strong class='reserved'>sizeof</strong> (addrbuf));
+<a id='L414' name='L414'></a>  zlog_warn ("Can't set %s on interface %s", addrbuf, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L415' name='L415'></a>
+<a id='L416' name='L416'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L417' name='L417'></a>
+<a id='L418' name='L418'></a><em class='brace'>}</em>
+<a id='L419' name='L419'></a>
+<a id='L420' name='L420'></a><strong class='reserved'>int</strong>
+<a id='L421' name='L421'></a><a href='../R/5954.html' title='Multiple referred from 2 places.'>if_prefix_delete_ipv6</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp, <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *ifc)
+<a id='L422' name='L422'></a><em class='brace'>{</em>
+<a id='L423' name='L423'></a>  <strong class='reserved'>char</strong> addrbuf[<a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a>];
+<a id='L424' name='L424'></a>
+<a id='L425' name='L425'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET6, &amp;(((<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *) (ifc-&gt;address))-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>),
+<a id='L426' name='L426'></a>             addrbuf, <strong class='reserved'>sizeof</strong> (addrbuf));
+<a id='L427' name='L427'></a>  zlog_warn ("Can't delete %s on interface %s", addrbuf, ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L428' name='L428'></a>
+<a id='L429' name='L429'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L430' name='L430'></a>
+<a id='L431' name='L431'></a><em class='brace'>}</em>
+<a id='L432' name='L432'></a>
+<a id='L433' name='L433'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L40'>[^]</a><a href='#L421'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

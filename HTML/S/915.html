@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vpnmd/vpnmd_ldp_msg.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1035.html'>vpnmd</a>/vpnmd_ldp_msg.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/554.html' title='Multiple included from 3 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L4' name='L4'></a>
+<a id='L5' name='L5'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>enum</strong> <em class='brace'>{</em>
+<a id='L6' name='L6'></a> SEND_HELLO,
+<a id='L7' name='L7'></a> STOP_HELLO,
+<a id='L8' name='L8'></a> SESSION_STATE,
+<a id='L9' name='L9'></a> VC_INFO,
+<a id='L10' name='L10'></a> WITHDRAW_PW,
+<a id='L11' name='L11'></a> RELEASE_PW,
+<a id='L12' name='L12'></a> IN_PW_LABEL,
+<a id='L13' name='L13'></a> OUT_PW_LABEL,
+<a id='L14' name='L14'></a> RCV_LDP_WITHDRAW_MSG,
+<a id='L15' name='L15'></a> RCV_LDP_RELEASE_MSG
+<a id='L16' name='L16'></a><em class='brace'>}</em> <a href='../S/915.html#L51' title='Referred from 51 in vpnmd/vpnmd_ldp_msg.h.'>ldp_msg_type</a>;
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a><em class='comment'>// used by SEND_HELLO, STOP_HELLO</em>
+<a id='L19' name='L19'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../S/915.html#L53' title='Referred from 53 in vpnmd/vpnmd_ldp_msg.h.'>remote_pe_ip</a><em class='brace'>{</em>
+<a id='L20' name='L20'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L21' name='L21'></a><em class='brace'>}</em> <a href='../S/915.html#L53' title='Referred from 53 in vpnmd/vpnmd_ldp_msg.h.'>remote_pe_ip</a>;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/9736.html' title='Multiple referred from 4 places.'>session_state</a><em class='brace'>{</em>
+<a id='L24' name='L24'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L25' name='L25'></a>        u_char state;  <em class='comment'>//0: no session, 2: yes</em>
+<a id='L26' name='L26'></a><em class='brace'>}</em> <a href='../R/9736.html' title='Multiple referred from 4 places.'>session_state</a>;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='comment'>// used by VC_INFO, WITHDRAW_PW, RELEASE_PW</em>
+<a id='L29' name='L29'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../S/915.html#L55' title='Referred from 55 in vpnmd/vpnmd_ldp_msg.h.'>vc_info</a><em class='brace'>{</em>
+<a id='L30' name='L30'></a>        u_short vc_type;
+<a id='L31' name='L31'></a>        u_short vpn_id;
+<a id='L32' name='L32'></a>        u_long label;
+<a id='L33' name='L33'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L34' name='L34'></a><em class='brace'>}</em> <a href='../S/915.html#L55' title='Referred from 55 in vpnmd/vpnmd_ldp_msg.h.'>vc_info</a>;
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><em class='comment'>// used by IN_PW_LABEL, OUT_PW_LABEL</em>
+<a id='L37' name='L37'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../S/915.html#L56' title='Referred from 56 in vpnmd/vpnmd_ldp_msg.h.'>pw_label_info</a><em class='brace'>{</em>
+<a id='L38' name='L38'></a>        u_short vpn_id;
+<a id='L39' name='L39'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L40' name='L40'></a>        u_long label;
+<a id='L41' name='L41'></a><em class='brace'>}</em> <a href='../S/915.html#L56' title='Referred from 56 in vpnmd/vpnmd_ldp_msg.h.'>pw_label_info</a>;
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><em class='comment'>// used by RCV_WITHDRAW_MSG, RCV_RELEASE_MSG</em>
+<a id='L44' name='L44'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../S/915.html#L57' title='Referred from 57 in vpnmd/vpnmd_ldp_msg.h.'>withdraw_pw_msg</a><em class='brace'>{</em>
+<a id='L45' name='L45'></a>        u_short vpn_id;
+<a id='L46' name='L46'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L47' name='L47'></a><em class='brace'>}</em> <a href='../S/915.html#L57' title='Referred from 57 in vpnmd/vpnmd_ldp_msg.h.'>withdraw_pw_msg</a>; 
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> vpn_ldp_xmsg<em class='brace'>{</em>
+<a id='L50' name='L50'></a>        u_short mid;
+<a id='L51' name='L51'></a>        <a href='../S/915.html#L16' title='Defined at 16 in vpnmd/vpnmd_ldp_msg.h.'>ldp_msg_type</a> type;
+<a id='L52' name='L52'></a>        <strong class='reserved'>union</strong> <em class='brace'>{</em>
+<a id='L53' name='L53'></a>                <a href='../D/9884.html' title='Multiple defined in 2 places.'>remote_pe_ip</a> rpi;
+<a id='L54' name='L54'></a>                <a href='../D/10644.html' title='Multiple defined in 2 places.'>session_state</a> ss;
+<a id='L55' name='L55'></a>                <a href='../D/11229.html' title='Multiple defined in 2 places.'>vc_info</a> vi;
+<a id='L56' name='L56'></a>                <a href='../D/9805.html' title='Multiple defined in 2 places.'>pw_label_info</a> pli;
+<a id='L57' name='L57'></a>                <a href='../D/11441.html' title='Multiple defined in 2 places.'>withdraw_pw_msg</a> wpm;
+<a id='L58' name='L58'></a>        <em class='brace'>}</em>u;
+<a id='L59' name='L59'></a><em class='brace'>}</em> vpn_ldp_xmsg;
+<a id='L60' name='L60'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

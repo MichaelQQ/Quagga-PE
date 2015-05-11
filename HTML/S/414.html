@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_hello.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_hello.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/202.html' title='Multiple included from 8 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2000</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#ifndef</em> <a href='../S/414.html#L11' title='Defined at 11 in ldpd/ldp_hello.h.'>_LDP_HELLO_H_</a>
+<a id='L11' name='L11'></a><em class='sharp'>#define</em> <a href='../S/414.html#L10' title='Referred from 10 in ldpd/ldp_hello.h.'>_LDP_HELLO_H_</a>
+<a id='L12' name='L12'></a>
+<a id='L13' name='L13'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/369.html#L30' title='Defined at 30 in ldpd/ldp_hello.c.'>ldp_hello_timeout_callback</a>(<a href='../S/448.html#L50' title='Defined at 50 in ldpd/mpls_handle_type.h.'>mpls_timer_handle</a> <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>, <strong class='reserved'>void</strong> *extra,
+<a id='L14' name='L14'></a>  <a href='../S/383.html#L240' title='Defined at 240 in ldpd/mpls_struct.h.'>mpls_cfg_handle</a> g);
+<a id='L15' name='L15'></a>
+<a id='L16' name='L16'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/369.html#L52' title='Defined at 52 in ldpd/ldp_hello.c.'>ldp_hello_send_callback</a>(<a href='../S/448.html#L50' title='Defined at 50 in ldpd/mpls_handle_type.h.'>mpls_timer_handle</a> <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>, <strong class='reserved'>void</strong> *extra,
+<a id='L17' name='L17'></a>  <a href='../S/383.html#L240' title='Defined at 240 in ldpd/mpls_struct.h.'>mpls_cfg_handle</a> g);
+<a id='L18' name='L18'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/369.html#L68' title='Defined at 68 in ldpd/ldp_hello.c.'>ldp_hello_send</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L19' name='L19'></a>
+<a id='L20' name='L20'></a><strong class='reserved'>extern</strong> <a href='../D/7421.html' title='Multiple defined in 2 places.'>ldp_mesg</a> *<a href='../S/369.html#L137' title='Defined at 137 in ldpd/ldp_hello.c.'>ldp_hello_create</a>(<a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> msgid, <strong class='reserved'>int</strong> holdtime,
+<a id='L21' name='L21'></a>  <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * traddr, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> confnum, <strong class='reserved'>int</strong> targeted, <strong class='reserved'>int</strong> request);
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/369.html#L171' title='Defined at 171 in ldpd/ldp_hello.c.'>ldp_hello_process</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,
+<a id='L24' name='L24'></a>  <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> *e, <strong class='reserved'>int</strong> hellotime, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> csn, <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * traddr,
+<a id='L25' name='L25'></a>  <strong class='reserved'>int</strong> target, <strong class='reserved'>int</strong> request);
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

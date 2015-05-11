@@ -1,0 +1,473 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vtysh/vtysh_config.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1036.html'>vtysh</a>/vtysh_config.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L51'>[^]</a><a href='#L428'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L51' title='Defined at 51.'>line_cmp</a></li>
+<li><a href='#L57' title='Defined at 57.'>line_del</a></li>
+<li><a href='#L63' title='Defined at 63.'>config_new</a></li>
+<li><a href='#L71' title='Defined at 71.'>config_cmp</a></li>
+<li><a href='#L77' title='Defined at 77.'>config_del</a></li>
+<li><a href='#L86' title='Defined at 86.'>config_get</a></li>
+<li><a href='#L125' title='Defined at 125.'>config_add_line</a></li>
+<li><a href='#L131' title='Defined at 131.'>config_add_line_uniq</a></li>
+<li><a href='#L145' title='Defined at 145.'>vtysh_config_parse_line</a></li>
+<li><a href='#L266' title='Defined at 266.'>vtysh_config_parse</a></li>
+<li><a href='#L299' title='Defined at 299.'>vtysh_config_dump</a></li>
+<li><a href='#L353' title='Defined at 353.'>vtysh_read_file</a></li>
+<li><a href='#L393' title='Defined at 393.'>vtysh_read_config</a></li>
+<li><a href='#L413' title='Defined at 413.'>vtysh_config_write</a></li>
+<li><a href='#L428' title='Defined at 428.'>vtysh_config_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* Configuration generator.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 2000 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='51.html'>vtysh/vtysh.h</a>"
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> configvec;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> vtysh_writeconfig_integrated;
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><strong class='reserved'>struct</strong> <a href='../R/5400.html' title='Multiple referred from 194 places.'>config</a>
+<a id='L34' name='L34'></a><em class='brace'>{</em>
+<a id='L35' name='L35'></a>  <em class='comment'>/* Configuration node name. */</em>
+<a id='L36' name='L36'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a>  <em class='comment'>/* Configuration string line. */</em>
+<a id='L39' name='L39'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *line;
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a>  <em class='comment'>/* Configuration can be nest. */</em>
+<a id='L42' name='L42'></a>  <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a>  <em class='comment'>/* Index of this config. */</em>
+<a id='L45' name='L45'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> index;
+<a id='L46' name='L46'></a><em class='brace'>}</em>;
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *config_top;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>int</strong>
+<a id='L51' name='L51'></a><a href='../S/54.html#L116' title='Referred from 116 in vtysh/vtysh_config.c.'>line_cmp</a> (<strong class='reserved'>char</strong> *<a href='../D/5983.html' title='Multiple defined in 12 places.'>c1</a>, <strong class='reserved'>char</strong> *c2)
+<a id='L52' name='L52'></a><em class='brace'>{</em>
+<a id='L53' name='L53'></a>  <strong class='reserved'>return</strong> strcmp (<a href='../D/5983.html' title='Multiple defined in 12 places.'>c1</a>, c2);
+<a id='L54' name='L54'></a><em class='brace'>}</em>
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><strong class='reserved'>void</strong>
+<a id='L57' name='L57'></a><a href='../R/6772.html' title='Multiple referred from 2 places.'>line_del</a> (<strong class='reserved'>char</strong> *line)
+<a id='L58' name='L58'></a><em class='brace'>{</em>
+<a id='L59' name='L59'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_VTYSH_CONFIG_LINE, line);
+<a id='L60' name='L60'></a><em class='brace'>}</em>
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a><strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *
+<a id='L63' name='L63'></a><a href='../S/54.html#L113' title='Referred from 113 in vtysh/vtysh_config.c.'>config_new</a> ()
+<a id='L64' name='L64'></a><em class='brace'>{</em>
+<a id='L65' name='L65'></a>  <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L66' name='L66'></a>  <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_VTYSH_CONFIG, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>));
+<a id='L67' name='L67'></a>  <strong class='reserved'>return</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L68' name='L68'></a><em class='brace'>}</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a><strong class='reserved'>int</strong>
+<a id='L71' name='L71'></a><a href='../S/54.html#L101' title='Referred from 101 in vtysh/vtysh_config.c.'>config_cmp</a> (<strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *<a href='../D/5983.html' title='Multiple defined in 12 places.'>c1</a>, <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *c2)
+<a id='L72' name='L72'></a><em class='brace'>{</em>
+<a id='L73' name='L73'></a>  <strong class='reserved'>return</strong> strcmp (<a href='../D/5983.html' title='Multiple defined in 12 places.'>c1</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, c2-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L74' name='L74'></a><em class='brace'>}</em>
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>void</strong>
+<a id='L77' name='L77'></a><a href='../S/54.html#L100' title='Referred from 100 in vtysh/vtysh_config.c.'>config_del</a> (<strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>* <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>)
+<a id='L78' name='L78'></a><em class='brace'>{</em>
+<a id='L79' name='L79'></a>  <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line);
+<a id='L80' name='L80'></a>  <strong class='reserved'>if</strong> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L81' name='L81'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_VTYSH_CONFIG_LINE, <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L82' name='L82'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_VTYSH_CONFIG, <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>);
+<a id='L83' name='L83'></a><em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *
+<a id='L86' name='L86'></a><a href='../R/5406.html' title='Multiple referred from 29 places.'>config_get</a> (<strong class='reserved'>int</strong> index, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *line)
+<a id='L87' name='L87'></a><em class='brace'>{</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L89' name='L89'></a>  <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *config_loop;
+<a id='L90' name='L90'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *master;
+<a id='L91' name='L91'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a>  <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = config_loop = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L94' name='L94'></a>
+<a id='L95' name='L95'></a>  master = <a href='../S/204.html#L154' title='Defined at 154 in lib/vector.c.'>vector_lookup_ensure</a> (configvec, index);
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a>  <strong class='reserved'>if</strong> (! master)
+<a id='L98' name='L98'></a>    <em class='brace'>{</em>
+<a id='L99' name='L99'></a>      master = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L100' name='L100'></a>      master-&gt;del = (<strong class='reserved'>void</strong> (*) (<strong class='reserved'>void</strong> *))<a href='../S/54.html#L77' title='Defined at 77 in vtysh/vtysh_config.c.'>config_del</a>;
+<a id='L101' name='L101'></a>      master-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = (<strong class='reserved'>int</strong> (*)(<strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *)) <a href='../S/54.html#L71' title='Defined at 71 in vtysh/vtysh_config.c.'>config_cmp</a>;
+<a id='L102' name='L102'></a>      <a href='../S/204.html#L131' title='Defined at 131 in lib/vector.c.'>vector_set_index</a> (configvec, index, master);
+<a id='L103' name='L103'></a>    <em class='brace'>}</em>
+<a id='L104' name='L104'></a>  
+<a id='L105' name='L105'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (master, node, nnode, config_loop))
+<a id='L106' name='L106'></a>    <em class='brace'>{</em>
+<a id='L107' name='L107'></a>      <strong class='reserved'>if</strong> (strcmp (config_loop-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, line) == 0)
+<a id='L108' name='L108'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = config_loop;
+<a id='L109' name='L109'></a>    <em class='brace'>}</em>
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>  <strong class='reserved'>if</strong> (! <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>)
+<a id='L112' name='L112'></a>    <em class='brace'>{</em>
+<a id='L113' name='L113'></a>      <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L63' title='Defined at 63 in vtysh/vtysh_config.c.'>config_new</a> ();
+<a id='L114' name='L114'></a>      <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L115' name='L115'></a>      <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line-&gt;del = (<strong class='reserved'>void</strong> (*) (<strong class='reserved'>void</strong> *))<a href='../S/54.html#L57' title='Defined at 57 in vtysh/vtysh_config.c.'>line_del</a>;
+<a id='L116' name='L116'></a>      <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = (<strong class='reserved'>int</strong> (*)(<strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *)) <a href='../S/54.html#L51' title='Defined at 51 in vtysh/vtysh_config.c.'>line_cmp</a>;
+<a id='L117' name='L117'></a>      <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_VTYSH_CONFIG_LINE, line);
+<a id='L118' name='L118'></a>      <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;index = index;
+<a id='L119' name='L119'></a>      <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (master, <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>);
+<a id='L120' name='L120'></a>    <em class='brace'>}</em>
+<a id='L121' name='L121'></a>  <strong class='reserved'>return</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L122' name='L122'></a><em class='brace'>}</em>
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a><strong class='reserved'>void</strong>
+<a id='L125' name='L125'></a><a href='../R/5401.html' title='Multiple referred from 3 places.'>config_add_line</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *line)
+<a id='L126' name='L126'></a><em class='brace'>{</em>
+<a id='L127' name='L127'></a>  <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_VTYSH_CONFIG_LINE, line));
+<a id='L128' name='L128'></a><em class='brace'>}</em>
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><strong class='reserved'>void</strong>
+<a id='L131' name='L131'></a><a href='../R/5402.html' title='Multiple referred from 2 places.'>config_add_line_uniq</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *line)
+<a id='L132' name='L132'></a><em class='brace'>{</em>
+<a id='L133' name='L133'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L134' name='L134'></a>  <strong class='reserved'>char</strong> *pnt;
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, node, nnode, pnt))
+<a id='L137' name='L137'></a>    <em class='brace'>{</em>
+<a id='L138' name='L138'></a>      <strong class='reserved'>if</strong> (strcmp (pnt, line) == 0)
+<a id='L139' name='L139'></a>        <strong class='reserved'>return</strong>;
+<a id='L140' name='L140'></a>    <em class='brace'>}</em>
+<a id='L141' name='L141'></a>  <a href='../S/243.html#L84' title='Defined at 84 in lib/linklist.c.'>listnode_add_sort</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_VTYSH_CONFIG_LINE, line));
+<a id='L142' name='L142'></a><em class='brace'>}</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a><strong class='reserved'>void</strong>
+<a id='L145' name='L145'></a><a href='../R/10473.html' title='Multiple referred from 3 places.'>vtysh_config_parse_line</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *line)
+<a id='L146' name='L146'></a><em class='brace'>{</em>
+<a id='L147' name='L147'></a>  <strong class='reserved'>char</strong> c;
+<a id='L148' name='L148'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L149' name='L149'></a>
+<a id='L150' name='L150'></a>  <strong class='reserved'>if</strong> (! line)
+<a id='L151' name='L151'></a>    <strong class='reserved'>return</strong>;
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a>  c = line[0];
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a>  <strong class='reserved'>if</strong> (c == '\0')
+<a id='L156' name='L156'></a>    <strong class='reserved'>return</strong>;
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a>  <em class='comment'>/* printf ("[%s]\n", line); */</em>
+<a id='L159' name='L159'></a>
+<a id='L160' name='L160'></a>  <strong class='reserved'>switch</strong> (c)
+<a id='L161' name='L161'></a>    <em class='brace'>{</em>
+<a id='L162' name='L162'></a>    <strong class='reserved'>case</strong> '!':
+<a id='L163' name='L163'></a>    <strong class='reserved'>case</strong> '#':
+<a id='L164' name='L164'></a>      <strong class='reserved'>break</strong>;
+<a id='L165' name='L165'></a>    <strong class='reserved'>case</strong> ' ':
+<a id='L166' name='L166'></a>      <em class='comment'>/* Store line to current configuration. */</em>
+<a id='L167' name='L167'></a>      <strong class='reserved'>if</strong> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>)
+<a id='L168' name='L168'></a>        <em class='brace'>{</em>
+<a id='L169' name='L169'></a>          <strong class='reserved'>if</strong> (strncmp (line, " address-family vpnv4",
+<a id='L170' name='L170'></a>              strlen (" address-family vpnv4")) == 0)
+<a id='L171' name='L171'></a>            <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (BGP_VPNV4_NODE, line);
+<a id='L172' name='L172'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, " address-family ipv4 multicast",
+<a id='L173' name='L173'></a>                   strlen (" address-family ipv4 multicast")) == 0)
+<a id='L174' name='L174'></a>            <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (BGP_IPV4M_NODE, line);
+<a id='L175' name='L175'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, " address-family ipv6",
+<a id='L176' name='L176'></a>                   strlen (" address-family ipv6")) == 0)
+<a id='L177' name='L177'></a>            <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (BGP_IPV6_NODE, line);
+<a id='L178' name='L178'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;index == RMAP_NODE ||
+<a id='L179' name='L179'></a>                   <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;index == INTERFACE_NODE ||
+<a id='L180' name='L180'></a>                   <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;index == VTY_NODE)
+<a id='L181' name='L181'></a>            <a href='../S/54.html#L131' title='Defined at 131 in vtysh/vtysh_config.c.'>config_add_line_uniq</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line, line);
+<a id='L182' name='L182'></a>          <strong class='reserved'>else</strong>
+<a id='L183' name='L183'></a>            <a href='../S/54.html#L125' title='Defined at 125 in vtysh/vtysh_config.c.'>config_add_line</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line, line);
+<a id='L184' name='L184'></a>        <em class='brace'>}</em>
+<a id='L185' name='L185'></a>      <strong class='reserved'>else</strong>
+<a id='L186' name='L186'></a>        <a href='../S/54.html#L125' title='Defined at 125 in vtysh/vtysh_config.c.'>config_add_line</a> (config_top, line);
+<a id='L187' name='L187'></a>      <strong class='reserved'>break</strong>;
+<a id='L188' name='L188'></a>    <strong class='reserved'>default</strong>:
+<a id='L189' name='L189'></a>      <strong class='reserved'>if</strong> (strncmp (line, "interface", strlen ("interface")) == 0)
+<a id='L190' name='L190'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (INTERFACE_NODE, line);
+<a id='L191' name='L191'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router-id", strlen ("router-id")) == 0)
+<a id='L192' name='L192'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (ZEBRA_NODE, line);
+<a id='L193' name='L193'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router rip", strlen ("router rip")) == 0)
+<a id='L194' name='L194'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (RIP_NODE, line);
+<a id='L195' name='L195'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router ripng", strlen ("router ripng")) == 0)
+<a id='L196' name='L196'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (RIPNG_NODE, line);
+<a id='L197' name='L197'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router ospf", strlen ("router ospf")) == 0)
+<a id='L198' name='L198'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (OSPF_NODE, line);
+<a id='L199' name='L199'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router ospf6", strlen ("router ospf6")) == 0)
+<a id='L200' name='L200'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (OSPF6_NODE, line);
+<a id='L201' name='L201'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router babel", strlen ("router babel")) == 0)
+<a id='L202' name='L202'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (BABEL_NODE, line);
+<a id='L203' name='L203'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router bgp", strlen ("router bgp")) == 0)
+<a id='L204' name='L204'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (BGP_NODE, line);
+<a id='L205' name='L205'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router isis", strlen ("router isis")) == 0)
+<a id='L206' name='L206'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (ISIS_NODE, line);
+<a id='L207' name='L207'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "router bgp", strlen ("router bgp")) == 0)
+<a id='L208' name='L208'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (BGP_NODE, line);
+<a id='L209' name='L209'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "route-map", strlen ("route-map")) == 0)
+<a id='L210' name='L210'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (RMAP_NODE, line);
+<a id='L211' name='L211'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "access-list", strlen ("access-list")) == 0)
+<a id='L212' name='L212'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (ACCESS_NODE, line);
+<a id='L213' name='L213'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ipv6 access-list",
+<a id='L214' name='L214'></a>               strlen ("ipv6 access-list")) == 0)
+<a id='L215' name='L215'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (ACCESS_IPV6_NODE, line);
+<a id='L216' name='L216'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ip prefix-list",
+<a id='L217' name='L217'></a>               strlen ("ip prefix-list")) == 0)
+<a id='L218' name='L218'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (PREFIX_NODE, line);
+<a id='L219' name='L219'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ipv6 prefix-list",
+<a id='L220' name='L220'></a>               strlen ("ipv6 prefix-list")) == 0)
+<a id='L221' name='L221'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (PREFIX_IPV6_NODE, line);
+<a id='L222' name='L222'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ip as-path access-list",
+<a id='L223' name='L223'></a>               strlen ("ip as-path access-list")) == 0)
+<a id='L224' name='L224'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (AS_LIST_NODE, line);
+<a id='L225' name='L225'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ip community-list",
+<a id='L226' name='L226'></a>               strlen ("ip community-list")) == 0)
+<a id='L227' name='L227'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (COMMUNITY_LIST_NODE, line);
+<a id='L228' name='L228'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ip route", strlen ("ip route")) == 0)
+<a id='L229' name='L229'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (IP_NODE, line);
+<a id='L230' name='L230'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ipv6 route", strlen ("ipv6 route")) == 0)
+<a id='L231' name='L231'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (IP_NODE, line);
+<a id='L232' name='L232'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "key", strlen ("key")) == 0)
+<a id='L233' name='L233'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (KEYCHAIN_NODE, line);
+<a id='L234' name='L234'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "line", strlen ("line")) == 0)
+<a id='L235' name='L235'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (VTY_NODE, line);
+<a id='L236' name='L236'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> ( (strncmp (line, "ipv6 forwarding",
+<a id='L237' name='L237'></a>                 strlen ("ipv6 forwarding")) == 0)
+<a id='L238' name='L238'></a>               || (strncmp (line, "ip forwarding",
+<a id='L239' name='L239'></a>                   strlen ("ip forwarding")) == 0) )
+<a id='L240' name='L240'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (FORWARDING_NODE, line);
+<a id='L241' name='L241'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "service", strlen ("service")) == 0)
+<a id='L242' name='L242'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (SERVICE_NODE, line);
+<a id='L243' name='L243'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "debug", strlen ("debug")) == 0)
+<a id='L244' name='L244'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (DEBUG_NODE, line);
+<a id='L245' name='L245'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "password", strlen ("password")) == 0
+<a id='L246' name='L246'></a>               || strncmp (line, "enable password",
+<a id='L247' name='L247'></a>                           strlen ("enable password")) == 0)
+<a id='L248' name='L248'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (AAA_NODE, line);
+<a id='L249' name='L249'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (line, "ip protocol", strlen ("ip protocol")) == 0)
+<a id='L250' name='L250'></a>        <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../S/54.html#L86' title='Defined at 86 in vtysh/vtysh_config.c.'>config_get</a> (PROTOCOL_NODE, line);
+<a id='L251' name='L251'></a>      <strong class='reserved'>else</strong>
+<a id='L252' name='L252'></a>        <em class='brace'>{</em>
+<a id='L253' name='L253'></a>          <strong class='reserved'>if</strong> (strncmp (line, "log", strlen ("log")) == 0
+<a id='L254' name='L254'></a>              || strncmp (line, "hostname", strlen ("hostname")) == 0
+<a id='L255' name='L255'></a>             )
+<a id='L256' name='L256'></a>            <a href='../S/54.html#L131' title='Defined at 131 in vtysh/vtysh_config.c.'>config_add_line_uniq</a> (config_top, line);
+<a id='L257' name='L257'></a>          <strong class='reserved'>else</strong>
+<a id='L258' name='L258'></a>            <a href='../S/54.html#L125' title='Defined at 125 in vtysh/vtysh_config.c.'>config_add_line</a> (config_top, line);
+<a id='L259' name='L259'></a>          <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L260' name='L260'></a>        <em class='brace'>}</em>
+<a id='L261' name='L261'></a>      <strong class='reserved'>break</strong>;
+<a id='L262' name='L262'></a>    <em class='brace'>}</em>
+<a id='L263' name='L263'></a><em class='brace'>}</em>
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a><strong class='reserved'>void</strong>
+<a id='L266' name='L266'></a><a href='../R/10472.html' title='Multiple referred from 3 places.'>vtysh_config_parse</a> (<strong class='reserved'>char</strong> *line)
+<a id='L267' name='L267'></a><em class='brace'>{</em>
+<a id='L268' name='L268'></a>  <strong class='reserved'>char</strong> *begin;
+<a id='L269' name='L269'></a>  <strong class='reserved'>char</strong> *pnt;
+<a id='L270' name='L270'></a>  
+<a id='L271' name='L271'></a>  begin = pnt = line;
+<a id='L272' name='L272'></a>
+<a id='L273' name='L273'></a>  <strong class='reserved'>while</strong> (*pnt != '\0')
+<a id='L274' name='L274'></a>    <em class='brace'>{</em>
+<a id='L275' name='L275'></a>      <strong class='reserved'>if</strong> (*pnt == '\n')
+<a id='L276' name='L276'></a>        <em class='brace'>{</em>
+<a id='L277' name='L277'></a>          *pnt++ = '\0';
+<a id='L278' name='L278'></a>          <a href='../S/54.html#L145' title='Defined at 145 in vtysh/vtysh_config.c.'>vtysh_config_parse_line</a> (begin);
+<a id='L279' name='L279'></a>          begin = pnt;
+<a id='L280' name='L280'></a>        <em class='brace'>}</em>
+<a id='L281' name='L281'></a>      <strong class='reserved'>else</strong>
+<a id='L282' name='L282'></a>        <em class='brace'>{</em>
+<a id='L283' name='L283'></a>          pnt++;
+<a id='L284' name='L284'></a>        <em class='brace'>}</em>
+<a id='L285' name='L285'></a>    <em class='brace'>}</em>
+<a id='L286' name='L286'></a><em class='brace'>}</em>
+<a id='L287' name='L287'></a>
+<a id='L288' name='L288'></a><em class='comment'>/* Macro to check delimiter is needed between each configuration line</em>
+<a id='L289' name='L289'></a><em class='comment'> * or not. */</em>
+<a id='L290' name='L290'></a><em class='sharp'>#define</em> <a href='../R/2085.html' title='Multiple referred from 2 places.'>NO_DELIMITER</a>(<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>)  \
+<a id='L291' name='L291'></a>  ((<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == ACCESS_NODE || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == PREFIX_NODE || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == IP_NODE \
+<a id='L292' name='L292'></a>   || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == AS_LIST_NODE || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == COMMUNITY_LIST_NODE || \
+<a id='L293' name='L293'></a>   (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == ACCESS_IPV6_NODE || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == PREFIX_IPV6_NODE \
+<a id='L294' name='L294'></a>   || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == SERVICE_NODE || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == FORWARDING_NODE || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == DEBUG_NODE \
+<a id='L295' name='L295'></a>   || (<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>) == AAA_NODE)
+<a id='L296' name='L296'></a>
+<a id='L297' name='L297'></a><em class='comment'>/* Display configuration to file pointer. */</em>
+<a id='L298' name='L298'></a><strong class='reserved'>void</strong>
+<a id='L299' name='L299'></a><a href='../R/10469.html' title='Multiple referred from 3 places.'>vtysh_config_dump</a> (FILE *fp)
+<a id='L300' name='L300'></a><em class='brace'>{</em>
+<a id='L301' name='L301'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L302' name='L302'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *mnode, *mnnode;
+<a id='L303' name='L303'></a>  <strong class='reserved'>struct</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L304' name='L304'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *master;
+<a id='L305' name='L305'></a>  <strong class='reserved'>char</strong> *line;
+<a id='L306' name='L306'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (config_top, node, nnode, line))
+<a id='L309' name='L309'></a>    <em class='brace'>{</em>
+<a id='L310' name='L310'></a>      fprintf (fp, "%s\n", line);
+<a id='L311' name='L311'></a>      fflush (fp);
+<a id='L312' name='L312'></a>    <em class='brace'>}</em>
+<a id='L313' name='L313'></a>  fprintf (fp, "!\n");
+<a id='L314' name='L314'></a>  fflush (fp);
+<a id='L315' name='L315'></a>
+<a id='L316' name='L316'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (configvec); i++)
+<a id='L317' name='L317'></a>    <strong class='reserved'>if</strong> ((master = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (configvec, i)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L318' name='L318'></a>      <em class='brace'>{</em>
+<a id='L319' name='L319'></a>        <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (master, node, nnode, <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>))
+<a id='L320' name='L320'></a>          <em class='brace'>{</em>
+<a id='L321' name='L321'></a>            fprintf (fp, "%s\n", <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L322' name='L322'></a>            fflush (fp);
+<a id='L323' name='L323'></a>
+<a id='L324' name='L324'></a>            <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>-&gt;line, mnode, mnnode, line))
+<a id='L325' name='L325'></a>              <em class='brace'>{</em>
+<a id='L326' name='L326'></a>                fprintf  (fp, "%s\n", line);
+<a id='L327' name='L327'></a>                fflush (fp);
+<a id='L328' name='L328'></a>              <em class='brace'>}</em>
+<a id='L329' name='L329'></a>            <strong class='reserved'>if</strong> (! <a href='../S/54.html#L290' title='Defined at 290 in vtysh/vtysh_config.c.'>NO_DELIMITER</a> (i))
+<a id='L330' name='L330'></a>              <em class='brace'>{</em>
+<a id='L331' name='L331'></a>                fprintf (fp, "!\n");
+<a id='L332' name='L332'></a>                fflush (fp);
+<a id='L333' name='L333'></a>              <em class='brace'>}</em>
+<a id='L334' name='L334'></a>          <em class='brace'>}</em>
+<a id='L335' name='L335'></a>        <strong class='reserved'>if</strong> (<a href='../S/54.html#L290' title='Defined at 290 in vtysh/vtysh_config.c.'>NO_DELIMITER</a> (i))
+<a id='L336' name='L336'></a>          <em class='brace'>{</em>
+<a id='L337' name='L337'></a>            fprintf (fp, "!\n");
+<a id='L338' name='L338'></a>            fflush (fp);
+<a id='L339' name='L339'></a>          <em class='brace'>}</em>
+<a id='L340' name='L340'></a>      <em class='brace'>}</em>
+<a id='L341' name='L341'></a>
+<a id='L342' name='L342'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (configvec); i++)
+<a id='L343' name='L343'></a>    <strong class='reserved'>if</strong> ((master = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (configvec, i)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L344' name='L344'></a>      <em class='brace'>{</em>
+<a id='L345' name='L345'></a>        <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (master);
+<a id='L346' name='L346'></a>        <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (configvec, i) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L347' name='L347'></a>      <em class='brace'>}</em>
+<a id='L348' name='L348'></a>  <a href='../S/243.html#L207' title='Defined at 207 in lib/linklist.c.'>list_delete_all_node</a> (config_top);
+<a id='L349' name='L349'></a><em class='brace'>}</em>
+<a id='L350' name='L350'></a>
+<a id='L351' name='L351'></a><em class='comment'>/* Read up configuration file from file_name. */</em>
+<a id='L352' name='L352'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L353' name='L353'></a><a href='../S/54.html#L401' title='Referred from 401 in vtysh/vtysh_config.c.'>vtysh_read_file</a> (FILE *confp)
+<a id='L354' name='L354'></a><em class='brace'>{</em>
+<a id='L355' name='L355'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L356' name='L356'></a>  <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>;
+<a id='L357' name='L357'></a>
+<a id='L358' name='L358'></a>  <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> = <a href='../S/200.html#L319' title='Defined at 319 in lib/vty.c.'>vty_new</a> ();
+<a id='L359' name='L359'></a>  <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;fd = 0;                  <em class='comment'>/* stdout */</em>
+<a id='L360' name='L360'></a>  <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;type = <a href='../S/304.html#L38' title='Defined at 38 in lib/vty.h.'>VTY_TERM</a>;
+<a id='L361' name='L361'></a>  <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = CONFIG_NODE;
+<a id='L362' name='L362'></a>  
+<a id='L363' name='L363'></a>  <a href='../S/58.html#L443' title='Defined at 443 in vtysh/vtysh.c.'>vtysh_execute_no_pager</a> ("enable");
+<a id='L364' name='L364'></a>  <a href='../S/58.html#L443' title='Defined at 443 in vtysh/vtysh.c.'>vtysh_execute_no_pager</a> ("configure terminal");
+<a id='L365' name='L365'></a>
+<a id='L366' name='L366'></a>  <em class='comment'>/* Execute configuration file. */</em>
+<a id='L367' name='L367'></a>  ret = <a href='../S/58.html#L456' title='Defined at 456 in vtysh/vtysh.c.'>vtysh_config_from_file</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, confp);
+<a id='L368' name='L368'></a>
+<a id='L369' name='L369'></a>  <a href='../S/58.html#L443' title='Defined at 443 in vtysh/vtysh.c.'>vtysh_execute_no_pager</a> ("end");
+<a id='L370' name='L370'></a>  <a href='../S/58.html#L443' title='Defined at 443 in vtysh/vtysh.c.'>vtysh_execute_no_pager</a> ("disable");
+<a id='L371' name='L371'></a>
+<a id='L372' name='L372'></a>  <a href='../S/200.html#L2163' title='Defined at 2163 in lib/vty.c.'>vty_close</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+<a id='L373' name='L373'></a>
+<a id='L374' name='L374'></a>  <strong class='reserved'>if</strong> (ret != <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>) 
+<a id='L375' name='L375'></a>    <em class='brace'>{</em>
+<a id='L376' name='L376'></a>      <strong class='reserved'>switch</strong> (ret)
+<a id='L377' name='L377'></a>        <em class='brace'>{</em>
+<a id='L378' name='L378'></a>        <strong class='reserved'>case</strong> <a href='../S/214.html#L168' title='Defined at 168 in lib/command.h.'>CMD_ERR_AMBIGUOUS</a>:
+<a id='L379' name='L379'></a>          fprintf (stderr, "Ambiguous command.\n");
+<a id='L380' name='L380'></a>          <strong class='reserved'>break</strong>;
+<a id='L381' name='L381'></a>        <strong class='reserved'>case</strong> <a href='../S/214.html#L167' title='Defined at 167 in lib/command.h.'>CMD_ERR_NO_MATCH</a>:
+<a id='L382' name='L382'></a>          fprintf (stderr, "There is no such command.\n");
+<a id='L383' name='L383'></a>          <strong class='reserved'>break</strong>;
+<a id='L384' name='L384'></a>        <em class='brace'>}</em>
+<a id='L385' name='L385'></a>      fprintf (stderr, "Error occured during reading below line.\n%s\n", 
+<a id='L386' name='L386'></a>               <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;buf);
+<a id='L387' name='L387'></a>      exit (1);
+<a id='L388' name='L388'></a>    <em class='brace'>}</em>
+<a id='L389' name='L389'></a><em class='brace'>}</em>
+<a id='L390' name='L390'></a>
+<a id='L391' name='L391'></a><em class='comment'>/* Read up configuration file from config_default_dir. */</em>
+<a id='L392' name='L392'></a><strong class='reserved'>int</strong>
+<a id='L393' name='L393'></a><a href='../R/10490.html' title='Multiple referred from 3 places.'>vtysh_read_config</a> (<strong class='reserved'>char</strong> *config_default_dir)
+<a id='L394' name='L394'></a><em class='brace'>{</em>
+<a id='L395' name='L395'></a>  FILE *confp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L396' name='L396'></a>
+<a id='L397' name='L397'></a>  confp = fopen (config_default_dir, "r");
+<a id='L398' name='L398'></a>  <strong class='reserved'>if</strong> (confp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L399' name='L399'></a>    <strong class='reserved'>return</strong> (1);
+<a id='L400' name='L400'></a>
+<a id='L401' name='L401'></a>  <a href='../S/54.html#L353' title='Defined at 353 in vtysh/vtysh_config.c.'>vtysh_read_file</a> (confp);
+<a id='L402' name='L402'></a>  fclose (confp);
+<a id='L403' name='L403'></a>  <a href='../S/264.html#L3437' title='Defined at 3437 in lib/command.c.'>host_config_set</a> (config_default_dir);
+<a id='L404' name='L404'></a>
+<a id='L405' name='L405'></a>  <strong class='reserved'>return</strong> (0);
+<a id='L406' name='L406'></a><em class='brace'>}</em>
+<a id='L407' name='L407'></a>
+<a id='L408' name='L408'></a><em class='comment'>/* We don't write vtysh specific into file from vtysh. vtysh.conf should</em>
+<a id='L409' name='L409'></a><em class='comment'> * be edited by hand. So, we handle only "write terminal" case here and</em>
+<a id='L410' name='L410'></a><em class='comment'> * integrate vtysh specific conf with conf from daemons.</em>
+<a id='L411' name='L411'></a><em class='comment'> */</em>
+<a id='L412' name='L412'></a><strong class='reserved'>void</strong>
+<a id='L413' name='L413'></a><a href='../R/10474.html' title='Multiple referred from 2 places.'>vtysh_config_write</a> ()
+<a id='L414' name='L414'></a><em class='brace'>{</em>
+<a id='L415' name='L415'></a>  <strong class='reserved'>char</strong> line[81];
+<a id='L416' name='L416'></a>  <strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a> <a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>;
+<a id='L417' name='L417'></a>
+<a id='L418' name='L418'></a>  <strong class='reserved'>if</strong> (<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>.<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L419' name='L419'></a>    <em class='brace'>{</em>
+<a id='L420' name='L420'></a>      sprintf (line, "hostname %s", <a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>.<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L421' name='L421'></a>      <a href='../S/54.html#L145' title='Defined at 145 in vtysh/vtysh_config.c.'>vtysh_config_parse_line</a>(line);
+<a id='L422' name='L422'></a>    <em class='brace'>}</em>
+<a id='L423' name='L423'></a>  <strong class='reserved'>if</strong> (vtysh_writeconfig_integrated)
+<a id='L424' name='L424'></a>    <a href='../S/54.html#L145' title='Defined at 145 in vtysh/vtysh_config.c.'>vtysh_config_parse_line</a> ("service integrated-vtysh-config");
+<a id='L425' name='L425'></a><em class='brace'>}</em>
+<a id='L426' name='L426'></a>
+<a id='L427' name='L427'></a><strong class='reserved'>void</strong>
+<a id='L428' name='L428'></a><a href='../R/10471.html' title='Multiple referred from 2 places.'>vtysh_config_init</a> ()
+<a id='L429' name='L429'></a><em class='brace'>{</em>
+<a id='L430' name='L430'></a>  config_top = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L431' name='L431'></a>  config_top-&gt;del = (<strong class='reserved'>void</strong> (*) (<strong class='reserved'>void</strong> *))<a href='../S/54.html#L57' title='Defined at 57 in vtysh/vtysh_config.c.'>line_del</a>;
+<a id='L432' name='L432'></a>  configvec = <a href='../S/204.html#L29' title='Defined at 29 in lib/vector.c.'>vector_init</a> (1);
+<a id='L433' name='L433'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L51'>[^]</a><a href='#L428'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

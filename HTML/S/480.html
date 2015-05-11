@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/dict.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/dict.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/111.html' title='Multiple included from 24 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Dictionary Abstract Data Type</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1997 Kaz Kylheku &lt;kaz@ashi.footprints.net&gt;</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Free Software License:</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * All rights are reserved by the author, with the following exceptions:</em>
+<a id='L8' name='L8'></a><em class='comment'> * Permission is granted to freely reproduce and distribute this software,</em>
+<a id='L9' name='L9'></a><em class='comment'> * possibly in exchange for a fee, provided that this copyright notice appears</em>
+<a id='L10' name='L10'></a><em class='comment'> * intact. Permission is also granted to adapt this software to produce</em>
+<a id='L11' name='L11'></a><em class='comment'> * derivative works, as long as the modified versions carry this copyright</em>
+<a id='L12' name='L12'></a><em class='comment'> * notice and additional notices stating that the work has been modified.</em>
+<a id='L13' name='L13'></a><em class='comment'> * This source code may be translated into executable form and incorporated</em>
+<a id='L14' name='L14'></a><em class='comment'> * into proprietary software; there is no requirement for such software to</em>
+<a id='L15' name='L15'></a><em class='comment'> * contain a copyright notice related to this source.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * $Id: dict.h,v 1.3 2005/09/25 12:04:25 hasso Exp $</em>
+<a id='L18' name='L18'></a><em class='comment'> * $Name:  $</em>
+<a id='L19' name='L19'></a><em class='comment'> */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/480.html#L22' title='Defined at 22 in isisd/dict.h.'>DICT_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/480.html#L21' title='Referred from 21 in isisd/dict.h.'>DICT_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;limits.h&gt;
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='comment'>/*</em>
+<a id='L27' name='L27'></a><em class='comment'> * Blurb for inclusion into C++ translation units</em>
+<a id='L28' name='L28'></a><em class='comment'> */</em>
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><em class='sharp'>#ifdef</em> __cplusplus
+<a id='L31' name='L31'></a><strong class='reserved'>extern</strong> "C" <em class='brace'>{</em>
+<a id='L32' name='L32'></a><em class='sharp'>#endif</em>
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../R/5581.html' title='Multiple referred from 11 places.'>dictcount_t</a>;
+<a id='L35' name='L35'></a><em class='sharp'>#define</em> <a href='../R/653.html' title='Multiple referred from 3 places.'>DICTCOUNT_T_MAX</a> ULONG_MAX
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='comment'>/*</em>
+<a id='L38' name='L38'></a><em class='comment'> * The dictionary is implemented as a red-black tree</em>
+<a id='L39' name='L39'></a><em class='comment'> */</em>
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>enum</strong> <em class='brace'>{</em> <a href='../R/5629.html' title='Multiple referred from 21 places.'>dnode_red</a>, <a href='../R/5619.html' title='Multiple referred from 37 places.'>dnode_black</a> <em class='brace'>}</em> <a href='../R/5620.html' title='Multiple referred from 2 places.'>dnode_color_t</a>;
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/5630.html' title='Multiple referred from 133 places.'>dnode_t</a> <em class='brace'>{</em>
+<a id='L44' name='L44'></a>    <strong class='reserved'>struct</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *dict_left;
+<a id='L45' name='L45'></a>    <strong class='reserved'>struct</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *dict_right;
+<a id='L46' name='L46'></a>    <strong class='reserved'>struct</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *dict_parent;
+<a id='L47' name='L47'></a>    <a href='../S/480.html#L41' title='Defined at 41 in isisd/dict.h.'>dnode_color_t</a> dict_color;
+<a id='L48' name='L48'></a>    <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *dict_key;
+<a id='L49' name='L49'></a>    <strong class='reserved'>void</strong> *dict_data;
+<a id='L50' name='L50'></a><em class='brace'>}</em> <a href='../R/5630.html' title='Multiple referred from 133 places.'>dnode_t</a>;
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>int</strong> (*dict_comp_t)(<strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L53' name='L53'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>int</strong> (*dict_grep_t)(<strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, <strong class='reserved'>int</strong>);
+<a id='L54' name='L54'></a><strong class='reserved'>typedef</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *(*dnode_alloc_t)(<strong class='reserved'>void</strong> *);
+<a id='L55' name='L55'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>void</strong> (*dnode_free_t)(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *, <strong class='reserved'>void</strong> *);
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/5578.html' title='Multiple referred from 101 places.'>dict_t</a> <em class='brace'>{</em>
+<a id='L58' name='L58'></a>    <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> dict_nilnode;
+<a id='L59' name='L59'></a>    <a href='../S/480.html#L34' title='Defined at 34 in isisd/dict.h.'>dictcount_t</a> dict_nodecount;
+<a id='L60' name='L60'></a>    <a href='../S/480.html#L34' title='Defined at 34 in isisd/dict.h.'>dictcount_t</a> dict_maxcount;
+<a id='L61' name='L61'></a>    dict_comp_t dict_compare;
+<a id='L62' name='L62'></a>    dict_grep_t dict_grep;
+<a id='L63' name='L63'></a>    dnode_alloc_t dict_allocnode;
+<a id='L64' name='L64'></a>    dnode_free_t dict_freenode;
+<a id='L65' name='L65'></a>    <strong class='reserved'>void</strong> *dict_context;
+<a id='L66' name='L66'></a>    <strong class='reserved'>int</strong> dict_dupes;
+<a id='L67' name='L67'></a><em class='brace'>}</em> <a href='../R/5578.html' title='Multiple referred from 101 places.'>dict_t</a>;
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>void</strong> (*dnode_process_t)(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *, <strong class='reserved'>void</strong> *);
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/5566.html' title='Multiple referred from 9 places.'>dict_load_t</a> <em class='brace'>{</em>
+<a id='L72' name='L72'></a>    <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *dict_dictptr;
+<a id='L73' name='L73'></a>    <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> dict_nilnode;
+<a id='L74' name='L74'></a><em class='brace'>}</em> <a href='../R/5566.html' title='Multiple referred from 9 places.'>dict_load_t</a>;
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>extern</strong> <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *<a href='../S/513.html#L244' title='Defined at 244 in isisd/dict.c.'>dict_create</a>(<a href='../S/480.html#L34' title='Defined at 34 in isisd/dict.h.'>dictcount_t</a>, dict_comp_t);
+<a id='L77' name='L77'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L269' title='Defined at 269 in isisd/dict.c.'>dict_set_allocator</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, dnode_alloc_t, dnode_free_t, <strong class='reserved'>void</strong> *);
+<a id='L78' name='L78'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L285' title='Defined at 285 in isisd/dict.c.'>dict_destroy</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L79' name='L79'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L296' title='Defined at 296 in isisd/dict.c.'>dict_free_nodes</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L80' name='L80'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L309' title='Defined at 309 in isisd/dict.c.'>dict_free</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L81' name='L81'></a><strong class='reserved'>extern</strong> <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *<a href='../S/513.html#L318' title='Defined at 318 in isisd/dict.c.'>dict_init</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../S/480.html#L34' title='Defined at 34 in isisd/dict.h.'>dictcount_t</a>, dict_comp_t, dict_grep_t);
+<a id='L82' name='L82'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L340' title='Defined at 340 in isisd/dict.c.'>dict_init_like</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L83' name='L83'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/513.html#L378' title='Defined at 378 in isisd/dict.c.'>dict_verify</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L84' name='L84'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/513.html#L408' title='Defined at 408 in isisd/dict.c.'>dict_similar</a>(<strong class='reserved'>const</strong> <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L85' name='L85'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L435' title='Defined at 435 in isisd/dict.c.'>dict_lookup</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L86' name='L86'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L473' title='Defined at 473 in isisd/dict.c.'>dict_lookup_length</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, <strong class='reserved'>int</strong>);
+<a id='L87' name='L87'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L509' title='Defined at 509 in isisd/dict.c.'>dict_lower_bound</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L88' name='L88'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L541' title='Defined at 541 in isisd/dict.c.'>dict_upper_bound</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L89' name='L89'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L576' title='Defined at 576 in isisd/dict.c.'>dict_insert</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L90' name='L90'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L673' title='Defined at 673 in isisd/dict.c.'>dict_delete</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L91' name='L91'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/513.html#L847' title='Defined at 847 in isisd/dict.c.'>dict_alloc_insert</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *);
+<a id='L92' name='L92'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L859' title='Defined at 859 in isisd/dict.c.'>dict_delete_free</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L93' name='L93'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L870' title='Defined at 870 in isisd/dict.c.'>dict_first</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L94' name='L94'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L886' title='Defined at 886 in isisd/dict.c.'>dict_last</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L95' name='L95'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L904' title='Defined at 904 in isisd/dict.c.'>dict_next</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L96' name='L96'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L930' title='Defined at 930 in isisd/dict.c.'>dict_prev</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L97' name='L97'></a><strong class='reserved'>extern</strong> <a href='../S/480.html#L34' title='Defined at 34 in isisd/dict.h.'>dictcount_t</a> <a href='../D/6305.html' title='Multiple defined in 3 places.'>dict_count</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L98' name='L98'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/6316.html' title='Multiple defined in 3 places.'>dict_isempty</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L99' name='L99'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/6317.html' title='Multiple defined in 3 places.'>dict_isfull</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L100' name='L100'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/513.html#L978' title='Defined at 978 in isisd/dict.c.'>dict_contains</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L101' name='L101'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L951' title='Defined at 951 in isisd/dict.c.'>dict_allow_dupes</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L102' name='L102'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/513.html#L1035' title='Defined at 1035 in isisd/dict.c.'>dnode_is_in_a_dict</a>(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L103' name='L103'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L993' title='Defined at 993 in isisd/dict.c.'>dnode_create</a>(<strong class='reserved'>void</strong> *);
+<a id='L104' name='L104'></a><strong class='reserved'>extern</strong> <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *<a href='../S/513.html#L1005' title='Defined at 1005 in isisd/dict.c.'>dnode_init</a>(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *, <strong class='reserved'>void</strong> *);
+<a id='L105' name='L105'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L1014' title='Defined at 1014 in isisd/dict.c.'>dnode_destroy</a>(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L106' name='L106'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> *<a href='../D/6380.html' title='Multiple defined in 3 places.'>dnode_get</a>(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L107' name='L107'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *<a href='../D/6381.html' title='Multiple defined in 3 places.'>dnode_getkey</a>(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *);
+<a id='L108' name='L108'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../D/6384.html' title='Multiple defined in 3 places.'>dnode_put</a>(<a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *, <strong class='reserved'>void</strong> *);
+<a id='L109' name='L109'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L1040' title='Defined at 1040 in isisd/dict.c.'>dict_process</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <strong class='reserved'>void</strong> *, dnode_process_t);
+<a id='L110' name='L110'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L1061' title='Defined at 1061 in isisd/dict.c.'>dict_load_begin</a>(<a href='../D/6322.html' title='Multiple defined in 2 places.'>dict_load_t</a> *, <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L111' name='L111'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L1067' title='Defined at 1067 in isisd/dict.c.'>dict_load_next</a>(<a href='../D/6322.html' title='Multiple defined in 2 places.'>dict_load_t</a> *, <a href='../D/6386.html' title='Multiple defined in 2 places.'>dnode_t</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L112' name='L112'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L1091' title='Defined at 1091 in isisd/dict.c.'>dict_load_end</a>(<a href='../D/6322.html' title='Multiple defined in 2 places.'>dict_load_t</a> *);
+<a id='L113' name='L113'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/513.html#L1172' title='Defined at 1172 in isisd/dict.c.'>dict_merge</a>(<a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *, <a href='../D/6334.html' title='Multiple defined in 2 places.'>dict_t</a> *);
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><em class='sharp'>#define</em> <a href='../R/5561.html' title='Multiple referred from 2 places.'>dict_isfull</a>(D) ((D)-&gt;dict_nodecount == (D)-&gt;dict_maxcount)
+<a id='L116' name='L116'></a><em class='sharp'>#define</em> <a href='../R/5549.html' title='Multiple referred from 9 places.'>dict_count</a>(D) ((D)-&gt;dict_nodecount)
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> <a href='../R/5560.html' title='Multiple referred from 5 places.'>dict_isempty</a>(D) ((D)-&gt;dict_nodecount == 0)
+<a id='L118' name='L118'></a><em class='sharp'>#define</em> <a href='../R/5624.html' title='Multiple referred from 25 places.'>dnode_get</a>(N) ((N)-&gt;dict_data)
+<a id='L119' name='L119'></a><em class='sharp'>#define</em> <a href='../R/5625.html' title='Multiple referred from 4 places.'>dnode_getkey</a>(N) ((N)-&gt;dict_key)
+<a id='L120' name='L120'></a><em class='sharp'>#define</em> <a href='../S/480.html#L108' title='Referred from 108 in isisd/dict.h.'>dnode_put</a>(N, X) ((N)-&gt;dict_data = (X))
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a><em class='sharp'>#define</em> <a href='../R/26.html' title='Multiple referred from 5 places.'>ALL_DICT_NODES_RO</a>(D,dnode,<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) \
+<a id='L123' name='L123'></a>  (dnode) = <a href='../S/513.html#L870' title='Defined at 870 in isisd/dict.c.'>dict_first</a>((D)); \
+<a id='L124' name='L124'></a>  (dnode) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; ((<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) = <a href='../D/6380.html' title='Multiple defined in 3 places.'>dnode_get</a>((dnode)), 1); \
+<a id='L125' name='L125'></a>  (dnode) = <a href='../S/513.html#L904' title='Defined at 904 in isisd/dict.c.'>dict_next</a>((D),(dnode))
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a><em class='sharp'>#ifdef</em> __cplusplus
+<a id='L128' name='L128'></a><em class='brace'>}</em>
+<a id='L129' name='L129'></a><em class='sharp'>#endif</em>
+<a id='L130' name='L130'></a>
+<a id='L131' name='L131'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

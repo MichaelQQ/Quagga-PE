@@ -1339,7 +1339,6 @@ DEFUN (trill_router_trill,
   vty->index = ifp;
   return CMD_SUCCESS;
 }
-
 #endif
 #ifdef HAVE_IPV6
 DEFUN (ipv6_router_isis,

@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/stream.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/stream.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/345.html' title='Multiple included from 79 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Packet interface</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/284.html#L24' title='Defined at 24 in lib/stream.h.'>_ZEBRA_STREAM_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/284.html#L23' title='Referred from 23 in lib/stream.h.'>_ZEBRA_STREAM_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='comment'>/*</em>
+<a id='L29' name='L29'></a><em class='comment'> * A stream is an arbitrary buffer, whose contents generally are assumed to</em>
+<a id='L30' name='L30'></a><em class='comment'> * be in network order.</em>
+<a id='L31' name='L31'></a><em class='comment'> *</em>
+<a id='L32' name='L32'></a><em class='comment'> * A stream has the following attributes associated with it:</em>
+<a id='L33' name='L33'></a><em class='comment'> *</em>
+<a id='L34' name='L34'></a><em class='comment'> * - size: the allocated, invariant size of the buffer.</em>
+<a id='L35' name='L35'></a><em class='comment'> *</em>
+<a id='L36' name='L36'></a><em class='comment'> * - getp: the get position marker, denoting the offset in the stream where</em>
+<a id='L37' name='L37'></a><em class='comment'> *         the next read (or 'get') will be from. This getp marker is</em>
+<a id='L38' name='L38'></a><em class='comment'> *         automatically adjusted when data is read from the stream, the</em>
+<a id='L39' name='L39'></a><em class='comment'> *         user may also manipulate this offset as they wish, within limits</em>
+<a id='L40' name='L40'></a><em class='comment'> *         (see below)</em>
+<a id='L41' name='L41'></a><em class='comment'> *</em>
+<a id='L42' name='L42'></a><em class='comment'> * - endp: the end position marker, denoting the offset in the stream where</em>
+<a id='L43' name='L43'></a><em class='comment'> *         valid data ends, and if the user attempted to write (or</em>
+<a id='L44' name='L44'></a><em class='comment'> *         'put') data where that data would be written (or 'put') to.</em>
+<a id='L45' name='L45'></a><em class='comment'> *</em>
+<a id='L46' name='L46'></a><em class='comment'> * These attributes are all size_t values.</em>
+<a id='L47' name='L47'></a><em class='comment'> *</em>
+<a id='L48' name='L48'></a><em class='comment'> * Constraints:</em>
+<a id='L49' name='L49'></a><em class='comment'> *</em>
+<a id='L50' name='L50'></a><em class='comment'> * 1. getp can never exceed endp</em>
+<a id='L51' name='L51'></a><em class='comment'> *</em>
+<a id='L52' name='L52'></a><em class='comment'> * - hence if getp is equal to endp, there is no more valid data that can be</em>
+<a id='L53' name='L53'></a><em class='comment'> *   gotten from the stream (though, the user may reposition getp to earlier in</em>
+<a id='L54' name='L54'></a><em class='comment'> *   the stream, if they wish).</em>
+<a id='L55' name='L55'></a><em class='comment'> *</em>
+<a id='L56' name='L56'></a><em class='comment'> * 2. endp can never exceed size</em>
+<a id='L57' name='L57'></a><em class='comment'> *</em>
+<a id='L58' name='L58'></a><em class='comment'> * - hence, if endp is equal to size, then the stream is full, and no more</em>
+<a id='L59' name='L59'></a><em class='comment'> *   data can be written to the stream.</em>
+<a id='L60' name='L60'></a><em class='comment'> *</em>
+<a id='L61' name='L61'></a><em class='comment'> * In other words the following must always be true, and the stream</em>
+<a id='L62' name='L62'></a><em class='comment'> * abstraction is allowed internally to assert that the following property</em>
+<a id='L63' name='L63'></a><em class='comment'> * holds true for a stream, as and when it wishes:</em>
+<a id='L64' name='L64'></a><em class='comment'> *</em>
+<a id='L65' name='L65'></a><em class='comment'> *        getp &lt;= endp &lt;= size</em>
+<a id='L66' name='L66'></a><em class='comment'> *</em>
+<a id='L67' name='L67'></a><em class='comment'> * It is the users responsibility to ensure this property is never violated.</em>
+<a id='L68' name='L68'></a><em class='comment'> *</em>
+<a id='L69' name='L69'></a><em class='comment'> * A stream therefore can be thought of like this:</em>
+<a id='L70' name='L70'></a><em class='comment'> *</em>
+<a id='L71' name='L71'></a><em class='comment'> *      ---------------------------------------------------</em>
+<a id='L72' name='L72'></a><em class='comment'> *      |XXXXXXXXXXXXXXXXXXXXXXXX                         |</em>
+<a id='L73' name='L73'></a><em class='comment'> *      ---------------------------------------------------</em>
+<a id='L74' name='L74'></a><em class='comment'> *               ^               ^                        ^</em>
+<a id='L75' name='L75'></a><em class='comment'> *               getp            endp                     size</em>
+<a id='L76' name='L76'></a><em class='comment'> *</em>
+<a id='L77' name='L77'></a><em class='comment'> * This shows a stream containing data (shown as 'X') up to the endp offset.</em>
+<a id='L78' name='L78'></a><em class='comment'> * The stream is empty from endp to size. Without adjusting getp, there are</em>
+<a id='L79' name='L79'></a><em class='comment'> * still endp-getp bytes of valid data to be read from the stream.</em>
+<a id='L80' name='L80'></a><em class='comment'> *</em>
+<a id='L81' name='L81'></a><em class='comment'> * Methods are provided to get and put to/from the stream, as well as </em>
+<a id='L82' name='L82'></a><em class='comment'> * retrieve the values of the 3 markers and manipulate the getp marker.</em>
+<a id='L83' name='L83'></a><em class='comment'> *</em>
+<a id='L84' name='L84'></a><em class='comment'> * Note:</em>
+<a id='L85' name='L85'></a><em class='comment'> * At the moment, newly allocated streams are zero filled. Hence, one can</em>
+<a id='L86' name='L86'></a><em class='comment'> * use stream_forward_endp() to effectively create arbitrary zero-fill</em>
+<a id='L87' name='L87'></a><em class='comment'> * padding. However, note that stream_reset() does *not* zero-out the</em>
+<a id='L88' name='L88'></a><em class='comment'> * stream. This property should **not** be relied upon.</em>
+<a id='L89' name='L89'></a><em class='comment'> *</em>
+<a id='L90' name='L90'></a><em class='comment'> * Best practice is to use stream_put (&lt;stream *&gt;, NULL, &lt;size&gt;) to zero out</em>
+<a id='L91' name='L91'></a><em class='comment'> * any part of a stream which isn't otherwise written to.</em>
+<a id='L92' name='L92'></a><em class='comment'> */</em>
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a><em class='comment'>/* Stream buffer. */</em>
+<a id='L95' name='L95'></a><strong class='reserved'>struct</strong> <a href='../R/10008.html' title='Multiple referred from 522 places.'>stream</a>
+<a id='L96' name='L96'></a><em class='brace'>{</em>
+<a id='L97' name='L97'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *next;
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a>  <em class='comment'>/* Remainder is ***private*** to stream</em>
+<a id='L100' name='L100'></a><em class='comment'>   * direct access is frowned upon!</em>
+<a id='L101' name='L101'></a><em class='comment'>   * Use the appropriate functions/macros </em>
+<a id='L102' name='L102'></a><em class='comment'>   */</em>
+<a id='L103' name='L103'></a>  size_t getp;          <em class='comment'>/* next get position */</em>
+<a id='L104' name='L104'></a>  size_t endp;          <em class='comment'>/* last valid data position */</em>
+<a id='L105' name='L105'></a>  size_t size;          <em class='comment'>/* size of data segment */</em>
+<a id='L106' name='L106'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>; <em class='comment'>/* data pointer */</em>
+<a id='L107' name='L107'></a><em class='brace'>}</em>;
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><em class='comment'>/* First in first out queue structure. */</em>
+<a id='L110' name='L110'></a><strong class='reserved'>struct</strong> <a href='../R/10012.html' title='Multiple referred from 15 places.'>stream_fifo</a>
+<a id='L111' name='L111'></a><em class='brace'>{</em>
+<a id='L112' name='L112'></a>  size_t count;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *head;
+<a id='L115' name='L115'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *tail;
+<a id='L116' name='L116'></a><em class='brace'>}</em>;
+<a id='L117' name='L117'></a>
+<a id='L118' name='L118'></a><em class='comment'>/* Utility macros. */</em>
+<a id='L119' name='L119'></a><em class='sharp'>#define</em> <a href='../R/3549.html' title='Multiple referred from 16 places.'>STREAM_SIZE</a>(S)  ((S)-&gt;size)
+<a id='L120' name='L120'></a>  <em class='comment'>/* number of bytes which can still be written */</em>
+<a id='L121' name='L121'></a><em class='sharp'>#define</em> <a href='../R/3552.html' title='Multiple referred from 20 places.'>STREAM_WRITEABLE</a>(S) ((S)-&gt;size - (S)-&gt;endp)
+<a id='L122' name='L122'></a>  <em class='comment'>/* number of bytes still to be read */</em>
+<a id='L123' name='L123'></a><em class='sharp'>#define</em> <a href='../R/3547.html' title='Multiple referred from 17 places.'>STREAM_READABLE</a>(S) ((S)-&gt;endp - (S)-&gt;getp)
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><em class='comment'>/* deprecated macros - do not use in new code */</em>
+<a id='L126' name='L126'></a><em class='sharp'>#define</em> <a href='../R/3546.html' title='Multiple referred from 34 places.'>STREAM_PNT</a>(S)   <a href='../S/296.html#L885' title='Defined at 885 in lib/stream.c.'>stream_pnt</a>((S))
+<a id='L127' name='L127'></a><em class='sharp'>#define</em> <a href='../R/3545.html' title='Multiple referred from 94 places.'>STREAM_DATA</a>(S)  ((S)-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>)
+<a id='L128' name='L128'></a><em class='sharp'>#define</em> <a href='../R/3548.html' title='Multiple referred from 5 places.'>STREAM_REMAIN</a>(S) <a href='../S/284.html#L121' title='Defined at 121 in lib/stream.h.'>STREAM_WRITEABLE</a>((S))
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><em class='comment'>/* Stream prototypes. </em>
+<a id='L131' name='L131'></a><em class='comment'> * For stream_{put,get}S, the S suffix mean:</em>
+<a id='L132' name='L132'></a><em class='comment'> *</em>
+<a id='L133' name='L133'></a><em class='comment'> * c: character (unsigned byte)</em>
+<a id='L134' name='L134'></a><em class='comment'> * w: word (two bytes)</em>
+<a id='L135' name='L135'></a><em class='comment'> * l: long (two words)</em>
+<a id='L136' name='L136'></a><em class='comment'> * q: quad (four words)</em>
+<a id='L137' name='L137'></a><em class='comment'> */</em>
+<a id='L138' name='L138'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/296.html#L90' title='Defined at 90 in lib/stream.c.'>stream_new</a> (size_t);
+<a id='L139' name='L139'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L119' title='Defined at 119 in lib/stream.c.'>stream_free</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L140' name='L140'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> * <a href='../S/296.html#L129' title='Defined at 129 in lib/stream.c.'>stream_copy</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *src);
+<a id='L141' name='L141'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/296.html#L145' title='Defined at 145 in lib/stream.c.'>stream_dup</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L142' name='L142'></a><strong class='reserved'>extern</strong> size_t <a href='../S/296.html#L158' title='Defined at 158 in lib/stream.c.'>stream_resize</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L143' name='L143'></a><strong class='reserved'>extern</strong> size_t <a href='../S/296.html#L182' title='Defined at 182 in lib/stream.c.'>stream_get_getp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L144' name='L144'></a><strong class='reserved'>extern</strong> size_t <a href='../S/296.html#L189' title='Defined at 189 in lib/stream.c.'>stream_get_endp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L145' name='L145'></a><strong class='reserved'>extern</strong> size_t <a href='../S/296.html#L196' title='Defined at 196 in lib/stream.c.'>stream_get_size</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L146' name='L146'></a><strong class='reserved'>extern</strong> u_char *stream_get_data (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L204' title='Defined at 204 in lib/stream.c.'>stream_set_getp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L149' name='L149'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L218' title='Defined at 218 in lib/stream.c.'>stream_set_endp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L150' name='L150'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L243' title='Defined at 243 in lib/stream.c.'>stream_forward_getp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L151' name='L151'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L257' title='Defined at 257 in lib/stream.c.'>stream_forward_endp</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a><em class='comment'>/* steam_put: NULL source zeroes out size_t bytes of stream */</em>
+<a id='L154' name='L154'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L485' title='Defined at 485 in lib/stream.c.'>stream_put</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, size_t);
+<a id='L155' name='L155'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L509' title='Defined at 509 in lib/stream.c.'>stream_putc</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, u_char);
+<a id='L156' name='L156'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L586' title='Defined at 586 in lib/stream.c.'>stream_putc_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t, u_char);
+<a id='L157' name='L157'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>);
+<a id='L158' name='L158'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L602' title='Defined at 602 in lib/stream.c.'>stream_putw_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>);
+<a id='L159' name='L159'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L160' name='L160'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L619' title='Defined at 619 in lib/stream.c.'>stream_putl_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L161' name='L161'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L563' title='Defined at 563 in lib/stream.c.'>stream_putq</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, uint64_t);
+<a id='L162' name='L162'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L637' title='Defined at 637 in lib/stream.c.'>stream_putq_at</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t, uint64_t);
+<a id='L163' name='L163'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L660' title='Defined at 660 in lib/stream.c.'>stream_put_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L164' name='L164'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L677' title='Defined at 677 in lib/stream.c.'>stream_put_in_addr</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>struct</strong> in_addr *);
+<a id='L165' name='L165'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L695' title='Defined at 695 in lib/stream.c.'>stream_put_prefix</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *);
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L272' title='Defined at 272 in lib/stream.c.'>stream_get</a> (<strong class='reserved'>void</strong> *, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L168' name='L168'></a><strong class='reserved'>extern</strong> u_char <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L169' name='L169'></a><strong class='reserved'>extern</strong> u_char <a href='../S/296.html#L306' title='Defined at 306 in lib/stream.c.'>stream_getc_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L170' name='L170'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L171' name='L171'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/296.html#L345' title='Defined at 345 in lib/stream.c.'>stream_getw_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L172' name='L172'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L173' name='L173'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/296.html#L365' title='Defined at 365 in lib/stream.c.'>stream_getl_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L174' name='L174'></a><strong class='reserved'>extern</strong> uint64_t <a href='../S/296.html#L433' title='Defined at 433 in lib/stream.c.'>stream_getq</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L175' name='L175'></a><strong class='reserved'>extern</strong> uint64_t <a href='../S/296.html#L408' title='Defined at 408 in lib/stream.c.'>stream_getq_from</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t);
+<a id='L176' name='L176'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L177' name='L177'></a>
+<a id='L178' name='L178'></a><em class='sharp'>#undef</em> <a href='../R/10051.html' title='Multiple referred from 8 places.'>stream_read</a>
+<a id='L179' name='L179'></a><em class='sharp'>#undef</em> <a href='../R/10060.html' title='Multiple referred from 26 places.'>stream_write</a>
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a><em class='comment'>/* Deprecated: assumes blocking I/O.  Will be removed. </em>
+<a id='L182' name='L182'></a><em class='comment'>   Use stream_read_try instead.  */</em>
+<a id='L183' name='L183'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/10963.html' title='Multiple defined in 2 places.'>stream_read</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>int</strong>, size_t);
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a><em class='comment'>/* Deprecated: all file descriptors should already be non-blocking.</em>
+<a id='L186' name='L186'></a><em class='comment'>   Will be removed.  Use stream_read_try instead. */</em>
+<a id='L187' name='L187'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L740' title='Defined at 740 in lib/stream.c.'>stream_read_unblock</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>int</strong>, size_t);
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a><em class='comment'>/* Read up to size bytes into the stream.</em>
+<a id='L190' name='L190'></a><em class='comment'>   Return code:</em>
+<a id='L191' name='L191'></a><em class='comment'>     &gt;0: number of bytes read</em>
+<a id='L192' name='L192'></a><em class='comment'>     0: end-of-file</em>
+<a id='L193' name='L193'></a><em class='comment'>     -1: fatal error</em>
+<a id='L194' name='L194'></a><em class='comment'>     -2: transient error, should retry later (i.e. EAGAIN or EINTR)</em>
+<a id='L195' name='L195'></a><em class='comment'>   This is suitable for use with non-blocking file descriptors.</em>
+<a id='L196' name='L196'></a><em class='comment'> */</em>
+<a id='L197' name='L197'></a><strong class='reserved'>extern</strong> ssize_t <a href='../S/296.html#L765' title='Defined at 765 in lib/stream.c.'>stream_read_try</a>(<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, size_t size);
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a><strong class='reserved'>extern</strong> ssize_t <a href='../S/296.html#L829' title='Defined at 829 in lib/stream.c.'>stream_recvmsg</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, <strong class='reserved'>struct</strong> msghdr *,
+<a id='L200' name='L200'></a>                               <strong class='reserved'>int</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, size_t size);
+<a id='L201' name='L201'></a><strong class='reserved'>extern</strong> ssize_t <a href='../S/296.html#L795' title='Defined at 795 in lib/stream.c.'>stream_recvfrom</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <strong class='reserved'>int</strong> fd, size_t len, 
+<a id='L202' name='L202'></a>                                <strong class='reserved'>int</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <strong class='reserved'>struct</strong> sockaddr *from, 
+<a id='L203' name='L203'></a>                                <a href='../S/191.html#L37' title='Defined at 37 in lib/zebra.h.'>socklen_t</a> *fromlen);
+<a id='L204' name='L204'></a><strong class='reserved'>extern</strong> size_t <a href='../D/10972.html' title='Multiple defined in 2 places.'>stream_write</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, size_t);
+<a id='L205' name='L205'></a>
+<a id='L206' name='L206'></a><em class='comment'>/* reset the stream. See Note above */</em>
+<a id='L207' name='L207'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L208' name='L208'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L911' title='Defined at 911 in lib/stream.c.'>stream_flush</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>int</strong>);
+<a id='L209' name='L209'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/296.html#L893' title='Defined at 893 in lib/stream.c.'>stream_empty</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *); <em class='comment'>/* is the stream empty? */</em>
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a><em class='comment'>/* deprecated */</em>
+<a id='L212' name='L212'></a><strong class='reserved'>extern</strong> u_char *<a href='../S/296.html#L885' title='Defined at 885 in lib/stream.c.'>stream_pnt</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a><em class='comment'>/* Stream fifo. */</em>
+<a id='L215' name='L215'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/296.html#L925' title='Defined at 925 in lib/stream.c.'>stream_fifo_new</a> (<strong class='reserved'>void</strong>);
+<a id='L216' name='L216'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L935' title='Defined at 935 in lib/stream.c.'>stream_fifo_push</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s);
+<a id='L217' name='L217'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/296.html#L949' title='Defined at 949 in lib/stream.c.'>stream_fifo_pop</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L218' name='L218'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/296.html#L970' title='Defined at 970 in lib/stream.c.'>stream_fifo_head</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L219' name='L219'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L976' title='Defined at 976 in lib/stream.c.'>stream_fifo_clean</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L220' name='L220'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/296.html#L991' title='Defined at 991 in lib/stream.c.'>stream_fifo_free</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L110' title='Defined at 110 in lib/stream.h.'>stream_fifo</a> *<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_STREAM_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

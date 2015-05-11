@@ -1,0 +1,350 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/mpls_list.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/mpls_list.h</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L141'>[^]</a><a href='#L294'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/269.html' title='Multiple included from 3 places.'>INCLUDED FROM</a></h2>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L141' title='Defined at 141.'>mpls_link_list_init</a></li>
+<li><a href='#L145' title='Defined at 145.'>mpls_link_list_create</a></li>
+<li><a href='#L154' title='Defined at 154.'>mpls_link_list_delete</a></li>
+<li><a href='#L158' title='Defined at 158.'>mpls_link_list_node_create</a></li>
+<li><a href='#L169' title='Defined at 169.'>mpls_link_list_node_delete</a></li>
+<li><a href='#L174' title='Defined at 174.'>mpls_link_list_add_node_head</a></li>
+<li><a href='#L188' title='Defined at 188.'>mpls_link_list_add_head</a></li>
+<li><a href='#L199' title='Defined at 199.'>mpls_link_list_add_node_tail</a></li>
+<li><a href='#L213' title='Defined at 213.'>mpls_link_list_add_tail</a></li>
+<li><a href='#L224' title='Defined at 224.'>mpls_link_list_add_node_before</a></li>
+<li><a href='#L239' title='Defined at 239.'>mpls_link_list_add_data_before</a></li>
+<li><a href='#L250' title='Defined at 250.'>mpls_link_list_add_node_after</a></li>
+<li><a href='#L265' title='Defined at 265.'>mpls_link_list_add_data_after</a></li>
+<li><a href='#L276' title='Defined at 276.'>mpls_link_list_remove_node</a></li>
+<li><a href='#L294' title='Defined at 294.'>mpls_link_list_remove_data</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2002</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#ifndef</em> <a href='../S/373.html#L11' title='Defined at 11 in ldpd/mpls_list.h.'>_MPLS_LIST_H_</a>
+<a id='L11' name='L11'></a><em class='sharp'>#define</em> <a href='../S/373.html#L10' title='Referred from 10 in ldpd/mpls_list.h.'>_MPLS_LIST_H_</a>
+<a id='L12' name='L12'></a>
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='381.html'>mpls_mm_impl.h</a>"
+<a id='L14' name='L14'></a>
+<a id='L15' name='L15'></a><em class='comment'>/* Endo list, the prev,next ptrs are part of the element in the list */</em>
+<a id='L16' name='L16'></a><em class='comment'>/* No addition memory allocations are done when inserting into the list */</em>
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a><em class='sharp'>#define</em> <a href='../R/1813.html' title='Multiple referred from 16 places.'>MPLS_LIST_ROOT</a>(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>,type)       \
+<a id='L19' name='L19'></a><strong class='reserved'>struct</strong> <a href='../R/7289.html' title='Multiple referred from 1920 places.'>name</a> <em class='brace'>{</em>                           \
+<a id='L20' name='L20'></a>  <strong class='reserved'>struct</strong> type *llh_first;               \
+<a id='L21' name='L21'></a>  <strong class='reserved'>struct</strong> type *llh_last;                \
+<a id='L22' name='L22'></a>  <strong class='reserved'>int</strong> count;                            \
+<a id='L23' name='L23'></a><em class='brace'>}</em>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../R/1804.html' title='Multiple referred from 36 places.'>MPLS_LIST_ELEM</a>(type)            \
+<a id='L26' name='L26'></a><strong class='reserved'>struct</strong> <em class='brace'>{</em>                                \
+<a id='L27' name='L27'></a>  <strong class='reserved'>struct</strong> type *lle_next;                \
+<a id='L28' name='L28'></a>  <strong class='reserved'>struct</strong> type *lle_prev;                \
+<a id='L29' name='L29'></a><em class='brace'>}</em>
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='sharp'>#define</em> <a href='../R/1812.html' title='Multiple referred from 33 places.'>MPLS_LIST_REMOVE</a>(head, elm, field) <em class='brace'>{</em>                            \
+<a id='L32' name='L32'></a>  <strong class='reserved'>if</strong>((elm)-&gt;field.lle_next == (<strong class='reserved'>void</strong> *)(head))                           \
+<a id='L33' name='L33'></a>    (head)-&gt;llh_last = (elm)-&gt;field.lle_prev;                           \
+<a id='L34' name='L34'></a>  <strong class='reserved'>else</strong>                                                                  \
+<a id='L35' name='L35'></a>    (elm)-&gt;field.lle_next-&gt;field.lle_prev = (elm)-&gt;field.lle_prev;      \
+<a id='L36' name='L36'></a>  <strong class='reserved'>if</strong>((elm)-&gt;field.lle_prev == (<strong class='reserved'>void</strong> *)(head))                           \
+<a id='L37' name='L37'></a>    (head)-&gt;llh_first = (elm)-&gt;field.lle_next;                          \
+<a id='L38' name='L38'></a>  <strong class='reserved'>else</strong>                                                                  \
+<a id='L39' name='L39'></a>    (elm)-&gt;field.lle_prev-&gt;field.lle_next = (elm)-&gt;field.lle_next;      \
+<a id='L40' name='L40'></a> (head)-&gt;count--;                                               <em class='brace'>}</em>
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><em class='sharp'>#define</em> <a href='../R/1809.html' title='Multiple referred from 21 places.'>MPLS_LIST_INSERT_BEFORE</a>(head,listelm,elm,field) <em class='brace'>{</em>       \
+<a id='L43' name='L43'></a>  (elm)-&gt;field.lle_next = (listelm);                            \
+<a id='L44' name='L44'></a>  (elm)-&gt;field.lle_prev = (listelm)-&gt;field.lle_prev;            \
+<a id='L45' name='L45'></a>  <strong class='reserved'>if</strong>((listelm)-&gt;field.lle_prev == (<strong class='reserved'>void</strong> *)(head))               \
+<a id='L46' name='L46'></a>    (head)-&gt;llh_first = (elm);                                  \
+<a id='L47' name='L47'></a>  <strong class='reserved'>else</strong>                                                          \
+<a id='L48' name='L48'></a>    (listelm)-&gt;field.lle_prev-&gt;field.lle_next = (elm);          \
+<a id='L49' name='L49'></a>  (listelm)-&gt;field.lle_prev = (elm);                            \
+<a id='L50' name='L50'></a>  (head)-&gt;count++;                                              \
+<a id='L51' name='L51'></a><em class='brace'>}</em>
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><em class='sharp'>#define</em> <a href='../R/1808.html' title='Multiple referred from 31 places.'>MPLS_LIST_INIT</a>(head,type) <em class='brace'>{</em>             \
+<a id='L54' name='L54'></a>  (head)-&gt;llh_first = (<strong class='reserved'>struct</strong> type *)(head);    \
+<a id='L55' name='L55'></a>  (head)-&gt;llh_last = (<strong class='reserved'>struct</strong> type *)(head);     \
+<a id='L56' name='L56'></a>  (head)-&gt;count = 0;                            \
+<a id='L57' name='L57'></a><em class='brace'>}</em>
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><em class='sharp'>#define</em> <a href='../R/1810.html' title='Multiple referred from 2 places.'>MPLS_LIST_IN_LIST</a>(elm,field) ((elm)-&gt;field.lle_next &amp;&amp; (elm)-&gt;field.lle_prev)
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='sharp'>#define</em> <a href='../R/1802.html' title='Multiple referred from 9 places.'>MPLS_LIST_ADD_HEAD</a>(head, elm, field, type) <em class='brace'>{</em>    \
+<a id='L62' name='L62'></a>  (elm)-&gt;field.lle_next = (head)-&gt;llh_first;            \
+<a id='L63' name='L63'></a>  (elm)-&gt;field.lle_prev = (<strong class='reserved'>struct</strong> type *)(head);        \
+<a id='L64' name='L64'></a>  <strong class='reserved'>if</strong> ((head)-&gt;llh_last == (<strong class='reserved'>struct</strong> type *)(head))        \
+<a id='L65' name='L65'></a>    (head)-&gt;llh_last = (elm);                           \
+<a id='L66' name='L66'></a>  <strong class='reserved'>else</strong>                                                  \
+<a id='L67' name='L67'></a>    (head)-&gt;llh_first-&gt;field.lle_prev = (elm);          \
+<a id='L68' name='L68'></a>  (head)-&gt;llh_first = (elm);                            \
+<a id='L69' name='L69'></a>  (head)-&gt;count++;                                      \
+<a id='L70' name='L70'></a><em class='brace'>}</em>
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a><em class='sharp'>#define</em> <a href='../R/1803.html' title='Multiple referred from 22 places.'>MPLS_LIST_ADD_TAIL</a>(head, elm, field, type) <em class='brace'>{</em>    \
+<a id='L73' name='L73'></a>  (elm)-&gt;field.lle_next = (<strong class='reserved'>struct</strong> type *)(head);        \
+<a id='L74' name='L74'></a>  (elm)-&gt;field.lle_prev = (head)-&gt;llh_last;             \
+<a id='L75' name='L75'></a>  <strong class='reserved'>if</strong> ((head)-&gt;llh_first == (<strong class='reserved'>struct</strong> type *)(head))       \
+<a id='L76' name='L76'></a>    (head)-&gt;llh_first = (elm);                          \
+<a id='L77' name='L77'></a>  <strong class='reserved'>else</strong>                                                  \
+<a id='L78' name='L78'></a>    (head)-&gt;llh_last-&gt;field.lle_next = (elm);           \
+<a id='L79' name='L79'></a>  (head)-&gt;llh_last = (elm);                             \
+<a id='L80' name='L80'></a>  (head)-&gt;count++;                                      \
+<a id='L81' name='L81'></a><em class='brace'>}</em>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='sharp'>#define</em> MPLS_LIST_REMOVE_TAIL(root,elem,field) <em class='brace'>{</em>        \
+<a id='L84' name='L84'></a>  (elem) = (root)-&gt;llh_last;                    \
+<a id='L85' name='L85'></a>  <strong class='reserved'>if</strong>((elem) &amp;&amp; (elem) != (<strong class='reserved'>void</strong>*)(root)) <em class='brace'>{</em>       \
+<a id='L86' name='L86'></a>    <a href='../S/373.html#L31' title='Defined at 31 in ldpd/mpls_list.h.'>MPLS_LIST_REMOVE</a>(root,elem,field);          \
+<a id='L87' name='L87'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>                                      \
+<a id='L88' name='L88'></a>    (elem) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;                              \
+<a id='L89' name='L89'></a>  <em class='brace'>}</em>                                             \
+<a id='L90' name='L90'></a>  (root)-&gt;count--;                              \
+<a id='L91' name='L91'></a><em class='brace'>}</em>
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a><em class='sharp'>#define</em> MPLS_LIST_REMOVE_HEAD(root,elem,field) <em class='brace'>{</em>        \
+<a id='L94' name='L94'></a>  (elem) = (root)-&gt;llh_first;                   \
+<a id='L95' name='L95'></a>  <strong class='reserved'>if</strong>((elem) &amp;&amp; (elem) != (<strong class='reserved'>void</strong>*)(root)) <em class='brace'>{</em>       \
+<a id='L96' name='L96'></a>    <a href='../S/373.html#L31' title='Defined at 31 in ldpd/mpls_list.h.'>MPLS_LIST_REMOVE</a>(root,elem,field);          \
+<a id='L97' name='L97'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>                                      \
+<a id='L98' name='L98'></a>    (elem) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;                              \
+<a id='L99' name='L99'></a>  <em class='brace'>}</em>                                             \
+<a id='L100' name='L100'></a>  (root)-&gt;count--;                              \
+<a id='L101' name='L101'></a><em class='brace'>}</em>
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><em class='sharp'>#define</em> <a href='../R/1805.html' title='Multiple referred from 30 places.'>MPLS_LIST_ELEM_INIT</a>(elem,field) <em class='brace'>{</em>       \
+<a id='L104' name='L104'></a>  (elem)-&gt;field.lle_next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;                \
+<a id='L105' name='L105'></a>  (elem)-&gt;field.lle_prev = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;                \
+<a id='L106' name='L106'></a><em class='brace'>}</em>
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a><em class='sharp'>#define</em> <a href='../R/1807.html' title='Multiple referred from 122 places.'>MPLS_LIST_HEAD</a>(root)            (((root)-&gt;llh_first == (<strong class='reserved'>void</strong>*)(root))?(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>):((root)-&gt;llh_first))
+<a id='L109' name='L109'></a><em class='sharp'>#define</em> <a href='../R/1811.html' title='Multiple referred from 99 places.'>MPLS_LIST_NEXT</a>(root,elem,field) ((((elem)-&gt;field.lle_next) == (<strong class='reserved'>void</strong>*)(root))?(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>):((elem)-&gt;field.lle_next))
+<a id='L110' name='L110'></a><em class='sharp'>#define</em> MPLS_LIST_PREV(root,elem,field) ((((elem)-&gt;field.lle_prev) == (<strong class='reserved'>void</strong>*)(root))?(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>):((elem)-&gt;field.lle_prev))
+<a id='L111' name='L111'></a><em class='sharp'>#define</em> <a href='../R/1814.html' title='Multiple referred from 16 places.'>MPLS_LIST_TAIL</a>(root)            (((root)-&gt;llh_last == (<strong class='reserved'>void</strong>*)(root))?(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>):((root)-&gt;llh_last))
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a><em class='sharp'>#define</em> <a href='../R/1806.html' title='Multiple referred from 5 places.'>MPLS_LIST_EMPTY</a>(root) ((root)-&gt;count ? <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a> : <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>)
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><em class='comment'>/* non Endo list, the list node has the next,prev pointers and a pointer to */</em>
+<a id='L116' name='L116'></a><em class='comment'>/* the data being stored, a memory allocation has to occur for each insert */</em>
+<a id='L117' name='L117'></a>
+<a id='L118' name='L118'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/7125.html' title='Multiple referred from 22 places.'>mpls_link_list_node</a> <em class='brace'>{</em>
+<a id='L119' name='L119'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *next;
+<a id='L120' name='L120'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *prev;
+<a id='L121' name='L121'></a>  <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L122' name='L122'></a><em class='brace'>}</em> <a href='../R/7125.html' title='Multiple referred from 22 places.'>mpls_link_list_node</a>;
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/7115.html' title='Multiple referred from 20 places.'>mpls_link_list</a> <em class='brace'>{</em>
+<a id='L125' name='L125'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *head;
+<a id='L126' name='L126'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *tail;
+<a id='L127' name='L127'></a>  <strong class='reserved'>int</strong> count;
+<a id='L128' name='L128'></a><em class='brace'>}</em> <a href='../R/7115.html' title='Multiple referred from 20 places.'>mpls_link_list</a>;
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><em class='sharp'>#define</em> mpls_link_list_head(X) ((X)-&gt;head)
+<a id='L131' name='L131'></a><em class='sharp'>#define</em> <a href='../R/7122.html' title='Multiple referred from 5 places.'>mpls_link_list_head_data</a>(X) ((X)-&gt;head ? (X)-&gt;head-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> : <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L132' name='L132'></a><em class='sharp'>#define</em> mpls_link_list_tail(X) ((X)-&gt;tail)
+<a id='L133' name='L133'></a><em class='sharp'>#define</em> <a href='../S/447.html#L652' title='Referred from 652 in ldpd/ldp_session.c.'>mpls_link_list_tail_data</a>(X) ((X)-&gt;tail ? (X)-&gt;tail-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> : <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L134' name='L134'></a><em class='sharp'>#define</em> <a href='../S/447.html#L749' title='Referred from 749 in ldpd/ldp_session.c.'>mpls_link_list_count</a>(X) ((X)-&gt;count)
+<a id='L135' name='L135'></a><em class='sharp'>#define</em> <a href='../S/447.html#L647' title='Referred from 647 in ldpd/ldp_session.c.'>mpls_link_list_isempty</a>(X) ((X)-&gt;head == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; (X)-&gt;tail == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a><em class='sharp'>#define</em> <a href='../R/1799.html' title='Multiple referred from 2 places.'>MPLS_LINK_LIST_LOOP</a>(LIST,DATA,<a href='../S/475.html#L27' title='Defined at 27 in isisd/topology/spgrid.c.'>NODE</a>)                     \
+<a id='L138' name='L138'></a>  <strong class='reserved'>for</strong> ((<a href='../S/475.html#L27' title='Defined at 27 in isisd/topology/spgrid.c.'>NODE</a>) = (LIST)-&gt;head; (<a href='../S/475.html#L27' title='Defined at 27 in isisd/topology/spgrid.c.'>NODE</a>); (<a href='../S/475.html#L27' title='Defined at 27 in isisd/topology/spgrid.c.'>NODE</a>) = (<a href='../S/475.html#L27' title='Defined at 27 in isisd/topology/spgrid.c.'>NODE</a>)-&gt;next)    \
+<a id='L139' name='L139'></a>    <strong class='reserved'>if</strong> (((DATA) = (<a href='../S/475.html#L27' title='Defined at 27 in isisd/topology/spgrid.c.'>NODE</a>)-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../R/7123.html' title='Multiple referred from 6 places.'>mpls_link_list_init</a>(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>) <em class='brace'>{</em>
+<a id='L142' name='L142'></a>  memset(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, 0, <strong class='reserved'>sizeof</strong>(*<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>));
+<a id='L143' name='L143'></a><em class='brace'>}</em>
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *mpls_link_list_create() <em class='brace'>{</em>
+<a id='L146' name='L146'></a>  <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>;
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a>  <strong class='reserved'>if</strong> ((<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> = <a href='../S/341.html#L10' title='Defined at 10 in ldpd/impl_mm.c.'>mpls_malloc</a>(<strong class='reserved'>sizeof</strong>(*<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>)))) <em class='brace'>{</em>
+<a id='L149' name='L149'></a>    <a href='../S/373.html#L141' title='Defined at 141 in ldpd/mpls_list.h.'>mpls_link_list_init</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L150' name='L150'></a>  <em class='brace'>}</em>
+<a id='L151' name='L151'></a>  <strong class='reserved'>return</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>;
+<a id='L152' name='L152'></a><em class='brace'>}</em>
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> mpls_link_list_delete(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>) <em class='brace'>{</em>
+<a id='L155' name='L155'></a>  <a href='../S/341.html#L19' title='Defined at 19 in ldpd/impl_mm.c.'>mpls_free</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L156' name='L156'></a><em class='brace'>}</em>
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *<a href='../R/7126.html' title='Multiple referred from 5 places.'>mpls_link_list_node_create</a>(<strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>)
+<a id='L159' name='L159'></a><em class='brace'>{</em>
+<a id='L160' name='L160'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node;
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a>  <strong class='reserved'>if</strong> ((node = <a href='../S/341.html#L10' title='Defined at 10 in ldpd/impl_mm.c.'>mpls_malloc</a>(<strong class='reserved'>sizeof</strong>(*node)))) <em class='brace'>{</em>
+<a id='L163' name='L163'></a>    memset(node, 0, <strong class='reserved'>sizeof</strong>(*node));
+<a id='L164' name='L164'></a>    node-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L165' name='L165'></a>  <em class='brace'>}</em>
+<a id='L166' name='L166'></a>  <strong class='reserved'>return</strong> node;
+<a id='L167' name='L167'></a><em class='brace'>}</em>
+<a id='L168' name='L168'></a>
+<a id='L169' name='L169'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../R/7127.html' title='Multiple referred from 2 places.'>mpls_link_list_node_delete</a>(<strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node)
+<a id='L170' name='L170'></a><em class='brace'>{</em>
+<a id='L171' name='L171'></a>  <a href='../S/341.html#L19' title='Defined at 19 in ldpd/impl_mm.c.'>mpls_free</a>(node);
+<a id='L172' name='L172'></a><em class='brace'>}</em>
+<a id='L173' name='L173'></a>
+<a id='L174' name='L174'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../S/373.html#L193' title='Referred from 193 in ldpd/mpls_list.h.'>mpls_link_list_add_node_head</a>(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L175' name='L175'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node) <em class='brace'>{</em>
+<a id='L176' name='L176'></a>  node-&gt;next = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head;
+<a id='L177' name='L177'></a>    
+<a id='L178' name='L178'></a>  <strong class='reserved'>if</strong> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L179' name='L179'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = node; 
+<a id='L180' name='L180'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L181' name='L181'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head-&gt;prev = node;
+<a id='L182' name='L182'></a>    node-&gt;next = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head;
+<a id='L183' name='L183'></a>  <em class='brace'>}</em>
+<a id='L184' name='L184'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = node;
+<a id='L185' name='L185'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;count++;
+<a id='L186' name='L186'></a><em class='brace'>}</em>
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> mpls_link_list_add_head(
+<a id='L189' name='L189'></a>  <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, <strong class='reserved'>void</strong> * <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) <em class='brace'>{</em>
+<a id='L190' name='L190'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node;
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>  <strong class='reserved'>if</strong> ((node = <a href='../S/373.html#L158' title='Defined at 158 in ldpd/mpls_list.h.'>mpls_link_list_node_create</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>))) <em class='brace'>{</em>
+<a id='L193' name='L193'></a>    <a href='../S/373.html#L174' title='Defined at 174 in ldpd/mpls_list.h.'>mpls_link_list_add_node_head</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,node);
+<a id='L194' name='L194'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L195' name='L195'></a>  <em class='brace'>}</em>
+<a id='L196' name='L196'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L22' title='Defined at 22 in ldpd/mpls_struct.h.'>MPLS_FATAL</a>;
+<a id='L197' name='L197'></a><em class='brace'>}</em>
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../R/7119.html' title='Multiple referred from 2 places.'>mpls_link_list_add_node_tail</a>(
+<a id='L200' name='L200'></a>  <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node) <em class='brace'>{</em>
+<a id='L201' name='L201'></a>  node-&gt;prev = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail;
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a>  <strong class='reserved'>if</strong> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L204' name='L204'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = node; 
+<a id='L205' name='L205'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L206' name='L206'></a>    node-&gt;prev = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail;
+<a id='L207' name='L207'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail-&gt;next = node;
+<a id='L208' name='L208'></a>  <em class='brace'>}</em>
+<a id='L209' name='L209'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = node;
+<a id='L210' name='L210'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;count++;
+<a id='L211' name='L211'></a><em class='brace'>}</em>
+<a id='L212' name='L212'></a>
+<a id='L213' name='L213'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/7120.html' title='Multiple referred from 4 places.'>mpls_link_list_add_tail</a>(
+<a id='L214' name='L214'></a>  <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) <em class='brace'>{</em>
+<a id='L215' name='L215'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node;
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  <strong class='reserved'>if</strong> ((node = <a href='../S/373.html#L158' title='Defined at 158 in ldpd/mpls_list.h.'>mpls_link_list_node_create</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>))) <em class='brace'>{</em>
+<a id='L218' name='L218'></a>    <a href='../S/373.html#L199' title='Defined at 199 in ldpd/mpls_list.h.'>mpls_link_list_add_node_tail</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, node);
+<a id='L219' name='L219'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L220' name='L220'></a>  <em class='brace'>}</em>
+<a id='L221' name='L221'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L22' title='Defined at 22 in ldpd/mpls_struct.h.'>MPLS_FATAL</a>;
+<a id='L222' name='L222'></a><em class='brace'>}</em>
+<a id='L223' name='L223'></a>
+<a id='L224' name='L224'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../R/7117.html' title='Multiple referred from 2 places.'>mpls_link_list_add_node_before</a>(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L225' name='L225'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *ptr, <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node) <em class='brace'>{</em>
+<a id='L226' name='L226'></a>  <strong class='reserved'>if</strong> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head == ptr) <em class='brace'>{</em>
+<a id='L227' name='L227'></a>    node-&gt;next = ptr;
+<a id='L228' name='L228'></a>    ptr-&gt;prev = node;
+<a id='L229' name='L229'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = node;
+<a id='L230' name='L230'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L231' name='L231'></a>    node-&gt;prev = ptr-&gt;prev;
+<a id='L232' name='L232'></a>    node-&gt;next = ptr;
+<a id='L233' name='L233'></a>    ptr-&gt;prev-&gt;next = node;
+<a id='L234' name='L234'></a>    ptr-&gt;prev = node;
+<a id='L235' name='L235'></a>  <em class='brace'>}</em>
+<a id='L236' name='L236'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;count++;
+<a id='L237' name='L237'></a><em class='brace'>}</em>
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> mpls_link_list_add_data_before(
+<a id='L240' name='L240'></a>  <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *ptr, <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) <em class='brace'>{</em>
+<a id='L241' name='L241'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node;
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a>  <strong class='reserved'>if</strong> ((node = <a href='../S/373.html#L158' title='Defined at 158 in ldpd/mpls_list.h.'>mpls_link_list_node_create</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>))) <em class='brace'>{</em>
+<a id='L244' name='L244'></a>    <a href='../S/373.html#L224' title='Defined at 224 in ldpd/mpls_list.h.'>mpls_link_list_add_node_before</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,ptr,node);
+<a id='L245' name='L245'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L246' name='L246'></a>  <em class='brace'>}</em>
+<a id='L247' name='L247'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L22' title='Defined at 22 in ldpd/mpls_struct.h.'>MPLS_FATAL</a>;
+<a id='L248' name='L248'></a><em class='brace'>}</em>
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../S/373.html#L270' title='Referred from 270 in ldpd/mpls_list.h.'>mpls_link_list_add_node_after</a>(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L251' name='L251'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *ptr, <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node) <em class='brace'>{</em>
+<a id='L252' name='L252'></a>  <strong class='reserved'>if</strong> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail == ptr) <em class='brace'>{</em>
+<a id='L253' name='L253'></a>    ptr-&gt;next = node;
+<a id='L254' name='L254'></a>    node-&gt;prev = ptr; 
+<a id='L255' name='L255'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = node;
+<a id='L256' name='L256'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L257' name='L257'></a>    node-&gt;prev = ptr;
+<a id='L258' name='L258'></a>    node-&gt;next = ptr-&gt;next;
+<a id='L259' name='L259'></a>    ptr-&gt;next = node;
+<a id='L260' name='L260'></a>    ptr-&gt;next-&gt;prev = node;
+<a id='L261' name='L261'></a>  <em class='brace'>}</em>
+<a id='L262' name='L262'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;count++;
+<a id='L263' name='L263'></a><em class='brace'>}</em>
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> mpls_link_list_add_data_after(
+<a id='L266' name='L266'></a>  <strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *ptr, <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) <em class='brace'>{</em>
+<a id='L267' name='L267'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node;
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a>  <strong class='reserved'>if</strong> ((node = <a href='../S/373.html#L158' title='Defined at 158 in ldpd/mpls_list.h.'>mpls_link_list_node_create</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>))) <em class='brace'>{</em>
+<a id='L270' name='L270'></a>    <a href='../S/373.html#L250' title='Defined at 250 in ldpd/mpls_list.h.'>mpls_link_list_add_node_after</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, ptr, node);
+<a id='L271' name='L271'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L272' name='L272'></a>  <em class='brace'>}</em>
+<a id='L273' name='L273'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L22' title='Defined at 22 in ldpd/mpls_struct.h.'>MPLS_FATAL</a>;
+<a id='L274' name='L274'></a><em class='brace'>}</em>
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../S/373.html#L301' title='Referred from 301 in ldpd/mpls_list.h.'>mpls_link_list_remove_node</a>(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L277' name='L277'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node) <em class='brace'>{</em>
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a>  <strong class='reserved'>if</strong> (node-&gt;prev) <em class='brace'>{</em>
+<a id='L280' name='L280'></a>    node-&gt;prev-&gt;next = node-&gt;next;
+<a id='L281' name='L281'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L282' name='L282'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = node-&gt;next;
+<a id='L283' name='L283'></a>  <em class='brace'>}</em>
+<a id='L284' name='L284'></a>
+<a id='L285' name='L285'></a>  <strong class='reserved'>if</strong> (node-&gt;next) <em class='brace'>{</em>
+<a id='L286' name='L286'></a>    node-&gt;next-&gt;prev = node-&gt;prev;
+<a id='L287' name='L287'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L288' name='L288'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = node-&gt;prev;
+<a id='L289' name='L289'></a>  <em class='brace'>}</em>
+<a id='L290' name='L290'></a>
+<a id='L291' name='L291'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;count--;
+<a id='L292' name='L292'></a><em class='brace'>}</em>
+<a id='L293' name='L293'></a>
+<a id='L294' name='L294'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>void</strong> <a href='../R/7128.html' title='Multiple referred from 6 places.'>mpls_link_list_remove_data</a>(<strong class='reserved'>struct</strong> <a href='../D/7942.html' title='Multiple defined in 2 places.'>mpls_link_list</a>* <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L295' name='L295'></a>  <strong class='reserved'>void</strong> *val)
+<a id='L296' name='L296'></a><em class='brace'>{</em>
+<a id='L297' name='L297'></a>  <strong class='reserved'>struct</strong> <a href='../D/7958.html' title='Multiple defined in 2 places.'>mpls_link_list_node</a> *node;
+<a id='L298' name='L298'></a>
+<a id='L299' name='L299'></a>  <strong class='reserved'>for</strong> (node = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head; node; node = node-&gt;next) <em class='brace'>{</em>
+<a id='L300' name='L300'></a>    <strong class='reserved'>if</strong> (node-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> == val) <em class='brace'>{</em>
+<a id='L301' name='L301'></a>      <a href='../S/373.html#L276' title='Defined at 276 in ldpd/mpls_list.h.'>mpls_link_list_remove_node</a>(<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,node);
+<a id='L302' name='L302'></a>      <a href='../S/373.html#L169' title='Defined at 169 in ldpd/mpls_list.h.'>mpls_link_list_node_delete</a>(node);
+<a id='L303' name='L303'></a>      <strong class='reserved'>break</strong>;
+<a id='L304' name='L304'></a>    <em class='brace'>}</em>
+<a id='L305' name='L305'></a>  <em class='brace'>}</em>
+<a id='L306' name='L306'></a><em class='brace'>}</em>
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L141'>[^]</a><a href='#L294'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

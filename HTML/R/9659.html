@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>rtentry</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/503.html#L448'>rtentry</a>           448 isisd/include-netbsd/clnp.h 	struct rtentry *clc_rt;	/* ptr to rtentry (points into the route</span>
+<span class='curline'><a href='../S/503.html#L483'>rtentry</a>           483 isisd/include-netbsd/clnp.h 		       int, int, int, struct rtentry *));</span>
+<span class='curline'><a href='../S/503.html#L494'>rtentry</a>           494 isisd/include-netbsd/clnp.h 		      struct rtentry *));</span>
+<span class='curline'><a href='../S/503.html#L535'>rtentry</a>           535 isisd/include-netbsd/clnp.h int clnp_badmtu __P((struct ifnet *, struct rtentry *, int, char *));</span>
+<span class='curline'><a href='../S/502.html#L126'>rtentry</a>           126 isisd/include-netbsd/esis.h struct rtentry;</span>
+<span class='curline'><a href='../S/502.html#L134'>rtentry</a>           134 isisd/include-netbsd/esis.h 			struct iso_addr *, struct rtentry *));</span>
+<span class='curline'><a href='../S/992.html#L72'>rtentry</a>            72 zebra/rt_ioctl.c   struct rtentry rtentry;</span>
+<span class='curline'><a href='../S/992.html#L75'>rtentry</a>            75 zebra/rt_ioctl.c   memset (&amp;rtentry, 0, sizeof (struct rtentry));</span>
+<span class='curline'><a href='../S/992.html#L104'>rtentry</a>           104 zebra/rt_ioctl.c   memcpy (&amp;rtentry.rt_dst, &amp;sin_dest, sizeof (struct sockaddr_in));</span>
+<span class='curline'><a href='../S/992.html#L106'>rtentry</a>           106 zebra/rt_ioctl.c     memcpy (&amp;rtentry.rt_gateway, &amp;sin_gate, sizeof (struct sockaddr_in));</span>
+<span class='curline'><a href='../S/992.html#L108'>rtentry</a>           108 zebra/rt_ioctl.c   memcpy (&amp;rtentry.rt_genmask, &amp;sin_mask, sizeof (struct sockaddr_in));</span>
+<span class='curline'><a href='../S/992.html#L113'>rtentry</a>           113 zebra/rt_ioctl.c     rtentry.rt_flags |= RTF_HOST;</span>
+<span class='curline'><a href='../S/992.html#L116'>rtentry</a>           116 zebra/rt_ioctl.c     rtentry.rt_flags |= RTF_GATEWAY;</span>
+<span class='curline'><a href='../S/992.html#L118'>rtentry</a>           118 zebra/rt_ioctl.c   rtentry.rt_flags |= RTF_UP;</span>
+<span class='curline'><a href='../S/992.html#L121'>rtentry</a>           121 zebra/rt_ioctl.c   rtentry.rt_flags |= flags;</span>
+<span class='curline'><a href='../S/992.html#L136'>rtentry</a>           136 zebra/rt_ioctl.c   ret = ioctl (sock, SIOCADDRT, &amp;rtentry);</span>
+<span class='curline'><a href='../S/992.html#L170'>rtentry</a>           170 zebra/rt_ioctl.c   struct rtentry rtentry;</span>
+<span class='curline'><a href='../S/992.html#L176'>rtentry</a>           176 zebra/rt_ioctl.c   memset (&amp;rtentry, 0, sizeof (struct rtentry));</span>
+<span class='curline'><a href='../S/992.html#L188'>rtentry</a>           188 zebra/rt_ioctl.c       SET_FLAG (rtentry.rt_flags, RTF_REJECT);</span>
+<span class='curline'><a href='../S/992.html#L217'>rtentry</a>           217 zebra/rt_ioctl.c 		  rtentry.rt_flags |= RTF_GATEWAY;</span>
+<span class='curline'><a href='../S/992.html#L224'>rtentry</a>           224 zebra/rt_ioctl.c 		    rtentry.rt_dev = ifp-&gt;name;</span>
+<span class='curline'><a href='../S/992.html#L239'>rtentry</a>           239 zebra/rt_ioctl.c 		  rtentry.rt_flags |= RTF_GATEWAY;</span>
+<span class='curline'><a href='../S/992.html#L246'>rtentry</a>           246 zebra/rt_ioctl.c 		    rtentry.rt_dev = ifp-&gt;name;</span>
+<span class='curline'><a href='../S/992.html#L278'>rtentry</a>           278 zebra/rt_ioctl.c   memcpy (&amp;rtentry.rt_dst, &amp;sin_dest, sizeof (struct sockaddr_in));</span>
+<span class='curline'><a href='../S/992.html#L280'>rtentry</a>           280 zebra/rt_ioctl.c   if (rtentry.rt_flags &amp; RTF_GATEWAY)</span>
+<span class='curline'><a href='../S/992.html#L281'>rtentry</a>           281 zebra/rt_ioctl.c     memcpy (&amp;rtentry.rt_gateway, &amp;sin_gate, sizeof (struct sockaddr_in));</span>
+<span class='curline'><a href='../S/992.html#L284'>rtentry</a>           284 zebra/rt_ioctl.c   memcpy (&amp;rtentry.rt_genmask, &amp;sin_mask, sizeof (struct sockaddr_in));</span>
+<span class='curline'><a href='../S/992.html#L288'>rtentry</a>           288 zebra/rt_ioctl.c   rtentry.rt_metric = rib-&gt;metric;</span>
+<span class='curline'><a href='../S/992.html#L292'>rtentry</a>           292 zebra/rt_ioctl.c     rtentry.rt_flags |= RTF_HOST;</span>
+<span class='curline'><a href='../S/992.html#L294'>rtentry</a>           294 zebra/rt_ioctl.c   rtentry.rt_flags |= RTF_UP;</span>
+<span class='curline'><a href='../S/992.html#L311'>rtentry</a>           311 zebra/rt_ioctl.c   ret = ioctl (sock, cmd, &amp;rtentry);</span>
+</pre>
+</body>
+</html>

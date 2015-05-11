@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_flags.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_flags.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/133.html' title='Multiple included from 24 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_flags.h</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             Routines for manipulation of SSN and SRM flags</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#ifndef</em> <a href='../S/497.html#L25' title='Defined at 25 in isisd/isis_flags.h.'>_ZEBRA_ISIS_FLAGS_H</a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../S/497.html#L24' title='Referred from 24 in isisd/isis_flags.h.'>_ZEBRA_ISIS_FLAGS_H</a>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='comment'>/* The grand plan is to support 1024 circuits so we have 32*32 bit flags</em>
+<a id='L28' name='L28'></a><em class='comment'> * the support will be achived using the newest drafts */</em>
+<a id='L29' name='L29'></a><em class='sharp'>#define</em> <a href='../R/1051.html' title='Multiple referred from 7 places.'>ISIS_MAX_CIRCUITS</a> 32 <em class='comment'>/* = 1024 */</em>
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='comment'>/*</em>
+<a id='L32' name='L32'></a><em class='comment'> * Flags structure for SSN and SRM flags</em>
+<a id='L33' name='L33'></a><em class='comment'> */</em>
+<a id='L34' name='L34'></a><strong class='reserved'>struct</strong> <a href='../R/5760.html' title='Multiple referred from 1451 places.'>flags</a>
+<a id='L35' name='L35'></a><em class='brace'>{</em>
+<a id='L36' name='L36'></a>  <strong class='reserved'>int</strong> maxindex;
+<a id='L37' name='L37'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *free_idcs;
+<a id='L38' name='L38'></a><em class='brace'>}</em>;
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>void</strong> <a href='../S/529.html#L33' title='Defined at 33 in isisd/isis_flags.c.'>flags_initialize</a> (<strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L41' name='L41'></a><strong class='reserved'>long</strong> <strong class='reserved'>int</strong> <a href='../S/529.html#L40' title='Defined at 40 in isisd/isis_flags.c.'>flags_get_index</a> (<strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L42' name='L42'></a><strong class='reserved'>void</strong> <a href='../S/529.html#L61' title='Defined at 61 in isisd/isis_flags.c.'>flags_free_index</a> (<strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <strong class='reserved'>long</strong> <strong class='reserved'>int</strong> index);
+<a id='L43' name='L43'></a><strong class='reserved'>int</strong> <a href='../S/529.html#L80' title='Defined at 80 in isisd/isis_flags.c.'>flags_any_set</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> * <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='sharp'>#define</em> <a href='../R/1068.html' title='Multiple referred from 14 places.'>ISIS_SET_FLAG</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>,C) \
+<a id='L46' name='L46'></a>        <em class='brace'>{</em> \
+<a id='L47' name='L47'></a>          <a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>[C-&gt;idx&gt;&gt;5] |= (1&lt;&lt;(C-&gt;idx &amp; 0x1F)); \
+<a id='L48' name='L48'></a>        <em class='brace'>}</em>
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><em class='sharp'>#define</em> <a href='../R/1034.html' title='Multiple referred from 13 places.'>ISIS_CLEAR_FLAG</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>,C) \
+<a id='L51' name='L51'></a>        <em class='brace'>{</em> \
+<a id='L52' name='L52'></a>          <a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>[C-&gt;idx&gt;&gt;5] &amp;= ~(1&lt;&lt;(C-&gt;idx &amp; 0x1F)); \
+<a id='L53' name='L53'></a>        <em class='brace'>}</em>
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='sharp'>#define</em> <a href='../R/1031.html' title='Multiple referred from 2 places.'>ISIS_CHECK_FLAG</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>, C)  (<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>[(C)-&gt;idx&gt;&gt;5] &amp; (1&lt;&lt;(C-&gt;idx &amp; 0x1F)))
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><em class='comment'>/* sets all u_32int_t flags to 1 */</em>
+<a id='L58' name='L58'></a><em class='sharp'>#define</em> ISIS_FLAGS_SET_ALL(FLAGS) \
+<a id='L59' name='L59'></a>        <em class='brace'>{</em> \
+<a id='L60' name='L60'></a>          memset(FLAGS,0xFF,<a href='../S/497.html#L29' title='Defined at 29 in isisd/isis_flags.h.'>ISIS_MAX_CIRCUITS</a>*4); \
+<a id='L61' name='L61'></a>        <em class='brace'>}</em>
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='sharp'>#define</em> <a href='../R/1042.html' title='Multiple referred from 5 places.'>ISIS_FLAGS_CLEAR_ALL</a>(FLAGS) \
+<a id='L64' name='L64'></a>        <em class='brace'>{</em> \
+<a id='L65' name='L65'></a>          memset(FLAGS,0x00,<a href='../S/497.html#L29' title='Defined at 29 in isisd/isis_flags.h.'>ISIS_MAX_CIRCUITS</a>*4); \
+<a id='L66' name='L66'></a>        <em class='brace'>}</em>
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_ISIS_FLAGS_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_mplsvpn.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_mplsvpn.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L36'>[^]</a><a href='#L721'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L36' title='Defined at 36.'>decode_rd_type</a></li>
+<li><a href='#L46' title='Defined at 46.'>decode_label</a></li>
+<li><a href='#L57' title='Defined at 57.'>decode_rd_as</a></li>
+<li><a href='#L69' title='Defined at 69.'>decode_rd_ip</a></li>
+<li><a href='#L79' title='Defined at 79.'>bgp_nlri_parse_vpnv4</a></li>
+<li><a href='#L174' title='Defined at 174.'>str2prefix_rd</a></li>
+<li><a href='#L230' title='Defined at 230.'>str2tag</a></li>
+<li><a href='#L255' title='Defined at 255.'>prefix_rd2str</a></li>
+<li><a href='#L286' title='Defined at 286.'>DEFUN</a></li>
+<li><a href='#L300' title='Defined at 300.'>DEFUN</a></li>
+<li><a href='#L315' title='Defined at 315.'>show_adj_route_vpn</a></li>
+<li><a href='#L409' title='Defined at 409.'>bgp_show_mpls_vpn</a></li>
+<li><a href='#L502' title='Defined at 502.'>DEFUN</a></li>
+<li><a href='#L514' title='Defined at 514.'>DEFUN</a></li>
+<li><a href='#L536' title='Defined at 536.'>DEFUN</a></li>
+<li><a href='#L549' title='Defined at 549.'>DEFUN</a></li>
+<li><a href='#L572' title='Defined at 572.'>DEFUN</a></li>
+<li><a href='#L605' title='Defined at 605.'>DEFUN</a></li>
+<li><a href='#L647' title='Defined at 647.'>DEFUN</a></li>
+<li><a href='#L679' title='Defined at 679.'>DEFUN</a></li>
+<li><a href='#L721' title='Defined at 721.'>bgp_mplsvpn_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* MPLS-VPN</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 2000 Kunihiro Ishiguro &lt;kunihiro@zebra.org&gt;</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='646.html'>bgpd/bgp_table.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='609.html'>bgpd/bgp_route.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='642.html'>bgpd/bgp_attr.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='612.html'>bgpd/bgp_mplsvpn.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><strong class='reserved'>static</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>
+<a id='L36' name='L36'></a><a href='../R/5516.html' title='Multiple referred from 4 places.'>decode_rd_type</a> (u_char *pnt)
+<a id='L37' name='L37'></a><em class='brace'>{</em>
+<a id='L38' name='L38'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> v;
+<a id='L39' name='L39'></a>  
+<a id='L40' name='L40'></a>  v = ((<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>) *pnt++ &lt;&lt; 8);
+<a id='L41' name='L41'></a>  v |= (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>) *pnt;
+<a id='L42' name='L42'></a>  <strong class='reserved'>return</strong> v;
+<a id='L43' name='L43'></a><em class='brace'>}</em>
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>
+<a id='L46' name='L46'></a><a href='../R/5513.html' title='Multiple referred from 4 places.'>decode_label</a> (u_char *pnt)
+<a id='L47' name='L47'></a><em class='brace'>{</em>
+<a id='L48' name='L48'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> l;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>  l = ((<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) *pnt++ &lt;&lt; 12);
+<a id='L51' name='L51'></a>  l |= (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) *pnt++ &lt;&lt; 4;
+<a id='L52' name='L52'></a>  l |= (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) ((*pnt &amp; 0xf0) &gt;&gt; 4);
+<a id='L53' name='L53'></a>  <strong class='reserved'>return</strong> l;
+<a id='L54' name='L54'></a><em class='brace'>}</em>
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L57' name='L57'></a><a href='../R/5514.html' title='Multiple referred from 4 places.'>decode_rd_as</a> (u_char *pnt, <strong class='reserved'>struct</strong> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a> *<a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>)
+<a id='L58' name='L58'></a><em class='brace'>{</em>
+<a id='L59' name='L59'></a>  <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>-&gt;as = (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>) *pnt++ &lt;&lt; 8;
+<a id='L60' name='L60'></a>  <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>-&gt;as |= (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>) *pnt++;
+<a id='L61' name='L61'></a>  
+<a id='L62' name='L62'></a>  <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>-&gt;val = ((<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) *pnt++ &lt;&lt; 24);
+<a id='L63' name='L63'></a>  <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>-&gt;val |= ((<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) *pnt++ &lt;&lt; 16);
+<a id='L64' name='L64'></a>  <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>-&gt;val |= ((<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) *pnt++ &lt;&lt; 8);
+<a id='L65' name='L65'></a>  <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>-&gt;val |= (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) *pnt;
+<a id='L66' name='L66'></a><em class='brace'>}</em>
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L69' name='L69'></a><a href='../R/5515.html' title='Multiple referred from 4 places.'>decode_rd_ip</a> (u_char *pnt, <strong class='reserved'>struct</strong> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a> *<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>)
+<a id='L70' name='L70'></a><em class='brace'>{</em>
+<a id='L71' name='L71'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>-&gt;ip, pnt, 4);
+<a id='L72' name='L72'></a>  pnt += 4;
+<a id='L73' name='L73'></a>  
+<a id='L74' name='L74'></a>  <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>-&gt;val = ((<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>) *pnt++ &lt;&lt; 8);
+<a id='L75' name='L75'></a>  <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>-&gt;val |= (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>) *pnt;
+<a id='L76' name='L76'></a><em class='brace'>}</em>
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a><strong class='reserved'>int</strong>
+<a id='L79' name='L79'></a><a href='../R/4960.html' title='Multiple referred from 3 places.'>bgp_nlri_parse_vpnv4</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, 
+<a id='L80' name='L80'></a>                      <strong class='reserved'>struct</strong> <a href='../S/608.html#L572' title='Defined at 572 in bgpd/bgpd.h.'>bgp_nlri</a> *packet)
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a>  u_char *pnt;
+<a id='L83' name='L83'></a>  u_char *lim;
+<a id='L84' name='L84'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> p;
+<a id='L85' name='L85'></a>  <strong class='reserved'>int</strong> psize;
+<a id='L86' name='L86'></a>  <strong class='reserved'>int</strong> prefixlen;
+<a id='L87' name='L87'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> label;
+<a id='L88' name='L88'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L89' name='L89'></a>  <strong class='reserved'>struct</strong> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>;
+<a id='L90' name='L90'></a>  <strong class='reserved'>struct</strong> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>;
+<a id='L91' name='L91'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> prd;
+<a id='L92' name='L92'></a>  u_char *tagpnt;
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <em class='comment'>/* Check peer status. */</em>
+<a id='L95' name='L95'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status != <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a>)
+<a id='L96' name='L96'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L97' name='L97'></a>  
+<a id='L98' name='L98'></a>  <em class='comment'>/* Make prefix_rd */</em>
+<a id='L99' name='L99'></a>  prd.family = AF_UNSPEC;
+<a id='L100' name='L100'></a>  prd.prefixlen = 64;
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a>  pnt = packet-&gt;nlri;
+<a id='L103' name='L103'></a>  lim = pnt + packet-&gt;length;
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a>  <strong class='reserved'>for</strong> (; pnt &lt; lim; pnt += psize)
+<a id='L106' name='L106'></a>    <em class='brace'>{</em>
+<a id='L107' name='L107'></a>      <em class='comment'>/* Clear prefix structure. */</em>
+<a id='L108' name='L108'></a>      memset (&amp;p, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>));
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a>      <em class='comment'>/* Fetch prefix length. */</em>
+<a id='L111' name='L111'></a>      prefixlen = *pnt++;
+<a id='L112' name='L112'></a>      p.family = AF_INET;
+<a id='L113' name='L113'></a>      psize = <a href='../D/3540.html' title='Multiple defined in 4 places.'>PSIZE</a> (prefixlen);
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a>      <strong class='reserved'>if</strong> (prefixlen &lt; 88)
+<a id='L116' name='L116'></a>        <em class='brace'>{</em>
+<a id='L117' name='L117'></a>          zlog_err ("prefix length is less than 88: %d", prefixlen);
+<a id='L118' name='L118'></a>          <strong class='reserved'>return</strong> -1;
+<a id='L119' name='L119'></a>        <em class='brace'>}</em>
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>      label = <a href='../S/641.html#L46' title='Defined at 46 in bgpd/bgp_mplsvpn.c.'>decode_label</a> (pnt);
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>      <em class='comment'>/* Copyr label to prefix. */</em>
+<a id='L124' name='L124'></a>      tagpnt = pnt;;
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a>      <em class='comment'>/* Copy routing distinguisher to rd. */</em>
+<a id='L127' name='L127'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;prd.val, pnt + 3, 8);
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a>      <em class='comment'>/* Decode RD type. */</em>
+<a id='L130' name='L130'></a>      type = <a href='../S/641.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.c.'>decode_rd_type</a> (pnt + 3);
+<a id='L131' name='L131'></a>
+<a id='L132' name='L132'></a>      <em class='comment'>/* Decode RD value. */</em>
+<a id='L133' name='L133'></a>      <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L134' name='L134'></a>        <a href='../S/641.html#L57' title='Defined at 57 in bgpd/bgp_mplsvpn.c.'>decode_rd_as</a> (pnt + 5, &amp;<a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>);
+<a id='L135' name='L135'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L136' name='L136'></a>        <a href='../S/641.html#L69' title='Defined at 69 in bgpd/bgp_mplsvpn.c.'>decode_rd_ip</a> (pnt + 5, &amp;<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>);
+<a id='L137' name='L137'></a>      <strong class='reserved'>else</strong>
+<a id='L138' name='L138'></a>        <em class='brace'>{</em>
+<a id='L139' name='L139'></a>          zlog_err ("Invalid RD type %d", type);
+<a id='L140' name='L140'></a>          <strong class='reserved'>return</strong> -1;
+<a id='L141' name='L141'></a>        <em class='brace'>}</em>
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a>      p.prefixlen = prefixlen - 88;
+<a id='L144' name='L144'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;p.u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, pnt + 11, psize - 11);
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a><em class='sharp'>#if</em> 0
+<a id='L147' name='L147'></a>      <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L148' name='L148'></a>        zlog_info ("prefix %ld:%ld:%ld:%s/%d", label, <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.as, <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.val,
+<a id='L149' name='L149'></a>                   inet_ntoa (p.u.prefix4), p.prefixlen);
+<a id='L150' name='L150'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L151' name='L151'></a>        zlog_info ("prefix %ld:%s:%ld:%s/%d", label, inet_ntoa (<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.ip),
+<a id='L152' name='L152'></a>                   <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.val, inet_ntoa (p.u.prefix4), p.prefixlen);
+<a id='L153' name='L153'></a><em class='sharp'>#endif</em> <em class='comment'>/* 0 */</em>
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a>      <strong class='reserved'>if</strong> (pnt + psize &gt; lim)
+<a id='L156' name='L156'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a>      <strong class='reserved'>if</strong> (<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L159' name='L159'></a>        <a href='../S/620.html#L2376' title='Defined at 2376 in bgpd/bgp_route.c.'>bgp_update</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, &amp;p, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>,
+<a id='L160' name='L160'></a>                    <a href='../S/280.html#L17' title='Defined at 17 in lib/route_types.h.'>ZEBRA_ROUTE_BGP</a>, <a href='../S/609.html#L92' title='Defined at 92 in bgpd/bgp_route.h.'>BGP_ROUTE_NORMAL</a>, &amp;prd, tagpnt, 0);
+<a id='L161' name='L161'></a>      <strong class='reserved'>else</strong>
+<a id='L162' name='L162'></a>        <a href='../S/620.html#L2402' title='Defined at 2402 in bgpd/bgp_route.c.'>bgp_withdraw</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, &amp;p, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>,
+<a id='L163' name='L163'></a>                      <a href='../S/280.html#L17' title='Defined at 17 in lib/route_types.h.'>ZEBRA_ROUTE_BGP</a>, <a href='../S/609.html#L92' title='Defined at 92 in bgpd/bgp_route.h.'>BGP_ROUTE_NORMAL</a>, &amp;prd, tagpnt);
+<a id='L164' name='L164'></a>    <em class='brace'>}</em>
+<a id='L165' name='L165'></a>
+<a id='L166' name='L166'></a>  <em class='comment'>/* Packet length consistency check. */</em>
+<a id='L167' name='L167'></a>  <strong class='reserved'>if</strong> (pnt != lim)
+<a id='L168' name='L168'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L171' name='L171'></a><em class='brace'>}</em>
+<a id='L172' name='L172'></a>
+<a id='L173' name='L173'></a><strong class='reserved'>int</strong>
+<a id='L174' name='L174'></a><a href='../R/10003.html' title='Multiple referred from 10 places.'>str2prefix_rd</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> *prd)
+<a id='L175' name='L175'></a><em class='brace'>{</em>
+<a id='L176' name='L176'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L177' name='L177'></a>  <strong class='reserved'>char</strong> *p;
+<a id='L178' name='L178'></a>  <strong class='reserved'>char</strong> *p2;
+<a id='L179' name='L179'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L180' name='L180'></a>  <strong class='reserved'>char</strong> *half;
+<a id='L181' name='L181'></a>  <strong class='reserved'>struct</strong> in_addr addr;
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a>  s = <a href='../S/296.html#L90' title='Defined at 90 in lib/stream.c.'>stream_new</a> (8);
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a>  prd-&gt;family = AF_UNSPEC;
+<a id='L186' name='L186'></a>  prd-&gt;prefixlen = 64;
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a>  p = strchr (str, ':');
+<a id='L189' name='L189'></a>  <strong class='reserved'>if</strong> (! p)
+<a id='L190' name='L190'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>  <strong class='reserved'>if</strong> (! <a href='../S/250.html#L793' title='Defined at 793 in lib/prefix.c.'>all_digit</a> (p + 1))
+<a id='L193' name='L193'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a>  half = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_TMP, (p - str) + 1);
+<a id='L196' name='L196'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (half, str, (p - str));
+<a id='L197' name='L197'></a>  half[p - str] = '\0';
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>  p2 = strchr (str, '.');
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>  <strong class='reserved'>if</strong> (! p2)
+<a id='L202' name='L202'></a>    <em class='brace'>{</em>
+<a id='L203' name='L203'></a>      <strong class='reserved'>if</strong> (! <a href='../S/250.html#L793' title='Defined at 793 in lib/prefix.c.'>all_digit</a> (half))
+<a id='L204' name='L204'></a>        <em class='brace'>{</em>
+<a id='L205' name='L205'></a>          <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, half);
+<a id='L206' name='L206'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L207' name='L207'></a>        <em class='brace'>}</em>
+<a id='L208' name='L208'></a>      <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (s, <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>);
+<a id='L209' name='L209'></a>      <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (s, atoi (half));
+<a id='L210' name='L210'></a>      <a href='../S/296.html#L543' title='Defined at 543 in lib/stream.c.'>stream_putl</a> (s, atol (p + 1));
+<a id='L211' name='L211'></a>    <em class='brace'>}</em>
+<a id='L212' name='L212'></a>  <strong class='reserved'>else</strong>
+<a id='L213' name='L213'></a>    <em class='brace'>{</em>
+<a id='L214' name='L214'></a>      ret = <a href='../S/213.html#L33' title='Defined at 33 in lib/sockunion.c.'>inet_aton</a> (half, &amp;addr);
+<a id='L215' name='L215'></a>      <strong class='reserved'>if</strong> (! ret)
+<a id='L216' name='L216'></a>        <em class='brace'>{</em>
+<a id='L217' name='L217'></a>          <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, half);
+<a id='L218' name='L218'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L219' name='L219'></a>        <em class='brace'>}</em>
+<a id='L220' name='L220'></a>      <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (s, <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>);
+<a id='L221' name='L221'></a>      <a href='../S/296.html#L677' title='Defined at 677 in lib/stream.c.'>stream_put_in_addr</a> (s, &amp;addr);
+<a id='L222' name='L222'></a>      <a href='../S/296.html#L525' title='Defined at 525 in lib/stream.c.'>stream_putw</a> (s, atol (p + 1));
+<a id='L223' name='L223'></a>    <em class='brace'>}</em>
+<a id='L224' name='L224'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (prd-&gt;val, s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, 8);
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L227' name='L227'></a><em class='brace'>}</em>
+<a id='L228' name='L228'></a>
+<a id='L229' name='L229'></a><strong class='reserved'>int</strong>
+<a id='L230' name='L230'></a><a href='../R/10005.html' title='Multiple referred from 3 places.'>str2tag</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, u_char *tag)
+<a id='L231' name='L231'></a><em class='brace'>{</em>
+<a id='L232' name='L232'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> l;
+<a id='L233' name='L233'></a>  <strong class='reserved'>char</strong> *endptr;
+<a id='L234' name='L234'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> t;
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a>  <strong class='reserved'>if</strong> (*str == '-')
+<a id='L237' name='L237'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L238' name='L238'></a>  
+<a id='L239' name='L239'></a>  errno = 0;
+<a id='L240' name='L240'></a>  l = strtoul (str, &amp;endptr, 10);
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>  <strong class='reserved'>if</strong> (*endptr != '\0' || errno || l &gt; <a href='../S/191.html#L241' title='Defined at 241 in lib/zebra.h.'>UINT32_MAX</a>)
+<a id='L243' name='L243'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L244' name='L244'></a>
+<a id='L245' name='L245'></a>  t = (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>) l;
+<a id='L246' name='L246'></a>  
+<a id='L247' name='L247'></a>  tag[0] = (u_char)(t &gt;&gt; 12);
+<a id='L248' name='L248'></a>  tag[1] = (u_char)(t &gt;&gt; 4);
+<a id='L249' name='L249'></a>  tag[2] = (u_char)(t &lt;&lt; 4);
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L252' name='L252'></a><em class='brace'>}</em>
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a><strong class='reserved'>char</strong> *
+<a id='L255' name='L255'></a><a href='../R/8816.html' title='Multiple referred from 3 places.'>prefix_rd2str</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> *prd, <strong class='reserved'>char</strong> *buf, size_t size)
+<a id='L256' name='L256'></a><em class='brace'>{</em>
+<a id='L257' name='L257'></a>  u_char *pnt;
+<a id='L258' name='L258'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L259' name='L259'></a>  <strong class='reserved'>struct</strong> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>;
+<a id='L260' name='L260'></a>  <strong class='reserved'>struct</strong> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>;
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>  <strong class='reserved'>if</strong> (size &lt; <a href='../S/612.html#L27' title='Defined at 27 in bgpd/bgp_mplsvpn.h.'>RD_ADDRSTRLEN</a>)
+<a id='L263' name='L263'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a>  pnt = prd-&gt;val;
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a>  type = <a href='../S/641.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.c.'>decode_rd_type</a> (pnt);
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a>  <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L270' name='L270'></a>    <em class='brace'>{</em>
+<a id='L271' name='L271'></a>      <a href='../S/641.html#L57' title='Defined at 57 in bgpd/bgp_mplsvpn.c.'>decode_rd_as</a> (pnt + 2, &amp;<a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>);
+<a id='L272' name='L272'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, size, "%u:%d", <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.as, <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.val);
+<a id='L273' name='L273'></a>      <strong class='reserved'>return</strong> buf;
+<a id='L274' name='L274'></a>    <em class='brace'>}</em>
+<a id='L275' name='L275'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L276' name='L276'></a>    <em class='brace'>{</em>
+<a id='L277' name='L277'></a>      <a href='../S/641.html#L69' title='Defined at 69 in bgpd/bgp_mplsvpn.c.'>decode_rd_ip</a> (pnt + 2, &amp;<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>);
+<a id='L278' name='L278'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, size, "%s:%d", inet_ntoa (<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.ip), <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.val);
+<a id='L279' name='L279'></a>      <strong class='reserved'>return</strong> buf;
+<a id='L280' name='L280'></a>    <em class='brace'>}</em>
+<a id='L281' name='L281'></a>
+<a id='L282' name='L282'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L283' name='L283'></a><em class='brace'>}</em>
+<a id='L284' name='L284'></a>
+<a id='L285' name='L285'></a><em class='comment'>/* For testing purpose, static route of MPLS-VPN. */</em>
+<a id='L286' name='L286'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (vpnv4_network,
+<a id='L287' name='L287'></a>       vpnv4_network_cmd,
+<a id='L288' name='L288'></a>       "network A.B.C.D/M rd ASN:nn_or_IP-address:nn tag WORD",
+<a id='L289' name='L289'></a>       "Specify a network to announce via BGP\n"
+<a id='L290' name='L290'></a>       "IP prefix &lt;network&gt;/&lt;length&gt;, e.g., 35.0.0.0/8\n"
+<a id='L291' name='L291'></a>       "Specify Route Distinguisher\n"
+<a id='L292' name='L292'></a>       "VPN Route Distinguisher\n"
+<a id='L293' name='L293'></a>       "BGP tag\n"
+<a id='L294' name='L294'></a>       "tag value\n")
+<a id='L295' name='L295'></a><em class='brace'>{</em>
+<a id='L296' name='L296'></a>  <strong class='reserved'>return</strong> <a href='../S/620.html#L3867' title='Defined at 3867 in bgpd/bgp_route.c.'>bgp_static_set_vpnv4</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1], argv[2]);
+<a id='L297' name='L297'></a><em class='brace'>}</em>
+<a id='L298' name='L298'></a>
+<a id='L299' name='L299'></a><em class='comment'>/* For testing purpose, static route of MPLS-VPN. */</em>
+<a id='L300' name='L300'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_vpnv4_network,
+<a id='L301' name='L301'></a>       no_vpnv4_network_cmd,
+<a id='L302' name='L302'></a>       "no network A.B.C.D/M rd ASN:nn_or_IP-address:nn tag WORD",
+<a id='L303' name='L303'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L304' name='L304'></a>       "Specify a network to announce via BGP\n"
+<a id='L305' name='L305'></a>       "IP prefix &lt;network&gt;/&lt;length&gt;, e.g., 35.0.0.0/8\n"
+<a id='L306' name='L306'></a>       "Specify Route Distinguisher\n"
+<a id='L307' name='L307'></a>       "VPN Route Distinguisher\n"
+<a id='L308' name='L308'></a>       "BGP tag\n"
+<a id='L309' name='L309'></a>       "tag value\n")
+<a id='L310' name='L310'></a><em class='brace'>{</em>
+<a id='L311' name='L311'></a>  <strong class='reserved'>return</strong> <a href='../S/620.html#L3935' title='Defined at 3935 in bgpd/bgp_route.c.'>bgp_static_unset_vpnv4</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1], argv[2]);
+<a id='L312' name='L312'></a><em class='brace'>}</em>
+<a id='L313' name='L313'></a>
+<a id='L314' name='L314'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L315' name='L315'></a><a href='../R/9813.html' title='Multiple referred from 2 places.'>show_adj_route_vpn</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> *prd)
+<a id='L316' name='L316'></a><em class='brace'>{</em>
+<a id='L317' name='L317'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>;
+<a id='L318' name='L318'></a>  <strong class='reserved'>struct</strong> <a href='../S/646.html#L32' title='Defined at 32 in bgpd/bgp_table.h.'>bgp_table</a> *table;
+<a id='L319' name='L319'></a>  <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn;
+<a id='L320' name='L320'></a>  <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rm;
+<a id='L321' name='L321'></a>  <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>;
+<a id='L322' name='L322'></a>  <strong class='reserved'>int</strong> rd_header;
+<a id='L323' name='L323'></a>  <strong class='reserved'>int</strong> header = 1;
+<a id='L324' name='L324'></a>  <strong class='reserved'>char</strong> v4_header[] = "   Network          Next Hop            Metric LocPrf Weight Path%s";
+<a id='L325' name='L325'></a>
+<a id='L326' name='L326'></a>  <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> = <a href='../S/610.html#L1977' title='Defined at 1977 in bgpd/bgpd.c.'>bgp_get_default</a> ();
+<a id='L327' name='L327'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L328' name='L328'></a>    <em class='brace'>{</em>
+<a id='L329' name='L329'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "No BGP process is configured%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L330' name='L330'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L331' name='L331'></a>    <em class='brace'>}</em>
+<a id='L332' name='L332'></a>
+<a id='L333' name='L333'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/646.html#L195' title='Defined at 195 in bgpd/bgp_table.h.'>bgp_table_top</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>]); rn;
+<a id='L334' name='L334'></a>       rn = <a href='../S/646.html#L204' title='Defined at 204 in bgpd/bgp_table.h.'>bgp_route_next</a> (rn))
+<a id='L335' name='L335'></a>    <em class='brace'>{</em>
+<a id='L336' name='L336'></a>      <strong class='reserved'>if</strong> (prd &amp;&amp; <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (rn-&gt;p.u.val, prd-&gt;val, 8) != 0)
+<a id='L337' name='L337'></a>        <strong class='reserved'>continue</strong>;
+<a id='L338' name='L338'></a>
+<a id='L339' name='L339'></a>      <strong class='reserved'>if</strong> ((table = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L340' name='L340'></a>        <em class='brace'>{</em>
+<a id='L341' name='L341'></a>          rd_header = 1;
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a>          <strong class='reserved'>for</strong> (rm = <a href='../S/646.html#L195' title='Defined at 195 in bgpd/bgp_table.h.'>bgp_table_top</a> (table); rm; rm = <a href='../S/646.html#L204' title='Defined at 204 in bgpd/bgp_table.h.'>bgp_route_next</a> (rm))
+<a id='L344' name='L344'></a>            <strong class='reserved'>if</strong> ((<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = rm-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L345' name='L345'></a>              <em class='brace'>{</em>
+<a id='L346' name='L346'></a>                <strong class='reserved'>if</strong> (header)
+<a id='L347' name='L347'></a>                  <em class='brace'>{</em>
+<a id='L348' name='L348'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "BGP table version is 0, local router ID is %s%s",
+<a id='L349' name='L349'></a>                             inet_ntoa (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;router_id), <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L350' name='L350'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Status codes: s suppressed, d damped, h history, * valid, &gt; best, i - internal%s",
+<a id='L351' name='L351'></a>                             <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L352' name='L352'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Origin codes: i - IGP, e - EGP, ? - incomplete%s%s",
+<a id='L353' name='L353'></a>                             <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L354' name='L354'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, v4_header, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L355' name='L355'></a>                    header = 0;
+<a id='L356' name='L356'></a>                  <em class='brace'>}</em>
+<a id='L357' name='L357'></a>
+<a id='L358' name='L358'></a>                <strong class='reserved'>if</strong> (rd_header)
+<a id='L359' name='L359'></a>                  <em class='brace'>{</em>
+<a id='L360' name='L360'></a>                    <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L361' name='L361'></a>                    <strong class='reserved'>struct</strong> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>;
+<a id='L362' name='L362'></a>                    <strong class='reserved'>struct</strong> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>;
+<a id='L363' name='L363'></a>                    u_char *pnt;
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a>                    pnt = rn-&gt;p.u.val;
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a>                    <em class='comment'>/* Decode RD type. */</em>
+<a id='L368' name='L368'></a>                    type = <a href='../S/641.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.c.'>decode_rd_type</a> (pnt);
+<a id='L369' name='L369'></a>                    <em class='comment'>/* Decode RD value. */</em>
+<a id='L370' name='L370'></a>                    <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L371' name='L371'></a>                      <a href='../S/641.html#L57' title='Defined at 57 in bgpd/bgp_mplsvpn.c.'>decode_rd_as</a> (pnt + 2, &amp;<a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>);
+<a id='L372' name='L372'></a>                    <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L373' name='L373'></a>                      <a href='../S/641.html#L69' title='Defined at 69 in bgpd/bgp_mplsvpn.c.'>decode_rd_ip</a> (pnt + 2, &amp;<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>);
+<a id='L374' name='L374'></a>
+<a id='L375' name='L375'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Route Distinguisher: ");
+<a id='L376' name='L376'></a>
+<a id='L377' name='L377'></a>                    <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L378' name='L378'></a>                      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%u:%d", <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.as, <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.val);
+<a id='L379' name='L379'></a>                    <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L380' name='L380'></a>                      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s:%d", inet_ntoa (<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.ip), <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.val);
+<a id='L381' name='L381'></a>
+<a id='L382' name='L382'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L383' name='L383'></a>                    rd_header = 0;
+<a id='L384' name='L384'></a>                  <em class='brace'>}</em>
+<a id='L385' name='L385'></a>                <a href='../S/620.html#L5709' title='Defined at 5709 in bgpd/bgp_route.c.'>route_vty_out_tmp</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, &amp;rm-&gt;p, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, <a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>);
+<a id='L386' name='L386'></a>              <em class='brace'>}</em>
+<a id='L387' name='L387'></a>        <em class='brace'>}</em>
+<a id='L388' name='L388'></a>    <em class='brace'>}</em>
+<a id='L389' name='L389'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L390' name='L390'></a><em class='brace'>}</em>
+<a id='L391' name='L391'></a>
+<a id='L392' name='L392'></a><strong class='reserved'>enum</strong> <a href='../R/5069.html' title='Multiple referred from 9 places.'>bgp_show_type</a>
+<a id='L393' name='L393'></a><em class='brace'>{</em>
+<a id='L394' name='L394'></a>  bgp_show_type_normal,
+<a id='L395' name='L395'></a>  bgp_show_type_regexp,
+<a id='L396' name='L396'></a>  bgp_show_type_prefix_list,
+<a id='L397' name='L397'></a>  bgp_show_type_filter_list,
+<a id='L398' name='L398'></a>  bgp_show_type_neighbor,
+<a id='L399' name='L399'></a>  bgp_show_type_cidr_only,
+<a id='L400' name='L400'></a>  bgp_show_type_prefix_longer,
+<a id='L401' name='L401'></a>  bgp_show_type_community_all,
+<a id='L402' name='L402'></a>  bgp_show_type_community,
+<a id='L403' name='L403'></a>  bgp_show_type_community_exact,
+<a id='L404' name='L404'></a>  bgp_show_type_community_list,
+<a id='L405' name='L405'></a>  bgp_show_type_community_list_exact
+<a id='L406' name='L406'></a><em class='brace'>}</em>;
+<a id='L407' name='L407'></a>
+<a id='L408' name='L408'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L409' name='L409'></a><a href='../R/5052.html' title='Multiple referred from 6 places.'>bgp_show_mpls_vpn</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> *prd, <strong class='reserved'>enum</strong> <a href='../D/5808.html' title='Multiple defined in 2 places.'>bgp_show_type</a> type,
+<a id='L410' name='L410'></a>                   <strong class='reserved'>void</strong> *output_arg, <strong class='reserved'>int</strong> tags)
+<a id='L411' name='L411'></a><em class='brace'>{</em>
+<a id='L412' name='L412'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>;
+<a id='L413' name='L413'></a>  <strong class='reserved'>struct</strong> <a href='../S/646.html#L32' title='Defined at 32 in bgpd/bgp_table.h.'>bgp_table</a> *table;
+<a id='L414' name='L414'></a>  <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn;
+<a id='L415' name='L415'></a>  <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rm;
+<a id='L416' name='L416'></a>  <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *ri;
+<a id='L417' name='L417'></a>  <strong class='reserved'>int</strong> rd_header;
+<a id='L418' name='L418'></a>  <strong class='reserved'>int</strong> header = 1;
+<a id='L419' name='L419'></a>  <strong class='reserved'>char</strong> v4_header[] = "   Network          Next Hop            Metric LocPrf Weight Path%s";
+<a id='L420' name='L420'></a>  <strong class='reserved'>char</strong> v4_header_tag[] = "   Network          Next Hop      In tag/Out tag%s";
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a>  <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> = <a href='../S/610.html#L1977' title='Defined at 1977 in bgpd/bgpd.c.'>bgp_get_default</a> ();
+<a id='L423' name='L423'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L424' name='L424'></a>    <em class='brace'>{</em>
+<a id='L425' name='L425'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "No BGP process is configured%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L426' name='L426'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L427' name='L427'></a>    <em class='brace'>}</em>
+<a id='L428' name='L428'></a>  
+<a id='L429' name='L429'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/646.html#L195' title='Defined at 195 in bgpd/bgp_table.h.'>bgp_table_top</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>]); rn; rn = <a href='../S/646.html#L204' title='Defined at 204 in bgpd/bgp_table.h.'>bgp_route_next</a> (rn))
+<a id='L430' name='L430'></a>    <em class='brace'>{</em>
+<a id='L431' name='L431'></a>      <strong class='reserved'>if</strong> (prd &amp;&amp; <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (rn-&gt;p.u.val, prd-&gt;val, 8) != 0)
+<a id='L432' name='L432'></a>        <strong class='reserved'>continue</strong>;
+<a id='L433' name='L433'></a>
+<a id='L434' name='L434'></a>      <strong class='reserved'>if</strong> ((table = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L435' name='L435'></a>        <em class='brace'>{</em>
+<a id='L436' name='L436'></a>          rd_header = 1;
+<a id='L437' name='L437'></a>
+<a id='L438' name='L438'></a>          <strong class='reserved'>for</strong> (rm = <a href='../S/646.html#L195' title='Defined at 195 in bgpd/bgp_table.h.'>bgp_table_top</a> (table); rm; rm = <a href='../S/646.html#L204' title='Defined at 204 in bgpd/bgp_table.h.'>bgp_route_next</a> (rm))
+<a id='L439' name='L439'></a>            <strong class='reserved'>for</strong> (ri = rm-&gt;info; ri; ri = ri-&gt;next)
+<a id='L440' name='L440'></a>              <em class='brace'>{</em>
+<a id='L441' name='L441'></a>                <strong class='reserved'>if</strong> (type == bgp_show_type_neighbor)
+<a id='L442' name='L442'></a>                  <em class='brace'>{</em>
+<a id='L443' name='L443'></a>                    <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> *su = output_arg;
+<a id='L444' name='L444'></a>
+<a id='L445' name='L445'></a>                    <strong class='reserved'>if</strong> (ri-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_remote == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || ! <a href='../S/213.html#L555' title='Defined at 555 in lib/sockunion.c.'>sockunion_same</a>(ri-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_remote, su))
+<a id='L446' name='L446'></a>                      <strong class='reserved'>continue</strong>;
+<a id='L447' name='L447'></a>                  <em class='brace'>}</em>
+<a id='L448' name='L448'></a>                <strong class='reserved'>if</strong> (header)
+<a id='L449' name='L449'></a>                  <em class='brace'>{</em>
+<a id='L450' name='L450'></a>                    <strong class='reserved'>if</strong> (tags)
+<a id='L451' name='L451'></a>                      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, v4_header_tag, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L452' name='L452'></a>                    <strong class='reserved'>else</strong>
+<a id='L453' name='L453'></a>                      <em class='brace'>{</em>
+<a id='L454' name='L454'></a>                        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "BGP table version is 0, local router ID is %s%s",
+<a id='L455' name='L455'></a>                                 inet_ntoa (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;router_id), <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L456' name='L456'></a>                        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Status codes: s suppressed, d damped, h history, * valid, &gt; best, i - internal%s",
+<a id='L457' name='L457'></a>                                 <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L458' name='L458'></a>                        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Origin codes: i - IGP, e - EGP, ? - incomplete%s%s",
+<a id='L459' name='L459'></a>                                 <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L460' name='L460'></a>                        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, v4_header, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L461' name='L461'></a>                      <em class='brace'>}</em>
+<a id='L462' name='L462'></a>                    header = 0;
+<a id='L463' name='L463'></a>                  <em class='brace'>}</em>
+<a id='L464' name='L464'></a>
+<a id='L465' name='L465'></a>                <strong class='reserved'>if</strong> (rd_header)
+<a id='L466' name='L466'></a>                  <em class='brace'>{</em>
+<a id='L467' name='L467'></a>                    <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L468' name='L468'></a>                    <strong class='reserved'>struct</strong> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a> <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>;
+<a id='L469' name='L469'></a>                    <strong class='reserved'>struct</strong> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a> <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>;
+<a id='L470' name='L470'></a>                    u_char *pnt;
+<a id='L471' name='L471'></a>
+<a id='L472' name='L472'></a>                    pnt = rn-&gt;p.u.val;
+<a id='L473' name='L473'></a>
+<a id='L474' name='L474'></a>                    <em class='comment'>/* Decode RD type. */</em>
+<a id='L475' name='L475'></a>                    type = <a href='../S/641.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.c.'>decode_rd_type</a> (pnt);
+<a id='L476' name='L476'></a>                    <em class='comment'>/* Decode RD value. */</em>
+<a id='L477' name='L477'></a>                    <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L478' name='L478'></a>                      <a href='../S/641.html#L57' title='Defined at 57 in bgpd/bgp_mplsvpn.c.'>decode_rd_as</a> (pnt + 2, &amp;<a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>);
+<a id='L479' name='L479'></a>                    <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L480' name='L480'></a>                      <a href='../S/641.html#L69' title='Defined at 69 in bgpd/bgp_mplsvpn.c.'>decode_rd_ip</a> (pnt + 2, &amp;<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>);
+<a id='L481' name='L481'></a>
+<a id='L482' name='L482'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Route Distinguisher: ");
+<a id='L483' name='L483'></a>
+<a id='L484' name='L484'></a>                    <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L24' title='Defined at 24 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_AS</a>)
+<a id='L485' name='L485'></a>                      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%u:%d", <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.as, <a href='../S/612.html#L29' title='Defined at 29 in bgpd/bgp_mplsvpn.h.'>rd_as</a>.val);
+<a id='L486' name='L486'></a>                    <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../S/612.html#L25' title='Defined at 25 in bgpd/bgp_mplsvpn.h.'>RD_TYPE_IP</a>)
+<a id='L487' name='L487'></a>                      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s:%d", inet_ntoa (<a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.ip), <a href='../S/612.html#L36' title='Defined at 36 in bgpd/bgp_mplsvpn.h.'>rd_ip</a>.val);
+<a id='L488' name='L488'></a>                  
+<a id='L489' name='L489'></a>                    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);             
+<a id='L490' name='L490'></a>                    rd_header = 0;
+<a id='L491' name='L491'></a>                  <em class='brace'>}</em>
+<a id='L492' name='L492'></a>                <strong class='reserved'>if</strong> (tags)
+<a id='L493' name='L493'></a>                  <a href='../S/620.html#L5774' title='Defined at 5774 in bgpd/bgp_route.c.'>route_vty_out_tag</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, &amp;rm-&gt;p, ri, 0, <a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>);
+<a id='L494' name='L494'></a>                <strong class='reserved'>else</strong>
+<a id='L495' name='L495'></a>                  <a href='../S/620.html#L5642' title='Defined at 5642 in bgpd/bgp_route.c.'>route_vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, &amp;rm-&gt;p, ri, 0, <a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>);
+<a id='L496' name='L496'></a>              <em class='brace'>}</em>
+<a id='L497' name='L497'></a>        <em class='brace'>}</em>
+<a id='L498' name='L498'></a>    <em class='brace'>}</em>
+<a id='L499' name='L499'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L500' name='L500'></a><em class='brace'>}</em>
+<a id='L501' name='L501'></a>
+<a id='L502' name='L502'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_all,
+<a id='L503' name='L503'></a>       show_ip_bgp_vpnv4_all_cmd,
+<a id='L504' name='L504'></a>       "show ip bgp vpnv4 all",
+<a id='L505' name='L505'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L506' name='L506'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L507' name='L507'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L508' name='L508'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L509' name='L509'></a>       "Display information about all VPNv4 NLRIs\n")
+<a id='L510' name='L510'></a><em class='brace'>{</em>
+<a id='L511' name='L511'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L409' title='Defined at 409 in bgpd/bgp_mplsvpn.c.'>bgp_show_mpls_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, bgp_show_type_normal, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L512' name='L512'></a><em class='brace'>}</em>
+<a id='L513' name='L513'></a>
+<a id='L514' name='L514'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_rd,
+<a id='L515' name='L515'></a>       show_ip_bgp_vpnv4_rd_cmd,
+<a id='L516' name='L516'></a>       "show ip bgp vpnv4 rd ASN:nn_or_IP-address:nn",
+<a id='L517' name='L517'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L518' name='L518'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L519' name='L519'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L520' name='L520'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L521' name='L521'></a>       "Display information for a route distinguisher\n"
+<a id='L522' name='L522'></a>       "VPN Route Distinguisher\n")
+<a id='L523' name='L523'></a><em class='brace'>{</em>
+<a id='L524' name='L524'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L525' name='L525'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> prd;
+<a id='L526' name='L526'></a>
+<a id='L527' name='L527'></a>  ret = <a href='../S/641.html#L174' title='Defined at 174 in bgpd/bgp_mplsvpn.c.'>str2prefix_rd</a> (argv[0], &amp;prd);
+<a id='L528' name='L528'></a>  <strong class='reserved'>if</strong> (! ret)
+<a id='L529' name='L529'></a>    <em class='brace'>{</em>
+<a id='L530' name='L530'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Malformed Route Distinguisher%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L531' name='L531'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L532' name='L532'></a>    <em class='brace'>}</em>
+<a id='L533' name='L533'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L409' title='Defined at 409 in bgpd/bgp_mplsvpn.c.'>bgp_show_mpls_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, &amp;prd, bgp_show_type_normal, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L534' name='L534'></a><em class='brace'>}</em>
+<a id='L535' name='L535'></a>
+<a id='L536' name='L536'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_all_tags,
+<a id='L537' name='L537'></a>       show_ip_bgp_vpnv4_all_tags_cmd,
+<a id='L538' name='L538'></a>       "show ip bgp vpnv4 all tags",
+<a id='L539' name='L539'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L540' name='L540'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L541' name='L541'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L542' name='L542'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L543' name='L543'></a>       "Display information about all VPNv4 NLRIs\n"
+<a id='L544' name='L544'></a>       "Display BGP tags for prefixes\n")
+<a id='L545' name='L545'></a><em class='brace'>{</em>
+<a id='L546' name='L546'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L409' title='Defined at 409 in bgpd/bgp_mplsvpn.c.'>bgp_show_mpls_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, bgp_show_type_normal, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>,  1);
+<a id='L547' name='L547'></a><em class='brace'>}</em>
+<a id='L548' name='L548'></a>
+<a id='L549' name='L549'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_rd_tags,
+<a id='L550' name='L550'></a>       show_ip_bgp_vpnv4_rd_tags_cmd,
+<a id='L551' name='L551'></a>       "show ip bgp vpnv4 rd ASN:nn_or_IP-address:nn tags",
+<a id='L552' name='L552'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L553' name='L553'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L554' name='L554'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L555' name='L555'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L556' name='L556'></a>       "Display information for a route distinguisher\n"
+<a id='L557' name='L557'></a>       "VPN Route Distinguisher\n"
+<a id='L558' name='L558'></a>       "Display BGP tags for prefixes\n")
+<a id='L559' name='L559'></a><em class='brace'>{</em>
+<a id='L560' name='L560'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L561' name='L561'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> prd;
+<a id='L562' name='L562'></a>
+<a id='L563' name='L563'></a>  ret = <a href='../S/641.html#L174' title='Defined at 174 in bgpd/bgp_mplsvpn.c.'>str2prefix_rd</a> (argv[0], &amp;prd);
+<a id='L564' name='L564'></a>  <strong class='reserved'>if</strong> (! ret)
+<a id='L565' name='L565'></a>    <em class='brace'>{</em>
+<a id='L566' name='L566'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Malformed Route Distinguisher%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L567' name='L567'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L568' name='L568'></a>    <em class='brace'>}</em>
+<a id='L569' name='L569'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L409' title='Defined at 409 in bgpd/bgp_mplsvpn.c.'>bgp_show_mpls_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, &amp;prd, bgp_show_type_normal, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 1);
+<a id='L570' name='L570'></a><em class='brace'>}</em>
+<a id='L571' name='L571'></a>
+<a id='L572' name='L572'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_all_neighbor_routes,
+<a id='L573' name='L573'></a>       show_ip_bgp_vpnv4_all_neighbor_routes_cmd,
+<a id='L574' name='L574'></a>       "show ip bgp vpnv4 all neighbors A.B.C.D routes",
+<a id='L575' name='L575'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L576' name='L576'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L577' name='L577'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L578' name='L578'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L579' name='L579'></a>       "Display information about all VPNv4 NLRIs\n"
+<a id='L580' name='L580'></a>       "Detailed information on TCP and BGP neighbor connections\n"
+<a id='L581' name='L581'></a>       "Neighbor to display information about\n"
+<a id='L582' name='L582'></a>       "Display routes learned from neighbor\n")
+<a id='L583' name='L583'></a><em class='brace'>{</em>
+<a id='L584' name='L584'></a>  <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> su;
+<a id='L585' name='L585'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L586' name='L586'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L587' name='L587'></a>
+<a id='L588' name='L588'></a>  ret = <a href='../S/213.html#L136' title='Defined at 136 in lib/sockunion.c.'>str2sockunion</a> (argv[0], &amp;su);
+<a id='L589' name='L589'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L590' name='L590'></a>    <em class='brace'>{</em>
+<a id='L591' name='L591'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Malformed address: %s%s", argv[0], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L592' name='L592'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L593' name='L593'></a>    <em class='brace'>}</em>
+<a id='L594' name='L594'></a>
+<a id='L595' name='L595'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L2165' title='Defined at 2165 in bgpd/bgpd.c.'>peer_lookup</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, &amp;su);
+<a id='L596' name='L596'></a>  <strong class='reserved'>if</strong> (! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> || ! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>])
+<a id='L597' name='L597'></a>    <em class='brace'>{</em>
+<a id='L598' name='L598'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% No such neighbor or address family%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L599' name='L599'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L600' name='L600'></a>    <em class='brace'>}</em>
+<a id='L601' name='L601'></a>
+<a id='L602' name='L602'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L409' title='Defined at 409 in bgpd/bgp_mplsvpn.c.'>bgp_show_mpls_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, bgp_show_type_neighbor, &amp;su, 0);
+<a id='L603' name='L603'></a><em class='brace'>}</em>
+<a id='L604' name='L604'></a>
+<a id='L605' name='L605'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_rd_neighbor_routes,
+<a id='L606' name='L606'></a>       show_ip_bgp_vpnv4_rd_neighbor_routes_cmd,
+<a id='L607' name='L607'></a>       "show ip bgp vpnv4 rd ASN:nn_or_IP-address:nn neighbors A.B.C.D routes",
+<a id='L608' name='L608'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L609' name='L609'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L610' name='L610'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L611' name='L611'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L612' name='L612'></a>       "Display information for a route distinguisher\n"
+<a id='L613' name='L613'></a>       "VPN Route Distinguisher\n"
+<a id='L614' name='L614'></a>       "Detailed information on TCP and BGP neighbor connections\n"
+<a id='L615' name='L615'></a>       "Neighbor to display information about\n"
+<a id='L616' name='L616'></a>       "Display routes learned from neighbor\n")
+<a id='L617' name='L617'></a><em class='brace'>{</em>
+<a id='L618' name='L618'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L619' name='L619'></a>  <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> su;
+<a id='L620' name='L620'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L621' name='L621'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> prd;
+<a id='L622' name='L622'></a>
+<a id='L623' name='L623'></a>  ret = <a href='../S/641.html#L174' title='Defined at 174 in bgpd/bgp_mplsvpn.c.'>str2prefix_rd</a> (argv[0], &amp;prd);
+<a id='L624' name='L624'></a>  <strong class='reserved'>if</strong> (! ret)
+<a id='L625' name='L625'></a>    <em class='brace'>{</em>
+<a id='L626' name='L626'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Malformed Route Distinguisher%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L627' name='L627'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L628' name='L628'></a>    <em class='brace'>}</em>
+<a id='L629' name='L629'></a>
+<a id='L630' name='L630'></a>  ret = <a href='../S/213.html#L136' title='Defined at 136 in lib/sockunion.c.'>str2sockunion</a> (argv[1], &amp;su);
+<a id='L631' name='L631'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L632' name='L632'></a>    <em class='brace'>{</em>
+<a id='L633' name='L633'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Malformed address: %s%s", argv[0], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L634' name='L634'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L635' name='L635'></a>    <em class='brace'>}</em>
+<a id='L636' name='L636'></a>
+<a id='L637' name='L637'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L2165' title='Defined at 2165 in bgpd/bgpd.c.'>peer_lookup</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, &amp;su);
+<a id='L638' name='L638'></a>  <strong class='reserved'>if</strong> (! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> || ! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>])
+<a id='L639' name='L639'></a>    <em class='brace'>{</em>
+<a id='L640' name='L640'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% No such neighbor or address family%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L641' name='L641'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L642' name='L642'></a>    <em class='brace'>}</em>
+<a id='L643' name='L643'></a>
+<a id='L644' name='L644'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L409' title='Defined at 409 in bgpd/bgp_mplsvpn.c.'>bgp_show_mpls_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, &amp;prd, bgp_show_type_neighbor, &amp;su, 0);
+<a id='L645' name='L645'></a><em class='brace'>}</em>
+<a id='L646' name='L646'></a>
+<a id='L647' name='L647'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_all_neighbor_advertised_routes,
+<a id='L648' name='L648'></a>       show_ip_bgp_vpnv4_all_neighbor_advertised_routes_cmd,
+<a id='L649' name='L649'></a>       "show ip bgp vpnv4 all neighbors A.B.C.D advertised-routes",
+<a id='L650' name='L650'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L651' name='L651'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L652' name='L652'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L653' name='L653'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L654' name='L654'></a>       "Display information about all VPNv4 NLRIs\n"
+<a id='L655' name='L655'></a>       "Detailed information on TCP and BGP neighbor connections\n"
+<a id='L656' name='L656'></a>       "Neighbor to display information about\n"
+<a id='L657' name='L657'></a>       "Display the routes advertised to a BGP neighbor\n")
+<a id='L658' name='L658'></a><em class='brace'>{</em>
+<a id='L659' name='L659'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L660' name='L660'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L661' name='L661'></a>  <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> su;
+<a id='L662' name='L662'></a>
+<a id='L663' name='L663'></a>  ret = <a href='../S/213.html#L136' title='Defined at 136 in lib/sockunion.c.'>str2sockunion</a> (argv[0], &amp;su);
+<a id='L664' name='L664'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L665' name='L665'></a>    <em class='brace'>{</em>
+<a id='L666' name='L666'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Malformed address: %s%s", argv[0], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L667' name='L667'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L668' name='L668'></a>    <em class='brace'>}</em>
+<a id='L669' name='L669'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L2165' title='Defined at 2165 in bgpd/bgpd.c.'>peer_lookup</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, &amp;su);
+<a id='L670' name='L670'></a>  <strong class='reserved'>if</strong> (! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> || ! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>])
+<a id='L671' name='L671'></a>    <em class='brace'>{</em>
+<a id='L672' name='L672'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% No such neighbor or address family%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L673' name='L673'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L674' name='L674'></a>    <em class='brace'>}</em>
+<a id='L675' name='L675'></a>
+<a id='L676' name='L676'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L315' title='Defined at 315 in bgpd/bgp_mplsvpn.c.'>show_adj_route_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L677' name='L677'></a><em class='brace'>}</em>
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (show_ip_bgp_vpnv4_rd_neighbor_advertised_routes,
+<a id='L680' name='L680'></a>       show_ip_bgp_vpnv4_rd_neighbor_advertised_routes_cmd,
+<a id='L681' name='L681'></a>       "show ip bgp vpnv4 rd ASN:nn_or_IP-address:nn neighbors A.B.C.D advertised-routes",
+<a id='L682' name='L682'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L683' name='L683'></a>       <a href='../S/214.html#L284' title='Defined at 284 in lib/command.h.'>IP_STR</a>
+<a id='L684' name='L684'></a>       <a href='../S/214.html#L290' title='Defined at 290 in lib/command.h.'>BGP_STR</a>
+<a id='L685' name='L685'></a>       "Display VPNv4 NLRI specific information\n"
+<a id='L686' name='L686'></a>       "Display information for a route distinguisher\n"
+<a id='L687' name='L687'></a>       "VPN Route Distinguisher\n"
+<a id='L688' name='L688'></a>       "Detailed information on TCP and BGP neighbor connections\n"
+<a id='L689' name='L689'></a>       "Neighbor to display information about\n"
+<a id='L690' name='L690'></a>       "Display the routes advertised to a BGP neighbor\n")
+<a id='L691' name='L691'></a><em class='brace'>{</em>
+<a id='L692' name='L692'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L693' name='L693'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L694' name='L694'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> prd;
+<a id='L695' name='L695'></a>  <strong class='reserved'>union</strong> <a href='../D/10852.html' title='Multiple defined in 2 places.'>sockunion</a> su;
+<a id='L696' name='L696'></a>
+<a id='L697' name='L697'></a>  ret = <a href='../S/213.html#L136' title='Defined at 136 in lib/sockunion.c.'>str2sockunion</a> (argv[1], &amp;su);
+<a id='L698' name='L698'></a>  <strong class='reserved'>if</strong> (ret &lt; 0)
+<a id='L699' name='L699'></a>    <em class='brace'>{</em>
+<a id='L700' name='L700'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Malformed address: %s%s", argv[0], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L701' name='L701'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L702' name='L702'></a>    <em class='brace'>}</em>
+<a id='L703' name='L703'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L2165' title='Defined at 2165 in bgpd/bgpd.c.'>peer_lookup</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, &amp;su);
+<a id='L704' name='L704'></a>  <strong class='reserved'>if</strong> (! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> || ! <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>])
+<a id='L705' name='L705'></a>    <em class='brace'>{</em>
+<a id='L706' name='L706'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% No such neighbor or address family%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L707' name='L707'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L708' name='L708'></a>    <em class='brace'>}</em>
+<a id='L709' name='L709'></a>
+<a id='L710' name='L710'></a>  ret = <a href='../S/641.html#L174' title='Defined at 174 in bgpd/bgp_mplsvpn.c.'>str2prefix_rd</a> (argv[0], &amp;prd);
+<a id='L711' name='L711'></a>  <strong class='reserved'>if</strong> (! ret)
+<a id='L712' name='L712'></a>    <em class='brace'>{</em>
+<a id='L713' name='L713'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Malformed Route Distinguisher%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L714' name='L714'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L715' name='L715'></a>    <em class='brace'>}</em>
+<a id='L716' name='L716'></a>
+<a id='L717' name='L717'></a>  <strong class='reserved'>return</strong> <a href='../S/641.html#L315' title='Defined at 315 in bgpd/bgp_mplsvpn.c.'>show_adj_route_vpn</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, &amp;prd);
+<a id='L718' name='L718'></a><em class='brace'>}</em>
+<a id='L719' name='L719'></a>
+<a id='L720' name='L720'></a><strong class='reserved'>void</strong>
+<a id='L721' name='L721'></a><a href='../R/4946.html' title='Multiple referred from 2 places.'>bgp_mplsvpn_init</a> (<strong class='reserved'>void</strong>)
+<a id='L722' name='L722'></a><em class='brace'>{</em>
+<a id='L723' name='L723'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (BGP_VPNV4_NODE, &amp;vpnv4_network_cmd);
+<a id='L724' name='L724'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (BGP_VPNV4_NODE, &amp;no_vpnv4_network_cmd);
+<a id='L725' name='L725'></a>
+<a id='L726' name='L726'></a>
+<a id='L727' name='L727'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_all_cmd);
+<a id='L728' name='L728'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_rd_cmd);
+<a id='L729' name='L729'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_all_tags_cmd);
+<a id='L730' name='L730'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_rd_tags_cmd);
+<a id='L731' name='L731'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_all_neighbor_routes_cmd);
+<a id='L732' name='L732'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_rd_neighbor_routes_cmd);
+<a id='L733' name='L733'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_all_neighbor_advertised_routes_cmd);
+<a id='L734' name='L734'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_ip_bgp_vpnv4_rd_neighbor_advertised_routes_cmd);
+<a id='L735' name='L735'></a>
+<a id='L736' name='L736'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_all_cmd);
+<a id='L737' name='L737'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_rd_cmd);
+<a id='L738' name='L738'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_all_tags_cmd);
+<a id='L739' name='L739'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_rd_tags_cmd);
+<a id='L740' name='L740'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_all_neighbor_routes_cmd);
+<a id='L741' name='L741'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_rd_neighbor_routes_cmd);
+<a id='L742' name='L742'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_all_neighbor_advertised_routes_cmd);
+<a id='L743' name='L743'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_ip_bgp_vpnv4_rd_neighbor_advertised_routes_cmd);
+<a id='L744' name='L744'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L36'>[^]</a><a href='#L721'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

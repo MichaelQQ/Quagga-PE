@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_dr.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_dr.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/127.html' title='Multiple included from 6 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_dr.h</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             IS-IS designated router related routines   </em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#ifndef</em> <a href='../S/508.html#L25' title='Defined at 25 in isisd/isis_dr.h.'>_ZEBRA_ISIS_DR_H</a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../S/508.html#L24' title='Referred from 24 in isisd/isis_dr.h.'>_ZEBRA_ISIS_DR_H</a>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>int</strong> <a href='../S/517.html#L69' title='Defined at 69 in isisd/isis_dr.c.'>isis_run_dr_l1</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L28' name='L28'></a><strong class='reserved'>int</strong> <a href='../S/517.html#L86' title='Defined at 86 in isisd/isis_dr.c.'>isis_run_dr_l2</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L29' name='L29'></a><strong class='reserved'>int</strong> <a href='../S/517.html#L127' title='Defined at 127 in isisd/isis_dr.c.'>isis_dr_elect</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level);
+<a id='L30' name='L30'></a><strong class='reserved'>int</strong> <a href='../S/517.html#L239' title='Defined at 239 in isisd/isis_dr.c.'>isis_dr_resign</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level);
+<a id='L31' name='L31'></a><strong class='reserved'>int</strong> <a href='../S/517.html#L301' title='Defined at 301 in isisd/isis_dr.c.'>isis_dr_commence</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level);
+<a id='L32' name='L32'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/517.html#L51' title='Defined at 51 in isisd/isis_dr.c.'>isis_disflag2string</a> (<strong class='reserved'>int</strong> disflag);
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><strong class='reserved'>enum</strong> isis_dis_state
+<a id='L35' name='L35'></a><em class='brace'>{</em>
+<a id='L36' name='L36'></a>  ISIS_IS_NOT_DIS,
+<a id='L37' name='L37'></a>  ISIS_IS_DIS,
+<a id='L38' name='L38'></a>  ISIS_WAS_DIS,
+<a id='L39' name='L39'></a>  ISIS_UNKNOWN_DIS
+<a id='L40' name='L40'></a><em class='brace'>}</em>;
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_ISIS_DR_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

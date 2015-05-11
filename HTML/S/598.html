@@ -1,0 +1,456 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ripd/rip_offset.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1030.html'>ripd</a>/rip_offset.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L52'>[^]</a><a href='#L377'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L52' title='Defined at 52.'>strcmp_safe</a></li>
+<li><a href='#L64' title='Defined at 64.'>rip_offset_list_new</a></li>
+<li><a href='#L70' title='Defined at 70.'>rip_offset_list_free</a></li>
+<li><a href='#L76' title='Defined at 76.'>rip_offset_list_lookup</a></li>
+<li><a href='#L90' title='Defined at 90.'>rip_offset_list_get</a></li>
+<li><a href='#L107' title='Defined at 107.'>rip_offset_list_set</a></li>
+<li><a href='#L145' title='Defined at 145.'>rip_offset_list_unset</a></li>
+<li><a href='#L206' title='Defined at 206.'>rip_offset_list_apply_in</a></li>
+<li><a href='#L245' title='Defined at 245.'>rip_offset_list_apply_out</a></li>
+<li><a href='#L283' title='Defined at 283.'>DEFUN</a></li>
+<li><a href='#L295' title='Defined at 295.'>DEFUN</a></li>
+<li><a href='#L308' title='Defined at 308.'>DEFUN</a></li>
+<li><a href='#L321' title='Defined at 321.'>DEFUN</a></li>
+<li><a href='#L336' title='Defined at 336.'>offset_list_cmp</a></li>
+<li><a href='#L342' title='Defined at 342.'>offset_list_del</a></li>
+<li><a href='#L354' title='Defined at 354.'>rip_offset_init</a></li>
+<li><a href='#L367' title='Defined at 367.'>rip_offset_clean</a></li>
+<li><a href='#L377' title='Defined at 377.'>config_write_rip_offset_list</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* RIP offset-list</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2000 Kunihiro Ishiguro &lt;kunihiro@zebra.org&gt;</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='199.html'>filter.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='593.html'>ripd/ripd.h</a>"
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><em class='sharp'>#define</em> <a href='../R/3287.html' title='Multiple referred from 11 places.'>RIP_OFFSET_LIST_IN</a>  0
+<a id='L34' name='L34'></a><em class='sharp'>#define</em> <a href='../R/3289.html' title='Multiple referred from 11 places.'>RIP_OFFSET_LIST_OUT</a> 1
+<a id='L35' name='L35'></a><em class='sharp'>#define</em> <a href='../S/598.html#L46' title='Referred from 46 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_MAX</a> 2
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><strong class='reserved'>struct</strong> <a href='../R/9163.html' title='Multiple referred from 15 places.'>rip_offset_list</a>
+<a id='L38' name='L38'></a><em class='brace'>{</em>
+<a id='L39' name='L39'></a>  <strong class='reserved'>char</strong> *ifname;
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a>  <strong class='reserved'>struct</strong> 
+<a id='L42' name='L42'></a>  <em class='brace'>{</em>
+<a id='L43' name='L43'></a>    <strong class='reserved'>char</strong> *alist_name;
+<a id='L44' name='L44'></a>    <em class='comment'>/* struct access_list *alist; */</em>
+<a id='L45' name='L45'></a>    <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L46' name='L46'></a>  <em class='brace'>}</em> direct[<a href='../S/598.html#L35' title='Defined at 35 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_MAX</a>];
+<a id='L47' name='L47'></a><em class='brace'>}</em>;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *rip_offset_list_master;
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L52' name='L52'></a><a href='../R/10007.html' title='Multiple referred from 4 places.'>strcmp_safe</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s1, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s2)
+<a id='L53' name='L53'></a><em class='brace'>{</em>
+<a id='L54' name='L54'></a>  <strong class='reserved'>if</strong> (s1 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; s2 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L55' name='L55'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L56' name='L56'></a>  <strong class='reserved'>if</strong> (s1 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L57' name='L57'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L58' name='L58'></a>  <strong class='reserved'>if</strong> (s2 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L59' name='L59'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L60' name='L60'></a>  <strong class='reserved'>return</strong> strcmp (s1, s2);
+<a id='L61' name='L61'></a><em class='brace'>}</em>
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *
+<a id='L64' name='L64'></a><a href='../S/598.html#L98' title='Referred from 98 in ripd/rip_offset.c.'>rip_offset_list_new</a> (<strong class='reserved'>void</strong>)
+<a id='L65' name='L65'></a><em class='brace'>{</em>
+<a id='L66' name='L66'></a>  <strong class='reserved'>return</strong> <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_RIP_OFFSET_LIST, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a>));
+<a id='L67' name='L67'></a><em class='brace'>}</em>
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L70' name='L70'></a><a href='../R/9166.html' title='Multiple referred from 2 places.'>rip_offset_list_free</a> (<strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset)
+<a id='L71' name='L71'></a><em class='brace'>{</em>
+<a id='L72' name='L72'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_RIP_OFFSET_LIST, offset);
+<a id='L73' name='L73'></a><em class='brace'>}</em>
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *
+<a id='L76' name='L76'></a><a href='../R/9168.html' title='Multiple referred from 6 places.'>rip_offset_list_lookup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L77' name='L77'></a><em class='brace'>{</em>
+<a id='L78' name='L78'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L79' name='L79'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (rip_offset_list_master, node, nnode, offset))
+<a id='L82' name='L82'></a>    <em class='brace'>{</em>
+<a id='L83' name='L83'></a>      <strong class='reserved'>if</strong> (<a href='../D/10919.html' title='Multiple defined in 2 places.'>strcmp_safe</a> (offset-&gt;ifname, ifname) == 0)
+<a id='L84' name='L84'></a>        <strong class='reserved'>return</strong> offset;
+<a id='L85' name='L85'></a>    <em class='brace'>}</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L87' name='L87'></a><em class='brace'>}</em>
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *
+<a id='L90' name='L90'></a><a href='../S/598.html#L134' title='Referred from 134 in ripd/rip_offset.c.'>rip_offset_list_get</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L91' name='L91'></a><em class='brace'>{</em>
+<a id='L92' name='L92'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L93' name='L93'></a>  
+<a id='L94' name='L94'></a>  offset = <a href='../S/598.html#L76' title='Defined at 76 in ripd/rip_offset.c.'>rip_offset_list_lookup</a> (ifname);
+<a id='L95' name='L95'></a>  <strong class='reserved'>if</strong> (offset)
+<a id='L96' name='L96'></a>    <strong class='reserved'>return</strong> offset;
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a>  offset = <a href='../S/598.html#L64' title='Defined at 64 in ripd/rip_offset.c.'>rip_offset_list_new</a> ();
+<a id='L99' name='L99'></a>  <strong class='reserved'>if</strong> (ifname)
+<a id='L100' name='L100'></a>    offset-&gt;ifname = strdup (ifname);
+<a id='L101' name='L101'></a>  <a href='../S/243.html#L84' title='Defined at 84 in lib/linklist.c.'>listnode_add_sort</a> (rip_offset_list_master, offset);
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>  <strong class='reserved'>return</strong> offset;
+<a id='L104' name='L104'></a><em class='brace'>}</em>
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L107' name='L107'></a><a href='../R/9170.html' title='Multiple referred from 2 places.'>rip_offset_list_set</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *alist, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *direct_str,
+<a id='L108' name='L108'></a>                     <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *metric_str, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L109' name='L109'></a><em class='brace'>{</em>
+<a id='L110' name='L110'></a>  <strong class='reserved'>int</strong> direct;
+<a id='L111' name='L111'></a>  <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L112' name='L112'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a>  <em class='comment'>/* Check direction. */</em>
+<a id='L115' name='L115'></a>  <strong class='reserved'>if</strong> (strncmp (direct_str, "i", 1) == 0)
+<a id='L116' name='L116'></a>    direct = <a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>;
+<a id='L117' name='L117'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (direct_str, "o", 1) == 0)
+<a id='L118' name='L118'></a>    direct = <a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>;
+<a id='L119' name='L119'></a>  <strong class='reserved'>else</strong>
+<a id='L120' name='L120'></a>    <em class='brace'>{</em>
+<a id='L121' name='L121'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Invalid direction: %s%s", direct_str, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L122' name='L122'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L123' name='L123'></a>    <em class='brace'>}</em>
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a>  <em class='comment'>/* Check metric. */</em>
+<a id='L126' name='L126'></a>  <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = atoi (metric_str);
+<a id='L127' name='L127'></a>  <strong class='reserved'>if</strong> (<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &lt; 0 || <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &gt; 16)
+<a id='L128' name='L128'></a>    <em class='brace'>{</em>
+<a id='L129' name='L129'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Invalid metric: %s%s", metric_str, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L130' name='L130'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L131' name='L131'></a>    <em class='brace'>}</em>
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <em class='comment'>/* Get offset-list structure with interface name. */</em>
+<a id='L134' name='L134'></a>  offset = <a href='../S/598.html#L90' title='Defined at 90 in ripd/rip_offset.c.'>rip_offset_list_get</a> (ifname);
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  <strong class='reserved'>if</strong> (offset-&gt;direct[direct].alist_name)
+<a id='L137' name='L137'></a>    free (offset-&gt;direct[direct].alist_name);
+<a id='L138' name='L138'></a>  offset-&gt;direct[direct].alist_name = strdup (alist);
+<a id='L139' name='L139'></a>  offset-&gt;direct[direct].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L142' name='L142'></a><em class='brace'>}</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L145' name='L145'></a><a href='../R/9171.html' title='Multiple referred from 2 places.'>rip_offset_list_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *alist,
+<a id='L146' name='L146'></a>                       <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *direct_str, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *metric_str,
+<a id='L147' name='L147'></a>                       <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L148' name='L148'></a><em class='brace'>{</em>
+<a id='L149' name='L149'></a>  <strong class='reserved'>int</strong> direct;
+<a id='L150' name='L150'></a>  <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L151' name='L151'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a>  <em class='comment'>/* Check direction. */</em>
+<a id='L154' name='L154'></a>  <strong class='reserved'>if</strong> (strncmp (direct_str, "i", 1) == 0)
+<a id='L155' name='L155'></a>    direct = <a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>;
+<a id='L156' name='L156'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (direct_str, "o", 1) == 0)
+<a id='L157' name='L157'></a>    direct = <a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>;
+<a id='L158' name='L158'></a>  <strong class='reserved'>else</strong>
+<a id='L159' name='L159'></a>    <em class='brace'>{</em>
+<a id='L160' name='L160'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Invalid direction: %s%s", direct_str, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L161' name='L161'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L162' name='L162'></a>    <em class='brace'>}</em>
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a>  <em class='comment'>/* Check metric. */</em>
+<a id='L165' name='L165'></a>  <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = atoi (metric_str);
+<a id='L166' name='L166'></a>  <strong class='reserved'>if</strong> (<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &lt; 0 || <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &gt; 16)
+<a id='L167' name='L167'></a>    <em class='brace'>{</em>
+<a id='L168' name='L168'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Invalid metric: %s%s", metric_str, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L169' name='L169'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L170' name='L170'></a>    <em class='brace'>}</em>
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>  <em class='comment'>/* Get offset-list structure with interface name. */</em>
+<a id='L173' name='L173'></a>  offset = <a href='../S/598.html#L76' title='Defined at 76 in ripd/rip_offset.c.'>rip_offset_list_lookup</a> (ifname);
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a>  <strong class='reserved'>if</strong> (offset)
+<a id='L176' name='L176'></a>    <em class='brace'>{</em>
+<a id='L177' name='L177'></a>      <strong class='reserved'>if</strong> (offset-&gt;direct[direct].alist_name)
+<a id='L178' name='L178'></a>        free (offset-&gt;direct[direct].alist_name);
+<a id='L179' name='L179'></a>      offset-&gt;direct[direct].alist_name = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a>      <strong class='reserved'>if</strong> (offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].alist_name == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp;
+<a id='L182' name='L182'></a>          offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].alist_name == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L183' name='L183'></a>        <em class='brace'>{</em>
+<a id='L184' name='L184'></a>          <a href='../S/243.html#L165' title='Defined at 165 in lib/linklist.c.'>listnode_delete</a> (rip_offset_list_master, offset);
+<a id='L185' name='L185'></a>          <strong class='reserved'>if</strong> (offset-&gt;ifname)
+<a id='L186' name='L186'></a>            free (offset-&gt;ifname);
+<a id='L187' name='L187'></a>          <a href='../S/598.html#L70' title='Defined at 70 in ripd/rip_offset.c.'>rip_offset_list_free</a> (offset);
+<a id='L188' name='L188'></a>        <em class='brace'>}</em>
+<a id='L189' name='L189'></a>    <em class='brace'>}</em>
+<a id='L190' name='L190'></a>  <strong class='reserved'>else</strong>
+<a id='L191' name='L191'></a>    <em class='brace'>{</em>
+<a id='L192' name='L192'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Can't find offset-list%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L193' name='L193'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L194' name='L194'></a>    <em class='brace'>}</em>
+<a id='L195' name='L195'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L196' name='L196'></a><em class='brace'>}</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a><em class='sharp'>#define</em> <a href='../R/2122.html' title='Multiple referred from 12 places.'>OFFSET_LIST_IN_NAME</a>(O)  ((O)-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].alist_name)
+<a id='L199' name='L199'></a><em class='sharp'>#define</em> <a href='../R/2121.html' title='Multiple referred from 4 places.'>OFFSET_LIST_IN_METRIC</a>(O)  ((O)-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a><em class='sharp'>#define</em> <a href='../R/2124.html' title='Multiple referred from 12 places.'>OFFSET_LIST_OUT_NAME</a>(O)  ((O)-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].alist_name)
+<a id='L202' name='L202'></a><em class='sharp'>#define</em> <a href='../R/2123.html' title='Multiple referred from 4 places.'>OFFSET_LIST_OUT_METRIC</a>(O)  ((O)-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a><em class='comment'>/* If metric is modifed return 1. */</em>
+<a id='L205' name='L205'></a><strong class='reserved'>int</strong>
+<a id='L206' name='L206'></a><a href='../R/9164.html' title='Multiple referred from 2 places.'>rip_offset_list_apply_in</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p, <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp,
+<a id='L207' name='L207'></a>                          <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L208' name='L208'></a><em class='brace'>{</em>
+<a id='L209' name='L209'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L210' name='L210'></a>  <strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *alist;
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  <em class='comment'>/* Look up offset-list with interface name. */</em>
+<a id='L213' name='L213'></a>  offset = <a href='../S/598.html#L76' title='Defined at 76 in ripd/rip_offset.c.'>rip_offset_list_lookup</a> (ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L214' name='L214'></a>  <strong class='reserved'>if</strong> (offset &amp;&amp; <a href='../D/2534.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_NAME</a> (offset))
+<a id='L215' name='L215'></a>    <em class='brace'>{</em>
+<a id='L216' name='L216'></a>      alist = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/2534.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_NAME</a> (offset));
+<a id='L217' name='L217'></a>
+<a id='L218' name='L218'></a>      <strong class='reserved'>if</strong> (alist 
+<a id='L219' name='L219'></a>          &amp;&amp; <a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (alist, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *)p) == FILTER_PERMIT)
+<a id='L220' name='L220'></a>        <em class='brace'>{</em>
+<a id='L221' name='L221'></a>          *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> += <a href='../D/2533.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_METRIC</a> (offset);
+<a id='L222' name='L222'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L223' name='L223'></a>        <em class='brace'>}</em>
+<a id='L224' name='L224'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L225' name='L225'></a>    <em class='brace'>}</em>
+<a id='L226' name='L226'></a>  <em class='comment'>/* Look up offset-list without interface name. */</em>
+<a id='L227' name='L227'></a>  offset = <a href='../S/598.html#L76' title='Defined at 76 in ripd/rip_offset.c.'>rip_offset_list_lookup</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L228' name='L228'></a>  <strong class='reserved'>if</strong> (offset &amp;&amp; <a href='../D/2534.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_NAME</a> (offset))
+<a id='L229' name='L229'></a>    <em class='brace'>{</em>
+<a id='L230' name='L230'></a>      alist = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/2534.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_NAME</a> (offset));
+<a id='L231' name='L231'></a>
+<a id='L232' name='L232'></a>      <strong class='reserved'>if</strong> (alist 
+<a id='L233' name='L233'></a>          &amp;&amp; <a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (alist, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *)p) == FILTER_PERMIT)
+<a id='L234' name='L234'></a>        <em class='brace'>{</em>
+<a id='L235' name='L235'></a>          *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> += <a href='../D/2533.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_METRIC</a> (offset);
+<a id='L236' name='L236'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L237' name='L237'></a>        <em class='brace'>}</em>
+<a id='L238' name='L238'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L239' name='L239'></a>    <em class='brace'>}</em>
+<a id='L240' name='L240'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L241' name='L241'></a><em class='brace'>}</em>
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a><em class='comment'>/* If metric is modifed return 1. */</em>
+<a id='L244' name='L244'></a><strong class='reserved'>int</strong>
+<a id='L245' name='L245'></a><a href='../R/9165.html' title='Multiple referred from 2 places.'>rip_offset_list_apply_out</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p, <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp,
+<a id='L246' name='L246'></a>                          <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L247' name='L247'></a><em class='brace'>{</em>
+<a id='L248' name='L248'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L249' name='L249'></a>  <strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *alist;
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>  <em class='comment'>/* Look up offset-list with interface name. */</em>
+<a id='L252' name='L252'></a>  offset = <a href='../S/598.html#L76' title='Defined at 76 in ripd/rip_offset.c.'>rip_offset_list_lookup</a> (ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L253' name='L253'></a>  <strong class='reserved'>if</strong> (offset &amp;&amp; <a href='../D/2536.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_NAME</a> (offset))
+<a id='L254' name='L254'></a>    <em class='brace'>{</em>
+<a id='L255' name='L255'></a>      alist = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/2536.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_NAME</a> (offset));
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a>      <strong class='reserved'>if</strong> (alist 
+<a id='L258' name='L258'></a>          &amp;&amp; <a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (alist, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *)p) == FILTER_PERMIT)
+<a id='L259' name='L259'></a>        <em class='brace'>{</em>
+<a id='L260' name='L260'></a>          *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> += <a href='../D/2535.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_METRIC</a> (offset);
+<a id='L261' name='L261'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L262' name='L262'></a>        <em class='brace'>}</em>
+<a id='L263' name='L263'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L264' name='L264'></a>    <em class='brace'>}</em>
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a>  <em class='comment'>/* Look up offset-list without interface name. */</em>
+<a id='L267' name='L267'></a>  offset = <a href='../S/598.html#L76' title='Defined at 76 in ripd/rip_offset.c.'>rip_offset_list_lookup</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L268' name='L268'></a>  <strong class='reserved'>if</strong> (offset &amp;&amp; <a href='../D/2536.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_NAME</a> (offset))
+<a id='L269' name='L269'></a>    <em class='brace'>{</em>
+<a id='L270' name='L270'></a>      alist = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../D/2536.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_NAME</a> (offset));
+<a id='L271' name='L271'></a>
+<a id='L272' name='L272'></a>      <strong class='reserved'>if</strong> (alist 
+<a id='L273' name='L273'></a>          &amp;&amp; <a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (alist, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *)p) == FILTER_PERMIT)
+<a id='L274' name='L274'></a>        <em class='brace'>{</em>
+<a id='L275' name='L275'></a>          *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> += <a href='../D/2535.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_METRIC</a> (offset);
+<a id='L276' name='L276'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L277' name='L277'></a>        <em class='brace'>}</em>
+<a id='L278' name='L278'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L279' name='L279'></a>    <em class='brace'>}</em>
+<a id='L280' name='L280'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L281' name='L281'></a><em class='brace'>}</em>
+<a id='L282' name='L282'></a>
+<a id='L283' name='L283'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (<a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a>,
+<a id='L284' name='L284'></a>       rip_offset_list_cmd,
+<a id='L285' name='L285'></a>       "offset-list WORD (in|out) &lt;0-16&gt;",
+<a id='L286' name='L286'></a>       "Modify RIP metric\n"
+<a id='L287' name='L287'></a>       "Access-list name\n"
+<a id='L288' name='L288'></a>       "For incoming updates\n"
+<a id='L289' name='L289'></a>       "For outgoing updates\n"
+<a id='L290' name='L290'></a>       "Metric value\n")
+<a id='L291' name='L291'></a><em class='brace'>{</em>
+<a id='L292' name='L292'></a>  <strong class='reserved'>return</strong> <a href='../S/598.html#L107' title='Defined at 107 in ripd/rip_offset.c.'>rip_offset_list_set</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1], argv[2], <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L293' name='L293'></a><em class='brace'>}</em>
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (rip_offset_list_ifname,
+<a id='L296' name='L296'></a>       rip_offset_list_ifname_cmd,
+<a id='L297' name='L297'></a>       "offset-list WORD (in|out) &lt;0-16&gt; IFNAME",
+<a id='L298' name='L298'></a>       "Modify RIP metric\n"
+<a id='L299' name='L299'></a>       "Access-list name\n"
+<a id='L300' name='L300'></a>       "For incoming updates\n"
+<a id='L301' name='L301'></a>       "For outgoing updates\n"
+<a id='L302' name='L302'></a>       "Metric value\n"
+<a id='L303' name='L303'></a>       "Interface to match\n")
+<a id='L304' name='L304'></a><em class='brace'>{</em>
+<a id='L305' name='L305'></a>  <strong class='reserved'>return</strong> <a href='../S/598.html#L107' title='Defined at 107 in ripd/rip_offset.c.'>rip_offset_list_set</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1], argv[2], argv[3]);
+<a id='L306' name='L306'></a><em class='brace'>}</em>
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_rip_offset_list,
+<a id='L309' name='L309'></a>       no_rip_offset_list_cmd,
+<a id='L310' name='L310'></a>       "no offset-list WORD (in|out) &lt;0-16&gt;",
+<a id='L311' name='L311'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L312' name='L312'></a>       "Modify RIP metric\n"
+<a id='L313' name='L313'></a>       "Access-list name\n"
+<a id='L314' name='L314'></a>       "For incoming updates\n"
+<a id='L315' name='L315'></a>       "For outgoing updates\n"
+<a id='L316' name='L316'></a>       "Metric value\n")
+<a id='L317' name='L317'></a><em class='brace'>{</em>
+<a id='L318' name='L318'></a>  <strong class='reserved'>return</strong> <a href='../S/598.html#L145' title='Defined at 145 in ripd/rip_offset.c.'>rip_offset_list_unset</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1], argv[2], <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L319' name='L319'></a><em class='brace'>}</em>
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_rip_offset_list_ifname,
+<a id='L322' name='L322'></a>       no_rip_offset_list_ifname_cmd,
+<a id='L323' name='L323'></a>       "no offset-list WORD (in|out) &lt;0-16&gt; IFNAME",
+<a id='L324' name='L324'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L325' name='L325'></a>       "Modify RIP metric\n"
+<a id='L326' name='L326'></a>       "Access-list name\n"
+<a id='L327' name='L327'></a>       "For incoming updates\n"
+<a id='L328' name='L328'></a>       "For outgoing updates\n"
+<a id='L329' name='L329'></a>       "Metric value\n"
+<a id='L330' name='L330'></a>       "Interface to match\n")
+<a id='L331' name='L331'></a><em class='brace'>{</em>
+<a id='L332' name='L332'></a>  <strong class='reserved'>return</strong> <a href='../S/598.html#L145' title='Defined at 145 in ripd/rip_offset.c.'>rip_offset_list_unset</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, argv[0], argv[1], argv[2], argv[3]);
+<a id='L333' name='L333'></a><em class='brace'>}</em>
+<a id='L334' name='L334'></a>
+<a id='L335' name='L335'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L336' name='L336'></a><a href='../R/7422.html' title='Multiple referred from 4 places.'>offset_list_cmp</a> (<strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *o1, <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *o2)
+<a id='L337' name='L337'></a><em class='brace'>{</em>
+<a id='L338' name='L338'></a>  <strong class='reserved'>return</strong> <a href='../D/10919.html' title='Multiple defined in 2 places.'>strcmp_safe</a> (o1-&gt;ifname, o2-&gt;ifname);
+<a id='L339' name='L339'></a><em class='brace'>}</em>
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L342' name='L342'></a><a href='../R/7423.html' title='Multiple referred from 4 places.'>offset_list_del</a> (<strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset)
+<a id='L343' name='L343'></a><em class='brace'>{</em>
+<a id='L344' name='L344'></a>  <strong class='reserved'>if</strong> (<a href='../D/2534.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_NAME</a> (offset))
+<a id='L345' name='L345'></a>    free (<a href='../D/2534.html' title='Multiple defined in 2 places.'>OFFSET_LIST_IN_NAME</a> (offset));
+<a id='L346' name='L346'></a>  <strong class='reserved'>if</strong> (<a href='../D/2536.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_NAME</a> (offset))
+<a id='L347' name='L347'></a>    free (<a href='../D/2536.html' title='Multiple defined in 2 places.'>OFFSET_LIST_OUT_NAME</a> (offset));
+<a id='L348' name='L348'></a>  <strong class='reserved'>if</strong> (offset-&gt;ifname)
+<a id='L349' name='L349'></a>    free (offset-&gt;ifname);
+<a id='L350' name='L350'></a>  <a href='../S/598.html#L70' title='Defined at 70 in ripd/rip_offset.c.'>rip_offset_list_free</a> (offset);
+<a id='L351' name='L351'></a><em class='brace'>}</em>
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a><strong class='reserved'>void</strong>
+<a id='L354' name='L354'></a><a href='../R/9162.html' title='Multiple referred from 2 places.'>rip_offset_init</a> ()
+<a id='L355' name='L355'></a><em class='brace'>{</em>
+<a id='L356' name='L356'></a>  rip_offset_list_master = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L357' name='L357'></a>  rip_offset_list_master-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = (<strong class='reserved'>int</strong> (*)(<strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *)) <a href='../D/8293.html' title='Multiple defined in 2 places.'>offset_list_cmp</a>;
+<a id='L358' name='L358'></a>  rip_offset_list_master-&gt;del = (<strong class='reserved'>void</strong> (*)(<strong class='reserved'>void</strong> *)) <a href='../D/8294.html' title='Multiple defined in 2 places.'>offset_list_del</a>;
+<a id='L359' name='L359'></a>
+<a id='L360' name='L360'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIP_NODE, &amp;rip_offset_list_cmd);
+<a id='L361' name='L361'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIP_NODE, &amp;rip_offset_list_ifname_cmd);
+<a id='L362' name='L362'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIP_NODE, &amp;no_rip_offset_list_cmd);
+<a id='L363' name='L363'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIP_NODE, &amp;no_rip_offset_list_ifname_cmd);
+<a id='L364' name='L364'></a><em class='brace'>}</em>
+<a id='L365' name='L365'></a>
+<a id='L366' name='L366'></a><strong class='reserved'>void</strong>
+<a id='L367' name='L367'></a><a href='../R/9161.html' title='Multiple referred from 2 places.'>rip_offset_clean</a> ()
+<a id='L368' name='L368'></a><em class='brace'>{</em>
+<a id='L369' name='L369'></a>  <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (rip_offset_list_master);
+<a id='L370' name='L370'></a>
+<a id='L371' name='L371'></a>  rip_offset_list_master = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L372' name='L372'></a>  rip_offset_list_master-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = (<strong class='reserved'>int</strong> (*)(<strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *)) <a href='../D/8293.html' title='Multiple defined in 2 places.'>offset_list_cmp</a>;
+<a id='L373' name='L373'></a>  rip_offset_list_master-&gt;del = (<strong class='reserved'>void</strong> (*)(<strong class='reserved'>void</strong> *)) <a href='../D/8294.html' title='Multiple defined in 2 places.'>offset_list_del</a>;
+<a id='L374' name='L374'></a><em class='brace'>}</em>
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a><strong class='reserved'>int</strong>
+<a id='L377' name='L377'></a><a href='../R/5446.html' title='Multiple referred from 2 places.'>config_write_rip_offset_list</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L378' name='L378'></a><em class='brace'>{</em>
+<a id='L379' name='L379'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L380' name='L380'></a>  <strong class='reserved'>struct</strong> <a href='../S/598.html#L37' title='Defined at 37 in ripd/rip_offset.c.'>rip_offset_list</a> *offset;
+<a id='L381' name='L381'></a>
+<a id='L382' name='L382'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (rip_offset_list_master, node, nnode, offset))
+<a id='L383' name='L383'></a>    <em class='brace'>{</em>
+<a id='L384' name='L384'></a>      <strong class='reserved'>if</strong> (! offset-&gt;ifname)
+<a id='L385' name='L385'></a>        <em class='brace'>{</em>
+<a id='L386' name='L386'></a>          <strong class='reserved'>if</strong> (offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].alist_name)
+<a id='L387' name='L387'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " offset-list %s in %d%s",
+<a id='L388' name='L388'></a>                     offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].alist_name,
+<a id='L389' name='L389'></a>                     offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>,
+<a id='L390' name='L390'></a>                     <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L391' name='L391'></a>          <strong class='reserved'>if</strong> (offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].alist_name)
+<a id='L392' name='L392'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " offset-list %s out %d%s",
+<a id='L393' name='L393'></a>                     offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].alist_name,
+<a id='L394' name='L394'></a>                     offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>,
+<a id='L395' name='L395'></a>                     <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L396' name='L396'></a>        <em class='brace'>}</em>
+<a id='L397' name='L397'></a>      <strong class='reserved'>else</strong>
+<a id='L398' name='L398'></a>        <em class='brace'>{</em>
+<a id='L399' name='L399'></a>          <strong class='reserved'>if</strong> (offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].alist_name)
+<a id='L400' name='L400'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " offset-list %s in %d %s%s",
+<a id='L401' name='L401'></a>                     offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].alist_name,
+<a id='L402' name='L402'></a>                     offset-&gt;direct[<a href='../S/598.html#L33' title='Defined at 33 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_IN</a>].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>,
+<a id='L403' name='L403'></a>                     offset-&gt;ifname, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L404' name='L404'></a>          <strong class='reserved'>if</strong> (offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].alist_name)
+<a id='L405' name='L405'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " offset-list %s out %d %s%s",
+<a id='L406' name='L406'></a>                     offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].alist_name,
+<a id='L407' name='L407'></a>                     offset-&gt;direct[<a href='../S/598.html#L34' title='Defined at 34 in ripd/rip_offset.c.'>RIP_OFFSET_LIST_OUT</a>].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>,
+<a id='L408' name='L408'></a>                     offset-&gt;ifname, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L409' name='L409'></a>        <em class='brace'>}</em>
+<a id='L410' name='L410'></a>    <em class='brace'>}</em>
+<a id='L411' name='L411'></a>
+<a id='L412' name='L412'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L413' name='L413'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L52'>[^]</a><a href='#L377'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

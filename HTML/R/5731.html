@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>fifo</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/639.html#L266'>fifo</a>              266 bgpd/bgp_advertise.c   FIFO_ADD (&amp;peer-&gt;sync[afi][safi]-&gt;update, &amp;adv-&gt;fifo);</span>
+<span class='curline'><a href='../S/639.html#L300'>fifo</a>              300 bgpd/bgp_advertise.c       FIFO_ADD (&amp;peer-&gt;sync[afi][safi]-&gt;withdraw, &amp;adv-&gt;fifo);</span>
+<span class='curline'><a href='../S/632.html#L47'>fifo</a>               47 bgpd/bgp_advertise.h   struct bgp_advertise_fifo fifo;</span>
+<span class='curline'><a href='../S/296.html#L935'>fifo</a>              935 lib/stream.c   stream_fifo_push (struct stream_fifo *fifo, struct stream *s)</span>
+<span class='curline'><a href='../S/296.html#L937'>fifo</a>              937 lib/stream.c     if (fifo-&gt;tail)</span>
+<span class='curline'><a href='../S/296.html#L938'>fifo</a>              938 lib/stream.c       fifo-&gt;tail-&gt;next = s;</span>
+<span class='curline'><a href='../S/296.html#L940'>fifo</a>              940 lib/stream.c       fifo-&gt;head = s;</span>
+<span class='curline'><a href='../S/296.html#L942'>fifo</a>              942 lib/stream.c     fifo-&gt;tail = s;</span>
+<span class='curline'><a href='../S/296.html#L944'>fifo</a>              944 lib/stream.c     fifo-&gt;count++;</span>
+<span class='curline'><a href='../S/296.html#L949'>fifo</a>              949 lib/stream.c   stream_fifo_pop (struct stream_fifo *fifo)</span>
+<span class='curline'><a href='../S/296.html#L953'>fifo</a>              953 lib/stream.c     s = fifo-&gt;head; </span>
+<span class='curline'><a href='../S/296.html#L957'>fifo</a>              957 lib/stream.c         fifo-&gt;head = s-&gt;next;</span>
+<span class='curline'><a href='../S/296.html#L959'>fifo</a>              959 lib/stream.c         if (fifo-&gt;head == NULL)</span>
+<span class='curline'><a href='../S/296.html#L960'>fifo</a>              960 lib/stream.c   	fifo-&gt;tail = NULL;</span>
+<span class='curline'><a href='../S/296.html#L962'>fifo</a>              962 lib/stream.c         fifo-&gt;count--;</span>
+<span class='curline'><a href='../S/296.html#L970'>fifo</a>              970 lib/stream.c   stream_fifo_head (struct stream_fifo *fifo)</span>
+<span class='curline'><a href='../S/296.html#L972'>fifo</a>              972 lib/stream.c     return fifo-&gt;head;</span>
+<span class='curline'><a href='../S/296.html#L976'>fifo</a>              976 lib/stream.c   stream_fifo_clean (struct stream_fifo *fifo)</span>
+<span class='curline'><a href='../S/296.html#L981'>fifo</a>              981 lib/stream.c     for (s = fifo-&gt;head; s; s = next)</span>
+<span class='curline'><a href='../S/296.html#L986'>fifo</a>              986 lib/stream.c     fifo-&gt;head = fifo-&gt;tail = NULL;</span>
+<span class='curline'><a href='../S/296.html#L987'>fifo</a>              987 lib/stream.c     fifo-&gt;count = 0;</span>
+<span class='curline'><a href='../S/296.html#L991'>fifo</a>              991 lib/stream.c   stream_fifo_free (struct stream_fifo *fifo)</span>
+<span class='curline'><a href='../S/296.html#L993'>fifo</a>              993 lib/stream.c     stream_fifo_clean (fifo);</span>
+<span class='curline'><a href='../S/296.html#L994'>fifo</a>              994 lib/stream.c     XFREE (MTYPE_STREAM_FIFO, fifo);</span>
+<span class='curline'><a href='../S/284.html#L216'>fifo</a>              216 lib/stream.h   extern void stream_fifo_push (struct stream_fifo *fifo, struct stream *s);</span>
+<span class='curline'><a href='../S/284.html#L217'>fifo</a>              217 lib/stream.h   extern struct stream *stream_fifo_pop (struct stream_fifo *fifo);</span>
+<span class='curline'><a href='../S/284.html#L218'>fifo</a>              218 lib/stream.h   extern struct stream *stream_fifo_head (struct stream_fifo *fifo);</span>
+<span class='curline'><a href='../S/284.html#L219'>fifo</a>              219 lib/stream.h   extern void stream_fifo_clean (struct stream_fifo *fifo);</span>
+<span class='curline'><a href='../S/284.html#L220'>fifo</a>              220 lib/stream.h   extern void stream_fifo_free (struct stream_fifo *fifo);</span>
+<span class='curline'><a href='../S/191.html#L541'>fifo</a>              541 lib/zebra.h      struct fifo *next;</span>
+<span class='curline'><a href='../S/191.html#L542'>fifo</a>              542 lib/zebra.h      struct fifo *prev;</span>
+<span class='curline'><a href='../S/191.html#L547'>fifo</a>              547 lib/zebra.h        struct fifo *Xfifo = (struct fifo *)(F);          \</span>
+<span class='curline'><a href='../S/191.html#L553'>fifo</a>              553 lib/zebra.h        struct fifo *Xfifo = (struct fifo *)(F);          \</span>
+<span class='curline'><a href='../S/191.html#L554'>fifo</a>              554 lib/zebra.h        struct fifo *Xnode = (struct fifo *)(N);          \</span>
+<span class='curline'><a href='../S/191.html#L562'>fifo</a>              562 lib/zebra.h        struct fifo *Xnode = (struct fifo *)(N);          \</span>
+<span class='curline'><a href='../S/191.html#L568'>fifo</a>              568 lib/zebra.h      ((((struct fifo *)(F))-&gt;next == (struct fifo *)(F)) \</span>
+<span class='curline'><a href='../S/191.html#L572'>fifo</a>              572 lib/zebra.h      (((struct fifo *)(F))-&gt;next == (struct fifo *)(F))</span>
+<span class='curline'><a href='../S/191.html#L575'>fifo</a>              575 lib/zebra.h      (FIFO_EMPTY(F) ? NULL : ((struct fifo *)(F))-&gt;next)</span>
+<span class='curline'><a href='../S/758.html#L278'>fifo</a>              278 ospfd/ospf_api.c msg_fifo_push (struct msg_fifo *fifo, struct msg *msg)</span>
+<span class='curline'><a href='../S/758.html#L280'>fifo</a>              280 ospfd/ospf_api.c   if (fifo-&gt;tail)</span>
+<span class='curline'><a href='../S/758.html#L281'>fifo</a>              281 ospfd/ospf_api.c     fifo-&gt;tail-&gt;next = msg;</span>
+<span class='curline'><a href='../S/758.html#L283'>fifo</a>              283 ospfd/ospf_api.c     fifo-&gt;head = msg;</span>
+<span class='curline'><a href='../S/758.html#L285'>fifo</a>              285 ospfd/ospf_api.c   fifo-&gt;tail = msg;</span>
+<span class='curline'><a href='../S/758.html#L286'>fifo</a>              286 ospfd/ospf_api.c   fifo-&gt;count++;</span>
+<span class='curline'><a href='../S/758.html#L292'>fifo</a>              292 ospfd/ospf_api.c msg_fifo_pop (struct msg_fifo *fifo)</span>
+<span class='curline'><a href='../S/758.html#L296'>fifo</a>              296 ospfd/ospf_api.c   msg = fifo-&gt;head;</span>
+<span class='curline'><a href='../S/758.html#L299'>fifo</a>              299 ospfd/ospf_api.c       fifo-&gt;head = msg-&gt;next;</span>
+<span class='curline'><a href='../S/758.html#L301'>fifo</a>              301 ospfd/ospf_api.c       if (fifo-&gt;head == NULL)</span>
+<span class='curline'><a href='../S/758.html#L302'>fifo</a>              302 ospfd/ospf_api.c 	fifo-&gt;tail = NULL;</span>
+<span class='curline'><a href='../S/758.html#L304'>fifo</a>              304 ospfd/ospf_api.c       fifo-&gt;count--;</span>
+<span class='curline'><a href='../S/758.html#L311'>fifo</a>              311 ospfd/ospf_api.c msg_fifo_head (struct msg_fifo *fifo)</span>
+<span class='curline'><a href='../S/758.html#L313'>fifo</a>              313 ospfd/ospf_api.c   return fifo-&gt;head;</span>
+<span class='curline'><a href='../S/758.html#L318'>fifo</a>              318 ospfd/ospf_api.c msg_fifo_flush (struct msg_fifo *fifo)</span>
+<span class='curline'><a href='../S/758.html#L323'>fifo</a>              323 ospfd/ospf_api.c   for (op = fifo-&gt;head; op; op = next)</span>
+<span class='curline'><a href='../S/758.html#L329'>fifo</a>              329 ospfd/ospf_api.c   fifo-&gt;head = fifo-&gt;tail = NULL;</span>
+<span class='curline'><a href='../S/758.html#L330'>fifo</a>              330 ospfd/ospf_api.c   fifo-&gt;count = 0;</span>
+<span class='curline'><a href='../S/758.html#L335'>fifo</a>              335 ospfd/ospf_api.c msg_fifo_free (struct msg_fifo *fifo)</span>
+<span class='curline'><a href='../S/758.html#L337'>fifo</a>              337 ospfd/ospf_api.c   msg_fifo_flush (fifo);</span>
+<span class='curline'><a href='../S/758.html#L339'>fifo</a>              339 ospfd/ospf_api.c   XFREE (MTYPE_OSPF_API_FIFO, fifo);</span>
+<span class='curline'><a href='../S/785.html#L102'>fifo</a>              102 ospfd/ospf_api.h extern struct msg *msg_fifo_pop (struct msg_fifo *fifo);</span>
+<span class='curline'><a href='../S/785.html#L103'>fifo</a>              103 ospfd/ospf_api.h extern struct msg *msg_fifo_head (struct msg_fifo *fifo);</span>
+<span class='curline'><a href='../S/785.html#L104'>fifo</a>              104 ospfd/ospf_api.h extern void msg_fifo_flush (struct msg_fifo *fifo);</span>
+<span class='curline'><a href='../S/785.html#L105'>fifo</a>              105 ospfd/ospf_api.h extern void msg_fifo_free (struct msg_fifo *fifo);</span>
+<span class='curline'><a href='../S/774.html#L772'>fifo</a>              772 ospfd/ospf_apiserver.c   struct msg_fifo *fifo;</span>
+<span class='curline'><a href='../S/774.html#L780'>fifo</a>              780 ospfd/ospf_apiserver.c       fifo = apiserv-&gt;out_sync_fifo;</span>
+<span class='curline'><a href='../S/774.html#L791'>fifo</a>              791 ospfd/ospf_apiserver.c       fifo = apiserv-&gt;out_async_fifo;</span>
+<span class='curline'><a href='../S/774.html#L807'>fifo</a>              807 ospfd/ospf_apiserver.c   msg_fifo_push (fifo, msg2);</span>
+<span class='curline'><a href='../S/768.html#L150'>fifo</a>              150 ospfd/ospf_packet.c ospf_fifo_push (struct ospf_fifo *fifo, struct ospf_packet *op)</span>
+<span class='curline'><a href='../S/768.html#L152'>fifo</a>              152 ospfd/ospf_packet.c   if (fifo-&gt;tail)</span>
+<span class='curline'><a href='../S/768.html#L153'>fifo</a>              153 ospfd/ospf_packet.c     fifo-&gt;tail-&gt;next = op;</span>
+<span class='curline'><a href='../S/768.html#L155'>fifo</a>              155 ospfd/ospf_packet.c     fifo-&gt;head = op;</span>
+<span class='curline'><a href='../S/768.html#L157'>fifo</a>              157 ospfd/ospf_packet.c   fifo-&gt;tail = op;</span>
+<span class='curline'><a href='../S/768.html#L159'>fifo</a>              159 ospfd/ospf_packet.c   fifo-&gt;count++;</span>
+<span class='curline'><a href='../S/768.html#L164'>fifo</a>              164 ospfd/ospf_packet.c ospf_fifo_push_head (struct ospf_fifo *fifo, struct ospf_packet *op)</span>
+<span class='curline'><a href='../S/768.html#L166'>fifo</a>              166 ospfd/ospf_packet.c   op-&gt;next = fifo-&gt;head;</span>
+<span class='curline'><a href='../S/768.html#L168'>fifo</a>              168 ospfd/ospf_packet.c   if (fifo-&gt;tail == NULL)</span>
+<span class='curline'><a href='../S/768.html#L169'>fifo</a>              169 ospfd/ospf_packet.c     fifo-&gt;tail = op;</span>
+<span class='curline'><a href='../S/768.html#L171'>fifo</a>              171 ospfd/ospf_packet.c   fifo-&gt;head = op;</span>
+<span class='curline'><a href='../S/768.html#L173'>fifo</a>              173 ospfd/ospf_packet.c   fifo-&gt;count++;</span>
+<span class='curline'><a href='../S/768.html#L178'>fifo</a>              178 ospfd/ospf_packet.c ospf_fifo_pop (struct ospf_fifo *fifo)</span>
+<span class='curline'><a href='../S/768.html#L182'>fifo</a>              182 ospfd/ospf_packet.c   op = fifo-&gt;head;</span>
+<span class='curline'><a href='../S/768.html#L186'>fifo</a>              186 ospfd/ospf_packet.c       fifo-&gt;head = op-&gt;next;</span>
+<span class='curline'><a href='../S/768.html#L188'>fifo</a>              188 ospfd/ospf_packet.c       if (fifo-&gt;head == NULL)</span>
+<span class='curline'><a href='../S/768.html#L189'>fifo</a>              189 ospfd/ospf_packet.c 	fifo-&gt;tail = NULL;</span>
+<span class='curline'><a href='../S/768.html#L191'>fifo</a>              191 ospfd/ospf_packet.c       fifo-&gt;count--;</span>
+<span class='curline'><a href='../S/768.html#L199'>fifo</a>              199 ospfd/ospf_packet.c ospf_fifo_head (struct ospf_fifo *fifo)</span>
+<span class='curline'><a href='../S/768.html#L201'>fifo</a>              201 ospfd/ospf_packet.c   return fifo-&gt;head;</span>
+<span class='curline'><a href='../S/768.html#L206'>fifo</a>              206 ospfd/ospf_packet.c ospf_fifo_flush (struct ospf_fifo *fifo)</span>
+<span class='curline'><a href='../S/768.html#L211'>fifo</a>              211 ospfd/ospf_packet.c   for (op = fifo-&gt;head; op; op = next)</span>
+<span class='curline'><a href='../S/768.html#L216'>fifo</a>              216 ospfd/ospf_packet.c   fifo-&gt;head = fifo-&gt;tail = NULL;</span>
+<span class='curline'><a href='../S/768.html#L217'>fifo</a>              217 ospfd/ospf_packet.c   fifo-&gt;count = 0;</span>
+<span class='curline'><a href='../S/768.html#L222'>fifo</a>              222 ospfd/ospf_packet.c ospf_fifo_free (struct ospf_fifo *fifo)</span>
+<span class='curline'><a href='../S/768.html#L224'>fifo</a>              224 ospfd/ospf_packet.c   ospf_fifo_flush (fifo);</span>
+<span class='curline'><a href='../S/768.html#L226'>fifo</a>              226 ospfd/ospf_packet.c   XFREE (MTYPE_OSPF_FIFO, fifo);</span>
+</pre>
+</body>
+</html>

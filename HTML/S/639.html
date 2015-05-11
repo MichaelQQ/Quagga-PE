@@ -1,0 +1,464 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_advertise.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_advertise.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L43'>[^]</a><a href='#L401'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L43' title='Defined at 43.'>baa_new</a></li>
+<li><a href='#L50' title='Defined at 50.'>baa_free</a></li>
+<li><a href='#L56' title='Defined at 56.'>baa_hash_alloc</a></li>
+<li><a href='#L67' title='Defined at 67.'>baa_hash_key</a></li>
+<li><a href='#L75' title='Defined at 75.'>baa_hash_cmp</a></li>
+<li><a href='#L87' title='Defined at 87.'>bgp_advertise_new</a></li>
+<li><a href='#L94' title='Defined at 94.'>bgp_advertise_free</a></li>
+<li><a href='#L102' title='Defined at 102.'>bgp_advertise_add</a></li>
+<li><a href='#L112' title='Defined at 112.'>bgp_advertise_delete</a></li>
+<li><a href='#L124' title='Defined at 124.'>bgp_advertise_intern</a></li>
+<li><a href='#L137' title='Defined at 137.'>bgp_advertise_unintern</a></li>
+<li><a href='#L157' title='Defined at 157.'>bgp_adj_out_free</a></li>
+<li><a href='#L164' title='Defined at 164.'>bgp_adj_out_lookup</a></li>
+<li><a href='#L182' title='Defined at 182.'>bgp_advertise_clean</a></li>
+<li><a href='#L216' title='Defined at 216.'>bgp_adj_out_set</a></li>
+<li><a href='#L270' title='Defined at 270.'>bgp_adj_out_unset</a></li>
+<li><a href='#L318' title='Defined at 318.'>bgp_adj_out_remove</a></li>
+<li><a href='#L332' title='Defined at 332.'>bgp_adj_in_set</a></li>
+<li><a href='#L356' title='Defined at 356.'>bgp_adj_in_remove</a></li>
+<li><a href='#L365' title='Defined at 365.'>bgp_adj_in_unset</a></li>
+<li><a href='#L381' title='Defined at 381.'>bgp_sync_init</a></li>
+<li><a href='#L401' title='Defined at 401.'>bgp_sync_delete</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP advertisement and adjacency</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1996, 97, 98, 99, 2000 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='227.html'>hash.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='646.html'>bgpd/bgp_table.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='609.html'>bgpd/bgp_route.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='632.html'>bgpd/bgp_advertise.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='642.html'>bgpd/bgp_attr.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='656.html'>bgpd/bgp_aspath.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='634.html'>bgpd/bgp_packet.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='658.html'>bgpd/bgp_fsm.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='612.html'>bgpd/bgp_mplsvpn.h</a>"
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='comment'>/* BGP advertise attribute is used for pack same attribute update into</em>
+<a id='L40' name='L40'></a><em class='comment'>   one packet.  To do that we maintain attribute hash in struct</em>
+<a id='L41' name='L41'></a><em class='comment'>   peer.  */</em>
+<a id='L42' name='L42'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *
+<a id='L43' name='L43'></a><a href='../R/4573.html' title='Multiple referred from 2 places.'>baa_new</a> (<strong class='reserved'>void</strong>)
+<a id='L44' name='L44'></a><em class='brace'>{</em>
+<a id='L45' name='L45'></a>  <strong class='reserved'>return</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *)
+<a id='L46' name='L46'></a>    <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_ADVERTISE_ATTR, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a>));
+<a id='L47' name='L47'></a><em class='brace'>}</em>
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L50' name='L50'></a><a href='../S/639.html#L151' title='Referred from 151 in bgpd/bgp_advertise.c.'>baa_free</a> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa)
+<a id='L51' name='L51'></a><em class='brace'>{</em>
+<a id='L52' name='L52'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_ADVERTISE_ATTR, baa);
+<a id='L53' name='L53'></a><em class='brace'>}</em>
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> *
+<a id='L56' name='L56'></a><a href='../S/639.html#L130' title='Referred from 130 in bgpd/bgp_advertise.c.'>baa_hash_alloc</a> (<strong class='reserved'>void</strong> *p)
+<a id='L57' name='L57'></a><em class='brace'>{</em>
+<a id='L58' name='L58'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> * ref = (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *) p;
+<a id='L59' name='L59'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa;
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>  baa = <a href='../S/639.html#L43' title='Defined at 43 in bgpd/bgp_advertise.c.'>baa_new</a> ();
+<a id='L62' name='L62'></a>  baa-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = ref-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>;
+<a id='L63' name='L63'></a>  <strong class='reserved'>return</strong> baa;
+<a id='L64' name='L64'></a><em class='brace'>}</em>
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><strong class='reserved'>static</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>
+<a id='L67' name='L67'></a><a href='../S/639.html#L396' title='Referred from 396 in bgpd/bgp_advertise.c.'>baa_hash_key</a> (<strong class='reserved'>void</strong> *p)
+<a id='L68' name='L68'></a><em class='brace'>{</em>
+<a id='L69' name='L69'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> * baa = (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *) p;
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a>  <strong class='reserved'>return</strong> <a href='../S/643.html#L359' title='Defined at 359 in bgpd/bgp_attr.c.'>attrhash_key_make</a> (baa-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L72' name='L72'></a><em class='brace'>}</em>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L75' name='L75'></a><a href='../S/639.html#L396' title='Referred from 396 in bgpd/bgp_advertise.c.'>baa_hash_cmp</a> (<strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *p1, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *p2)
+<a id='L76' name='L76'></a><em class='brace'>{</em>
+<a id='L77' name='L77'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> * baa1 = p1;
+<a id='L78' name='L78'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> * baa2 = p2;
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a>  <strong class='reserved'>return</strong> <a href='../S/643.html#L409' title='Defined at 409 in bgpd/bgp_attr.c.'>attrhash_cmp</a> (baa1-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, baa2-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L81' name='L81'></a><em class='brace'>}</em>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='comment'>/* BGP update and withdraw information is stored in BGP advertise</em>
+<a id='L84' name='L84'></a><em class='comment'>   structure.  This structure is referred from BGP adjacency</em>
+<a id='L85' name='L85'></a><em class='comment'>   information.  */</em>
+<a id='L86' name='L86'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *
+<a id='L87' name='L87'></a><a href='../R/4680.html' title='Multiple referred from 2 places.'>bgp_advertise_new</a> (<strong class='reserved'>void</strong>)
+<a id='L88' name='L88'></a><em class='brace'>{</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>return</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *) 
+<a id='L90' name='L90'></a>    <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_ADVERTISE, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a>));
+<a id='L91' name='L91'></a><em class='brace'>}</em>
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L94' name='L94'></a><a href='../S/639.html#L209' title='Referred from 209 in bgpd/bgp_advertise.c.'>bgp_advertise_free</a> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *adv)
+<a id='L95' name='L95'></a><em class='brace'>{</em>
+<a id='L96' name='L96'></a>  <strong class='reserved'>if</strong> (adv-&gt;binfo)
+<a id='L97' name='L97'></a>    <a href='../S/620.html#L159' title='Defined at 159 in bgpd/bgp_route.c.'>bgp_info_unlock</a> (adv-&gt;binfo); <em class='comment'>/* bgp_advertise bgp_info reference */</em>
+<a id='L98' name='L98'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_ADVERTISE, adv);
+<a id='L99' name='L99'></a><em class='brace'>}</em>
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L102' name='L102'></a><a href='../S/639.html#L264' title='Referred from 264 in bgpd/bgp_advertise.c.'>bgp_advertise_add</a> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa,
+<a id='L103' name='L103'></a>                   <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *adv)
+<a id='L104' name='L104'></a><em class='brace'>{</em>
+<a id='L105' name='L105'></a>  adv-&gt;next = baa-&gt;adv;
+<a id='L106' name='L106'></a>  <strong class='reserved'>if</strong> (baa-&gt;adv)
+<a id='L107' name='L107'></a>    baa-&gt;adv-&gt;prev = adv;
+<a id='L108' name='L108'></a>  baa-&gt;adv = adv;
+<a id='L109' name='L109'></a><em class='brace'>}</em>
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L112' name='L112'></a><a href='../S/639.html#L196' title='Referred from 196 in bgpd/bgp_advertise.c.'>bgp_advertise_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa,
+<a id='L113' name='L113'></a>                      <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *adv)
+<a id='L114' name='L114'></a><em class='brace'>{</em>
+<a id='L115' name='L115'></a>  <strong class='reserved'>if</strong> (adv-&gt;next)
+<a id='L116' name='L116'></a>    adv-&gt;next-&gt;prev = adv-&gt;prev;
+<a id='L117' name='L117'></a>  <strong class='reserved'>if</strong> (adv-&gt;prev)
+<a id='L118' name='L118'></a>    adv-&gt;prev-&gt;next = adv-&gt;next;
+<a id='L119' name='L119'></a>  <strong class='reserved'>else</strong>
+<a id='L120' name='L120'></a>    baa-&gt;adv = adv-&gt;next;
+<a id='L121' name='L121'></a><em class='brace'>}</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *
+<a id='L124' name='L124'></a><a href='../S/639.html#L258' title='Referred from 258 in bgpd/bgp_advertise.c.'>bgp_advertise_intern</a> (<strong class='reserved'>struct</strong> <a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a> *<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L125' name='L125'></a><em class='brace'>{</em>
+<a id='L126' name='L126'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> ref;
+<a id='L127' name='L127'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa;
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a>  ref.<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = <a href='../S/643.html#L498' title='Defined at 498 in bgpd/bgp_attr.c.'>bgp_attr_intern</a> (<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L130' name='L130'></a>  baa = (<strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *) <a href='../S/265.html#L66' title='Defined at 66 in lib/hash.c.'>hash_get</a> (<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>, &amp;ref, <a href='../S/639.html#L56' title='Defined at 56 in bgpd/bgp_advertise.c.'>baa_hash_alloc</a>);
+<a id='L131' name='L131'></a>  baa-&gt;refcnt++;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <strong class='reserved'>return</strong> baa;
+<a id='L134' name='L134'></a><em class='brace'>}</em>
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L137' name='L137'></a><a href='../S/639.html#L202' title='Referred from 202 in bgpd/bgp_advertise.c.'>bgp_advertise_unintern</a> (<strong class='reserved'>struct</strong> <a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a> *<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>, <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa)
+<a id='L138' name='L138'></a><em class='brace'>{</em>
+<a id='L139' name='L139'></a>  <strong class='reserved'>if</strong> (baa-&gt;refcnt)
+<a id='L140' name='L140'></a>    baa-&gt;refcnt--;
+<a id='L141' name='L141'></a>
+<a id='L142' name='L142'></a>  <strong class='reserved'>if</strong> (baa-&gt;refcnt &amp;&amp; baa-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L143' name='L143'></a>    <a href='../S/643.html#L671' title='Defined at 671 in bgpd/bgp_attr.c.'>bgp_attr_unintern</a> (&amp;baa-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L144' name='L144'></a>  <strong class='reserved'>else</strong>
+<a id='L145' name='L145'></a>    <em class='brace'>{</em>
+<a id='L146' name='L146'></a>      <strong class='reserved'>if</strong> (baa-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L147' name='L147'></a>        <em class='brace'>{</em>
+<a id='L148' name='L148'></a>          <a href='../S/265.html#L119' title='Defined at 119 in lib/hash.c.'>hash_release</a> (<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>, baa);
+<a id='L149' name='L149'></a>          <a href='../S/643.html#L671' title='Defined at 671 in bgpd/bgp_attr.c.'>bgp_attr_unintern</a> (&amp;baa-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L150' name='L150'></a>        <em class='brace'>}</em>
+<a id='L151' name='L151'></a>      <a href='../S/639.html#L50' title='Defined at 50 in bgpd/bgp_advertise.c.'>baa_free</a> (baa);
+<a id='L152' name='L152'></a>    <em class='brace'>}</em>
+<a id='L153' name='L153'></a><em class='brace'>}</em>
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a><em class='comment'>/* BGP adjacency keeps minimal advertisement information.  */</em>
+<a id='L156' name='L156'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L157' name='L157'></a><a href='../R/4667.html' title='Multiple referred from 2 places.'>bgp_adj_out_free</a> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a> *adj)
+<a id='L158' name='L158'></a><em class='brace'>{</em>
+<a id='L159' name='L159'></a>  <a href='../S/610.html#L761' title='Defined at 761 in bgpd/bgpd.c.'>peer_unlock</a> (adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>); <em class='comment'>/* adj_out peer reference */</em>
+<a id='L160' name='L160'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_ADJ_OUT, adj);
+<a id='L161' name='L161'></a><em class='brace'>}</em>
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><strong class='reserved'>int</strong>
+<a id='L164' name='L164'></a><a href='../R/4668.html' title='Multiple referred from 2 places.'>bgp_adj_out_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p,
+<a id='L165' name='L165'></a>                    <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi, <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn)
+<a id='L166' name='L166'></a><em class='brace'>{</em>
+<a id='L167' name='L167'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a> *adj;
+<a id='L168' name='L168'></a>
+<a id='L169' name='L169'></a>  <strong class='reserved'>for</strong> (adj = rn-&gt;adj_out; adj; adj = adj-&gt;next)
+<a id='L170' name='L170'></a>    <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> == <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L171' name='L171'></a>      <strong class='reserved'>break</strong>;
+<a id='L172' name='L172'></a>
+<a id='L173' name='L173'></a>  <strong class='reserved'>if</strong> (! adj)
+<a id='L174' name='L174'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L175' name='L175'></a>
+<a id='L176' name='L176'></a>  <strong class='reserved'>return</strong> (adj-&gt;adv 
+<a id='L177' name='L177'></a>          ? (adj-&gt;adv-&gt;baa ? 1 : 0)
+<a id='L178' name='L178'></a>          : (adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> ? 1 : 0));
+<a id='L179' name='L179'></a><em class='brace'>}</em>
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a><strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *
+<a id='L182' name='L182'></a><a href='../R/4675.html' title='Multiple referred from 5 places.'>bgp_advertise_clean</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a> *adj,
+<a id='L183' name='L183'></a>                     <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi)
+<a id='L184' name='L184'></a><em class='brace'>{</em>
+<a id='L185' name='L185'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *adv;
+<a id='L186' name='L186'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L32' title='Defined at 32 in bgpd/bgp_advertise.h.'>bgp_advertise_attr</a> *baa;
+<a id='L187' name='L187'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *next;
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a>  adv = adj-&gt;adv;
+<a id='L190' name='L190'></a>  baa = adv-&gt;baa;
+<a id='L191' name='L191'></a>  next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a>  <strong class='reserved'>if</strong> (baa)
+<a id='L194' name='L194'></a>    <em class='brace'>{</em>
+<a id='L195' name='L195'></a>      <em class='comment'>/* Unlink myself from advertise attribute FIFO.  */</em>
+<a id='L196' name='L196'></a>      <a href='../S/639.html#L112' title='Defined at 112 in bgpd/bgp_advertise.c.'>bgp_advertise_delete</a> (baa, adv);
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>      <em class='comment'>/* Fetch next advertise candidate. */</em>
+<a id='L199' name='L199'></a>      next = baa-&gt;adv;
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>      <em class='comment'>/* Unintern BGP advertise attribute.  */</em>
+<a id='L202' name='L202'></a>      <a href='../S/639.html#L137' title='Defined at 137 in bgpd/bgp_advertise.c.'>bgp_advertise_unintern</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>[afi][safi], baa);
+<a id='L203' name='L203'></a>    <em class='brace'>}</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a>  <em class='comment'>/* Unlink myself from advertisement FIFO.  */</em>
+<a id='L206' name='L206'></a>  <a href='../S/191.html#L560' title='Defined at 560 in lib/zebra.h.'>FIFO_DEL</a> (adv);
+<a id='L207' name='L207'></a>
+<a id='L208' name='L208'></a>  <em class='comment'>/* Free memory.  */</em>
+<a id='L209' name='L209'></a>  <a href='../S/639.html#L94' title='Defined at 94 in bgpd/bgp_advertise.c.'>bgp_advertise_free</a> (adj-&gt;adv);
+<a id='L210' name='L210'></a>  adj-&gt;adv = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  <strong class='reserved'>return</strong> next;
+<a id='L213' name='L213'></a><em class='brace'>}</em>
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a><strong class='reserved'>void</strong>
+<a id='L216' name='L216'></a><a href='../R/4670.html' title='Multiple referred from 4 places.'>bgp_adj_out_set</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p,
+<a id='L217' name='L217'></a>                 <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi,
+<a id='L218' name='L218'></a>                 <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo)
+<a id='L219' name='L219'></a><em class='brace'>{</em>
+<a id='L220' name='L220'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a> *adj = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L221' name='L221'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *adv;
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  <strong class='reserved'>if</strong> (<a href='../S/665.html#L29' title='Defined at 29 in config.h.'>DISABLE_BGP_ANNOUNCE</a>)
+<a id='L224' name='L224'></a>    <strong class='reserved'>return</strong>;
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a>  <em class='comment'>/* Look for adjacency information. */</em>
+<a id='L227' name='L227'></a>  <strong class='reserved'>if</strong> (rn)
+<a id='L228' name='L228'></a>    <em class='brace'>{</em>
+<a id='L229' name='L229'></a>      <strong class='reserved'>for</strong> (adj = rn-&gt;adj_out; adj; adj = adj-&gt;next)
+<a id='L230' name='L230'></a>        <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> == <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L231' name='L231'></a>          <strong class='reserved'>break</strong>;
+<a id='L232' name='L232'></a>    <em class='brace'>}</em>
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a>  <strong class='reserved'>if</strong> (! adj)
+<a id='L235' name='L235'></a>    <em class='brace'>{</em>
+<a id='L236' name='L236'></a>      adj = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_ADJ_OUT, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a>));
+<a id='L237' name='L237'></a>      adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L748' title='Defined at 748 in bgpd/bgpd.c.'>peer_lock</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>); <em class='comment'>/* adj_out peer reference */</em>
+<a id='L238' name='L238'></a>      
+<a id='L239' name='L239'></a>      <strong class='reserved'>if</strong> (rn)
+<a id='L240' name='L240'></a>        <em class='brace'>{</em>
+<a id='L241' name='L241'></a>          <a href='../S/632.html#L127' title='Defined at 127 in bgpd/bgp_advertise.h.'>BGP_ADJ_OUT_ADD</a> (rn, adj);
+<a id='L242' name='L242'></a>          <a href='../S/646.html#L244' title='Defined at 244 in bgpd/bgp_table.h.'>bgp_lock_node</a> (rn);
+<a id='L243' name='L243'></a>        <em class='brace'>}</em>
+<a id='L244' name='L244'></a>    <em class='brace'>}</em>
+<a id='L245' name='L245'></a>
+<a id='L246' name='L246'></a>  <strong class='reserved'>if</strong> (adj-&gt;adv)
+<a id='L247' name='L247'></a>    <a href='../S/639.html#L182' title='Defined at 182 in bgpd/bgp_advertise.c.'>bgp_advertise_clean</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, adj, afi, safi);
+<a id='L248' name='L248'></a>  
+<a id='L249' name='L249'></a>  adj-&gt;adv = <a href='../S/639.html#L87' title='Defined at 87 in bgpd/bgp_advertise.c.'>bgp_advertise_new</a> ();
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>  adv = adj-&gt;adv;
+<a id='L252' name='L252'></a>  adv-&gt;rn = rn;
+<a id='L253' name='L253'></a>  
+<a id='L254' name='L254'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (adv-&gt;binfo == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L255' name='L255'></a>  adv-&gt;binfo = <a href='../S/620.html#L152' title='Defined at 152 in bgpd/bgp_route.c.'>bgp_info_lock</a> (binfo); <em class='comment'>/* bgp_info adj_out reference */</em>
+<a id='L256' name='L256'></a>  
+<a id='L257' name='L257'></a>  <strong class='reserved'>if</strong> (<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L258' name='L258'></a>    adv-&gt;baa = <a href='../S/639.html#L124' title='Defined at 124 in bgpd/bgp_advertise.c.'>bgp_advertise_intern</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>[afi][safi], <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L259' name='L259'></a>  <strong class='reserved'>else</strong>
+<a id='L260' name='L260'></a>    adv-&gt;baa = <a href='../S/639.html#L43' title='Defined at 43 in bgpd/bgp_advertise.c.'>baa_new</a> ();
+<a id='L261' name='L261'></a>  adv-&gt;adj = adj;
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a>  <em class='comment'>/* Add new advertisement to advertisement attribute list. */</em>
+<a id='L264' name='L264'></a>  <a href='../S/639.html#L102' title='Defined at 102 in bgpd/bgp_advertise.c.'>bgp_advertise_add</a> (adv-&gt;baa, adv);
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a>  <a href='../S/191.html#L551' title='Defined at 551 in lib/zebra.h.'>FIFO_ADD</a> (&amp;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sync[afi][safi]-&gt;update, &amp;adv-&gt;<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L267' name='L267'></a><em class='brace'>}</em>
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a><strong class='reserved'>void</strong>
+<a id='L270' name='L270'></a><a href='../R/4671.html' title='Multiple referred from 4 places.'>bgp_adj_out_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p, 
+<a id='L271' name='L271'></a>                   <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi)
+<a id='L272' name='L272'></a><em class='brace'>{</em>
+<a id='L273' name='L273'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a> *adj;
+<a id='L274' name='L274'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L44' title='Defined at 44 in bgpd/bgp_advertise.h.'>bgp_advertise</a> *adv;
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>  <strong class='reserved'>if</strong> (<a href='../S/665.html#L29' title='Defined at 29 in config.h.'>DISABLE_BGP_ANNOUNCE</a>)
+<a id='L277' name='L277'></a>    <strong class='reserved'>return</strong>;
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a>  <em class='comment'>/* Lookup existing adjacency, if it is not there return immediately.  */</em>
+<a id='L280' name='L280'></a>  <strong class='reserved'>for</strong> (adj = rn-&gt;adj_out; adj; adj = adj-&gt;next)
+<a id='L281' name='L281'></a>    <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> == <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L282' name='L282'></a>      <strong class='reserved'>break</strong>;
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a>  <strong class='reserved'>if</strong> (! adj)
+<a id='L285' name='L285'></a>    <strong class='reserved'>return</strong>;
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>  <em class='comment'>/* Clearn up previous advertisement.  */</em>
+<a id='L288' name='L288'></a>  <strong class='reserved'>if</strong> (adj-&gt;adv)
+<a id='L289' name='L289'></a>    <a href='../S/639.html#L182' title='Defined at 182 in bgpd/bgp_advertise.c.'>bgp_advertise_clean</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, adj, afi, safi);
+<a id='L290' name='L290'></a>
+<a id='L291' name='L291'></a>  <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L292' name='L292'></a>    <em class='brace'>{</em>
+<a id='L293' name='L293'></a>      <em class='comment'>/* We need advertisement structure.  */</em>
+<a id='L294' name='L294'></a>      adj-&gt;adv = <a href='../S/639.html#L87' title='Defined at 87 in bgpd/bgp_advertise.c.'>bgp_advertise_new</a> ();
+<a id='L295' name='L295'></a>      adv = adj-&gt;adv;
+<a id='L296' name='L296'></a>      adv-&gt;rn = rn;
+<a id='L297' name='L297'></a>      adv-&gt;adj = adj;
+<a id='L298' name='L298'></a>
+<a id='L299' name='L299'></a>      <em class='comment'>/* Add to synchronization entry for withdraw announcement.  */</em>
+<a id='L300' name='L300'></a>      <a href='../S/191.html#L551' title='Defined at 551 in lib/zebra.h.'>FIFO_ADD</a> (&amp;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sync[afi][safi]-&gt;withdraw, &amp;adv-&gt;<a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a>);
+<a id='L301' name='L301'></a>
+<a id='L302' name='L302'></a>      <em class='comment'>/* Schedule packet write. */</em>
+<a id='L303' name='L303'></a>      <a href='../S/658.html#L38' title='Defined at 38 in bgpd/bgp_fsm.h.'>BGP_WRITE_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_write, <a href='../S/622.html#L605' title='Defined at 605 in bgpd/bgp_packet.c.'>bgp_write</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L304' name='L304'></a>    <em class='brace'>}</em>
+<a id='L305' name='L305'></a>  <strong class='reserved'>else</strong>
+<a id='L306' name='L306'></a>    <em class='brace'>{</em>
+<a id='L307' name='L307'></a>      <em class='comment'>/* Remove myself from adjacency. */</em>
+<a id='L308' name='L308'></a>      <a href='../S/632.html#L128' title='Defined at 128 in bgpd/bgp_advertise.h.'>BGP_ADJ_OUT_DEL</a> (rn, adj);
+<a id='L309' name='L309'></a>      
+<a id='L310' name='L310'></a>      <em class='comment'>/* Free allocated information.  */</em>
+<a id='L311' name='L311'></a>      <a href='../S/639.html#L157' title='Defined at 157 in bgpd/bgp_advertise.c.'>bgp_adj_out_free</a> (adj);
+<a id='L312' name='L312'></a>
+<a id='L313' name='L313'></a>      <a href='../S/646.html#L173' title='Defined at 173 in bgpd/bgp_table.h.'>bgp_unlock_node</a> (rn);
+<a id='L314' name='L314'></a>    <em class='brace'>}</em>
+<a id='L315' name='L315'></a><em class='brace'>}</em>
+<a id='L316' name='L316'></a>
+<a id='L317' name='L317'></a><strong class='reserved'>void</strong>
+<a id='L318' name='L318'></a><a href='../R/4669.html' title='Multiple referred from 3 places.'>bgp_adj_out_remove</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/632.html#L67' title='Defined at 67 in bgpd/bgp_advertise.h.'>bgp_adj_out</a> *adj, 
+<a id='L319' name='L319'></a>                    <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi)
+<a id='L320' name='L320'></a><em class='brace'>{</em>
+<a id='L321' name='L321'></a>  <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L322' name='L322'></a>    <a href='../S/643.html#L671' title='Defined at 671 in bgpd/bgp_attr.c.'>bgp_attr_unintern</a> (&amp;adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L323' name='L323'></a>
+<a id='L324' name='L324'></a>  <strong class='reserved'>if</strong> (adj-&gt;adv)
+<a id='L325' name='L325'></a>    <a href='../S/639.html#L182' title='Defined at 182 in bgpd/bgp_advertise.c.'>bgp_advertise_clean</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, adj, afi, safi);
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a>  <a href='../S/632.html#L128' title='Defined at 128 in bgpd/bgp_advertise.h.'>BGP_ADJ_OUT_DEL</a> (rn, adj);
+<a id='L328' name='L328'></a>  <a href='../S/639.html#L157' title='Defined at 157 in bgpd/bgp_advertise.c.'>bgp_adj_out_free</a> (adj);
+<a id='L329' name='L329'></a><em class='brace'>}</em>
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a><strong class='reserved'>void</strong>
+<a id='L332' name='L332'></a><a href='../R/4664.html' title='Multiple referred from 2 places.'>bgp_adj_in_set</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L333' name='L333'></a><em class='brace'>{</em>
+<a id='L334' name='L334'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L84' title='Defined at 84 in bgpd/bgp_advertise.h.'>bgp_adj_in</a> *adj;
+<a id='L335' name='L335'></a>
+<a id='L336' name='L336'></a>  <strong class='reserved'>for</strong> (adj = rn-&gt;adj_in; adj; adj = adj-&gt;next)
+<a id='L337' name='L337'></a>    <em class='brace'>{</em>
+<a id='L338' name='L338'></a>      <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> == <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L339' name='L339'></a>        <em class='brace'>{</em>
+<a id='L340' name='L340'></a>          <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> != <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>)
+<a id='L341' name='L341'></a>            <em class='brace'>{</em>
+<a id='L342' name='L342'></a>              <a href='../S/643.html#L671' title='Defined at 671 in bgpd/bgp_attr.c.'>bgp_attr_unintern</a> (&amp;adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L343' name='L343'></a>              adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = <a href='../S/643.html#L498' title='Defined at 498 in bgpd/bgp_attr.c.'>bgp_attr_intern</a> (<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L344' name='L344'></a>            <em class='brace'>}</em>
+<a id='L345' name='L345'></a>          <strong class='reserved'>return</strong>;
+<a id='L346' name='L346'></a>        <em class='brace'>}</em>
+<a id='L347' name='L347'></a>    <em class='brace'>}</em>
+<a id='L348' name='L348'></a>  adj = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_ADJ_IN, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L84' title='Defined at 84 in bgpd/bgp_advertise.h.'>bgp_adj_in</a>));
+<a id='L349' name='L349'></a>  adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L748' title='Defined at 748 in bgpd/bgpd.c.'>peer_lock</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>); <em class='comment'>/* adj_in peer reference */</em>
+<a id='L350' name='L350'></a>  adj-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = <a href='../S/643.html#L498' title='Defined at 498 in bgpd/bgp_attr.c.'>bgp_attr_intern</a> (<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L351' name='L351'></a>  <a href='../S/632.html#L125' title='Defined at 125 in bgpd/bgp_advertise.h.'>BGP_ADJ_IN_ADD</a> (rn, adj);
+<a id='L352' name='L352'></a>  <a href='../S/646.html#L244' title='Defined at 244 in bgpd/bgp_table.h.'>bgp_lock_node</a> (rn);
+<a id='L353' name='L353'></a><em class='brace'>}</em>
+<a id='L354' name='L354'></a>
+<a id='L355' name='L355'></a><strong class='reserved'>void</strong>
+<a id='L356' name='L356'></a><a href='../R/4663.html' title='Multiple referred from 4 places.'>bgp_adj_in_remove</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/632.html#L84' title='Defined at 84 in bgpd/bgp_advertise.h.'>bgp_adj_in</a> *bai)
+<a id='L357' name='L357'></a><em class='brace'>{</em>
+<a id='L358' name='L358'></a>  <a href='../S/643.html#L671' title='Defined at 671 in bgpd/bgp_attr.c.'>bgp_attr_unintern</a> (&amp;bai-&gt;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>);
+<a id='L359' name='L359'></a>  <a href='../S/632.html#L126' title='Defined at 126 in bgpd/bgp_advertise.h.'>BGP_ADJ_IN_DEL</a> (rn, bai);
+<a id='L360' name='L360'></a>  <a href='../S/610.html#L761' title='Defined at 761 in bgpd/bgpd.c.'>peer_unlock</a> (bai-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>); <em class='comment'>/* adj_in peer reference */</em>
+<a id='L361' name='L361'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_ADJ_IN, bai);
+<a id='L362' name='L362'></a><em class='brace'>}</em>
+<a id='L363' name='L363'></a>
+<a id='L364' name='L364'></a><strong class='reserved'>void</strong>
+<a id='L365' name='L365'></a><a href='../R/4665.html' title='Multiple referred from 2 places.'>bgp_adj_in_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L366' name='L366'></a><em class='brace'>{</em>
+<a id='L367' name='L367'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L84' title='Defined at 84 in bgpd/bgp_advertise.h.'>bgp_adj_in</a> *adj;
+<a id='L368' name='L368'></a>
+<a id='L369' name='L369'></a>  <strong class='reserved'>for</strong> (adj = rn-&gt;adj_in; adj; adj = adj-&gt;next)
+<a id='L370' name='L370'></a>    <strong class='reserved'>if</strong> (adj-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> == <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L371' name='L371'></a>      <strong class='reserved'>break</strong>;
+<a id='L372' name='L372'></a>
+<a id='L373' name='L373'></a>  <strong class='reserved'>if</strong> (! adj)
+<a id='L374' name='L374'></a>    <strong class='reserved'>return</strong>;
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a>  <a href='../S/639.html#L356' title='Defined at 356 in bgpd/bgp_advertise.c.'>bgp_adj_in_remove</a> (rn, adj);
+<a id='L377' name='L377'></a>  <a href='../S/646.html#L173' title='Defined at 173 in bgpd/bgp_table.h.'>bgp_unlock_node</a> (rn);
+<a id='L378' name='L378'></a><em class='brace'>}</em>
+<a id='L379' name='L379'></a>
+<a id='L380' name='L380'></a><strong class='reserved'>void</strong>
+<a id='L381' name='L381'></a><a href='../R/5098.html' title='Multiple referred from 2 places.'>bgp_sync_init</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L382' name='L382'></a><em class='brace'>{</em>
+<a id='L383' name='L383'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L384' name='L384'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L385' name='L385'></a>  <strong class='reserved'>struct</strong> <a href='../S/632.html#L98' title='Defined at 98 in bgpd/bgp_advertise.h.'>bgp_synchronize</a> *sync;
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a>; afi++)
+<a id='L388' name='L388'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>; safi &lt; <a href='../S/191.html#L506' title='Defined at 506 in lib/zebra.h.'>SAFI_MAX</a>; safi++)
+<a id='L389' name='L389'></a>      <em class='brace'>{</em>
+<a id='L390' name='L390'></a>        sync = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_SYNCHRONISE, 
+<a id='L391' name='L391'></a>                        <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/632.html#L98' title='Defined at 98 in bgpd/bgp_advertise.h.'>bgp_synchronize</a>));
+<a id='L392' name='L392'></a>        <a href='../S/191.html#L545' title='Defined at 545 in lib/zebra.h.'>FIFO_INIT</a> (&amp;sync-&gt;update);
+<a id='L393' name='L393'></a>        <a href='../S/191.html#L545' title='Defined at 545 in lib/zebra.h.'>FIFO_INIT</a> (&amp;sync-&gt;withdraw);
+<a id='L394' name='L394'></a>        <a href='../S/191.html#L545' title='Defined at 545 in lib/zebra.h.'>FIFO_INIT</a> (&amp;sync-&gt;withdraw_low);
+<a id='L395' name='L395'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sync[afi][safi] = sync;
+<a id='L396' name='L396'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>[afi][safi] = <a href='../S/265.html#L47' title='Defined at 47 in lib/hash.c.'>hash_create</a> (<a href='../S/639.html#L67' title='Defined at 67 in bgpd/bgp_advertise.c.'>baa_hash_key</a>, <a href='../S/639.html#L75' title='Defined at 75 in bgpd/bgp_advertise.c.'>baa_hash_cmp</a>);
+<a id='L397' name='L397'></a>      <em class='brace'>}</em>
+<a id='L398' name='L398'></a><em class='brace'>}</em>
+<a id='L399' name='L399'></a>
+<a id='L400' name='L400'></a><strong class='reserved'>void</strong>
+<a id='L401' name='L401'></a><a href='../R/5097.html' title='Multiple referred from 2 places.'>bgp_sync_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L402' name='L402'></a><em class='brace'>{</em>
+<a id='L403' name='L403'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L404' name='L404'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L405' name='L405'></a>
+<a id='L406' name='L406'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a>; afi++)
+<a id='L407' name='L407'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>; safi &lt; <a href='../S/191.html#L506' title='Defined at 506 in lib/zebra.h.'>SAFI_MAX</a>; safi++)
+<a id='L408' name='L408'></a>      <em class='brace'>{</em>
+<a id='L409' name='L409'></a>        <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sync[afi][safi])
+<a id='L410' name='L410'></a>          <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_SYNCHRONISE, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sync[afi][safi]);
+<a id='L411' name='L411'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sync[afi][safi] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L412' name='L412'></a>        
+<a id='L413' name='L413'></a>        <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>[afi][safi])
+<a id='L414' name='L414'></a>          <a href='../S/265.html#L196' title='Defined at 196 in lib/hash.c.'>hash_free</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>[afi][safi]);
+<a id='L415' name='L415'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>[afi][safi] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L416' name='L416'></a>      <em class='brace'>}</em>
+<a id='L417' name='L417'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L43'>[^]</a><a href='#L401'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

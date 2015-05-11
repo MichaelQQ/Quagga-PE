@@ -1,0 +1,777 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>babeld/babeld.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1012.html'>babeld</a>/babeld.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L94'>[^]</a><a href='#L723'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L94' title='Defined at 94.'>babel_config_write</a></li>
+<li><a href='#L125' title='Defined at 125.'>babel_create_routing_process</a></li>
+<li><a href='#L160' title='Defined at 160.'>babel_read_protocol</a></li>
+<li><a href='#L199' title='Defined at 199.'>babel_init_routing_process</a></li>
+<li><a href='#L212' title='Defined at 212.'>babel_get_myid</a></li>
+<li><a href='#L266' title='Defined at 266.'>babel_initial_noise</a></li>
+<li><a href='#L297' title='Defined at 297.'>babel_clean_routing_process</a></li>
+<li><a href='#L316' title='Defined at 316.'>babel_main_loop</a></li>
+<li><a href='#L400' title='Defined at 400.'>printIfMin</a></li>
+<li><a href='#L440' title='Defined at 440.'>babel_fill_with_next_timeout</a></li>
+<li><a href='#L483' title='Defined at 483.'>babel_set_timer</a></li>
+<li><a href='#L495' title='Defined at 495.'>schedule_neighbours_check</a></li>
+<li><a href='#L507' title='Defined at 507.'>resize_receive_buffer</a></li>
+<li><a href='#L533' title='Defined at 533.'>babel_distribute_update</a></li>
+<li><a href='#L591' title='Defined at 591.'>babel_distribute_update_interface</a></li>
+<li><a href='#L602' title='Defined at 602.'>babel_distribute_update_all</a></li>
+<li><a href='#L612' title='Defined at 612.'>babel_distribute_update_all_wrapper</a></li>
+<li><a href='#L619' title='Defined at 619.'>DEFUN</a></li>
+<li><a href='#L644' title='Defined at 644.'>DEFUN</a></li>
+<li><a href='#L658' title='Defined at 658.'>DEFUN</a></li>
+<li><a href='#L674' title='Defined at 674.'>babeld_quagga_init</a></li>
+<li><a href='#L706' title='Defined at 706.'>input_filter</a></li>
+<li><a href='#L714' title='Defined at 714.'>output_filter</a></li>
+<li><a href='#L723' title='Defined at 723.'>redistribute_filter</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*  </em>
+<a id='L2' name='L2'></a><em class='comment'> *  This file is free software: you may copy, redistribute and/or modify it  </em>
+<a id='L3' name='L3'></a><em class='comment'> *  under the terms of the GNU General Public License as published by the  </em>
+<a id='L4' name='L4'></a><em class='comment'> *  Free Software Foundation, either version 2 of the License, or (at your  </em>
+<a id='L5' name='L5'></a><em class='comment'> *  option) any later version.  </em>
+<a id='L6' name='L6'></a><em class='comment'> *  </em>
+<a id='L7' name='L7'></a><em class='comment'> *  This file is distributed in the hope that it will be useful, but  </em>
+<a id='L8' name='L8'></a><em class='comment'> *  WITHOUT ANY WARRANTY; without even the implied warranty of  </em>
+<a id='L9' name='L9'></a><em class='comment'> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  </em>
+<a id='L10' name='L10'></a><em class='comment'> *  General Public License for more details.  </em>
+<a id='L11' name='L11'></a><em class='comment'> *  </em>
+<a id='L12' name='L12'></a><em class='comment'> *  You should have received a copy of the GNU General Public License  </em>
+<a id='L13' name='L13'></a><em class='comment'> *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.  </em>
+<a id='L14' name='L14'></a><em class='comment'> *  </em>
+<a id='L15' name='L15'></a><em class='comment'> * This file incorporates work covered by the following copyright and  </em>
+<a id='L16' name='L16'></a><em class='comment'> * permission notice:  </em>
+<a id='L17' name='L17'></a><em class='comment'> *  </em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'>Copyright 2011 by Matthieu Boutier and Juliusz Chroboczek</em>
+<a id='L20' name='L20'></a><em class='comment'></em>
+<a id='L21' name='L21'></a><em class='comment'>Permission is hereby granted, free of charge, to any person obtaining a copy</em>
+<a id='L22' name='L22'></a><em class='comment'>of this software and associated documentation files (the "Software"), to deal</em>
+<a id='L23' name='L23'></a><em class='comment'>in the Software without restriction, including without limitation the rights</em>
+<a id='L24' name='L24'></a><em class='comment'>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</em>
+<a id='L25' name='L25'></a><em class='comment'>copies of the Software, and to permit persons to whom the Software is</em>
+<a id='L26' name='L26'></a><em class='comment'>furnished to do so, subject to the following conditions:</em>
+<a id='L27' name='L27'></a><em class='comment'></em>
+<a id='L28' name='L28'></a><em class='comment'>The above copyright notice and this permission notice shall be included in</em>
+<a id='L29' name='L29'></a><em class='comment'>all copies or substantial portions of the Software.</em>
+<a id='L30' name='L30'></a><em class='comment'></em>
+<a id='L31' name='L31'></a><em class='comment'>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</em>
+<a id='L32' name='L32'></a><em class='comment'>IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</em>
+<a id='L33' name='L33'></a><em class='comment'>FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE</em>
+<a id='L34' name='L34'></a><em class='comment'>AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</em>
+<a id='L35' name='L35'></a><em class='comment'>LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</em>
+<a id='L36' name='L36'></a><em class='comment'>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</em>
+<a id='L37' name='L37'></a><em class='comment'>THE SOFTWARE.</em>
+<a id='L38' name='L38'></a><em class='comment'>*/</em>
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='294.html'>memtypes.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='207.html'>distribute.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='199.html'>filter.h</a>"
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='302.html'>plist.h</a>"
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><em class='sharp'>#include</em> "<a href='144.html'>babel_main.h</a>"
+<a id='L52' name='L52'></a><em class='sharp'>#include</em> "<a href='165.html'>babeld.h</a>"
+<a id='L53' name='L53'></a><em class='sharp'>#include</em> "<a href='168.html'>util.h</a>"
+<a id='L54' name='L54'></a><em class='sharp'>#include</em> "<a href='161.html'>net.h</a>"
+<a id='L55' name='L55'></a><em class='sharp'>#include</em> "<a href='169.html'>kernel.h</a>"
+<a id='L56' name='L56'></a><em class='sharp'>#include</em> "<a href='159.html'>babel_interface.h</a>"
+<a id='L57' name='L57'></a><em class='sharp'>#include</em> "<a href='172.html'>neighbour.h</a>"
+<a id='L58' name='L58'></a><em class='sharp'>#include</em> "<a href='147.html'>route.h</a>"
+<a id='L59' name='L59'></a><em class='sharp'>#include</em> "<a href='176.html'>message.h</a>"
+<a id='L60' name='L60'></a><em class='sharp'>#include</em> "<a href='143.html'>resend.h</a>"
+<a id='L61' name='L61'></a><em class='sharp'>#include</em> "<a href='162.html'>babel_filter.h</a>"
+<a id='L62' name='L62'></a><em class='sharp'>#include</em> "<a href='145.html'>babel_zebra.h</a>"
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/171.html#L199' title='Defined at 199 in babeld/babeld.c.'>babel_init_routing_process</a>(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L66' name='L66'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/171.html#L212' title='Defined at 212 in babeld/babeld.c.'>babel_get_myid</a>(<strong class='reserved'>void</strong>);
+<a id='L67' name='L67'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/171.html#L266' title='Defined at 266 in babeld/babeld.c.'>babel_initial_noise</a>(<strong class='reserved'>void</strong>);
+<a id='L68' name='L68'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/171.html#L160' title='Defined at 160 in babeld/babeld.c.'>babel_read_protocol</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L69' name='L69'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/171.html#L316' title='Defined at 316 in babeld/babeld.c.'>babel_main_loop</a>(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L70' name='L70'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/171.html#L483' title='Defined at 483 in babeld/babeld.c.'>babel_set_timer</a>(<strong class='reserved'>struct</strong> timeval *timeout);
+<a id='L71' name='L71'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/171.html#L440' title='Defined at 440 in babeld/babeld.c.'>babel_fill_with_next_timeout</a>(<strong class='reserved'>struct</strong> timeval *tv);
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a><em class='comment'>/* Informations relative to the babel running daemon. */</em>
+<a id='L75' name='L75'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/165.html#L121' title='Defined at 121 in babeld/babeld.h.'>babel</a> *babel_routing_process = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L76' name='L76'></a><strong class='reserved'>static</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *receive_buffer = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L77' name='L77'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> receive_buffer_size = 0;
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><em class='comment'>/* timeouts */</em>
+<a id='L80' name='L80'></a><strong class='reserved'>struct</strong> timeval check_neighbours_timeout;
+<a id='L81' name='L81'></a><strong class='reserved'>static</strong> time_t expiry_time;
+<a id='L82' name='L82'></a><strong class='reserved'>static</strong> time_t source_expiry_time;
+<a id='L83' name='L83'></a>
+<a id='L84' name='L84'></a><em class='comment'>/* Babel node structure. */</em>
+<a id='L85' name='L85'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> cmd_babel_node =
+<a id='L86' name='L86'></a><em class='brace'>{</em>
+<a id='L87' name='L87'></a>    .node   = BABEL_NODE,
+<a id='L88' name='L88'></a>    .prompt = "%s(config-router)# ",
+<a id='L89' name='L89'></a>    .vtysh  = 1,
+<a id='L90' name='L90'></a><em class='brace'>}</em>;
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><em class='comment'>/* print current babel configuration on vty */</em>
+<a id='L93' name='L93'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L94' name='L94'></a><a href='../S/171.html#L677' title='Referred from 677 in babeld/babeld.c.'>babel_config_write</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L95' name='L95'></a><em class='brace'>{</em>
+<a id='L96' name='L96'></a>    <strong class='reserved'>int</strong> lines = 0;
+<a id='L97' name='L97'></a>    <strong class='reserved'>int</strong> i;
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a>    <em class='comment'>/* list enabled debug modes */</em>
+<a id='L100' name='L100'></a>    lines += <a href='../S/170.html#L300' title='Defined at 300 in babeld/babel_zebra.c.'>debug_babel_config_write</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a>    <strong class='reserved'>if</strong> (!babel_routing_process)
+<a id='L103' name='L103'></a>        <strong class='reserved'>return</strong> lines;
+<a id='L104' name='L104'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "router babel%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L105' name='L105'></a>    <strong class='reserved'>if</strong> (resend_delay != <a href='../S/165.html#L114' title='Defined at 114 in babeld/babeld.h.'>BABEL_DEFAULT_RESEND_DELAY</a>)
+<a id='L106' name='L106'></a>    <em class='brace'>{</em>
+<a id='L107' name='L107'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " babel resend-delay %u%s", resend_delay, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L108' name='L108'></a>        lines++;
+<a id='L109' name='L109'></a>    <em class='brace'>}</em>
+<a id='L110' name='L110'></a>    <em class='comment'>/* list enabled interfaces */</em>
+<a id='L111' name='L111'></a>    lines = 1 + <a href='../S/164.html#L982' title='Defined at 982 in babeld/babel_interface.c.'>babel_enable_if_config_write</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+<a id='L112' name='L112'></a>    <em class='comment'>/* list redistributed protocols */</em>
+<a id='L113' name='L113'></a>    <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>; i++)
+<a id='L114' name='L114'></a>        <strong class='reserved'>if</strong> (i != <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist_default &amp;&amp; <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[i])
+<a id='L115' name='L115'></a>        <em class='brace'>{</em>
+<a id='L116' name='L116'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " redistribute %s%s", <a href='../S/205.html#L879' title='Defined at 879 in lib/log.c.'>zebra_route_string</a> (i), <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L117' name='L117'></a>            lines++;
+<a id='L118' name='L118'></a>        <em class='brace'>}</em>
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>    <strong class='reserved'>return</strong> lines;
+<a id='L121' name='L121'></a><em class='brace'>}</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L125' name='L125'></a><a href='../S/171.html#L631' title='Referred from 631 in babeld/babeld.c.'>babel_create_routing_process</a> (<strong class='reserved'>void</strong>)
+<a id='L126' name='L126'></a><em class='brace'>{</em>
+<a id='L127' name='L127'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (babel_routing_process == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a>    <em class='comment'>/* Allocaste Babel instance. */</em>
+<a id='L130' name='L130'></a>    babel_routing_process = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BABEL, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/165.html#L121' title='Defined at 121 in babeld/babeld.h.'>babel</a>));
+<a id='L131' name='L131'></a>
+<a id='L132' name='L132'></a>    <em class='comment'>/* Initialize timeouts */</em>
+<a id='L133' name='L133'></a>    <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L134' name='L134'></a>    expiry_time = babel_now.tv_sec + <a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(30);
+<a id='L135' name='L135'></a>    source_expiry_time = babel_now.tv_sec + <a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(300);
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a>    <em class='comment'>/* Make socket for Babel protocol. */</em>
+<a id='L138' name='L138'></a>    protocol_socket = <a href='../S/173.html#L55' title='Defined at 55 in babeld/net.c.'>babel_socket</a>(protocol_port);
+<a id='L139' name='L139'></a>    <strong class='reserved'>if</strong> (protocol_socket &lt; 0) <em class='brace'>{</em>
+<a id='L140' name='L140'></a>        zlog_err("Couldn't create link local socket: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L141' name='L141'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L142' name='L142'></a>    <em class='brace'>}</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a>    <em class='comment'>/* Threads. */</em>
+<a id='L145' name='L145'></a>    babel_routing_process-&gt;t_read =
+<a id='L146' name='L146'></a>    <a href='../S/279.html#L165' title='Defined at 165 in lib/thread.h.'>thread_add_read</a>(master, &amp;<a href='../S/171.html#L160' title='Defined at 160 in babeld/babeld.c.'>babel_read_protocol</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, protocol_socket);
+<a id='L147' name='L147'></a>    <em class='comment'>/* wait a little: zebra will announce interfaces, addresses, routes... */</em>
+<a id='L148' name='L148'></a>    babel_routing_process-&gt;t_update =
+<a id='L149' name='L149'></a>    <a href='../S/279.html#L168' title='Defined at 168 in lib/thread.h.'>thread_add_timer_msec</a>(master, &amp;<a href='../S/171.html#L199' title='Defined at 199 in babeld/babeld.c.'>babel_init_routing_process</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 200L);
+<a id='L150' name='L150'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a>fail:
+<a id='L153' name='L153'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a>(MTYPE_BABEL, babel_routing_process);
+<a id='L154' name='L154'></a>    babel_routing_process = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L155' name='L155'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L156' name='L156'></a><em class='brace'>}</em>
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a><em class='comment'>/* thread reading entries form others babel daemons */</em>
+<a id='L159' name='L159'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L160' name='L160'></a><a href='../R/4618.html' title='Multiple referred from 3 places.'>babel_read_protocol</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L161' name='L161'></a><em class='brace'>{</em>
+<a id='L162' name='L162'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L163' name='L163'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L164' name='L164'></a>    <strong class='reserved'>struct</strong> sockaddr_in6 sin6;
+<a id='L165' name='L165'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *linklist_node = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(babel_routing_process != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L168' name='L168'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(protocol_socket &gt;= 0);
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>    rc = <a href='../S/173.html#L132' title='Defined at 132 in babeld/net.c.'>babel_recv</a>(protocol_socket,
+<a id='L171' name='L171'></a>                    receive_buffer, receive_buffer_size,
+<a id='L172' name='L172'></a>                    (<strong class='reserved'>struct</strong> sockaddr*)&amp;sin6, <strong class='reserved'>sizeof</strong>(sin6));
+<a id='L173' name='L173'></a>    <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L174' name='L174'></a>        <strong class='reserved'>if</strong>(errno != EAGAIN &amp;&amp; errno != EINTR) <em class='brace'>{</em>
+<a id='L175' name='L175'></a>            zlog_err("recv: %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L176' name='L176'></a>        <em class='brace'>}</em>
+<a id='L177' name='L177'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L178' name='L178'></a>        <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L179' name='L179'></a>            <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(ifp))
+<a id='L180' name='L180'></a>                <strong class='reserved'>continue</strong>;
+<a id='L181' name='L181'></a>            <strong class='reserved'>if</strong>(ifp-&gt;ifindex == sin6.sin6_scope_id) <em class='brace'>{</em>
+<a id='L182' name='L182'></a>                <a href='../S/166.html#L195' title='Defined at 195 in babeld/message.c.'>parse_packet</a>((<strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong>*)&amp;sin6.sin6_addr, ifp,
+<a id='L183' name='L183'></a>                             receive_buffer, rc);
+<a id='L184' name='L184'></a>                <strong class='reserved'>break</strong>;
+<a id='L185' name='L185'></a>            <em class='brace'>}</em>
+<a id='L186' name='L186'></a>        <em class='brace'>}</em>
+<a id='L187' name='L187'></a>    <em class='brace'>}</em>
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a>    <em class='comment'>/* re-add thread */</em>
+<a id='L190' name='L190'></a>    babel_routing_process-&gt;t_read =
+<a id='L191' name='L191'></a>    <a href='../S/279.html#L165' title='Defined at 165 in lib/thread.h.'>thread_add_read</a>(master, &amp;<a href='../S/171.html#L160' title='Defined at 160 in babeld/babeld.c.'>babel_read_protocol</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, protocol_socket);
+<a id='L192' name='L192'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L193' name='L193'></a><em class='brace'>}</em>
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a><em class='comment'>/* Zebra will give some information, especially about interfaces. This function</em>
+<a id='L196' name='L196'></a><em class='comment'> must be call with a litte timeout wich may give zebra the time to do his job,</em>
+<a id='L197' name='L197'></a><em class='comment'> making these inits have sense. */</em>
+<a id='L198' name='L198'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L199' name='L199'></a><a href='../R/4598.html' title='Multiple referred from 2 places.'>babel_init_routing_process</a>(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L200' name='L200'></a><em class='brace'>{</em>
+<a id='L201' name='L201'></a>    myseqno = (random() &amp; 0xFFFF);
+<a id='L202' name='L202'></a>    <a href='../S/171.html#L212' title='Defined at 212 in babeld/babeld.c.'>babel_get_myid</a>();
+<a id='L203' name='L203'></a>    <a href='../S/157.html#L361' title='Defined at 361 in babeld/babel_main.c.'>babel_load_state_file</a>();
+<a id='L204' name='L204'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>, "My ID is : %s.", <a href='../S/151.html#L279' title='Defined at 279 in babeld/util.c.'>format_eui64</a>(myid));
+<a id='L205' name='L205'></a>    <a href='../S/171.html#L266' title='Defined at 266 in babeld/babeld.c.'>babel_initial_noise</a>();
+<a id='L206' name='L206'></a>    <a href='../S/171.html#L316' title='Defined at 316 in babeld/babeld.c.'>babel_main_loop</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);<em class='comment'>/* this function self-add to the t_update thread */</em>
+<a id='L207' name='L207'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L208' name='L208'></a><em class='brace'>}</em>
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a><em class='comment'>/* fill "myid" with an unique id (only if myid != {0}). */</em>
+<a id='L211' name='L211'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L212' name='L212'></a><a href='../R/4591.html' title='Multiple referred from 2 places.'>babel_get_myid</a>(<strong class='reserved'>void</strong>)
+<a id='L213' name='L213'></a><em class='brace'>{</em>
+<a id='L214' name='L214'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L215' name='L215'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *linklist_node = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L216' name='L216'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L217' name='L217'></a>    <strong class='reserved'>int</strong> i;
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>    <em class='comment'>/* if we already have an id (from state file), we return. */</em>
+<a id='L220' name='L220'></a>    <strong class='reserved'>if</strong> (<a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(myid, zeroes, 8) != 0) <em class='brace'>{</em>
+<a id='L221' name='L221'></a>        <strong class='reserved'>return</strong>;
+<a id='L222' name='L222'></a>    <em class='brace'>}</em>
+<a id='L223' name='L223'></a>
+<a id='L224' name='L224'></a>    <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L225' name='L225'></a>        <em class='comment'>/* ifp-&gt;ifindex is not necessarily valid at this point */</em>
+<a id='L226' name='L226'></a>        <strong class='reserved'>int</strong> ifindex = <a href='../S/240.html#L764' title='Defined at 764 in lib/if.c.'>if_nametoindex</a>(ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L227' name='L227'></a>        <strong class='reserved'>if</strong>(ifindex &gt; 0) <em class='brace'>{</em>
+<a id='L228' name='L228'></a>            <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> eui[8];
+<a id='L229' name='L229'></a>            rc = <a href='../S/174.html#L274' title='Defined at 274 in babeld/kernel.c.'>if_eui64</a>(ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, ifindex, eui);
+<a id='L230' name='L230'></a>            <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L231' name='L231'></a>                <strong class='reserved'>continue</strong>;
+<a id='L232' name='L232'></a>            <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(myid, eui, 8);
+<a id='L233' name='L233'></a>            <strong class='reserved'>return</strong>;
+<a id='L234' name='L234'></a>        <em class='brace'>}</em>
+<a id='L235' name='L235'></a>    <em class='brace'>}</em>
+<a id='L236' name='L236'></a>
+<a id='L237' name='L237'></a>    <em class='comment'>/* We failed to get a global EUI64 from the interfaces we were given.</em>
+<a id='L238' name='L238'></a><em class='comment'>     Let's try to find an interface with a MAC address. */</em>
+<a id='L239' name='L239'></a>    <strong class='reserved'>for</strong>(i = 1; i &lt; 256; i++) <em class='brace'>{</em>
+<a id='L240' name='L240'></a>        <strong class='reserved'>char</strong> buf[IF_NAMESIZE], *ifname;
+<a id='L241' name='L241'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> eui[8];
+<a id='L242' name='L242'></a>        ifname = <a href='../S/240.html#L799' title='Defined at 799 in lib/if.c.'>if_indextoname</a>(i, buf);
+<a id='L243' name='L243'></a>        <strong class='reserved'>if</strong>(ifname == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L244' name='L244'></a>            <strong class='reserved'>continue</strong>;
+<a id='L245' name='L245'></a>        rc = <a href='../S/174.html#L274' title='Defined at 274 in babeld/kernel.c.'>if_eui64</a>(ifname, i, eui);
+<a id='L246' name='L246'></a>        <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L247' name='L247'></a>            <strong class='reserved'>continue</strong>;
+<a id='L248' name='L248'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(myid, eui, 8);
+<a id='L249' name='L249'></a>        <strong class='reserved'>return</strong>;
+<a id='L250' name='L250'></a>    <em class='brace'>}</em>
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a>    zlog_err("Warning: couldn't find router id -- using random value.");
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a>    rc = <a href='../S/174.html#L313' title='Defined at 313 in babeld/kernel.c.'>read_random_bytes</a>(myid, 8);
+<a id='L255' name='L255'></a>    <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L256' name='L256'></a>        zlog_err("read(random): %s (cannot assign an ID)",<a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L257' name='L257'></a>        exit(1);
+<a id='L258' name='L258'></a>    <em class='brace'>}</em>
+<a id='L259' name='L259'></a>    <em class='comment'>/* Clear group and global bits */</em>
+<a id='L260' name='L260'></a>    myid[0] &amp;= ~3;
+<a id='L261' name='L261'></a><em class='brace'>}</em>
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a><em class='comment'>/* Make some noise so that others notice us, and send retractions in</em>
+<a id='L264' name='L264'></a><em class='comment'> case we were restarted recently */</em>
+<a id='L265' name='L265'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L266' name='L266'></a><a href='../R/4600.html' title='Multiple referred from 2 places.'>babel_initial_noise</a>(<strong class='reserved'>void</strong>)
+<a id='L267' name='L267'></a><em class='brace'>{</em>
+<a id='L268' name='L268'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L269' name='L269'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *linklist_node = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L270' name='L270'></a>
+<a id='L271' name='L271'></a>    <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L272' name='L272'></a>        <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(ifp))
+<a id='L273' name='L273'></a>            <strong class='reserved'>continue</strong>;
+<a id='L274' name='L274'></a>        <em class='comment'>/* Apply jitter before we send the first message. */</em>
+<a id='L275' name='L275'></a>        usleep(<a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(10000));
+<a id='L276' name='L276'></a>        <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L277' name='L277'></a>        <a href='../D/10613.html' title='Multiple defined in 2 places.'>send_hello</a>(ifp);
+<a id='L278' name='L278'></a>        <a href='../S/166.html#L1179' title='Defined at 1179 in babeld/message.c.'>send_wildcard_retraction</a>(ifp);
+<a id='L279' name='L279'></a>    <em class='brace'>}</em>
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>    <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L282' name='L282'></a>        <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(ifp))
+<a id='L283' name='L283'></a>            <strong class='reserved'>continue</strong>;
+<a id='L284' name='L284'></a>        usleep(<a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(10000));
+<a id='L285' name='L285'></a>        <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L286' name='L286'></a>        <a href='../D/10613.html' title='Multiple defined in 2 places.'>send_hello</a>(ifp);
+<a id='L287' name='L287'></a>        <a href='../S/166.html#L1179' title='Defined at 1179 in babeld/message.c.'>send_wildcard_retraction</a>(ifp);
+<a id='L288' name='L288'></a>        <a href='../S/166.html#L1222' title='Defined at 1222 in babeld/message.c.'>send_self_update</a>(ifp);
+<a id='L289' name='L289'></a>        <a href='../S/166.html#L1331' title='Defined at 1331 in babeld/message.c.'>send_request</a>(ifp, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L290' name='L290'></a>        <a href='../S/166.html#L945' title='Defined at 945 in babeld/message.c.'>flushupdates</a>(ifp);
+<a id='L291' name='L291'></a>        <a href='../S/166.html#L533' title='Defined at 533 in babeld/message.c.'>flushbuf</a>(ifp);
+<a id='L292' name='L292'></a>    <em class='brace'>}</em>
+<a id='L293' name='L293'></a><em class='brace'>}</em>
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a><em class='comment'>/* Delete all the added babel routes, make babeld only speak to zebra. */</em>
+<a id='L296' name='L296'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L297' name='L297'></a><a href='../S/171.html#L653' title='Referred from 653 in babeld/babeld.c.'>babel_clean_routing_process</a>()
+<a id='L298' name='L298'></a><em class='brace'>{</em>
+<a id='L299' name='L299'></a>    <a href='../S/154.html#L263' title='Defined at 263 in babeld/route.c.'>flush_all_routes</a>();
+<a id='L300' name='L300'></a>    <a href='../S/164.html#L639' title='Defined at 639 in babeld/babel_interface.c.'>babel_interface_close_all</a>();
+<a id='L301' name='L301'></a>
+<a id='L302' name='L302'></a>    <em class='comment'>/* cancel threads */</em>
+<a id='L303' name='L303'></a>    <strong class='reserved'>if</strong> (babel_routing_process-&gt;t_read != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L304' name='L304'></a>        <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a>(babel_routing_process-&gt;t_read);
+<a id='L305' name='L305'></a>    <em class='brace'>}</em>
+<a id='L306' name='L306'></a>    <strong class='reserved'>if</strong> (babel_routing_process-&gt;t_update != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L307' name='L307'></a>        <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a>(babel_routing_process-&gt;t_update);
+<a id='L308' name='L308'></a>    <em class='brace'>}</em>
+<a id='L309' name='L309'></a>
+<a id='L310' name='L310'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a>(MTYPE_BABEL, babel_routing_process);
+<a id='L311' name='L311'></a>    babel_routing_process = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L312' name='L312'></a><em class='brace'>}</em>
+<a id='L313' name='L313'></a>
+<a id='L314' name='L314'></a><em class='comment'>/* Function used with timeout. */</em>
+<a id='L315' name='L315'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L316' name='L316'></a><a href='../R/4617.html' title='Multiple referred from 3 places.'>babel_main_loop</a>(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L317' name='L317'></a><em class='brace'>{</em>
+<a id='L318' name='L318'></a>    <strong class='reserved'>struct</strong> timeval tv;
+<a id='L319' name='L319'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L320' name='L320'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *linklist_node = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a>    <strong class='reserved'>while</strong>(1) <em class='brace'>{</em>
+<a id='L323' name='L323'></a>        <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a>        <em class='comment'>/* timeouts --------------------------------------------------------- */</em>
+<a id='L326' name='L326'></a>        <em class='comment'>/* get the next timeout */</em>
+<a id='L327' name='L327'></a>        <a href='../S/171.html#L440' title='Defined at 440 in babeld/babeld.c.'>babel_fill_with_next_timeout</a>(&amp;tv);
+<a id='L328' name='L328'></a>        <em class='comment'>/* if there is no timeout, we must wait. */</em>
+<a id='L329' name='L329'></a>        <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;tv, &amp;babel_now) &gt; 0) <em class='brace'>{</em>
+<a id='L330' name='L330'></a>            <a href='../S/151.html#L65' title='Defined at 65 in babeld/util.c.'>timeval_minus</a>(&amp;tv, &amp;tv, &amp;babel_now);
+<a id='L331' name='L331'></a>            <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L145' title='Defined at 145 in babeld/util.h.'>BABEL_DEBUG_TIMEOUT</a>, "babel main loop : timeout: %ld msecs",
+<a id='L332' name='L332'></a>                   tv.tv_sec * 1000 + tv.tv_usec / 1000);
+<a id='L333' name='L333'></a>            <em class='comment'>/* it happens often to have less than 1 ms, it's bad. */</em>
+<a id='L334' name='L334'></a>            <a href='../S/151.html#L100' title='Defined at 100 in babeld/util.c.'>timeval_add_msec</a>(&amp;tv, &amp;tv, 300);
+<a id='L335' name='L335'></a>            <a href='../S/171.html#L483' title='Defined at 483 in babeld/babeld.c.'>babel_set_timer</a>(&amp;tv);
+<a id='L336' name='L336'></a>            <strong class='reserved'>return</strong> 0;
+<a id='L337' name='L337'></a>        <em class='brace'>}</em>
+<a id='L338' name='L338'></a>
+<a id='L339' name='L339'></a>        <a href='../S/174.html#L304' title='Defined at 304 in babeld/kernel.c.'>gettime</a>(&amp;babel_now);
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a>        <em class='comment'>/* update database -------------------------------------------------- */</em>
+<a id='L342' name='L342'></a>        <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;check_neighbours_timeout, &amp;babel_now) &lt; 0) <em class='brace'>{</em>
+<a id='L343' name='L343'></a>            <strong class='reserved'>int</strong> msecs;
+<a id='L344' name='L344'></a>            msecs = <a href='../S/158.html#L243' title='Defined at 243 in babeld/neighbour.c.'>check_neighbours</a>();
+<a id='L345' name='L345'></a>            msecs = <a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>(msecs, 10);
+<a id='L346' name='L346'></a>            <a href='../S/171.html#L495' title='Defined at 495 in babeld/babeld.c.'>schedule_neighbours_check</a>(msecs, 1);
+<a id='L347' name='L347'></a>        <em class='brace'>}</em>
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a>        <strong class='reserved'>if</strong>(babel_now.tv_sec &gt;= expiry_time) <em class='brace'>{</em>
+<a id='L350' name='L350'></a>            <a href='../S/154.html#L988' title='Defined at 988 in babeld/route.c.'>expire_routes</a>();
+<a id='L351' name='L351'></a>            <a href='../S/146.html#L253' title='Defined at 253 in babeld/resend.c.'>expire_resend</a>();
+<a id='L352' name='L352'></a>            expiry_time = babel_now.tv_sec + <a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(30);
+<a id='L353' name='L353'></a>        <em class='brace'>}</em>
+<a id='L354' name='L354'></a>
+<a id='L355' name='L355'></a>        <strong class='reserved'>if</strong>(babel_now.tv_sec &gt;= source_expiry_time) <em class='brace'>{</em>
+<a id='L356' name='L356'></a>            <a href='../S/160.html#L149' title='Defined at 149 in babeld/source.c.'>expire_sources</a>();
+<a id='L357' name='L357'></a>            source_expiry_time = babel_now.tv_sec + <a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(300);
+<a id='L358' name='L358'></a>        <em class='brace'>}</em>
+<a id='L359' name='L359'></a>
+<a id='L360' name='L360'></a>        <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L361' name='L361'></a>            <a href='../S/159.html#L88' title='Defined at 88 in babeld/babel_interface.h.'>babel_interface_nfo</a> *babel_ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L362' name='L362'></a>            <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(ifp))
+<a id='L363' name='L363'></a>                <strong class='reserved'>continue</strong>;
+<a id='L364' name='L364'></a>            babel_ifp = <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(ifp);
+<a id='L365' name='L365'></a>            <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;babel_now, &amp;babel_ifp-&gt;hello_timeout) &gt;= 0)
+<a id='L366' name='L366'></a>                <a href='../D/10613.html' title='Multiple defined in 2 places.'>send_hello</a>(ifp);
+<a id='L367' name='L367'></a>            <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;babel_now, &amp;babel_ifp-&gt;update_timeout) &gt;= 0)
+<a id='L368' name='L368'></a>                <a href='../S/166.html#L1128' title='Defined at 1128 in babeld/message.c.'>send_update</a>(ifp, 0, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L369' name='L369'></a>            <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;babel_now,
+<a id='L370' name='L370'></a>                               &amp;babel_ifp-&gt;update_flush_timeout) &gt;= 0)
+<a id='L371' name='L371'></a>                <a href='../S/166.html#L945' title='Defined at 945 in babeld/message.c.'>flushupdates</a>(ifp);
+<a id='L372' name='L372'></a>        <em class='brace'>}</em>
+<a id='L373' name='L373'></a>
+<a id='L374' name='L374'></a>        <strong class='reserved'>if</strong>(resend_time.tv_sec != 0) <em class='brace'>{</em>
+<a id='L375' name='L375'></a>            <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;babel_now, &amp;resend_time) &gt;= 0)
+<a id='L376' name='L376'></a>                <a href='../S/146.html#L301' title='Defined at 301 in babeld/resend.c.'>do_resend</a>();
+<a id='L377' name='L377'></a>        <em class='brace'>}</em>
+<a id='L378' name='L378'></a>
+<a id='L379' name='L379'></a>        <strong class='reserved'>if</strong>(unicast_flush_timeout.tv_sec != 0) <em class='brace'>{</em>
+<a id='L380' name='L380'></a>            <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;babel_now, &amp;unicast_flush_timeout) &gt;= 0)
+<a id='L381' name='L381'></a>                <a href='../S/166.html#L767' title='Defined at 767 in babeld/message.c.'>flush_unicast</a>(1);
+<a id='L382' name='L382'></a>        <em class='brace'>}</em>
+<a id='L383' name='L383'></a>
+<a id='L384' name='L384'></a>        <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L385' name='L385'></a>            <a href='../S/159.html#L88' title='Defined at 88 in babeld/babel_interface.h.'>babel_interface_nfo</a> *babel_ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L386' name='L386'></a>            <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(ifp))
+<a id='L387' name='L387'></a>                <strong class='reserved'>continue</strong>;
+<a id='L388' name='L388'></a>            babel_ifp = <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(ifp);
+<a id='L389' name='L389'></a>            <strong class='reserved'>if</strong>(babel_ifp-&gt;flush_timeout.tv_sec != 0) <em class='brace'>{</em>
+<a id='L390' name='L390'></a>                <strong class='reserved'>if</strong>(<a href='../S/151.html#L121' title='Defined at 121 in babeld/util.c.'>timeval_compare</a>(&amp;babel_now, &amp;babel_ifp-&gt;flush_timeout) &gt;= 0)
+<a id='L391' name='L391'></a>                    <a href='../S/166.html#L533' title='Defined at 533 in babeld/message.c.'>flushbuf</a>(ifp);
+<a id='L392' name='L392'></a>            <em class='brace'>}</em>
+<a id='L393' name='L393'></a>        <em class='brace'>}</em>
+<a id='L394' name='L394'></a>    <em class='brace'>}</em>
+<a id='L395' name='L395'></a>
+<a id='L396' name='L396'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(0); <em class='comment'>/* this line should never be reach */</em>
+<a id='L397' name='L397'></a><em class='brace'>}</em>
+<a id='L398' name='L398'></a>
+<a id='L399' name='L399'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L400' name='L400'></a><a href='../R/8848.html' title='Multiple referred from 11 places.'>printIfMin</a>(<strong class='reserved'>struct</strong> timeval *tv, <strong class='reserved'>int</strong> cmd, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *tag, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L401' name='L401'></a><em class='brace'>{</em>
+<a id='L402' name='L402'></a>    <strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> timeval curr_tv;
+<a id='L403' name='L403'></a>    <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>[200];
+<a id='L404' name='L404'></a>    <strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *curr_tag = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L405' name='L405'></a>
+<a id='L406' name='L406'></a>    <strong class='reserved'>switch</strong> (cmd) <em class='brace'>{</em>
+<a id='L407' name='L407'></a>        <strong class='reserved'>case</strong> 0: <em class='comment'>/* reset timeval */</em>
+<a id='L408' name='L408'></a>            curr_tv = *tv;
+<a id='L409' name='L409'></a>            <strong class='reserved'>if</strong>(ifname != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L410' name='L410'></a>                <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>, 200L, "interface: %s; %s", ifname, tag);
+<a id='L411' name='L411'></a>                curr_tag = <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>;
+<a id='L412' name='L412'></a>            <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L413' name='L413'></a>                curr_tag = tag;
+<a id='L414' name='L414'></a>            <em class='brace'>}</em>
+<a id='L415' name='L415'></a>            <strong class='reserved'>break</strong>;
+<a id='L416' name='L416'></a>        <strong class='reserved'>case</strong> 1: <em class='comment'>/* take the min */</em>
+<a id='L417' name='L417'></a>            <strong class='reserved'>if</strong> (tv-&gt;tv_sec == 0 &amp;&amp; tv-&gt;tv_usec == 0) <em class='brace'>{</em> <em class='comment'>/* if (tv == ∞) */</em>
+<a id='L418' name='L418'></a>                <strong class='reserved'>break</strong>;
+<a id='L419' name='L419'></a>            <em class='brace'>}</em>
+<a id='L420' name='L420'></a>            <strong class='reserved'>if</strong> (tv-&gt;tv_sec &lt; curr_tv.tv_sec ||(tv-&gt;tv_sec == curr_tv.tv_sec &amp;&amp;
+<a id='L421' name='L421'></a>                                               tv-&gt;tv_usec &lt; curr_tv.tv_usec)) <em class='brace'>{</em>
+<a id='L422' name='L422'></a>                curr_tv = *tv;
+<a id='L423' name='L423'></a>                <strong class='reserved'>if</strong>(ifname != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L424' name='L424'></a>                    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>, 200L, "interface: %s; %s", ifname, tag);
+<a id='L425' name='L425'></a>                    curr_tag = <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>;
+<a id='L426' name='L426'></a>                <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L427' name='L427'></a>                    curr_tag = tag;
+<a id='L428' name='L428'></a>                <em class='brace'>}</em>
+<a id='L429' name='L429'></a>            <em class='brace'>}</em>
+<a id='L430' name='L430'></a>            <strong class='reserved'>break</strong>;
+<a id='L431' name='L431'></a>        <strong class='reserved'>case</strong> 2: <em class='comment'>/* print message */</em>
+<a id='L432' name='L432'></a>            <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L145' title='Defined at 145 in babeld/util.h.'>BABEL_DEBUG_TIMEOUT</a>, "next timeout due to: %s", curr_tag);
+<a id='L433' name='L433'></a>            <strong class='reserved'>break</strong>;
+<a id='L434' name='L434'></a>        <strong class='reserved'>default</strong>:
+<a id='L435' name='L435'></a>            <strong class='reserved'>break</strong>;
+<a id='L436' name='L436'></a>    <em class='brace'>}</em>
+<a id='L437' name='L437'></a><em class='brace'>}</em>
+<a id='L438' name='L438'></a>
+<a id='L439' name='L439'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L440' name='L440'></a><a href='../R/4588.html' title='Multiple referred from 2 places.'>babel_fill_with_next_timeout</a>(<strong class='reserved'>struct</strong> timeval *tv)
+<a id='L441' name='L441'></a><em class='brace'>{</em>
+<a id='L442' name='L442'></a><em class='sharp'>#if</em> (<strong class='reserved'>defined</strong> NO_DEBUG)
+<a id='L443' name='L443'></a><em class='sharp'>#define</em> <a href='../R/8848.html' title='Multiple referred from 11 places.'>printIfMin</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>,c,d)
+<a id='L444' name='L444'></a><em class='sharp'>#else</em>
+<a id='L445' name='L445'></a><em class='sharp'>#define</em> <a href='../R/8848.html' title='Multiple referred from 11 places.'>printIfMin</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>,c,d) \
+<a id='L446' name='L446'></a>  <strong class='reserved'>if</strong> (<a href='../D/4440.html' title='Multiple defined in 2 places.'>UNLIKELY</a>(<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a> &amp; <a href='../S/168.html#L145' title='Defined at 145 in babeld/util.h.'>BABEL_DEBUG_TIMEOUT</a>)) <em class='brace'>{</em><a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>,c,d);<em class='brace'>}</em>
+<a id='L447' name='L447'></a>
+<a id='L448' name='L448'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L449' name='L449'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *linklist_node = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L450' name='L450'></a>
+<a id='L451' name='L451'></a>    *tv = check_neighbours_timeout;
+<a id='L452' name='L452'></a>    <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 0, "check_neighbours_timeout", <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L453' name='L453'></a>    <a href='../S/151.html#L150' title='Defined at 150 in babeld/util.c.'>timeval_min_sec</a>(tv, expiry_time);
+<a id='L454' name='L454'></a>    <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "expiry_time", <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L455' name='L455'></a>    <a href='../S/151.html#L150' title='Defined at 150 in babeld/util.c.'>timeval_min_sec</a>(tv, source_expiry_time);
+<a id='L456' name='L456'></a>    <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "source_expiry_time", <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L457' name='L457'></a>    <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(tv, &amp;resend_time);
+<a id='L458' name='L458'></a>    <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "resend_time", <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L459' name='L459'></a>    <a href='../S/159.html#L116' title='Defined at 116 in babeld/babel_interface.h.'>FOR_ALL_INTERFACES</a>(ifp, linklist_node) <em class='brace'>{</em>
+<a id='L460' name='L460'></a>        <a href='../S/159.html#L88' title='Defined at 88 in babeld/babel_interface.h.'>babel_interface_nfo</a> *babel_ifp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L461' name='L461'></a>        <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(ifp))
+<a id='L462' name='L462'></a>            <strong class='reserved'>continue</strong>;
+<a id='L463' name='L463'></a>        babel_ifp = <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(ifp);
+<a id='L464' name='L464'></a>        <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(tv, &amp;babel_ifp-&gt;flush_timeout);
+<a id='L465' name='L465'></a>        <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "flush_timeout", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L466' name='L466'></a>        <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(tv, &amp;babel_ifp-&gt;hello_timeout);
+<a id='L467' name='L467'></a>        <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "hello_timeout", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L468' name='L468'></a>        <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(tv, &amp;babel_ifp-&gt;update_timeout);
+<a id='L469' name='L469'></a>        <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "update_timeout", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L470' name='L470'></a>        <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(tv, &amp;babel_ifp-&gt;update_flush_timeout);
+<a id='L471' name='L471'></a>        <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "update_flush_timeout",ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L472' name='L472'></a>    <em class='brace'>}</em>
+<a id='L473' name='L473'></a>    <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(tv, &amp;unicast_flush_timeout);
+<a id='L474' name='L474'></a>    <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 1, "unicast_flush_timeout", <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L475' name='L475'></a>    <a href='../D/9733.html' title='Multiple defined in 4 places.'>printIfMin</a>(tv, 2, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L476' name='L476'></a><em class='sharp'>#undef</em> <a href='../R/8848.html' title='Multiple referred from 11 places.'>printIfMin</a>
+<a id='L477' name='L477'></a><em class='sharp'>#endif</em>
+<a id='L478' name='L478'></a><em class='brace'>}</em>
+<a id='L479' name='L479'></a>
+<a id='L480' name='L480'></a><em class='comment'>/* set the t_update thread of the babel routing process to be launch in</em>
+<a id='L481' name='L481'></a><em class='comment'> 'timeout' (approximate at the milisecond) */</em>
+<a id='L482' name='L482'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L483' name='L483'></a><a href='../R/4624.html' title='Multiple referred from 2 places.'>babel_set_timer</a>(<strong class='reserved'>struct</strong> timeval *timeout)
+<a id='L484' name='L484'></a><em class='brace'>{</em>
+<a id='L485' name='L485'></a>    <strong class='reserved'>long</strong> msecs = timeout-&gt;tv_sec * 1000 + timeout-&gt;tv_usec / 1000;
+<a id='L486' name='L486'></a>    <strong class='reserved'>if</strong> (babel_routing_process-&gt;t_update != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L487' name='L487'></a>        <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a>(babel_routing_process-&gt;t_update);
+<a id='L488' name='L488'></a>    <em class='brace'>}</em>
+<a id='L489' name='L489'></a>    babel_routing_process-&gt;t_update =
+<a id='L490' name='L490'></a>    <a href='../S/279.html#L168' title='Defined at 168 in lib/thread.h.'>thread_add_timer_msec</a>(master, &amp;<a href='../S/171.html#L316' title='Defined at 316 in babeld/babeld.c.'>babel_main_loop</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, msecs);
+<a id='L491' name='L491'></a><em class='brace'>}</em>
+<a id='L492' name='L492'></a>
+<a id='L493' name='L493'></a><em class='comment'>/* Schedule a neighbours check after roughly 3/2 times msecs have elapsed. */</em>
+<a id='L494' name='L494'></a><strong class='reserved'>void</strong>
+<a id='L495' name='L495'></a><a href='../R/9692.html' title='Multiple referred from 5 places.'>schedule_neighbours_check</a>(<strong class='reserved'>int</strong> msecs, <strong class='reserved'>int</strong> override)
+<a id='L496' name='L496'></a><em class='brace'>{</em>
+<a id='L497' name='L497'></a>    <strong class='reserved'>struct</strong> timeval timeout;
+<a id='L498' name='L498'></a>
+<a id='L499' name='L499'></a>    <a href='../S/151.html#L100' title='Defined at 100 in babeld/util.c.'>timeval_add_msec</a>(&amp;timeout, &amp;babel_now, <a href='../S/151.html#L58' title='Defined at 58 in babeld/util.c.'>roughly</a>(msecs * 3 / 2));
+<a id='L500' name='L500'></a>    <strong class='reserved'>if</strong>(override)
+<a id='L501' name='L501'></a>        check_neighbours_timeout = timeout;
+<a id='L502' name='L502'></a>    <strong class='reserved'>else</strong>
+<a id='L503' name='L503'></a>        <a href='../S/151.html#L138' title='Defined at 138 in babeld/util.c.'>timeval_min</a>(&amp;check_neighbours_timeout, &amp;timeout);
+<a id='L504' name='L504'></a><em class='brace'>}</em>
+<a id='L505' name='L505'></a>
+<a id='L506' name='L506'></a><strong class='reserved'>int</strong>
+<a id='L507' name='L507'></a><a href='../R/9005.html' title='Multiple referred from 3 places.'>resize_receive_buffer</a>(<strong class='reserved'>int</strong> size)
+<a id='L508' name='L508'></a><em class='brace'>{</em>
+<a id='L509' name='L509'></a>    <strong class='reserved'>if</strong>(size &lt;= receive_buffer_size)
+<a id='L510' name='L510'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L511' name='L511'></a>
+<a id='L512' name='L512'></a>    <strong class='reserved'>if</strong>(receive_buffer == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L513' name='L513'></a>        receive_buffer = malloc(size);
+<a id='L514' name='L514'></a>        <strong class='reserved'>if</strong>(receive_buffer == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L515' name='L515'></a>            zlog_err("malloc(receive_buffer): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L516' name='L516'></a>            <strong class='reserved'>return</strong> -1;
+<a id='L517' name='L517'></a>        <em class='brace'>}</em>
+<a id='L518' name='L518'></a>        receive_buffer_size = size;
+<a id='L519' name='L519'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L520' name='L520'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *new;
+<a id='L521' name='L521'></a>        new = realloc(receive_buffer, size);
+<a id='L522' name='L522'></a>        <strong class='reserved'>if</strong>(new == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L523' name='L523'></a>            zlog_err("realloc(receive_buffer): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L524' name='L524'></a>            <strong class='reserved'>return</strong> -1;
+<a id='L525' name='L525'></a>        <em class='brace'>}</em>
+<a id='L526' name='L526'></a>        receive_buffer = new;
+<a id='L527' name='L527'></a>        receive_buffer_size = size;
+<a id='L528' name='L528'></a>    <em class='brace'>}</em>
+<a id='L529' name='L529'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L530' name='L530'></a><em class='brace'>}</em>
+<a id='L531' name='L531'></a>
+<a id='L532' name='L532'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L533' name='L533'></a><a href='../R/4578.html' title='Multiple referred from 3 places.'>babel_distribute_update</a> (<strong class='reserved'>struct</strong> <a href='../S/207.html#L36' title='Defined at 36 in lib/distribute.h.'>distribute</a> *dist)
+<a id='L534' name='L534'></a><em class='brace'>{</em>
+<a id='L535' name='L535'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L536' name='L536'></a>    <a href='../S/159.html#L88' title='Defined at 88 in babeld/babel_interface.h.'>babel_interface_nfo</a> *babel_ifp;
+<a id='L537' name='L537'></a>    <strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *alist;
+<a id='L538' name='L538'></a>    <strong class='reserved'>struct</strong> <a href='../S/302.html#L40' title='Defined at 40 in lib/plist.h.'>prefix_list</a> *plist;
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a>    <strong class='reserved'>if</strong> (! dist-&gt;ifname)
+<a id='L541' name='L541'></a>        <strong class='reserved'>return</strong>;
+<a id='L542' name='L542'></a>
+<a id='L543' name='L543'></a>    ifp = <a href='../S/240.html#L216' title='Defined at 216 in lib/if.c.'>if_lookup_by_name</a> (dist-&gt;ifname);
+<a id='L544' name='L544'></a>    <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L545' name='L545'></a>        <strong class='reserved'>return</strong>;
+<a id='L546' name='L546'></a>
+<a id='L547' name='L547'></a>    babel_ifp = <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(ifp);
+<a id='L548' name='L548'></a>
+<a id='L549' name='L549'></a>    <strong class='reserved'>if</strong> (dist-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/609.html#L139' title='Defined at 139 in bgpd/bgp_route.h.'>DISTRIBUTE_IN</a>]) <em class='brace'>{</em>
+<a id='L550' name='L550'></a>        alist = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, dist-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/609.html#L139' title='Defined at 139 in bgpd/bgp_route.h.'>DISTRIBUTE_IN</a>]);
+<a id='L551' name='L551'></a>        <strong class='reserved'>if</strong> (alist)
+<a id='L552' name='L552'></a>            babel_ifp-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/159.html#L81' title='Defined at 81 in babeld/babel_interface.h.'>BABEL_FILTER_IN</a>] = alist;
+<a id='L553' name='L553'></a>        <strong class='reserved'>else</strong>
+<a id='L554' name='L554'></a>            babel_ifp-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/159.html#L81' title='Defined at 81 in babeld/babel_interface.h.'>BABEL_FILTER_IN</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L555' name='L555'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L556' name='L556'></a>        babel_ifp-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/159.html#L81' title='Defined at 81 in babeld/babel_interface.h.'>BABEL_FILTER_IN</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L557' name='L557'></a>    <em class='brace'>}</em>
+<a id='L558' name='L558'></a>
+<a id='L559' name='L559'></a>    <strong class='reserved'>if</strong> (dist-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/609.html#L141' title='Defined at 141 in bgpd/bgp_route.h.'>DISTRIBUTE_OUT</a>]) <em class='brace'>{</em>
+<a id='L560' name='L560'></a>        alist = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, dist-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/609.html#L141' title='Defined at 141 in bgpd/bgp_route.h.'>DISTRIBUTE_OUT</a>]);
+<a id='L561' name='L561'></a>        <strong class='reserved'>if</strong> (alist)
+<a id='L562' name='L562'></a>            babel_ifp-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/159.html#L82' title='Defined at 82 in babeld/babel_interface.h.'>BABEL_FILTER_OUT</a>] = alist;
+<a id='L563' name='L563'></a>        <strong class='reserved'>else</strong>
+<a id='L564' name='L564'></a>            babel_ifp-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/159.html#L82' title='Defined at 82 in babeld/babel_interface.h.'>BABEL_FILTER_OUT</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L565' name='L565'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L566' name='L566'></a>        babel_ifp-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>[<a href='../S/159.html#L82' title='Defined at 82 in babeld/babel_interface.h.'>BABEL_FILTER_OUT</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L567' name='L567'></a>    <em class='brace'>}</em>
+<a id='L568' name='L568'></a>
+<a id='L569' name='L569'></a>    <strong class='reserved'>if</strong> (dist-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/609.html#L139' title='Defined at 139 in bgpd/bgp_route.h.'>DISTRIBUTE_IN</a>]) <em class='brace'>{</em>
+<a id='L570' name='L570'></a>        plist = <a href='../S/181.html#L130' title='Defined at 130 in lib/plist.c.'>prefix_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, dist-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/609.html#L139' title='Defined at 139 in bgpd/bgp_route.h.'>DISTRIBUTE_IN</a>]);
+<a id='L571' name='L571'></a>        <strong class='reserved'>if</strong> (plist)
+<a id='L572' name='L572'></a>            babel_ifp-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/159.html#L81' title='Defined at 81 in babeld/babel_interface.h.'>BABEL_FILTER_IN</a>] = plist;
+<a id='L573' name='L573'></a>        <strong class='reserved'>else</strong>
+<a id='L574' name='L574'></a>            babel_ifp-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/159.html#L81' title='Defined at 81 in babeld/babel_interface.h.'>BABEL_FILTER_IN</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L575' name='L575'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L576' name='L576'></a>        babel_ifp-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/159.html#L81' title='Defined at 81 in babeld/babel_interface.h.'>BABEL_FILTER_IN</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L577' name='L577'></a>    <em class='brace'>}</em>
+<a id='L578' name='L578'></a>
+<a id='L579' name='L579'></a>    <strong class='reserved'>if</strong> (dist-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/609.html#L141' title='Defined at 141 in bgpd/bgp_route.h.'>DISTRIBUTE_OUT</a>]) <em class='brace'>{</em>
+<a id='L580' name='L580'></a>        plist = <a href='../S/181.html#L130' title='Defined at 130 in lib/plist.c.'>prefix_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, dist-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/609.html#L141' title='Defined at 141 in bgpd/bgp_route.h.'>DISTRIBUTE_OUT</a>]);
+<a id='L581' name='L581'></a>        <strong class='reserved'>if</strong> (plist)
+<a id='L582' name='L582'></a>            babel_ifp-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/159.html#L82' title='Defined at 82 in babeld/babel_interface.h.'>BABEL_FILTER_OUT</a>] = plist;
+<a id='L583' name='L583'></a>        <strong class='reserved'>else</strong>
+<a id='L584' name='L584'></a>            babel_ifp-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/159.html#L82' title='Defined at 82 in babeld/babel_interface.h.'>BABEL_FILTER_OUT</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L585' name='L585'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L586' name='L586'></a>        babel_ifp-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[<a href='../S/159.html#L82' title='Defined at 82 in babeld/babel_interface.h.'>BABEL_FILTER_OUT</a>] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L587' name='L587'></a>    <em class='brace'>}</em>
+<a id='L588' name='L588'></a><em class='brace'>}</em>
+<a id='L589' name='L589'></a>
+<a id='L590' name='L590'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L591' name='L591'></a><a href='../S/171.html#L608' title='Referred from 608 in babeld/babeld.c.'>babel_distribute_update_interface</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp)
+<a id='L592' name='L592'></a><em class='brace'>{</em>
+<a id='L593' name='L593'></a>    <strong class='reserved'>struct</strong> <a href='../S/207.html#L36' title='Defined at 36 in lib/distribute.h.'>distribute</a> *dist;
+<a id='L594' name='L594'></a>
+<a id='L595' name='L595'></a>    dist = <a href='../S/197.html#L66' title='Defined at 66 in lib/distribute.c.'>distribute_lookup</a> (ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L596' name='L596'></a>    <strong class='reserved'>if</strong> (dist)
+<a id='L597' name='L597'></a>        <a href='../S/171.html#L533' title='Defined at 533 in babeld/babeld.c.'>babel_distribute_update</a> (dist);
+<a id='L598' name='L598'></a><em class='brace'>}</em>
+<a id='L599' name='L599'></a>
+<a id='L600' name='L600'></a><em class='comment'>/* Update all interface's distribute list. */</em>
+<a id='L601' name='L601'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L602' name='L602'></a><a href='../R/4579.html' title='Multiple referred from 3 places.'>babel_distribute_update_all</a> (<strong class='reserved'>struct</strong> <a href='../S/302.html#L40' title='Defined at 40 in lib/plist.h.'>prefix_list</a> *notused)
+<a id='L603' name='L603'></a><em class='brace'>{</em>
+<a id='L604' name='L604'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L605' name='L605'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L606' name='L606'></a>
+<a id='L607' name='L607'></a>    <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (iflist, node, ifp))
+<a id='L608' name='L608'></a>        <a href='../S/171.html#L591' title='Defined at 591 in babeld/babeld.c.'>babel_distribute_update_interface</a> (ifp);
+<a id='L609' name='L609'></a><em class='brace'>}</em>
+<a id='L610' name='L610'></a>
+<a id='L611' name='L611'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L612' name='L612'></a><a href='../R/4580.html' title='Multiple referred from 2 places.'>babel_distribute_update_all_wrapper</a> (<strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *notused)
+<a id='L613' name='L613'></a><em class='brace'>{</em>
+<a id='L614' name='L614'></a>    <a href='../S/171.html#L602' title='Defined at 602 in babeld/babeld.c.'>babel_distribute_update_all</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L615' name='L615'></a><em class='brace'>}</em>
+<a id='L616' name='L616'></a>
+<a id='L617' name='L617'></a>
+<a id='L618' name='L618'></a><em class='comment'>/* [Command] */</em>
+<a id='L619' name='L619'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (router_babel,
+<a id='L620' name='L620'></a>       router_babel_cmd,
+<a id='L621' name='L621'></a>       "router babel",
+<a id='L622' name='L622'></a>       "Enable a routing process\n"
+<a id='L623' name='L623'></a>       "Make Babel instance command\n"
+<a id='L624' name='L624'></a>       "No attributes\n")
+<a id='L625' name='L625'></a><em class='brace'>{</em>
+<a id='L626' name='L626'></a>    <strong class='reserved'>int</strong> ret;
+<a id='L627' name='L627'></a>
+<a id='L628' name='L628'></a>    <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = BABEL_NODE;
+<a id='L629' name='L629'></a>
+<a id='L630' name='L630'></a>    <strong class='reserved'>if</strong> (!babel_routing_process) <em class='brace'>{</em>
+<a id='L631' name='L631'></a>        ret = <a href='../S/171.html#L125' title='Defined at 125 in babeld/babeld.c.'>babel_create_routing_process</a> ();
+<a id='L632' name='L632'></a>
+<a id='L633' name='L633'></a>        <em class='comment'>/* Notice to user we couldn't create Babel. */</em>
+<a id='L634' name='L634'></a>        <strong class='reserved'>if</strong> (ret &lt; 0) <em class='brace'>{</em>
+<a id='L635' name='L635'></a>            zlog_warn ("can't create Babel");
+<a id='L636' name='L636'></a>            <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L637' name='L637'></a>        <em class='brace'>}</em>
+<a id='L638' name='L638'></a>    <em class='brace'>}</em>
+<a id='L639' name='L639'></a>
+<a id='L640' name='L640'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L641' name='L641'></a><em class='brace'>}</em>
+<a id='L642' name='L642'></a>
+<a id='L643' name='L643'></a><em class='comment'>/* [Command] */</em>
+<a id='L644' name='L644'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_router_babel,
+<a id='L645' name='L645'></a>       no_router_babel_cmd,
+<a id='L646' name='L646'></a>       "no router babel",
+<a id='L647' name='L647'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L648' name='L648'></a>       "Disable a routing process\n"
+<a id='L649' name='L649'></a>       "Remove Babel instance command\n"
+<a id='L650' name='L650'></a>       "No attributes\n")
+<a id='L651' name='L651'></a><em class='brace'>{</em>
+<a id='L652' name='L652'></a>    <strong class='reserved'>if</strong>(babel_routing_process)
+<a id='L653' name='L653'></a>        <a href='../S/171.html#L297' title='Defined at 297 in babeld/babeld.c.'>babel_clean_routing_process</a>();
+<a id='L654' name='L654'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L655' name='L655'></a><em class='brace'>}</em>
+<a id='L656' name='L656'></a>
+<a id='L657' name='L657'></a><em class='comment'>/* [Babel Command] */</em>
+<a id='L658' name='L658'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (babel_set_resend_delay,
+<a id='L659' name='L659'></a>       babel_set_resend_delay_cmd,
+<a id='L660' name='L660'></a>       "babel resend-delay &lt;20-655340&gt;",
+<a id='L661' name='L661'></a>       "Babel commands\n"
+<a id='L662' name='L662'></a>       "Time before resending a message\n"
+<a id='L663' name='L663'></a>       "Milliseconds\n")
+<a id='L664' name='L664'></a><em class='brace'>{</em>
+<a id='L665' name='L665'></a>    <strong class='reserved'>int</strong> interval;
+<a id='L666' name='L666'></a>
+<a id='L667' name='L667'></a>    <a href='../S/304.html#L182' title='Defined at 182 in lib/vty.h.'>VTY_GET_INTEGER_RANGE</a>("milliseconds", interval, argv[0], 20, 10 * 0xFFFE);
+<a id='L668' name='L668'></a>
+<a id='L669' name='L669'></a>    resend_delay = interval;
+<a id='L670' name='L670'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L671' name='L671'></a><em class='brace'>}</em>
+<a id='L672' name='L672'></a>
+<a id='L673' name='L673'></a><strong class='reserved'>void</strong>
+<a id='L674' name='L674'></a><a href='../R/4633.html' title='Multiple referred from 2 places.'>babeld_quagga_init</a>(<strong class='reserved'>void</strong>)
+<a id='L675' name='L675'></a><em class='brace'>{</em>
+<a id='L676' name='L676'></a>
+<a id='L677' name='L677'></a>    <a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a>(&amp;cmd_babel_node, &amp;<a href='../S/171.html#L94' title='Defined at 94 in babeld/babeld.c.'>babel_config_write</a>);
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>(CONFIG_NODE, &amp;router_babel_cmd);
+<a id='L680' name='L680'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>(CONFIG_NODE, &amp;no_router_babel_cmd);
+<a id='L681' name='L681'></a>
+<a id='L682' name='L682'></a>    <a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a>(BABEL_NODE);
+<a id='L683' name='L683'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>(BABEL_NODE, &amp;babel_set_resend_delay_cmd);
+<a id='L684' name='L684'></a>
+<a id='L685' name='L685'></a>    <a href='../S/164.html#L880' title='Defined at 880 in babeld/babel_interface.c.'>babel_if_init</a>();
+<a id='L686' name='L686'></a>
+<a id='L687' name='L687'></a>    <em class='comment'>/* Access list install. */</em>
+<a id='L688' name='L688'></a>    <a href='../S/203.html#L2021' title='Defined at 2021 in lib/filter.c.'>access_list_init</a> ();
+<a id='L689' name='L689'></a>    <a href='../S/203.html#L429' title='Defined at 429 in lib/filter.c.'>access_list_add_hook</a> (<a href='../S/171.html#L612' title='Defined at 612 in babeld/babeld.c.'>babel_distribute_update_all_wrapper</a>);
+<a id='L690' name='L690'></a>    <a href='../S/203.html#L439' title='Defined at 439 in lib/filter.c.'>access_list_delete_hook</a> (<a href='../S/171.html#L612' title='Defined at 612 in babeld/babeld.c.'>babel_distribute_update_all_wrapper</a>);
+<a id='L691' name='L691'></a>
+<a id='L692' name='L692'></a>    <em class='comment'>/* Prefix list initialize.*/</em>
+<a id='L693' name='L693'></a>    <a href='../S/181.html#L2844' title='Defined at 2844 in lib/plist.c.'>prefix_list_init</a> ();
+<a id='L694' name='L694'></a>    <a href='../S/181.html#L359' title='Defined at 359 in lib/plist.c.'>prefix_list_add_hook</a> (<a href='../S/171.html#L602' title='Defined at 602 in babeld/babeld.c.'>babel_distribute_update_all</a>);
+<a id='L695' name='L695'></a>    <a href='../S/181.html#L369' title='Defined at 369 in lib/plist.c.'>prefix_list_delete_hook</a> (<a href='../S/171.html#L602' title='Defined at 602 in babeld/babeld.c.'>babel_distribute_update_all</a>);
+<a id='L696' name='L696'></a>
+<a id='L697' name='L697'></a>    <em class='comment'>/* Distribute list install. */</em>
+<a id='L698' name='L698'></a>    <a href='../S/197.html#L755' title='Defined at 755 in lib/distribute.c.'>distribute_list_init</a> (BABEL_NODE);
+<a id='L699' name='L699'></a>    <a href='../S/197.html#L80' title='Defined at 80 in lib/distribute.c.'>distribute_list_add_hook</a> (<a href='../S/171.html#L533' title='Defined at 533 in babeld/babeld.c.'>babel_distribute_update</a>);
+<a id='L700' name='L700'></a>    <a href='../S/197.html#L86' title='Defined at 86 in lib/distribute.c.'>distribute_list_delete_hook</a> (<a href='../S/171.html#L533' title='Defined at 533 in babeld/babeld.c.'>babel_distribute_update</a>);
+<a id='L701' name='L701'></a><em class='brace'>}</em>
+<a id='L702' name='L702'></a>
+<a id='L703' name='L703'></a><em class='comment'>/* Stubs to adapt Babel's filtering calls to Quagga's infrastructure. */</em>
+<a id='L704' name='L704'></a>
+<a id='L705' name='L705'></a><strong class='reserved'>int</strong>
+<a id='L706' name='L706'></a><a href='../R/6026.html' title='Multiple referred from 4 places.'>input_filter</a>(<strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *id,
+<a id='L707' name='L707'></a>             <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L708' name='L708'></a>             <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *neigh, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> ifindex)
+<a id='L709' name='L709'></a><em class='brace'>{</em>
+<a id='L710' name='L710'></a>    <strong class='reserved'>return</strong> <a href='../S/153.html#L49' title='Defined at 49 in babeld/babel_filter.c.'>babel_filter</a>(0, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, plen, ifindex);
+<a id='L711' name='L711'></a><em class='brace'>}</em>
+<a id='L712' name='L712'></a>
+<a id='L713' name='L713'></a><strong class='reserved'>int</strong>
+<a id='L714' name='L714'></a><a href='../R/8589.html' title='Multiple referred from 3 places.'>output_filter</a>(<strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *id, <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L715' name='L715'></a>              <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> ifindex)
+<a id='L716' name='L716'></a><em class='brace'>{</em>
+<a id='L717' name='L717'></a>    <strong class='reserved'>return</strong> <a href='../S/153.html#L49' title='Defined at 49 in babeld/babel_filter.c.'>babel_filter</a>(1, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, plen, ifindex);
+<a id='L718' name='L718'></a><em class='brace'>}</em>
+<a id='L719' name='L719'></a>
+<a id='L720' name='L720'></a><em class='comment'>/* There's no redistribute filter in Quagga -- the zebra daemon does its</em>
+<a id='L721' name='L721'></a><em class='comment'>   own filtering. */</em>
+<a id='L722' name='L722'></a><strong class='reserved'>int</strong>
+<a id='L723' name='L723'></a><a href='../R/8964.html' title='Multiple referred from 2 places.'>redistribute_filter</a>(<strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L724' name='L724'></a>                    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> ifindex, <strong class='reserved'>int</strong> proto)
+<a id='L725' name='L725'></a><em class='brace'>{</em>
+<a id='L726' name='L726'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L727' name='L727'></a><em class='brace'>}</em>
+<a id='L728' name='L728'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L94'>[^]</a><a href='#L723'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

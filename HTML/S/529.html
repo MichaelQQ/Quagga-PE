@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_flags.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_flags.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L33'>[^]</a><a href='#L80'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L33' title='Defined at 33.'>flags_initialize</a></li>
+<li><a href='#L40' title='Defined at 40.'>flags_get_index</a></li>
+<li><a href='#L61' title='Defined at 61.'>flags_free_index</a></li>
+<li><a href='#L80' title='Defined at 80.'>flags_any_set</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_flags.c</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             Routines for manipulation of SSN and SRM flags</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'> *</em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='488.html'>isisd/isis_common.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='497.html'>isisd/isis_flags.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><strong class='reserved'>void</strong>
+<a id='L33' name='L33'></a><a href='../R/5764.html' title='Multiple referred from 2 places.'>flags_initialize</a> (<strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>)
+<a id='L34' name='L34'></a><em class='brace'>{</em>
+<a id='L35' name='L35'></a>  <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;maxindex = 0;
+<a id='L36' name='L36'></a>  <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L37' name='L37'></a><em class='brace'>}</em>
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><strong class='reserved'>long</strong> <strong class='reserved'>int</strong>
+<a id='L40' name='L40'></a><a href='../R/5763.html' title='Multiple referred from 2 places.'>flags_get_index</a> (<strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>)
+<a id='L41' name='L41'></a><em class='brace'>{</em>
+<a id='L42' name='L42'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L43' name='L43'></a>  <strong class='reserved'>long</strong> <strong class='reserved'>int</strong> index;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a>  <strong class='reserved'>if</strong> (<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs-&gt;count == 0)
+<a id='L46' name='L46'></a>    <em class='brace'>{</em>
+<a id='L47' name='L47'></a>      index = <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;maxindex++;
+<a id='L48' name='L48'></a>    <em class='brace'>}</em>
+<a id='L49' name='L49'></a>  <strong class='reserved'>else</strong>
+<a id='L50' name='L50'></a>    <em class='brace'>{</em>
+<a id='L51' name='L51'></a>      node = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a> (<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs);
+<a id='L52' name='L52'></a>      index = (<strong class='reserved'>long</strong> <strong class='reserved'>int</strong>) <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a> (node);
+<a id='L53' name='L53'></a>      <a href='../S/243.html#L165' title='Defined at 165 in lib/linklist.c.'>listnode_delete</a> (<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs, (<strong class='reserved'>void</strong> *) index);
+<a id='L54' name='L54'></a>      index--;
+<a id='L55' name='L55'></a>    <em class='brace'>}</em>
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a>  <strong class='reserved'>return</strong> index;
+<a id='L58' name='L58'></a><em class='brace'>}</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><strong class='reserved'>void</strong>
+<a id='L61' name='L61'></a><a href='../R/5762.html' title='Multiple referred from 2 places.'>flags_free_index</a> (<strong class='reserved'>struct</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> *<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <strong class='reserved'>long</strong> <strong class='reserved'>int</strong> index)
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>  <strong class='reserved'>if</strong> (index + 1 == <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;maxindex)
+<a id='L64' name='L64'></a>    <em class='brace'>{</em>
+<a id='L65' name='L65'></a>      <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;maxindex--;
+<a id='L66' name='L66'></a>      <strong class='reserved'>return</strong>;
+<a id='L67' name='L67'></a>    <em class='brace'>}</em>
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a>  <strong class='reserved'>if</strong> (<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L70' name='L70'></a>    <em class='brace'>{</em>
+<a id='L71' name='L71'></a>      <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L72' name='L72'></a>    <em class='brace'>}</em>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>-&gt;free_idcs, (<strong class='reserved'>void</strong> *) (index + 1));
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>  <strong class='reserved'>return</strong>;
+<a id='L77' name='L77'></a><em class='brace'>}</em>
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><strong class='reserved'>int</strong>
+<a id='L80' name='L80'></a><a href='../R/5761.html' title='Multiple referred from 2 places.'>flags_any_set</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> * <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>)
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> zero[<a href='../S/497.html#L29' title='Defined at 29 in isisd/isis_flags.h.'>ISIS_MAX_CIRCUITS</a>];
+<a id='L83' name='L83'></a>  memset (zero, 0x00, <a href='../S/497.html#L29' title='Defined at 29 in isisd/isis_flags.h.'>ISIS_MAX_CIRCUITS</a> * 4);
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a>  <strong class='reserved'>return</strong> bcmp (<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, zero, <a href='../S/497.html#L29' title='Defined at 29 in isisd/isis_flags.h.'>ISIS_MAX_CIRCUITS</a> * 4);
+<a id='L86' name='L86'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L33'>[^]</a><a href='#L80'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

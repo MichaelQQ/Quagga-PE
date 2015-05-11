@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>brctld/brctl.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1014.html'>brctld</a>/brctl.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L30'>[^]</a><a href='#L38'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L30' title='Defined at 30.'>help</a></li>
+<li><a href='#L38' title='Defined at 38.'>brctl_action</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2000 Lennert Buytenhek</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This program is free software; you can redistribute it and/or</em>
+<a id='L5' name='L5'></a><em class='comment'> * modify it under the terms of the GNU General Public License as</em>
+<a id='L6' name='L6'></a><em class='comment'> * published by the Free Software Foundation; either version 2 of the</em>
+<a id='L7' name='L7'></a><em class='comment'> * License, or (at your option) any later version.</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is distributed in the hope that it will be useful, but</em>
+<a id='L10' name='L10'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L11' name='L11'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L12' name='L12'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L15' name='L15'></a><em class='comment'> * along with this program; if not, write to the Free Software</em>
+<a id='L16' name='L16'></a><em class='comment'> * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</em>
+<a id='L17' name='L17'></a><em class='comment'> */</em>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L20' name='L20'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;sys/errno.h&gt;
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='196.html'>getopt.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='../I/91.html'>libbridge.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='118.html'>brctl_config.h</a>"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='137.html'>brctl.h</a>"
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../R/5880.html' title='Multiple referred from 19 places.'>help</a>()
+<a id='L31' name='L31'></a><em class='brace'>{</em>
+<a id='L32' name='L32'></a>        printf("Usage: brctl [commands]\n");
+<a id='L33' name='L33'></a>        printf("commands:\n");
+<a id='L34' name='L34'></a>        <a href='../S/116.html#L471' title='Defined at 471 in brctld/brctl_cmd.c.'>command_helpall</a>();
+<a id='L35' name='L35'></a><em class='brace'>}</em>
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='comment'>//int main(int argc, char *const* argv)</em>
+<a id='L38' name='L38'></a><strong class='reserved'>int</strong> <a href='../R/5191.html' title='Multiple referred from 10 places.'>brctl_action</a>(<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> *<strong class='reserved'>const</strong>* argv)
+<a id='L39' name='L39'></a><em class='brace'>{</em>
+<a id='L40' name='L40'></a>        <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a> *cmd;
+<a id='L41' name='L41'></a>        <strong class='reserved'>int</strong> f;
+<a id='L42' name='L42'></a>        <strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a> options[] = <em class='brace'>{</em>
+<a id='L43' name='L43'></a>                <em class='brace'>{</em> .<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = "help", .val = 'h' <em class='brace'>}</em>,
+<a id='L44' name='L44'></a>                <em class='brace'>{</em> .<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = "version", .val = 'V' <em class='brace'>}</em>,
+<a id='L45' name='L45'></a>                <em class='brace'>{</em> 0 <em class='brace'>}</em>
+<a id='L46' name='L46'></a>        <em class='brace'>}</em>;
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a>        <strong class='reserved'>while</strong> ((f = <a href='../S/245.html#L70' title='Defined at 70 in lib/getopt1.c.'>getopt_long</a>(argc, argv, "Vh", options, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)) != EOF) 
+<a id='L49' name='L49'></a>                <strong class='reserved'>switch</strong>(f) <em class='brace'>{</em>
+<a id='L50' name='L50'></a>                <strong class='reserved'>case</strong> 'h':
+<a id='L51' name='L51'></a>                        <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>();
+<a id='L52' name='L52'></a>                        <strong class='reserved'>return</strong> 0;
+<a id='L53' name='L53'></a>                <strong class='reserved'>case</strong> 'V':
+<a id='L54' name='L54'></a>                        printf("%s, %s\n", <a href='../D/3368.html' title='Multiple defined in 2 places.'>PACKAGE</a>, <a href='../D/4456.html' title='Multiple defined in 2 places.'>VERSION</a>);
+<a id='L55' name='L55'></a>                        <strong class='reserved'>return</strong> 0;
+<a id='L56' name='L56'></a>                <strong class='reserved'>default</strong>:
+<a id='L57' name='L57'></a>                        fprintf(stderr, "Unknown option '%c'\n", f);
+<a id='L58' name='L58'></a>                        <strong class='reserved'>goto</strong> <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>;
+<a id='L59' name='L59'></a>                <em class='brace'>}</em>
+<a id='L60' name='L60'></a>                        
+<a id='L61' name='L61'></a>        <strong class='reserved'>if</strong> (argc == optind)
+<a id='L62' name='L62'></a>                <strong class='reserved'>goto</strong> <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>;
+<a id='L63' name='L63'></a>        
+<a id='L64' name='L64'></a>        <strong class='reserved'>if</strong> (<a href='../D/5925.html' title='Multiple defined in 2 places.'>br_init</a>()) <em class='brace'>{</em>
+<a id='L65' name='L65'></a>                fprintf(stderr, "can't setup bridge control: %s\n",
+<a id='L66' name='L66'></a>                        strerror(errno));
+<a id='L67' name='L67'></a>                <strong class='reserved'>return</strong> 1;
+<a id='L68' name='L68'></a>        <em class='brace'>}</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a>        argc -= optind;
+<a id='L71' name='L71'></a>        argv += optind;
+<a id='L72' name='L72'></a>        <strong class='reserved'>if</strong> ((cmd = <a href='../S/116.html#L459' title='Defined at 459 in brctld/brctl_cmd.c.'>command_lookup</a>(*argv)) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L73' name='L73'></a>                fprintf(stderr, "never heard of command [%s]\n", argv[1]);
+<a id='L74' name='L74'></a>                <strong class='reserved'>goto</strong> <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>;
+<a id='L75' name='L75'></a>        <em class='brace'>}</em>
+<a id='L76' name='L76'></a>        
+<a id='L77' name='L77'></a>        <strong class='reserved'>if</strong> (argc &lt; cmd-&gt;nargs + 1) <em class='brace'>{</em>
+<a id='L78' name='L78'></a>                printf("Incorrect number of arguments for command\n");
+<a id='L79' name='L79'></a>                printf("Usage: brctl %s %s\n", cmd-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, cmd-&gt;<a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>);
+<a id='L80' name='L80'></a>                <strong class='reserved'>return</strong> 1;
+<a id='L81' name='L81'></a>        <em class='brace'>}</em>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a>        <strong class='reserved'>return</strong> cmd-&gt;func(argc, argv);
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>:
+<a id='L86' name='L86'></a>        <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>();
+<a id='L87' name='L87'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L88' name='L88'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L30'>[^]</a><a href='#L38'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

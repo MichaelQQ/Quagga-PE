@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospf6d/ospf6_lsdb.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1027.html'>ospf6d</a>/ospf6_lsdb.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/416.html' title='Multiple included from 16 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2003 Yasuhiro Ohara</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the </em>
+<a id='L18' name='L18'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330, </em>
+<a id='L19' name='L19'></a><em class='comment'> * Boston, MA 02111-1307, USA.  </em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#ifndef</em> <a href='../S/31.html#L23' title='Defined at 23 in ospf6d/ospf6_lsdb.h.'>OSPF6_LSDB_H</a>
+<a id='L23' name='L23'></a><em class='sharp'>#define</em> <a href='../S/31.html#L22' title='Referred from 22 in ospf6d/ospf6_lsdb.h.'>OSPF6_LSDB_H</a>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><strong class='reserved'>struct</strong> <a href='../R/7631.html' title='Multiple referred from 60 places.'>ospf6_lsdb</a>
+<a id='L29' name='L29'></a><em class='brace'>{</em>
+<a id='L30' name='L30'></a>  <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>; <em class='comment'>/* data structure that holds this lsdb */</em>
+<a id='L31' name='L31'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table;
+<a id='L32' name='L32'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> count;
+<a id='L33' name='L33'></a>  <strong class='reserved'>void</strong> (*hook_add) (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *);
+<a id='L34' name='L34'></a>  <strong class='reserved'>void</strong> (*hook_remove) (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *);
+<a id='L35' name='L35'></a><em class='brace'>}</em>;
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/2288.html' title='Multiple referred from 3 places.'>OSPF6_LSDB_MAXAGE_REMOVER</a>(lsdb)                                  \
+<a id='L38' name='L38'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em>                                                                   \
+<a id='L39' name='L39'></a>    <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa;                                               \
+<a id='L40' name='L40'></a>    <strong class='reserved'>for</strong> (lsa = <a href='../S/6.html#L335' title='Defined at 335 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_head</a> (lsdb); lsa; lsa = <a href='../S/6.html#L356' title='Defined at 356 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_next</a> (lsa)) \
+<a id='L41' name='L41'></a>      <em class='brace'>{</em>                                                                  \
+<a id='L42' name='L42'></a>        <strong class='reserved'>if</strong> (! <a href='../S/4.html#L110' title='Defined at 110 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_MAXAGE</a> (lsa))                                 \
+<a id='L43' name='L43'></a>          <strong class='reserved'>continue</strong>;                                                      \
+<a id='L44' name='L44'></a>        <strong class='reserved'>if</strong> (lsa-&gt;retrans_count != 0)                                     \
+<a id='L45' name='L45'></a>          <strong class='reserved'>continue</strong>;                                                      \
+<a id='L46' name='L46'></a>        <strong class='reserved'>if</strong> (<a href='../S/4.html#L40' title='Defined at 40 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_LSA_TYPE</a> (lsa-&gt;header-&gt;type))                 \
+<a id='L47' name='L47'></a>          zlog_debug ("Remove MaxAge %s", lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);                    \
+<a id='L48' name='L48'></a>        <a href='../S/6.html#L209' title='Defined at 209 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_remove</a> (lsa, lsdb);                                   \
+<a id='L49' name='L49'></a>      <em class='brace'>}</em>                                                                  \
+<a id='L50' name='L50'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><em class='comment'>/* Function Prototypes */</em>
+<a id='L53' name='L53'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *<a href='../S/6.html#L37' title='Defined at 37 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_create</a> (<strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L54' name='L54'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/6.html#L55' title='Defined at 55 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L241' title='Defined at 241 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_lookup</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> id,
+<a id='L57' name='L57'></a>                                            <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> adv_router,
+<a id='L58' name='L58'></a>                                            <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L59' name='L59'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L262' title='Defined at 262 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_lookup_next</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> id,
+<a id='L60' name='L60'></a>                                                 <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> adv_router,
+<a id='L61' name='L61'></a>                                                 <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/6.html#L102' title='Defined at 102 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_add</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa, <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L64' name='L64'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/6.html#L209' title='Defined at 209 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_remove</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa, <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L335' title='Defined at 335 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_head</a> (<strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L67' name='L67'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L356' title='Defined at 356 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_next</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa);
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L368' title='Defined at 368 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_router_head</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type,
+<a id='L70' name='L70'></a>                                               <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> adv_router,
+<a id='L71' name='L71'></a>                                               <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L72' name='L72'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L406' title='Defined at 406 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_router_next</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type,
+<a id='L73' name='L73'></a>                                               <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> adv_router,
+<a id='L74' name='L74'></a>                                               <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L425' title='Defined at 425 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_head</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type,
+<a id='L77' name='L77'></a>                                               <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L78' name='L78'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/6.html#L460' title='Defined at 460 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_next</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type,
+<a id='L79' name='L79'></a>                                               <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa);
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/6.html#L477' title='Defined at 477 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_remove_all</a> (<strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='sharp'>#define</em> <a href='../R/2292.html' title='Multiple referred from 4 places.'>OSPF6_LSDB_SHOW_LEVEL_NORMAL</a>   0
+<a id='L84' name='L84'></a><em class='sharp'>#define</em> <a href='../R/2289.html' title='Multiple referred from 2 places.'>OSPF6_LSDB_SHOW_LEVEL_DETAIL</a>   1
+<a id='L85' name='L85'></a><em class='sharp'>#define</em> <a href='../R/2291.html' title='Multiple referred from 2 places.'>OSPF6_LSDB_SHOW_LEVEL_INTERNAL</a> 2
+<a id='L86' name='L86'></a><em class='sharp'>#define</em> <a href='../R/2290.html' title='Multiple referred from 2 places.'>OSPF6_LSDB_SHOW_LEVEL_DUMP</a>     3
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/6.html#L485' title='Defined at 485 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_show</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>int</strong> level, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> *type,
+<a id='L89' name='L89'></a>                             <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> *id, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> *adv_router,
+<a id='L90' name='L90'></a>                             <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/6.html#L541' title='Defined at 541 in ospf6d/ospf6_lsdb.c.'>ospf6_new_ls_id</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> adv_router,
+<a id='L93' name='L93'></a>                                  <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L94' name='L94'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/6.html#L566' title='Defined at 566 in ospf6d/ospf6_lsdb.c.'>ospf6_new_ls_seqnum</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> id,
+<a id='L95' name='L95'></a>                                      <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> adv_router,
+<a id='L96' name='L96'></a>                                      <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb);
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a><em class='sharp'>#endif</em> <em class='comment'>/* OSPF6_LSDB_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

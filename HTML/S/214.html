@@ -1,0 +1,404 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/command.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/command.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/287.html' title='Multiple included from 161 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Zebra configuration command interface routine</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1997, 98 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify</em>
+<a id='L8' name='L8'></a><em class='comment'> * it under the terms of the GNU General Public License as published</em>
+<a id='L9' name='L9'></a><em class='comment'> * by the Free Software Foundation; either version 2, or (at your</em>
+<a id='L10' name='L10'></a><em class='comment'> * option) any later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> * </em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the</em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330,</em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/214.html#L24' title='Defined at 24 in lib/command.h.'>_ZEBRA_COMMAND_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/214.html#L23' title='Referred from 23 in lib/command.h.'>_ZEBRA_COMMAND_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='253.html'>vector.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='280.html'>lib/route_types.h</a>"
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><em class='comment'>/* Host configuration variable */</em>
+<a id='L31' name='L31'></a><strong class='reserved'>struct</strong> <a href='../R/5886.html' title='Multiple referred from 414 places.'>host</a>
+<a id='L32' name='L32'></a><em class='brace'>{</em>
+<a id='L33' name='L33'></a>  <em class='comment'>/* Host name of this router. */</em>
+<a id='L34' name='L34'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a>  <em class='comment'>/* Password for vty interface. */</em>
+<a id='L37' name='L37'></a>  <strong class='reserved'>char</strong> *<a href='../S/524.html#L28' title='Defined at 28 in isisd/isis_circuit.h.'>password</a>;
+<a id='L38' name='L38'></a>  <strong class='reserved'>char</strong> *password_encrypt;
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a>  <em class='comment'>/* Enable password */</em>
+<a id='L41' name='L41'></a>  <strong class='reserved'>char</strong> *enable;
+<a id='L42' name='L42'></a>  <strong class='reserved'>char</strong> *enable_encrypt;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a>  <em class='comment'>/* System wide terminal lines. */</em>
+<a id='L45' name='L45'></a>  <strong class='reserved'>int</strong> lines;
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a>  <em class='comment'>/* Log filename. */</em>
+<a id='L48' name='L48'></a>  <strong class='reserved'>char</strong> *logfile;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>  <em class='comment'>/* config file name of this host */</em>
+<a id='L51' name='L51'></a>  <strong class='reserved'>char</strong> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a>  <em class='comment'>/* Flags for services */</em>
+<a id='L54' name='L54'></a>  <strong class='reserved'>int</strong> advanced;
+<a id='L55' name='L55'></a>  <strong class='reserved'>int</strong> encrypt;
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a>  <em class='comment'>/* Banner configuration. */</em>
+<a id='L58' name='L58'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *motd;
+<a id='L59' name='L59'></a>  <strong class='reserved'>char</strong> *motdfile;
+<a id='L60' name='L60'></a><em class='brace'>}</em>;
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a><em class='comment'>/* There are some command levels which called from command node. */</em>
+<a id='L63' name='L63'></a><strong class='reserved'>enum</strong> <a href='../R/7401.html' title='Multiple referred from 18 places.'>node_type</a> 
+<a id='L64' name='L64'></a><em class='brace'>{</em>
+<a id='L65' name='L65'></a>  AUTH_NODE,                    <em class='comment'>/* Authentication mode of vty interface. */</em>
+<a id='L66' name='L66'></a>  RESTRICTED_NODE,              <em class='comment'>/* Restricted view mode */</em> 
+<a id='L67' name='L67'></a>  VIEW_NODE,                    <em class='comment'>/* View node. Default mode of vty interface. */</em>
+<a id='L68' name='L68'></a>  AUTH_ENABLE_NODE,             <em class='comment'>/* Authentication mode for change enable. */</em>
+<a id='L69' name='L69'></a>  ENABLE_NODE,                  <em class='comment'>/* Enable node. */</em>
+<a id='L70' name='L70'></a>  CONFIG_NODE,                  <em class='comment'>/* Config node. Default mode of config file. */</em>
+<a id='L71' name='L71'></a>  SERVICE_NODE,                 <em class='comment'>/* Service node. */</em>
+<a id='L72' name='L72'></a>  DEBUG_NODE,                   <em class='comment'>/* Debug node. */</em>
+<a id='L73' name='L73'></a>  AAA_NODE,                     <em class='comment'>/* AAA node. */</em>
+<a id='L74' name='L74'></a>  KEYCHAIN_NODE,                <em class='comment'>/* Key-chain node. */</em>
+<a id='L75' name='L75'></a>  KEYCHAIN_KEY_NODE,            <em class='comment'>/* Key-chain key node. */</em>
+<a id='L76' name='L76'></a>  INTERFACE_NODE,               <em class='comment'>/* Interface mode node. */</em>
+<a id='L77' name='L77'></a>  ZEBRA_NODE,                   <em class='comment'>/* zebra connection node. */</em>
+<a id='L78' name='L78'></a>  TABLE_NODE,                   <em class='comment'>/* rtm_table selection node. */</em>
+<a id='L79' name='L79'></a>  RIP_NODE,                     <em class='comment'>/* RIP protocol mode node. */</em> 
+<a id='L80' name='L80'></a>  RIPNG_NODE,                   <em class='comment'>/* RIPng protocol mode node. */</em>
+<a id='L81' name='L81'></a>  LMD_NODE,                     <em class='comment'>/* LMD daemon mode */</em>
+<a id='L82' name='L82'></a>  LDP_NODE,                     <em class='comment'>/* LDP protocol mode */</em>
+<a id='L83' name='L83'></a>  LDP_IF_NODE,                  <em class='comment'>/* LDP interface mode */</em>
+<a id='L84' name='L84'></a>  VPNMD_NODE,                   <em class='comment'>/* VPNMD daemon mode */</em>
+<a id='L85' name='L85'></a>  RSVPD_NODE,                   <em class='comment'>/* RSVPD protocol mode */</em>
+<a id='L86' name='L86'></a>  MPLS_LABELSPACE_NODE,         <em class='comment'>/* MPLS Labelspace node. */</em>
+<a id='L87' name='L87'></a>  MPLS_TUN_INTERFACE_NODE,      <em class='comment'>/* MPLS tunnel interface node. */</em>
+<a id='L88' name='L88'></a>  MPLSADMD_NODE,                <em class='comment'>/* MPLSADMD daemon mode */</em>
+<a id='L89' name='L89'></a>  BRCTLD_NODE,                  <em class='comment'>/* VPNMD daemon mode */</em>
+<a id='L90' name='L90'></a>  BABEL_NODE,                   <em class='comment'>/* Babel protocol mode node. */</em>
+<a id='L91' name='L91'></a>  BGP_NODE,                     <em class='comment'>/* BGP protocol mode which includes BGP4+ */</em>
+<a id='L92' name='L92'></a>  BGP_VPNV4_NODE,               <em class='comment'>/* BGP MPLS-VPN PE exchange. */</em>
+<a id='L93' name='L93'></a>  BGP_IPV4_NODE,                <em class='comment'>/* BGP IPv4 unicast address family.  */</em>
+<a id='L94' name='L94'></a>  BGP_IPV4M_NODE,               <em class='comment'>/* BGP IPv4 multicast address family.  */</em>
+<a id='L95' name='L95'></a>  BGP_IPV6_NODE,                <em class='comment'>/* BGP IPv6 address family */</em>
+<a id='L96' name='L96'></a>  BGP_IPV6M_NODE,               <em class='comment'>/* BGP IPv6 multicast address family. */</em>
+<a id='L97' name='L97'></a>  OSPF_NODE,                    <em class='comment'>/* OSPF protocol mode */</em>
+<a id='L98' name='L98'></a>  OSPF6_NODE,                   <em class='comment'>/* OSPF protocol for IPv6 mode */</em>
+<a id='L99' name='L99'></a>  ISIS_NODE,                    <em class='comment'>/* ISIS protocol mode */</em>
+<a id='L100' name='L100'></a>  MASC_NODE,                    <em class='comment'>/* MASC for multicast.  */</em>
+<a id='L101' name='L101'></a>  IRDP_NODE,                    <em class='comment'>/* ICMP Router Discovery Protocol mode. */</em> 
+<a id='L102' name='L102'></a>  IP_NODE,                      <em class='comment'>/* Static ip route node. */</em>
+<a id='L103' name='L103'></a>  ACCESS_NODE,                  <em class='comment'>/* Access list node. */</em>
+<a id='L104' name='L104'></a>  PREFIX_NODE,                  <em class='comment'>/* Prefix list node. */</em>
+<a id='L105' name='L105'></a>  ACCESS_IPV6_NODE,             <em class='comment'>/* Access list node. */</em>
+<a id='L106' name='L106'></a>  PREFIX_IPV6_NODE,             <em class='comment'>/* Prefix list node. */</em>
+<a id='L107' name='L107'></a>  AS_LIST_NODE,                 <em class='comment'>/* AS list node. */</em>
+<a id='L108' name='L108'></a>  COMMUNITY_LIST_NODE,          <em class='comment'>/* Community list node. */</em>
+<a id='L109' name='L109'></a>  RMAP_NODE,                    <em class='comment'>/* Route map node. */</em>
+<a id='L110' name='L110'></a>  SMUX_NODE,                    <em class='comment'>/* SNMP configuration node. */</em>
+<a id='L111' name='L111'></a>  DUMP_NODE,                    <em class='comment'>/* Packet dump node. */</em>
+<a id='L112' name='L112'></a>  FORWARDING_NODE,              <em class='comment'>/* IP forwarding node. */</em>
+<a id='L113' name='L113'></a>  PROTOCOL_NODE,                <em class='comment'>/* protocol filtering node */</em>
+<a id='L114' name='L114'></a>  VTY_NODE,                     <em class='comment'>/* Vty node. */</em>
+<a id='L115' name='L115'></a><em class='brace'>}</em>;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='comment'>/* Node which has some commands and prompt string and configuration</em>
+<a id='L118' name='L118'></a><em class='comment'>   function pointer . */</em>
+<a id='L119' name='L119'></a><strong class='reserved'>struct</strong> <a href='../R/5307.html' title='Multiple referred from 102 places.'>cmd_node</a> 
+<a id='L120' name='L120'></a><em class='brace'>{</em>
+<a id='L121' name='L121'></a>  <em class='comment'>/* Node index. */</em>
+<a id='L122' name='L122'></a>  <strong class='reserved'>enum</strong> <a href='../S/214.html#L63' title='Defined at 63 in lib/command.h.'>node_type</a> node;          
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a>  <em class='comment'>/* Prompt character at vty interface. */</em>
+<a id='L125' name='L125'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *prompt;                   
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a>  <em class='comment'>/* Is this node's configuration goes to vtysh ? */</em>
+<a id='L128' name='L128'></a>  <strong class='reserved'>int</strong> vtysh;
+<a id='L129' name='L129'></a>  
+<a id='L130' name='L130'></a>  <em class='comment'>/* Node's configuration write function */</em>
+<a id='L131' name='L131'></a>  <strong class='reserved'>int</strong> (*func) (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <em class='comment'>/* Vector of this node's command list. */</em>
+<a id='L134' name='L134'></a>  <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> cmd_vector;    
+<a id='L135' name='L135'></a><em class='brace'>}</em>;
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a><strong class='reserved'>enum</strong>
+<a id='L138' name='L138'></a><em class='brace'>{</em>
+<a id='L139' name='L139'></a>  CMD_ATTR_DEPRECATED = 1,
+<a id='L140' name='L140'></a>  CMD_ATTR_HIDDEN,
+<a id='L141' name='L141'></a><em class='brace'>}</em>;
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a><em class='comment'>/* Structure of command element. */</em>
+<a id='L144' name='L144'></a><strong class='reserved'>struct</strong> <a href='../R/5290.html' title='Multiple referred from 79 places.'>cmd_element</a> 
+<a id='L145' name='L145'></a><em class='brace'>{</em>
+<a id='L146' name='L146'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *string;                   <em class='comment'>/* Command specification by string. */</em>
+<a id='L147' name='L147'></a>  <strong class='reserved'>int</strong> (*func) (<strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> *, <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *[]);
+<a id='L148' name='L148'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *doc;                      <em class='comment'>/* Documentation of this command. */</em>
+<a id='L149' name='L149'></a>  <strong class='reserved'>int</strong> <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>;                   <em class='comment'>/* Daemon to which this command belong. */</em>
+<a id='L150' name='L150'></a>  <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> strvec;                <em class='comment'>/* Pointing out each description vector. */</em>
+<a id='L151' name='L151'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> cmdsize;         <em class='comment'>/* Command index count. */</em>
+<a id='L152' name='L152'></a>  <strong class='reserved'>char</strong> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;                 <em class='comment'>/* Configuration string */</em>
+<a id='L153' name='L153'></a>  <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> subconfig;             <em class='comment'>/* Sub configuration string */</em>
+<a id='L154' name='L154'></a>  u_char <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>;                  <em class='comment'>/* Command attributes */</em>
+<a id='L155' name='L155'></a><em class='brace'>}</em>;
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a><em class='comment'>/* Command description structure. */</em>
+<a id='L158' name='L158'></a><strong class='reserved'>struct</strong> <a href='../R/5543.html' title='Multiple referred from 186 places.'>desc</a>
+<a id='L159' name='L159'></a><em class='brace'>{</em>
+<a id='L160' name='L160'></a>  <strong class='reserved'>char</strong> *cmd;                    <em class='comment'>/* Command string. */</em>
+<a id='L161' name='L161'></a>  <strong class='reserved'>char</strong> *str;                    <em class='comment'>/* Command's description. */</em>
+<a id='L162' name='L162'></a><em class='brace'>}</em>;
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a><em class='comment'>/* Return value of the commands. */</em>
+<a id='L165' name='L165'></a><em class='sharp'>#define</em> <a href='../R/499.html' title='Multiple referred from 1547 places.'>CMD_SUCCESS</a>              0
+<a id='L166' name='L166'></a><em class='sharp'>#define</em> <a href='../R/503.html' title='Multiple referred from 801 places.'>CMD_WARNING</a>              1
+<a id='L167' name='L167'></a><em class='sharp'>#define</em> <a href='../R/492.html' title='Multiple referred from 96 places.'>CMD_ERR_NO_MATCH</a>         2
+<a id='L168' name='L168'></a><em class='sharp'>#define</em> <a href='../R/488.html' title='Multiple referred from 59 places.'>CMD_ERR_AMBIGUOUS</a>        3
+<a id='L169' name='L169'></a><em class='sharp'>#define</em> <a href='../R/490.html' title='Multiple referred from 5 places.'>CMD_ERR_INCOMPLETE</a>       4
+<a id='L170' name='L170'></a><em class='sharp'>#define</em> <a href='../R/489.html' title='Multiple referred from 2 places.'>CMD_ERR_EXEED_ARGC_MAX</a>   5
+<a id='L171' name='L171'></a><em class='sharp'>#define</em> <a href='../R/491.html' title='Multiple referred from 7 places.'>CMD_ERR_NOTHING_TODO</a>     6
+<a id='L172' name='L172'></a><em class='sharp'>#define</em> <a href='../R/485.html' title='Multiple referred from 3 places.'>CMD_COMPLETE_FULL_MATCH</a>  7
+<a id='L173' name='L173'></a><em class='sharp'>#define</em> <a href='../R/487.html' title='Multiple referred from 2 places.'>CMD_COMPLETE_MATCH</a>       8
+<a id='L174' name='L174'></a><em class='sharp'>#define</em> <a href='../R/486.html' title='Multiple referred from 2 places.'>CMD_COMPLETE_LIST_MATCH</a>  9
+<a id='L175' name='L175'></a><em class='sharp'>#define</em> <a href='../R/500.html' title='Multiple referred from 11 places.'>CMD_SUCCESS_DAEMON</a>      10
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a><em class='comment'>/* Argc max counts. */</em>
+<a id='L178' name='L178'></a><em class='sharp'>#define</em> <a href='../R/483.html' title='Multiple referred from 8 places.'>CMD_ARGC_MAX</a>   25
+<a id='L179' name='L179'></a>
+<a id='L180' name='L180'></a><em class='comment'>/* Turn off these macros when uisng cpp with extract.pl */</em>
+<a id='L181' name='L181'></a><em class='sharp'>#ifndef</em> VTYSH_EXTRACT_PL  
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a><em class='comment'>/* helper defines for end-user DEFUN* macros */</em>
+<a id='L184' name='L184'></a><em class='sharp'>#define</em> <a href='../R/644.html' title='Multiple referred from 12 places.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, attrs, dnum) \
+<a id='L185' name='L185'></a>  <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> cmdname = \
+<a id='L186' name='L186'></a>  <em class='brace'>{</em> \
+<a id='L187' name='L187'></a>    .string = cmdstr, \
+<a id='L188' name='L188'></a>    .func = funcname, \
+<a id='L189' name='L189'></a>    .doc = helpstr, \
+<a id='L190' name='L190'></a>    .<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = attrs, \
+<a id='L191' name='L191'></a>    .<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a> = dnum, \
+<a id='L192' name='L192'></a>  <em class='brace'>}</em>;
+<a id='L193' name='L193'></a>
+<a id='L194' name='L194'></a><em class='sharp'>#define</em> <a href='../R/645.html' title='Multiple referred from 4 places.'>DEFUN_CMD_FUNC_DECL</a>(funcname) \
+<a id='L195' name='L195'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>int</strong> funcname (<strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> *, <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *[]);
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a><em class='sharp'>#define</em> <a href='../R/646.html' title='Multiple referred from 4 places.'>DEFUN_CMD_FUNC_TEXT</a>(funcname) \
+<a id='L198' name='L198'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>int</strong> funcname \
+<a id='L199' name='L199'></a>    (<strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> *self <strong class='reserved'>__attribute__</strong> ((unused)), \
+<a id='L200' name='L200'></a>     <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> <strong class='reserved'>__attribute__</strong> ((unused)), \
+<a id='L201' name='L201'></a>     <strong class='reserved'>int</strong> argc <strong class='reserved'>__attribute__</strong> ((unused)), \
+<a id='L202' name='L202'></a>     <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *argv[] <strong class='reserved'>__attribute__</strong> ((unused)) )
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a><em class='comment'>/* DEFUN for vty command interafce. Little bit hacky ;-). */</em>
+<a id='L205' name='L205'></a><em class='sharp'>#define</em> <a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(funcname, cmdname, cmdstr, helpstr) \
+<a id='L206' name='L206'></a>  <a href='../S/214.html#L194' title='Defined at 194 in lib/command.h.'>DEFUN_CMD_FUNC_DECL</a>(funcname) \
+<a id='L207' name='L207'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, 0, 0) \
+<a id='L208' name='L208'></a>  <a href='../S/214.html#L197' title='Defined at 197 in lib/command.h.'>DEFUN_CMD_FUNC_TEXT</a>(funcname)
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a><em class='sharp'>#define</em> <a href='../R/643.html' title='Multiple referred from 2 places.'>DEFUN_ATTR</a>(funcname, cmdname, cmdstr, helpstr, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>) \
+<a id='L211' name='L211'></a>  <a href='../S/214.html#L194' title='Defined at 194 in lib/command.h.'>DEFUN_CMD_FUNC_DECL</a>(funcname) \
+<a id='L212' name='L212'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, 0) \
+<a id='L213' name='L213'></a>  <a href='../S/214.html#L197' title='Defined at 197 in lib/command.h.'>DEFUN_CMD_FUNC_TEXT</a>(funcname)
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a><em class='sharp'>#define</em> DEFUN_HIDDEN(funcname, cmdname, cmdstr, helpstr) \
+<a id='L216' name='L216'></a>  <a href='../S/214.html#L210' title='Defined at 210 in lib/command.h.'>DEFUN_ATTR</a> (funcname, cmdname, cmdstr, helpstr, CMD_ATTR_HIDDEN)
+<a id='L217' name='L217'></a>
+<a id='L218' name='L218'></a><em class='sharp'>#define</em> <a href='../R/647.html' title='Multiple referred from 3 places.'>DEFUN_DEPRECATED</a>(funcname, cmdname, cmdstr, helpstr) \
+<a id='L219' name='L219'></a>  <a href='../S/214.html#L210' title='Defined at 210 in lib/command.h.'>DEFUN_ATTR</a> (funcname, cmdname, cmdstr, helpstr, CMD_ATTR_DEPRECATED) \
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a><em class='comment'>/* DEFUN_NOSH for commands that vtysh should ignore */</em>
+<a id='L222' name='L222'></a><em class='sharp'>#define</em> DEFUN_NOSH(funcname, cmdname, cmdstr, helpstr) \
+<a id='L223' name='L223'></a>  <a href='../D/726.html' title='Multiple defined in 1524 places.'>DEFUN</a>(funcname, cmdname, cmdstr, helpstr)
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a><em class='comment'>/* DEFSH for vtysh. */</em>
+<a id='L226' name='L226'></a><em class='sharp'>#define</em> <a href='../R/639.html' title='Multiple referred from 2 places.'>DEFSH</a>(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, cmdname, cmdstr, helpstr) \
+<a id='L227' name='L227'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, cmdname, cmdstr, helpstr, 0, <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>) \
+<a id='L228' name='L228'></a>
+<a id='L229' name='L229'></a><em class='comment'>/* DEFUN + DEFSH */</em>
+<a id='L230' name='L230'></a><em class='sharp'>#define</em> <a href='../R/641.html' title='Multiple referred from 13 places.'>DEFUNSH</a>(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr) \
+<a id='L231' name='L231'></a>  <a href='../S/214.html#L194' title='Defined at 194 in lib/command.h.'>DEFUN_CMD_FUNC_DECL</a>(funcname) \
+<a id='L232' name='L232'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, 0, <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>) \
+<a id='L233' name='L233'></a>  <a href='../S/214.html#L197' title='Defined at 197 in lib/command.h.'>DEFUN_CMD_FUNC_TEXT</a>(funcname)
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a><em class='comment'>/* DEFUN + DEFSH with attributes */</em>
+<a id='L236' name='L236'></a><em class='sharp'>#define</em> <a href='../R/642.html' title='Multiple referred from 2 places.'>DEFUNSH_ATTR</a>(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>) \
+<a id='L237' name='L237'></a>  <a href='../S/214.html#L194' title='Defined at 194 in lib/command.h.'>DEFUN_CMD_FUNC_DECL</a>(funcname) \
+<a id='L238' name='L238'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>) \
+<a id='L239' name='L239'></a>  <a href='../S/214.html#L197' title='Defined at 197 in lib/command.h.'>DEFUN_CMD_FUNC_TEXT</a>(funcname)
+<a id='L240' name='L240'></a>
+<a id='L241' name='L241'></a><em class='sharp'>#define</em> DEFUNSH_HIDDEN(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr) \
+<a id='L242' name='L242'></a>  <a href='../S/214.html#L236' title='Defined at 236 in lib/command.h.'>DEFUNSH_ATTR</a> (<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr, CMD_ATTR_HIDDEN)
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a><em class='sharp'>#define</em> DEFUNSH_DEPRECATED(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr) \
+<a id='L245' name='L245'></a>  <a href='../S/214.html#L236' title='Defined at 236 in lib/command.h.'>DEFUNSH_ATTR</a> (<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr, CMD_ATTR_DEPRECATED)
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a><em class='comment'>/* ALIAS macro which define existing command's alias. */</em>
+<a id='L248' name='L248'></a><em class='sharp'>#define</em> <a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a>(funcname, cmdname, cmdstr, helpstr) \
+<a id='L249' name='L249'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, 0, 0)
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a><em class='sharp'>#define</em> ALIAS_ATTR(funcname, cmdname, cmdstr, helpstr, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>) \
+<a id='L252' name='L252'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>, 0)
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a><em class='sharp'>#define</em> ALIAS_HIDDEN(funcname, cmdname, cmdstr, helpstr) \
+<a id='L255' name='L255'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, CMD_ATTR_HIDDEN, 0)
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a><em class='sharp'>#define</em> <a href='../R/22.html' title='Multiple referred from 14 places.'>ALIAS_DEPRECATED</a>(funcname, cmdname, cmdstr, helpstr) \
+<a id='L258' name='L258'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, CMD_ATTR_DEPRECATED, 0)
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a><em class='sharp'>#define</em> ALIAS_SH(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr) \
+<a id='L261' name='L261'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, 0, <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>)
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a><em class='sharp'>#define</em> ALIAS_SH_HIDDEN(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr) \
+<a id='L264' name='L264'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, CMD_ATTR_HIDDEN, <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>)
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a><em class='sharp'>#define</em> ALIAS_SH_DEPRECATED(<a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>, funcname, cmdname, cmdstr, helpstr) \
+<a id='L267' name='L267'></a>  <a href='../S/214.html#L184' title='Defined at 184 in lib/command.h.'>DEFUN_CMD_ELEMENT</a>(funcname, cmdname, cmdstr, helpstr, CMD_ATTR_DEPRECATED, <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a>)
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a><em class='sharp'>#endif</em> <em class='comment'>/* VTYSH_EXTRACT_PL */</em>
+<a id='L270' name='L270'></a>
+<a id='L271' name='L271'></a><em class='comment'>/* Some macroes */</em>
+<a id='L272' name='L272'></a><em class='sharp'>#define</em> <a href='../R/497.html' title='Multiple referred from 10 places.'>CMD_OPTION</a>(S)   ((S[0]) == '[')
+<a id='L273' name='L273'></a><em class='sharp'>#define</em> <a href='../R/502.html' title='Multiple referred from 9 places.'>CMD_VARIABLE</a>(S) (((S[0]) &gt;= 'A' &amp;&amp; (S[0]) &lt;= 'Z') || ((S[0]) == '&lt;'))
+<a id='L274' name='L274'></a><em class='sharp'>#define</em> <a href='../R/501.html' title='Multiple referred from 6 places.'>CMD_VARARG</a>(S)   ((S[0]) == '.')
+<a id='L275' name='L275'></a><em class='sharp'>#define</em> <a href='../R/498.html' title='Multiple referred from 4 places.'>CMD_RANGE</a>(S)    ((S[0] == '&lt;'))
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a><em class='sharp'>#define</em> <a href='../R/493.html' title='Multiple referred from 5 places.'>CMD_IPV4</a>(S)        ((strcmp ((S), "A.B.C.D") == 0))
+<a id='L278' name='L278'></a><em class='sharp'>#define</em> <a href='../R/494.html' title='Multiple referred from 4 places.'>CMD_IPV4_PREFIX</a>(S) ((strcmp ((S), "A.B.C.D/M") == 0))
+<a id='L279' name='L279'></a><em class='sharp'>#define</em> <a href='../R/495.html' title='Multiple referred from 4 places.'>CMD_IPV6</a>(S)        ((strcmp ((S), "X:X::X:X") == 0))
+<a id='L280' name='L280'></a><em class='sharp'>#define</em> <a href='../R/496.html' title='Multiple referred from 3 places.'>CMD_IPV6_PREFIX</a>(S) ((strcmp ((S), "X:X::X:X/M") == 0))
+<a id='L281' name='L281'></a>
+<a id='L282' name='L282'></a><em class='comment'>/* Common descriptions. */</em>
+<a id='L283' name='L283'></a><em class='sharp'>#define</em> <a href='../R/3459.html' title='Multiple referred from 497 places.'>SHOW_STR</a> "Show running system information\n"
+<a id='L284' name='L284'></a><em class='sharp'>#define</em> <a href='../R/1008.html' title='Multiple referred from 479 places.'>IP_STR</a> "IP information\n"
+<a id='L285' name='L285'></a><em class='sharp'>#define</em> <a href='../R/1005.html' title='Multiple referred from 157 places.'>IPV6_STR</a> "IPv6 information\n"
+<a id='L286' name='L286'></a><em class='sharp'>#define</em> <a href='../R/2090.html' title='Multiple referred from 829 places.'>NO_STR</a> "Negate a command or set its defaults\n"
+<a id='L287' name='L287'></a><em class='sharp'>#define</em> <a href='../R/3089.html' title='Multiple referred from 19 places.'>REDIST_STR</a> "Redistribute information from another routing protocol\n"
+<a id='L288' name='L288'></a><em class='sharp'>#define</em> <a href='../R/471.html' title='Multiple referred from 188 places.'>CLEAR_STR</a> "Reset functions\n"
+<a id='L289' name='L289'></a><em class='sharp'>#define</em> <a href='../R/3308.html' title='Multiple referred from 10 places.'>RIP_STR</a> "RIP information\n"
+<a id='L290' name='L290'></a><em class='sharp'>#define</em> <a href='../R/399.html' title='Multiple referred from 501 places.'>BGP_STR</a> "BGP information\n"
+<a id='L291' name='L291'></a><em class='sharp'>#define</em> <a href='../R/2749.html' title='Multiple referred from 21 places.'>OSPF_STR</a> "OSPF information\n"
+<a id='L292' name='L292'></a><em class='sharp'>#define</em> <a href='../R/2035.html' title='Multiple referred from 146 places.'>NEIGHBOR_STR</a> "Specify neighbor router\n"
+<a id='L293' name='L293'></a><em class='sharp'>#define</em> <a href='../R/603.html' title='Multiple referred from 126 places.'>DEBUG_STR</a> "Debugging functions (see also 'undebug')\n"
+<a id='L294' name='L294'></a><em class='sharp'>#define</em> <a href='../R/3735.html' title='Multiple referred from 22 places.'>UNDEBUG_STR</a> "Disable debugging functions (see also 'debug')\n"
+<a id='L295' name='L295'></a><em class='sharp'>#define</em> <a href='../R/3373.html' title='Multiple referred from 13 places.'>ROUTER_STR</a> "Enable a routing process\n"
+<a id='L296' name='L296'></a><em class='sharp'>#define</em> <a href='../R/57.html' title='Multiple referred from 11 places.'>AS_STR</a> "AS number\n"
+<a id='L297' name='L297'></a><em class='sharp'>#define</em> <a href='../R/1591.html' title='Multiple referred from 21 places.'>MBGP_STR</a> "MBGP information\n"
+<a id='L298' name='L298'></a><em class='sharp'>#define</em> <a href='../R/1553.html' title='Multiple referred from 116 places.'>MATCH_STR</a> "Match values from routing table\n"
+<a id='L299' name='L299'></a><em class='sharp'>#define</em> <a href='../R/3449.html' title='Multiple referred from 84 places.'>SET_STR</a> "Set values in destination routing protocol\n"
+<a id='L300' name='L300'></a><em class='sharp'>#define</em> <a href='../R/2864.html' title='Multiple referred from 2 places.'>OUT_STR</a> "Filter outgoing routing updates\n"
+<a id='L301' name='L301'></a><em class='sharp'>#define</em> IN_STR  "Filter incoming routing updates\n"
+<a id='L302' name='L302'></a><em class='sharp'>#define</em> <a href='../S/13.html#L293' title='Referred from 293 in ospf6d/ospf6_top.c.'>V4NOTATION_STR</a> "specify by IPv4 address notation(e.g. 0.0.0.0)\n"
+<a id='L303' name='L303'></a><em class='sharp'>#define</em> OSPF6_NUMBER_STR "Specify by number\n"
+<a id='L304' name='L304'></a><em class='sharp'>#define</em> <a href='../R/932.html' title='Multiple referred from 8 places.'>INTERFACE_STR</a> "Interface infomation\n"
+<a id='L305' name='L305'></a><em class='sharp'>#define</em> <a href='../R/874.html' title='Multiple referred from 6 places.'>IFNAME_STR</a> "Interface name(e.g. ep0)\n"
+<a id='L306' name='L306'></a><em class='sharp'>#define</em> <a href='../R/936.html' title='Multiple referred from 45 places.'>IP6_STR</a> "IPv6 Information\n"
+<a id='L307' name='L307'></a><em class='sharp'>#define</em> <a href='../R/2394.html' title='Multiple referred from 120 places.'>OSPF6_STR</a> "Open Shortest Path First (OSPF) for IPv6\n"
+<a id='L308' name='L308'></a><em class='sharp'>#define</em> <a href='../R/2372.html' title='Multiple referred from 2 places.'>OSPF6_ROUTER_STR</a> "Enable a routing process\n"
+<a id='L309' name='L309'></a><em class='sharp'>#define</em> OSPF6_INSTANCE_STR "&lt;1-65535&gt; Instance ID\n"
+<a id='L310' name='L310'></a><em class='sharp'>#define</em> <a href='../R/3430.html' title='Multiple referred from 4 places.'>SECONDS_STR</a> "&lt;1-65535&gt; Seconds\n"
+<a id='L311' name='L311'></a><em class='sharp'>#define</em> <a href='../R/3386.html' title='Multiple referred from 8 places.'>ROUTE_STR</a> "Routing Table\n"
+<a id='L312' name='L312'></a><em class='sharp'>#define</em> <a href='../R/3007.html' title='Multiple referred from 78 places.'>PREFIX_LIST_STR</a> "Build a prefix list\n"
+<a id='L313' name='L313'></a><em class='sharp'>#define</em> OSPF6_DUMP_TYPE_LIST \
+<a id='L314' name='L314'></a>"(neighbor|interface|area|lsa|zebra|config|dbex|spf|route|lsdb|redistribute|hook|asbr|prefix|abr)"
+<a id='L315' name='L315'></a><em class='sharp'>#define</em> ISIS_STR "IS-IS information\n"
+<a id='L316' name='L316'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L317' name='L317'></a><em class='sharp'>#define</em> <a href='../R/3725.html' title='Multiple referred from 12 places.'>TRILL_STR</a> "TRILL IS-IS information\n"
+<a id='L318' name='L318'></a><em class='sharp'>#define</em> <a href='../R/3720.html' title='Multiple referred from 6 places.'>TRILL_NICK_STR</a> "Configure TRILL RBridge nickname information\n"
+<a id='L319' name='L319'></a><em class='sharp'>#endif</em>
+<a id='L320' name='L320'></a><em class='sharp'>#define</em> AREA_TAG_STR "[area tag]\n"
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a><em class='sharp'>#define</em> <a href='../R/532.html' title='Multiple referred from 6 places.'>CONF_BACKUP_EXT</a> ".sav"
+<a id='L323' name='L323'></a>
+<a id='L324' name='L324'></a><em class='comment'>/* IPv4 only machine should not accept IPv6 address for peer's IP</em>
+<a id='L325' name='L325'></a><em class='comment'>   address.  So we replace VTY command string like below. */</em>
+<a id='L326' name='L326'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L327' name='L327'></a><em class='sharp'>#define</em> <a href='../R/2033.html' title='Multiple referred from 9 places.'>NEIGHBOR_CMD</a>       "neighbor (A.B.C.D|X:X::X:X) "
+<a id='L328' name='L328'></a><em class='sharp'>#define</em> <a href='../R/2088.html' title='Multiple referred from 10 places.'>NO_NEIGHBOR_CMD</a>    "no neighbor (A.B.C.D|X:X::X:X) "
+<a id='L329' name='L329'></a><em class='sharp'>#define</em> <a href='../R/2031.html' title='Multiple referred from 43 places.'>NEIGHBOR_ADDR_STR</a>  "Neighbor address\nIPv6 address\n"
+<a id='L330' name='L330'></a><em class='sharp'>#define</em> <a href='../R/2034.html' title='Multiple referred from 56 places.'>NEIGHBOR_CMD2</a>      "neighbor (A.B.C.D|X:X::X:X|WORD) "
+<a id='L331' name='L331'></a><em class='sharp'>#define</em> <a href='../R/2089.html' title='Multiple referred from 59 places.'>NO_NEIGHBOR_CMD2</a>   "no neighbor (A.B.C.D|X:X::X:X|WORD) "
+<a id='L332' name='L332'></a><em class='sharp'>#define</em> <a href='../R/2032.html' title='Multiple referred from 115 places.'>NEIGHBOR_ADDR_STR2</a> "Neighbor address\nNeighbor IPv6 address\nNeighbor tag\n"
+<a id='L333' name='L333'></a><em class='sharp'>#else</em>
+<a id='L334' name='L334'></a><em class='sharp'>#define</em> <a href='../R/2033.html' title='Multiple referred from 9 places.'>NEIGHBOR_CMD</a>       "neighbor A.B.C.D "
+<a id='L335' name='L335'></a><em class='sharp'>#define</em> <a href='../R/2088.html' title='Multiple referred from 10 places.'>NO_NEIGHBOR_CMD</a>    "no neighbor A.B.C.D "
+<a id='L336' name='L336'></a><em class='sharp'>#define</em> <a href='../R/2031.html' title='Multiple referred from 43 places.'>NEIGHBOR_ADDR_STR</a>  "Neighbor address\n"
+<a id='L337' name='L337'></a><em class='sharp'>#define</em> <a href='../R/2034.html' title='Multiple referred from 56 places.'>NEIGHBOR_CMD2</a>      "neighbor (A.B.C.D|WORD) "
+<a id='L338' name='L338'></a><em class='sharp'>#define</em> <a href='../R/2089.html' title='Multiple referred from 59 places.'>NO_NEIGHBOR_CMD2</a>   "no neighbor (A.B.C.D|WORD) "
+<a id='L339' name='L339'></a><em class='sharp'>#define</em> <a href='../R/2032.html' title='Multiple referred from 115 places.'>NEIGHBOR_ADDR_STR2</a> "Neighbor address\nNeighbor tag\n"
+<a id='L340' name='L340'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L341' name='L341'></a>
+<a id='L342' name='L342'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L343' name='L343'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a> (<strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> *, <strong class='reserved'>int</strong> (*) (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *));
+<a id='L344' name='L344'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a> (<strong class='reserved'>enum</strong> <a href='../S/214.html#L63' title='Defined at 63 in lib/command.h.'>node_type</a>);
+<a id='L345' name='L345'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (<strong class='reserved'>enum</strong> <a href='../S/214.html#L63' title='Defined at 63 in lib/command.h.'>node_type</a>, <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> *);
+<a id='L346' name='L346'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L220' title='Defined at 220 in lib/command.c.'>sort_node</a> (<strong class='reserved'>void</strong>);
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a><em class='comment'>/* Concatenates argv[shift] through argv[argc-1] into a single NUL-terminated</em>
+<a id='L349' name='L349'></a><em class='comment'>   string with a space between each element (allocated using</em>
+<a id='L350' name='L350'></a><em class='comment'>   XMALLOC(MTYPE_TMP)).  Returns NULL if shift &gt;= argc. */</em>
+<a id='L351' name='L351'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> *<a href='../S/264.html#L165' title='Defined at 165 in lib/command.c.'>argv_concat</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> **argv, <strong class='reserved'>int</strong> argc, <strong class='reserved'>int</strong> shift);
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a><strong class='reserved'>extern</strong> <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> <a href='../S/264.html#L250' title='Defined at 250 in lib/command.c.'>cmd_make_strvec</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L354' name='L354'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L300' title='Defined at 300 in lib/command.c.'>cmd_free_strvec</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>);
+<a id='L355' name='L355'></a><strong class='reserved'>extern</strong> <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> <a href='../S/264.html#L1645' title='Defined at 1645 in lib/command.c.'>cmd_describe_command</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>, <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong> *status);
+<a id='L356' name='L356'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> **<a href='../S/264.html#L1868' title='Defined at 1868 in lib/command.c.'>cmd_complete_command</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>, <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong> *status);
+<a id='L357' name='L357'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/264.html#L472' title='Defined at 472 in lib/command.c.'>cmd_prompt</a> (<strong class='reserved'>enum</strong> <a href='../S/214.html#L63' title='Defined at 63 in lib/command.h.'>node_type</a>);
+<a id='L358' name='L358'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/264.html#L2228' title='Defined at 2228 in lib/command.c.'>config_from_file</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, FILE *);
+<a id='L359' name='L359'></a><strong class='reserved'>extern</strong> <strong class='reserved'>enum</strong> <a href='../S/214.html#L63' title='Defined at 63 in lib/command.h.'>node_type</a> <a href='../S/264.html#L1903' title='Defined at 1903 in lib/command.c.'>node_parent</a> (<strong class='reserved'>enum</strong> <a href='../S/214.html#L63' title='Defined at 63 in lib/command.h.'>node_type</a>);
+<a id='L360' name='L360'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/264.html#L2051' title='Defined at 2051 in lib/command.c.'>cmd_execute_command</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>, <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> **, <strong class='reserved'>int</strong>);
+<a id='L361' name='L361'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/264.html#L2109' title='Defined at 2109 in lib/command.c.'>cmd_execute_command_strict</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>, <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> **);
+<a id='L362' name='L362'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> config_replace_string (<strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> *, <strong class='reserved'>char</strong> *, ...);
+<a id='L363' name='L363'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L3462' title='Defined at 3462 in lib/command.c.'>cmd_init</a> (<strong class='reserved'>int</strong>);
+<a id='L364' name='L364'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L3588' title='Defined at 3588 in lib/command.c.'>cmd_terminate</a> (<strong class='reserved'>void</strong>);
+<a id='L365' name='L365'></a>
+<a id='L366' name='L366'></a><em class='comment'>/* Export typical functions. */</em>
+<a id='L367' name='L367'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> config_end_cmd;
+<a id='L368' name='L368'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> config_exit_cmd;
+<a id='L369' name='L369'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> config_quit_cmd;
+<a id='L370' name='L370'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> config_help_cmd;
+<a id='L371' name='L371'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> config_list_cmd;
+<a id='L372' name='L372'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> *host_config_file (<strong class='reserved'>void</strong>);
+<a id='L373' name='L373'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L3437' title='Defined at 3437 in lib/command.c.'>host_config_set</a> (<strong class='reserved'>char</strong> *);
+<a id='L374' name='L374'></a>
+<a id='L375' name='L375'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/264.html#L155' title='Defined at 155 in lib/command.c.'>print_version</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L376' name='L376'></a>
+<a id='L377' name='L377'></a><em class='comment'>/* struct host global, ick */</em>
+<a id='L378' name='L378'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a> <a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>; 
+<a id='L379' name='L379'></a>
+<a id='L380' name='L380'></a><em class='comment'>/* "&lt;cr&gt;" global */</em>
+<a id='L381' name='L381'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> *command_cr;
+<a id='L382' name='L382'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_COMMAND_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

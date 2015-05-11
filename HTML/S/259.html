@@ -1,0 +1,1406 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/routemap.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/routemap.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L79'>[^]</a><a href='#L1301'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L79' title='Defined at 79.'>route_map_new</a></li>
+<li><a href='#L90' title='Defined at 90.'>route_map_add</a></li>
+<li><a href='#L115' title='Defined at 115.'>route_map_delete</a></li>
+<li><a href='#L151' title='Defined at 151.'>route_map_lookup_by_name</a></li>
+<li><a href='#L164' title='Defined at 164.'>route_map_get</a></li>
+<li><a href='#L176' title='Defined at 176.'>route_map_type_str</a></li>
+<li><a href='#L193' title='Defined at 193.'>route_map_empty</a></li>
+<li><a href='#L203' title='Defined at 203.'>vty_show_route_map_entry</a></li>
+<li><a href='#L252' title='Defined at 252.'>vty_show_route_map</a></li>
+<li><a href='#L283' title='Defined at 283.'>route_map_index_new</a></li>
+<li><a href='#L294' title='Defined at 294.'>route_map_index_delete</a></li>
+<li><a href='#L331' title='Defined at 331.'>route_map_index_lookup</a></li>
+<li><a href='#L345' title='Defined at 345.'>route_map_index_add</a></li>
+<li><a href='#L397' title='Defined at 397.'>route_map_index_get</a></li>
+<li><a href='#L416' title='Defined at 416.'>route_map_rule_new</a></li>
+<li><a href='#L426' title='Defined at 426.'>route_map_install_match</a></li>
+<li><a href='#L433' title='Defined at 433.'>route_map_install_set</a></li>
+<li><a href='#L440' title='Defined at 440.'>route_map_lookup_match</a></li>
+<li><a href='#L454' title='Defined at 454.'>route_map_lookup_set</a></li>
+<li><a href='#L468' title='Defined at 468.'>route_map_rule_add</a></li>
+<li><a href='#L482' title='Defined at 482.'>route_map_rule_delete</a></li>
+<li><a href='#L505' title='Defined at 505.'>rulecmp</a></li>
+<li><a href='#L526' title='Defined at 526.'>route_map_add_match</a></li>
+<li><a href='#L585' title='Defined at 585.'>route_map_delete_match</a></li>
+<li><a href='#L612' title='Defined at 612.'>route_map_add_set</a></li>
+<li><a href='#L671' title='Defined at 671.'>route_map_delete_set</a></li>
+<li><a href='#L743' title='Defined at 743.'>route_map_apply_match</a></li>
+<li><a href='#L774' title='Defined at 774.'>route_map_apply</a></li>
+<li><a href='#L868' title='Defined at 868.'>route_map_add_hook</a></li>
+<li><a href='#L874' title='Defined at 874.'>route_map_delete_hook</a></li>
+<li><a href='#L880' title='Defined at 880.'>route_map_event_hook</a></li>
+<li><a href='#L886' title='Defined at 886.'>route_map_init</a></li>
+<li><a href='#L894' title='Defined at 894.'>route_map_finish</a></li>
+<li><a href='#L903' title='Defined at 903.'>DEFUN</a></li>
+<li><a href='#L952' title='Defined at 952.'>DEFUN</a></li>
+<li><a href='#L974' title='Defined at 974.'>DEFUN</a></li>
+<li><a href='#L1043' title='Defined at 1043.'>DEFUN</a></li>
+<li><a href='#L1059' title='Defined at 1059.'>DEFUN</a></li>
+<li><a href='#L1076' title='Defined at 1076.'>DEFUN</a></li>
+<li><a href='#L1109' title='Defined at 1109.'>DEFUN</a></li>
+<li><a href='#L1127' title='Defined at 1127.'>ALIAS</a></li>
+<li><a href='#L1165' title='Defined at 1165.'>ALIAS</a></li>
+<li><a href='#L1189' title='Defined at 1189.'>DEFUN</a></li>
+<li><a href='#L1208' title='Defined at 1208.'>DEFUN</a></li>
+<li><a href='#L1226' title='Defined at 1226.'>DEFUN</a></li>
+<li><a href='#L1246' title='Defined at 1246.'>route_map_config_write</a></li>
+<li><a href='#L1301' title='Defined at 1301.'>route_map_init_vty</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* Route map function.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1998, 1999 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='253.html'>vector.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='235.html'>routemap.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='comment'>/* Vector for route match rules. */</em>
+<a id='L33' name='L33'></a><strong class='reserved'>static</strong> <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> route_match_vec;
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='comment'>/* Vector for route set rules. */</em>
+<a id='L36' name='L36'></a><strong class='reserved'>static</strong> <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> route_set_vec;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><em class='comment'>/* Route map rule. This rule has both `match' rule and `set' rule. */</em>
+<a id='L39' name='L39'></a><strong class='reserved'>struct</strong> <a href='../R/9438.html' title='Multiple referred from 21 places.'>route_map_rule</a>
+<a id='L40' name='L40'></a><em class='brace'>{</em>
+<a id='L41' name='L41'></a>  <em class='comment'>/* Rule type. */</em>
+<a id='L42' name='L42'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a>  <em class='comment'>/* For pretty printing. */</em>
+<a id='L45' name='L45'></a>  <strong class='reserved'>char</strong> *rule_str;
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a>  <em class='comment'>/* Pre-compiled match rule. */</em>
+<a id='L48' name='L48'></a>  <strong class='reserved'>void</strong> *value;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>  <em class='comment'>/* Linked list. */</em>
+<a id='L51' name='L51'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *next;
+<a id='L52' name='L52'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *prev;
+<a id='L53' name='L53'></a><em class='brace'>}</em>;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='comment'>/* Making route map list. */</em>
+<a id='L56' name='L56'></a><strong class='reserved'>struct</strong> <a href='../R/9431.html' title='Multiple referred from 3 places.'>route_map_list</a>
+<a id='L57' name='L57'></a><em class='brace'>{</em>
+<a id='L58' name='L58'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *head;
+<a id='L59' name='L59'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *tail;
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>  <strong class='reserved'>void</strong> (*add_hook) (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L62' name='L62'></a>  <strong class='reserved'>void</strong> (*delete_hook) (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L63' name='L63'></a>  <strong class='reserved'>void</strong> (*event_hook) (<a href='../S/235.html#L70' title='Defined at 70 in lib/routemap.h.'>route_map_event_t</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *); 
+<a id='L64' name='L64'></a><em class='brace'>}</em>;
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><em class='comment'>/* Master list of route map. */</em>
+<a id='L67' name='L67'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/259.html#L56' title='Defined at 56 in lib/routemap.c.'>route_map_list</a> route_map_master = <em class='brace'>{</em> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> <em class='brace'>}</em>;
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L70' name='L70'></a><a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L103' title='Defined at 103 in lib/routemap.h.'>route_map_rule_list</a> *,
+<a id='L71' name='L71'></a>                       <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *);
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L74' name='L74'></a><a href='../S/259.html#L294' title='Defined at 294 in lib/routemap.c.'>route_map_index_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *, <strong class='reserved'>int</strong>);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><em class='comment'>/* New route map allocation. Please note route map's name must be</em>
+<a id='L77' name='L77'></a><em class='comment'>   specified. */</em>
+<a id='L78' name='L78'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *
+<a id='L79' name='L79'></a><a href='../S/259.html#L95' title='Referred from 95 in lib/routemap.c.'>route_map_new</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L80' name='L80'></a><em class='brace'>{</em>
+<a id='L81' name='L81'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *new;
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a>  new =  <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ROUTE_MAP, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a>));
+<a id='L84' name='L84'></a>  new-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_ROUTE_MAP_NAME, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L85' name='L85'></a>  <strong class='reserved'>return</strong> new;
+<a id='L86' name='L86'></a><em class='brace'>}</em>
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a><em class='comment'>/* Add new name to route_map. */</em>
+<a id='L89' name='L89'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *
+<a id='L90' name='L90'></a><a href='../S/259.html#L170' title='Referred from 170 in lib/routemap.c.'>route_map_add</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L91' name='L91'></a><em class='brace'>{</em>
+<a id='L92' name='L92'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L93' name='L93'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L56' title='Defined at 56 in lib/routemap.c.'>route_map_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>;
+<a id='L94' name='L94'></a>
+<a id='L95' name='L95'></a>  map = <a href='../S/259.html#L79' title='Defined at 79 in lib/routemap.c.'>route_map_new</a> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L96' name='L96'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> = &amp;route_map_master;
+<a id='L97' name='L97'></a>    
+<a id='L98' name='L98'></a>  map-&gt;next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L99' name='L99'></a>  map-&gt;prev = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail;
+<a id='L100' name='L100'></a>  <strong class='reserved'>if</strong> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail)
+<a id='L101' name='L101'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail-&gt;next = map;
+<a id='L102' name='L102'></a>  <strong class='reserved'>else</strong>
+<a id='L103' name='L103'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = map;
+<a id='L104' name='L104'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = map;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>  <em class='comment'>/* Execute hook. */</em>
+<a id='L107' name='L107'></a>  <strong class='reserved'>if</strong> (route_map_master.add_hook)
+<a id='L108' name='L108'></a>    (*route_map_master.add_hook) (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a>  <strong class='reserved'>return</strong> map;
+<a id='L111' name='L111'></a><em class='brace'>}</em>
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a><em class='comment'>/* Route map delete from list. */</em>
+<a id='L114' name='L114'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L115' name='L115'></a><a href='../R/9411.html' title='Multiple referred from 2 places.'>route_map_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map)
+<a id='L116' name='L116'></a><em class='brace'>{</em>
+<a id='L117' name='L117'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L56' title='Defined at 56 in lib/routemap.c.'>route_map_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>;
+<a id='L118' name='L118'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L119' name='L119'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L120' name='L120'></a>  
+<a id='L121' name='L121'></a>  <strong class='reserved'>while</strong> ((index = map-&gt;head) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L122' name='L122'></a>    <a href='../S/259.html#L294' title='Defined at 294 in lib/routemap.c.'>route_map_index_delete</a> (index, 0);
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a>  <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> = &amp;route_map_master;
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a>  <strong class='reserved'>if</strong> (map-&gt;next)
+<a id='L129' name='L129'></a>    map-&gt;next-&gt;prev = map-&gt;prev;
+<a id='L130' name='L130'></a>  <strong class='reserved'>else</strong>
+<a id='L131' name='L131'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = map-&gt;prev;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <strong class='reserved'>if</strong> (map-&gt;prev)
+<a id='L134' name='L134'></a>    map-&gt;prev-&gt;next = map-&gt;next;
+<a id='L135' name='L135'></a>  <strong class='reserved'>else</strong>
+<a id='L136' name='L136'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = map-&gt;next;
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP, map);
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a>  <em class='comment'>/* Execute deletion hook. */</em>
+<a id='L141' name='L141'></a>  <strong class='reserved'>if</strong> (route_map_master.delete_hook)
+<a id='L142' name='L142'></a>    (*route_map_master.delete_hook) (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a>  <strong class='reserved'>if</strong> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L145' name='L145'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_NAME, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a><em class='brace'>}</em>
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a><em class='comment'>/* Lookup route map by route map name string. */</em>
+<a id='L150' name='L150'></a><strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *
+<a id='L151' name='L151'></a><a href='../R/9432.html' title='Multiple referred from 40 places.'>route_map_lookup_by_name</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L152' name='L152'></a><em class='brace'>{</em>
+<a id='L153' name='L153'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a>  <strong class='reserved'>for</strong> (map = route_map_master.head; map; map = map-&gt;next)
+<a id='L156' name='L156'></a>    <strong class='reserved'>if</strong> (strcmp (map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>) == 0)
+<a id='L157' name='L157'></a>      <strong class='reserved'>return</strong> map;
+<a id='L158' name='L158'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L159' name='L159'></a><em class='brace'>}</em>
+<a id='L160' name='L160'></a>
+<a id='L161' name='L161'></a><em class='comment'>/* Lookup route map.  If there isn't route map create one and return</em>
+<a id='L162' name='L162'></a><em class='comment'>   it. */</em>
+<a id='L163' name='L163'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *
+<a id='L164' name='L164'></a><a href='../S/259.html#L944' title='Referred from 944 in lib/routemap.c.'>route_map_get</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L165' name='L165'></a><em class='brace'>{</em>
+<a id='L166' name='L166'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L167' name='L167'></a>
+<a id='L168' name='L168'></a>  map = <a href='../S/259.html#L151' title='Defined at 151 in lib/routemap.c.'>route_map_lookup_by_name</a> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L169' name='L169'></a>  <strong class='reserved'>if</strong> (map == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L170' name='L170'></a>    map = <a href='../S/259.html#L90' title='Defined at 90 in lib/routemap.c.'>route_map_add</a> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L171' name='L171'></a>  <strong class='reserved'>return</strong> map;
+<a id='L172' name='L172'></a><em class='brace'>}</em>
+<a id='L173' name='L173'></a>
+<a id='L174' name='L174'></a><em class='comment'>/* Return route map's type string. */</em>
+<a id='L175' name='L175'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L176' name='L176'></a><a href='../R/9446.html' title='Multiple referred from 2 places.'>route_map_type_str</a> (<strong class='reserved'>enum</strong> <a href='../S/235.html#L26' title='Defined at 26 in lib/routemap.h.'>route_map_type</a> type)
+<a id='L177' name='L177'></a><em class='brace'>{</em>
+<a id='L178' name='L178'></a>  <strong class='reserved'>switch</strong> (type)
+<a id='L179' name='L179'></a>    <em class='brace'>{</em>
+<a id='L180' name='L180'></a>    <strong class='reserved'>case</strong> RMAP_PERMIT:
+<a id='L181' name='L181'></a>      <strong class='reserved'>return</strong> "permit";
+<a id='L182' name='L182'></a>      <strong class='reserved'>break</strong>;
+<a id='L183' name='L183'></a>    <strong class='reserved'>case</strong> RMAP_DENY:
+<a id='L184' name='L184'></a>      <strong class='reserved'>return</strong> "deny";
+<a id='L185' name='L185'></a>      <strong class='reserved'>break</strong>;
+<a id='L186' name='L186'></a>    <strong class='reserved'>default</strong>:
+<a id='L187' name='L187'></a>      <strong class='reserved'>return</strong> "";
+<a id='L188' name='L188'></a>      <strong class='reserved'>break</strong>;
+<a id='L189' name='L189'></a>    <em class='brace'>}</em>
+<a id='L190' name='L190'></a><em class='brace'>}</em>
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L193' name='L193'></a><a href='../S/259.html#L1037' title='Referred from 1037 in lib/routemap.c.'>route_map_empty</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map)
+<a id='L194' name='L194'></a><em class='brace'>{</em>
+<a id='L195' name='L195'></a>  <strong class='reserved'>if</strong> (map-&gt;head == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; map-&gt;tail == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L196' name='L196'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L197' name='L197'></a>  <strong class='reserved'>else</strong>
+<a id='L198' name='L198'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L199' name='L199'></a><em class='brace'>}</em>
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a><em class='comment'>/* show route-map */</em>
+<a id='L202' name='L202'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L203' name='L203'></a><a href='../R/10451.html' title='Multiple referred from 2 places.'>vty_show_route_map_entry</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map)
+<a id='L204' name='L204'></a><em class='brace'>{</em>
+<a id='L205' name='L205'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L206' name='L206'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L207' name='L207'></a>
+<a id='L208' name='L208'></a>  <em class='comment'>/* Print the name of the protocol */</em>
+<a id='L209' name='L209'></a>  <strong class='reserved'>if</strong> (zlog_default)
+<a id='L210' name='L210'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s:%s", zlog_proto_names[zlog_default-&gt;protocol],
+<a id='L211' name='L211'></a>             <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L212' name='L212'></a>
+<a id='L213' name='L213'></a>  <strong class='reserved'>for</strong> (index = map-&gt;head; index; index = index-&gt;next)
+<a id='L214' name='L214'></a>    <em class='brace'>{</em>
+<a id='L215' name='L215'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "route-map %s, %s, sequence %d%s",
+<a id='L216' name='L216'></a>               map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/259.html#L176' title='Defined at 176 in lib/routemap.c.'>route_map_type_str</a> (index-&gt;type),
+<a id='L217' name='L217'></a>               index-&gt;pref, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>      <em class='comment'>/* Description */</em>
+<a id='L220' name='L220'></a>      <strong class='reserved'>if</strong> (index-&gt;description)
+<a id='L221' name='L221'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Description:%s    %s%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>,
+<a id='L222' name='L222'></a>                 index-&gt;description, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L223' name='L223'></a>      
+<a id='L224' name='L224'></a>      <em class='comment'>/* Match clauses */</em>
+<a id='L225' name='L225'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Match clauses:%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L226' name='L226'></a>      <strong class='reserved'>for</strong> (rule = index-&gt;match_list.head; rule; rule = rule-&gt;next)
+<a id='L227' name='L227'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    %s %s%s", 
+<a id='L228' name='L228'></a>                 rule-&gt;cmd-&gt;str, rule-&gt;rule_str, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L229' name='L229'></a>      
+<a id='L230' name='L230'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Set clauses:%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L231' name='L231'></a>      <strong class='reserved'>for</strong> (rule = index-&gt;set_list.head; rule; rule = rule-&gt;next)
+<a id='L232' name='L232'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    %s %s%s",
+<a id='L233' name='L233'></a>                 rule-&gt;cmd-&gt;str, rule-&gt;rule_str, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L234' name='L234'></a>      
+<a id='L235' name='L235'></a>      <em class='comment'>/* Call clause */</em>
+<a id='L236' name='L236'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Call clause:%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L237' name='L237'></a>      <strong class='reserved'>if</strong> (index-&gt;nextrm)
+<a id='L238' name='L238'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    Call %s%s", index-&gt;nextrm, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L239' name='L239'></a>      
+<a id='L240' name='L240'></a>      <em class='comment'>/* Exit Policy */</em>
+<a id='L241' name='L241'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "  Action:%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L242' name='L242'></a>      <strong class='reserved'>if</strong> (index-&gt;exitpolicy == <a href='../S/235.html#L56' title='Defined at 56 in lib/routemap.h.'>RMAP_GOTO</a>)
+<a id='L243' name='L243'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    Goto %d%s", index-&gt;nextpref, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L244' name='L244'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (index-&gt;exitpolicy == RMAP_NEXT)
+<a id='L245' name='L245'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    Continue to next entry%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L246' name='L246'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (index-&gt;exitpolicy == <a href='../S/235.html#L55' title='Defined at 55 in lib/routemap.h.'>RMAP_EXIT</a>)
+<a id='L247' name='L247'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    Exit routemap%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L248' name='L248'></a>    <em class='brace'>}</em>
+<a id='L249' name='L249'></a><em class='brace'>}</em>
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L252' name='L252'></a><a href='../S/259.html#L1162' title='Referred from 1162 in lib/routemap.c.'>vty_show_route_map</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L253' name='L253'></a><em class='brace'>{</em>
+<a id='L254' name='L254'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L255' name='L255'></a>
+<a id='L256' name='L256'></a>  <strong class='reserved'>if</strong> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L257' name='L257'></a>    <em class='brace'>{</em>
+<a id='L258' name='L258'></a>      map = <a href='../S/259.html#L151' title='Defined at 151 in lib/routemap.c.'>route_map_lookup_by_name</a> (<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a>      <strong class='reserved'>if</strong> (map)
+<a id='L261' name='L261'></a>        <em class='brace'>{</em>
+<a id='L262' name='L262'></a>          <a href='../S/259.html#L203' title='Defined at 203 in lib/routemap.c.'>vty_show_route_map_entry</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, map);
+<a id='L263' name='L263'></a>          <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L264' name='L264'></a>        <em class='brace'>}</em>
+<a id='L265' name='L265'></a>      <strong class='reserved'>else</strong>
+<a id='L266' name='L266'></a>        <em class='brace'>{</em>
+<a id='L267' name='L267'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%%route-map %s not found%s", <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L268' name='L268'></a>          <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L269' name='L269'></a>        <em class='brace'>}</em>
+<a id='L270' name='L270'></a>    <em class='brace'>}</em>
+<a id='L271' name='L271'></a>  <strong class='reserved'>else</strong>
+<a id='L272' name='L272'></a>    <em class='brace'>{</em>
+<a id='L273' name='L273'></a>      <strong class='reserved'>for</strong> (map = route_map_master.head; map; map = map-&gt;next)
+<a id='L274' name='L274'></a>        <a href='../S/259.html#L203' title='Defined at 203 in lib/routemap.c.'>vty_show_route_map_entry</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, map);
+<a id='L275' name='L275'></a>    <em class='brace'>}</em>
+<a id='L276' name='L276'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L277' name='L277'></a><em class='brace'>}</em>
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a><em class='comment'>/* New route map allocation. Please note route map's name must be</em>
+<a id='L281' name='L281'></a><em class='comment'>   specified. */</em>
+<a id='L282' name='L282'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *
+<a id='L283' name='L283'></a><a href='../S/259.html#L352' title='Referred from 352 in lib/routemap.c.'>route_map_index_new</a> (<strong class='reserved'>void</strong>)
+<a id='L284' name='L284'></a><em class='brace'>{</em>
+<a id='L285' name='L285'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *new;
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>  new =  <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ROUTE_MAP_INDEX, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a>));
+<a id='L288' name='L288'></a>  new-&gt;exitpolicy = <a href='../S/235.html#L55' title='Defined at 55 in lib/routemap.h.'>RMAP_EXIT</a>; <em class='comment'>/* Default to Cisco-style */</em>
+<a id='L289' name='L289'></a>  <strong class='reserved'>return</strong> new;
+<a id='L290' name='L290'></a><em class='brace'>}</em>
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a><em class='comment'>/* Free route map index. */</em>
+<a id='L293' name='L293'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L294' name='L294'></a><a href='../R/9423.html' title='Multiple referred from 4 places.'>route_map_index_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index, <strong class='reserved'>int</strong> notify)
+<a id='L295' name='L295'></a><em class='brace'>{</em>
+<a id='L296' name='L296'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L297' name='L297'></a>
+<a id='L298' name='L298'></a>  <em class='comment'>/* Free route match. */</em>
+<a id='L299' name='L299'></a>  <strong class='reserved'>while</strong> ((rule = index-&gt;match_list.head) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L300' name='L300'></a>    <a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (&amp;index-&gt;match_list, rule);
+<a id='L301' name='L301'></a>
+<a id='L302' name='L302'></a>  <em class='comment'>/* Free route set. */</em>
+<a id='L303' name='L303'></a>  <strong class='reserved'>while</strong> ((rule = index-&gt;set_list.head) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L304' name='L304'></a>    <a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (&amp;index-&gt;set_list, rule);
+<a id='L305' name='L305'></a>
+<a id='L306' name='L306'></a>  <em class='comment'>/* Remove index from route map list. */</em>
+<a id='L307' name='L307'></a>  <strong class='reserved'>if</strong> (index-&gt;next)
+<a id='L308' name='L308'></a>    index-&gt;next-&gt;prev = index-&gt;prev;
+<a id='L309' name='L309'></a>  <strong class='reserved'>else</strong>
+<a id='L310' name='L310'></a>    index-&gt;map-&gt;tail = index-&gt;prev;
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a>  <strong class='reserved'>if</strong> (index-&gt;prev)
+<a id='L313' name='L313'></a>    index-&gt;prev-&gt;next = index-&gt;next;
+<a id='L314' name='L314'></a>  <strong class='reserved'>else</strong>
+<a id='L315' name='L315'></a>    index-&gt;map-&gt;head = index-&gt;next;
+<a id='L316' name='L316'></a>
+<a id='L317' name='L317'></a>  <em class='comment'>/* Free 'char *nextrm' if not NULL */</em>
+<a id='L318' name='L318'></a>  <strong class='reserved'>if</strong> (index-&gt;nextrm)
+<a id='L319' name='L319'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_NAME, index-&gt;nextrm);
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a>    <em class='comment'>/* Execute event hook. */</em>
+<a id='L322' name='L322'></a>  <strong class='reserved'>if</strong> (route_map_master.event_hook &amp;&amp; notify)
+<a id='L323' name='L323'></a>    (*route_map_master.event_hook) (RMAP_EVENT_INDEX_DELETED,
+<a id='L324' name='L324'></a>                                    index-&gt;map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L325' name='L325'></a>
+<a id='L326' name='L326'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_INDEX, index);
+<a id='L327' name='L327'></a><em class='brace'>}</em>
+<a id='L328' name='L328'></a>
+<a id='L329' name='L329'></a><em class='comment'>/* Lookup index from route map. */</em>
+<a id='L330' name='L330'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *
+<a id='L331' name='L331'></a><a href='../R/9425.html' title='Multiple referred from 2 places.'>route_map_index_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map, <strong class='reserved'>enum</strong> <a href='../S/235.html#L26' title='Defined at 26 in lib/routemap.h.'>route_map_type</a> type,
+<a id='L332' name='L332'></a>                        <strong class='reserved'>int</strong> pref)
+<a id='L333' name='L333'></a><em class='brace'>{</em>
+<a id='L334' name='L334'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L335' name='L335'></a>
+<a id='L336' name='L336'></a>  <strong class='reserved'>for</strong> (index = map-&gt;head; index; index = index-&gt;next)
+<a id='L337' name='L337'></a>    <strong class='reserved'>if</strong> ((index-&gt;type == type || type == RMAP_ANY)
+<a id='L338' name='L338'></a>        &amp;&amp; index-&gt;pref == pref)
+<a id='L339' name='L339'></a>      <strong class='reserved'>return</strong> index;
+<a id='L340' name='L340'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L341' name='L341'></a><em class='brace'>}</em>
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a><em class='comment'>/* Add new index to route map. */</em>
+<a id='L344' name='L344'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *
+<a id='L345' name='L345'></a><a href='../S/259.html#L410' title='Referred from 410 in lib/routemap.c.'>route_map_index_add</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map, <strong class='reserved'>enum</strong> <a href='../S/235.html#L26' title='Defined at 26 in lib/routemap.h.'>route_map_type</a> type,
+<a id='L346' name='L346'></a>                     <strong class='reserved'>int</strong> pref)
+<a id='L347' name='L347'></a><em class='brace'>{</em>
+<a id='L348' name='L348'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L349' name='L349'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *point;
+<a id='L350' name='L350'></a>
+<a id='L351' name='L351'></a>  <em class='comment'>/* Allocate new route map inex. */</em>
+<a id='L352' name='L352'></a>  index = <a href='../S/259.html#L283' title='Defined at 283 in lib/routemap.c.'>route_map_index_new</a> ();
+<a id='L353' name='L353'></a>  index-&gt;map = map;
+<a id='L354' name='L354'></a>  index-&gt;type = type;
+<a id='L355' name='L355'></a>  index-&gt;pref = pref;
+<a id='L356' name='L356'></a>  
+<a id='L357' name='L357'></a>  <em class='comment'>/* Compare preference. */</em>
+<a id='L358' name='L358'></a>  <strong class='reserved'>for</strong> (point = map-&gt;head; point; point = point-&gt;next)
+<a id='L359' name='L359'></a>    <strong class='reserved'>if</strong> (point-&gt;pref &gt;= pref)
+<a id='L360' name='L360'></a>      <strong class='reserved'>break</strong>;
+<a id='L361' name='L361'></a>
+<a id='L362' name='L362'></a>  <strong class='reserved'>if</strong> (map-&gt;head == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L363' name='L363'></a>    <em class='brace'>{</em>
+<a id='L364' name='L364'></a>      map-&gt;head = map-&gt;tail = index;
+<a id='L365' name='L365'></a>    <em class='brace'>}</em>
+<a id='L366' name='L366'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (point == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L367' name='L367'></a>    <em class='brace'>{</em>
+<a id='L368' name='L368'></a>      index-&gt;prev = map-&gt;tail;
+<a id='L369' name='L369'></a>      map-&gt;tail-&gt;next = index;
+<a id='L370' name='L370'></a>      map-&gt;tail = index;
+<a id='L371' name='L371'></a>    <em class='brace'>}</em>
+<a id='L372' name='L372'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (point == map-&gt;head)
+<a id='L373' name='L373'></a>    <em class='brace'>{</em>
+<a id='L374' name='L374'></a>      index-&gt;next = map-&gt;head;
+<a id='L375' name='L375'></a>      map-&gt;head-&gt;prev = index;
+<a id='L376' name='L376'></a>      map-&gt;head = index;
+<a id='L377' name='L377'></a>    <em class='brace'>}</em>
+<a id='L378' name='L378'></a>  <strong class='reserved'>else</strong>
+<a id='L379' name='L379'></a>    <em class='brace'>{</em>
+<a id='L380' name='L380'></a>      index-&gt;next = point;
+<a id='L381' name='L381'></a>      index-&gt;prev = point-&gt;prev;
+<a id='L382' name='L382'></a>      <strong class='reserved'>if</strong> (point-&gt;prev)
+<a id='L383' name='L383'></a>        point-&gt;prev-&gt;next = index;
+<a id='L384' name='L384'></a>      point-&gt;prev = index;
+<a id='L385' name='L385'></a>    <em class='brace'>}</em>
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a>  <em class='comment'>/* Execute event hook. */</em>
+<a id='L388' name='L388'></a>  <strong class='reserved'>if</strong> (route_map_master.event_hook)
+<a id='L389' name='L389'></a>    (*route_map_master.event_hook) (<a href='../S/235.html#L68' title='Defined at 68 in lib/routemap.h.'>RMAP_EVENT_INDEX_ADDED</a>,
+<a id='L390' name='L390'></a>                                    map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L391' name='L391'></a>
+<a id='L392' name='L392'></a>  <strong class='reserved'>return</strong> index;
+<a id='L393' name='L393'></a><em class='brace'>}</em>
+<a id='L394' name='L394'></a>
+<a id='L395' name='L395'></a><em class='comment'>/* Get route map index. */</em>
+<a id='L396' name='L396'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *
+<a id='L397' name='L397'></a><a href='../S/259.html#L945' title='Referred from 945 in lib/routemap.c.'>route_map_index_get</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map, <strong class='reserved'>enum</strong> <a href='../S/235.html#L26' title='Defined at 26 in lib/routemap.h.'>route_map_type</a> type, 
+<a id='L398' name='L398'></a>                     <strong class='reserved'>int</strong> pref)
+<a id='L399' name='L399'></a><em class='brace'>{</em>
+<a id='L400' name='L400'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L401' name='L401'></a>
+<a id='L402' name='L402'></a>  index = <a href='../S/259.html#L331' title='Defined at 331 in lib/routemap.c.'>route_map_index_lookup</a> (map, RMAP_ANY, pref);
+<a id='L403' name='L403'></a>  <strong class='reserved'>if</strong> (index &amp;&amp; index-&gt;type != type)
+<a id='L404' name='L404'></a>    <em class='brace'>{</em>
+<a id='L405' name='L405'></a>      <em class='comment'>/* Delete index from route map. */</em>
+<a id='L406' name='L406'></a>      <a href='../S/259.html#L294' title='Defined at 294 in lib/routemap.c.'>route_map_index_delete</a> (index, 1);
+<a id='L407' name='L407'></a>      index = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L408' name='L408'></a>    <em class='brace'>}</em>
+<a id='L409' name='L409'></a>  <strong class='reserved'>if</strong> (index == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L410' name='L410'></a>    index = <a href='../S/259.html#L345' title='Defined at 345 in lib/routemap.c.'>route_map_index_add</a> (map, type, pref);
+<a id='L411' name='L411'></a>  <strong class='reserved'>return</strong> index;
+<a id='L412' name='L412'></a><em class='brace'>}</em>
+<a id='L413' name='L413'></a>
+<a id='L414' name='L414'></a><em class='comment'>/* New route map rule */</em>
+<a id='L415' name='L415'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *
+<a id='L416' name='L416'></a><a href='../R/9443.html' title='Multiple referred from 2 places.'>route_map_rule_new</a> (<strong class='reserved'>void</strong>)
+<a id='L417' name='L417'></a><em class='brace'>{</em>
+<a id='L418' name='L418'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *new;
+<a id='L419' name='L419'></a>
+<a id='L420' name='L420'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ROUTE_MAP_RULE, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a>));
+<a id='L421' name='L421'></a>  <strong class='reserved'>return</strong> new;
+<a id='L422' name='L422'></a><em class='brace'>}</em>
+<a id='L423' name='L423'></a>
+<a id='L424' name='L424'></a><em class='comment'>/* Install rule command to the match list. */</em>
+<a id='L425' name='L425'></a><strong class='reserved'>void</strong>
+<a id='L426' name='L426'></a><a href='../R/9429.html' title='Multiple referred from 39 places.'>route_map_install_match</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd)
+<a id='L427' name='L427'></a><em class='brace'>{</em>
+<a id='L428' name='L428'></a>  <a href='../S/204.html#L114' title='Defined at 114 in lib/vector.c.'>vector_set</a> (route_match_vec, cmd);
+<a id='L429' name='L429'></a><em class='brace'>}</em>
+<a id='L430' name='L430'></a>
+<a id='L431' name='L431'></a><em class='comment'>/* Install rule command to the set list. */</em>
+<a id='L432' name='L432'></a><strong class='reserved'>void</strong>
+<a id='L433' name='L433'></a><a href='../R/9430.html' title='Multiple referred from 30 places.'>route_map_install_set</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd)
+<a id='L434' name='L434'></a><em class='brace'>{</em>
+<a id='L435' name='L435'></a>  <a href='../S/204.html#L114' title='Defined at 114 in lib/vector.c.'>vector_set</a> (route_set_vec, cmd);
+<a id='L436' name='L436'></a><em class='brace'>}</em>
+<a id='L437' name='L437'></a>
+<a id='L438' name='L438'></a><em class='comment'>/* Lookup rule command from match list. */</em>
+<a id='L439' name='L439'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *
+<a id='L440' name='L440'></a><a href='../R/9433.html' title='Multiple referred from 2 places.'>route_map_lookup_match</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L441' name='L441'></a><em class='brace'>{</em>
+<a id='L442' name='L442'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L443' name='L443'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *rule;
+<a id='L444' name='L444'></a>
+<a id='L445' name='L445'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (route_match_vec); i++)
+<a id='L446' name='L446'></a>    <strong class='reserved'>if</strong> ((rule = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (route_match_vec, i)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L447' name='L447'></a>      <strong class='reserved'>if</strong> (strcmp (rule-&gt;str, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>) == 0)
+<a id='L448' name='L448'></a>        <strong class='reserved'>return</strong> rule;
+<a id='L449' name='L449'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L450' name='L450'></a><em class='brace'>}</em>
+<a id='L451' name='L451'></a>
+<a id='L452' name='L452'></a><em class='comment'>/* Lookup rule command from set list. */</em>
+<a id='L453' name='L453'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *
+<a id='L454' name='L454'></a><a href='../R/9434.html' title='Multiple referred from 2 places.'>route_map_lookup_set</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L455' name='L455'></a><em class='brace'>{</em>
+<a id='L456' name='L456'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L457' name='L457'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *rule;
+<a id='L458' name='L458'></a>
+<a id='L459' name='L459'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (route_set_vec); i++)
+<a id='L460' name='L460'></a>    <strong class='reserved'>if</strong> ((rule = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (route_set_vec, i)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L461' name='L461'></a>      <strong class='reserved'>if</strong> (strcmp (rule-&gt;str, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>) == 0)
+<a id='L462' name='L462'></a>        <strong class='reserved'>return</strong> rule;
+<a id='L463' name='L463'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L464' name='L464'></a><em class='brace'>}</em>
+<a id='L465' name='L465'></a>
+<a id='L466' name='L466'></a><em class='comment'>/* Add match and set rule to rule list. */</em>
+<a id='L467' name='L467'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L468' name='L468'></a><a href='../R/9439.html' title='Multiple referred from 2 places.'>route_map_rule_add</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L103' title='Defined at 103 in lib/routemap.h.'>route_map_rule_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L469' name='L469'></a>                    <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule)
+<a id='L470' name='L470'></a><em class='brace'>{</em>
+<a id='L471' name='L471'></a>  rule-&gt;next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L472' name='L472'></a>  rule-&gt;prev = <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail;
+<a id='L473' name='L473'></a>  <strong class='reserved'>if</strong> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail)
+<a id='L474' name='L474'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail-&gt;next = rule;
+<a id='L475' name='L475'></a>  <strong class='reserved'>else</strong>
+<a id='L476' name='L476'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = rule;
+<a id='L477' name='L477'></a>  <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = rule;
+<a id='L478' name='L478'></a><em class='brace'>}</em>
+<a id='L479' name='L479'></a>
+<a id='L480' name='L480'></a><em class='comment'>/* Delete rule from rule list. */</em>
+<a id='L481' name='L481'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L482' name='L482'></a><a href='../R/9441.html' title='Multiple referred from 7 places.'>route_map_rule_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L103' title='Defined at 103 in lib/routemap.h.'>route_map_rule_list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>,
+<a id='L483' name='L483'></a>                       <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule)
+<a id='L484' name='L484'></a><em class='brace'>{</em>
+<a id='L485' name='L485'></a>  <strong class='reserved'>if</strong> (rule-&gt;cmd-&gt;func_free)
+<a id='L486' name='L486'></a>    (*rule-&gt;cmd-&gt;func_free) (rule-&gt;value);
+<a id='L487' name='L487'></a>
+<a id='L488' name='L488'></a>  <strong class='reserved'>if</strong> (rule-&gt;rule_str)
+<a id='L489' name='L489'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_RULE_STR, rule-&gt;rule_str);
+<a id='L490' name='L490'></a>
+<a id='L491' name='L491'></a>  <strong class='reserved'>if</strong> (rule-&gt;next)
+<a id='L492' name='L492'></a>    rule-&gt;next-&gt;prev = rule-&gt;prev;
+<a id='L493' name='L493'></a>  <strong class='reserved'>else</strong>
+<a id='L494' name='L494'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;tail = rule-&gt;prev;
+<a id='L495' name='L495'></a>  <strong class='reserved'>if</strong> (rule-&gt;prev)
+<a id='L496' name='L496'></a>    rule-&gt;prev-&gt;next = rule-&gt;next;
+<a id='L497' name='L497'></a>  <strong class='reserved'>else</strong>
+<a id='L498' name='L498'></a>    <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>-&gt;head = rule-&gt;next;
+<a id='L499' name='L499'></a>
+<a id='L500' name='L500'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_RULE, rule);
+<a id='L501' name='L501'></a><em class='brace'>}</em>
+<a id='L502' name='L502'></a>
+<a id='L503' name='L503'></a><em class='comment'>/* strcmp wrapper function which don't crush even argument is NULL. */</em>
+<a id='L504' name='L504'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L505' name='L505'></a><a href='../R/9676.html' title='Multiple referred from 2 places.'>rulecmp</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *dst, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *src)
+<a id='L506' name='L506'></a><em class='brace'>{</em>
+<a id='L507' name='L507'></a>  <strong class='reserved'>if</strong> (dst == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L508' name='L508'></a>    <em class='brace'>{</em>
+<a id='L509' name='L509'></a>      <strong class='reserved'>if</strong> (src ==  <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L510' name='L510'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L511' name='L511'></a>      <strong class='reserved'>else</strong>
+<a id='L512' name='L512'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L513' name='L513'></a>    <em class='brace'>}</em>
+<a id='L514' name='L514'></a>  <strong class='reserved'>else</strong>
+<a id='L515' name='L515'></a>    <em class='brace'>{</em>
+<a id='L516' name='L516'></a>      <strong class='reserved'>if</strong> (src == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L517' name='L517'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L518' name='L518'></a>      <strong class='reserved'>else</strong>
+<a id='L519' name='L519'></a>        <strong class='reserved'>return</strong> strcmp (dst, src);
+<a id='L520' name='L520'></a>    <em class='brace'>}</em>
+<a id='L521' name='L521'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L522' name='L522'></a><em class='brace'>}</em>
+<a id='L523' name='L523'></a>
+<a id='L524' name='L524'></a><em class='comment'>/* Add match statement to route map. */</em>
+<a id='L525' name='L525'></a><strong class='reserved'>int</strong>
+<a id='L526' name='L526'></a><a href='../R/9405.html' title='Multiple referred from 8 places.'>route_map_add_match</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *match_name,
+<a id='L527' name='L527'></a>                     <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *match_arg)
+<a id='L528' name='L528'></a><em class='brace'>{</em>
+<a id='L529' name='L529'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L530' name='L530'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *next;
+<a id='L531' name='L531'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd;
+<a id='L532' name='L532'></a>  <strong class='reserved'>void</strong> *compile;
+<a id='L533' name='L533'></a>  <strong class='reserved'>int</strong> replaced = 0;
+<a id='L534' name='L534'></a>
+<a id='L535' name='L535'></a>  <em class='comment'>/* First lookup rule for add match statement. */</em>
+<a id='L536' name='L536'></a>  cmd = <a href='../S/259.html#L440' title='Defined at 440 in lib/routemap.c.'>route_map_lookup_match</a> (match_name);
+<a id='L537' name='L537'></a>  <strong class='reserved'>if</strong> (cmd == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L538' name='L538'></a>    <strong class='reserved'>return</strong> RMAP_RULE_MISSING;
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a>  <em class='comment'>/* Next call compile function for this match statement. */</em>
+<a id='L541' name='L541'></a>  <strong class='reserved'>if</strong> (cmd-&gt;func_compile)
+<a id='L542' name='L542'></a>    <em class='brace'>{</em>
+<a id='L543' name='L543'></a>      compile= (*cmd-&gt;func_compile)(match_arg);
+<a id='L544' name='L544'></a>      <strong class='reserved'>if</strong> (compile == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L545' name='L545'></a>        <strong class='reserved'>return</strong> RMAP_COMPILE_ERROR;
+<a id='L546' name='L546'></a>    <em class='brace'>}</em>
+<a id='L547' name='L547'></a>  <strong class='reserved'>else</strong>
+<a id='L548' name='L548'></a>    compile = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L549' name='L549'></a>
+<a id='L550' name='L550'></a>  <em class='comment'>/* If argument is completely same ignore it. */</em>
+<a id='L551' name='L551'></a>  <strong class='reserved'>for</strong> (rule = index-&gt;match_list.head; rule; rule = next)
+<a id='L552' name='L552'></a>    <em class='brace'>{</em>
+<a id='L553' name='L553'></a>      next = rule-&gt;next;
+<a id='L554' name='L554'></a>      <strong class='reserved'>if</strong> (rule-&gt;cmd == cmd)
+<a id='L555' name='L555'></a>        <em class='brace'>{</em>       
+<a id='L556' name='L556'></a>          <a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (&amp;index-&gt;match_list, rule);
+<a id='L557' name='L557'></a>          replaced = 1;
+<a id='L558' name='L558'></a>        <em class='brace'>}</em>
+<a id='L559' name='L559'></a>    <em class='brace'>}</em>
+<a id='L560' name='L560'></a>
+<a id='L561' name='L561'></a>  <em class='comment'>/* Add new route map match rule. */</em>
+<a id='L562' name='L562'></a>  rule = <a href='../S/259.html#L416' title='Defined at 416 in lib/routemap.c.'>route_map_rule_new</a> ();
+<a id='L563' name='L563'></a>  rule-&gt;cmd = cmd;
+<a id='L564' name='L564'></a>  rule-&gt;value = compile;
+<a id='L565' name='L565'></a>  <strong class='reserved'>if</strong> (match_arg)
+<a id='L566' name='L566'></a>    rule-&gt;rule_str = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_ROUTE_MAP_RULE_STR, match_arg);
+<a id='L567' name='L567'></a>  <strong class='reserved'>else</strong>
+<a id='L568' name='L568'></a>    rule-&gt;rule_str = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L569' name='L569'></a>
+<a id='L570' name='L570'></a>  <em class='comment'>/* Add new route match rule to linked list. */</em>
+<a id='L571' name='L571'></a>  <a href='../S/259.html#L468' title='Defined at 468 in lib/routemap.c.'>route_map_rule_add</a> (&amp;index-&gt;match_list, rule);
+<a id='L572' name='L572'></a>
+<a id='L573' name='L573'></a>  <em class='comment'>/* Execute event hook. */</em>
+<a id='L574' name='L574'></a>  <strong class='reserved'>if</strong> (route_map_master.event_hook)
+<a id='L575' name='L575'></a>    (*route_map_master.event_hook) (replaced ?
+<a id='L576' name='L576'></a>                                    <a href='../S/235.html#L67' title='Defined at 67 in lib/routemap.h.'>RMAP_EVENT_MATCH_REPLACED</a>:
+<a id='L577' name='L577'></a>                                    <a href='../S/235.html#L65' title='Defined at 65 in lib/routemap.h.'>RMAP_EVENT_MATCH_ADDED</a>,
+<a id='L578' name='L578'></a>                                    index-&gt;map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L579' name='L579'></a>
+<a id='L580' name='L580'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L581' name='L581'></a><em class='brace'>}</em>
+<a id='L582' name='L582'></a>
+<a id='L583' name='L583'></a><em class='comment'>/* Delete specified route match rule. */</em>
+<a id='L584' name='L584'></a><strong class='reserved'>int</strong>
+<a id='L585' name='L585'></a><a href='../R/9413.html' title='Multiple referred from 8 places.'>route_map_delete_match</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *match_name,
+<a id='L586' name='L586'></a>                        <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *match_arg)
+<a id='L587' name='L587'></a><em class='brace'>{</em>
+<a id='L588' name='L588'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L589' name='L589'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd;
+<a id='L590' name='L590'></a>
+<a id='L591' name='L591'></a>  cmd = <a href='../S/259.html#L440' title='Defined at 440 in lib/routemap.c.'>route_map_lookup_match</a> (match_name);
+<a id='L592' name='L592'></a>  <strong class='reserved'>if</strong> (cmd == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L593' name='L593'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L594' name='L594'></a>  
+<a id='L595' name='L595'></a>  <strong class='reserved'>for</strong> (rule = index-&gt;match_list.head; rule; rule = rule-&gt;next)
+<a id='L596' name='L596'></a>    <strong class='reserved'>if</strong> (rule-&gt;cmd == cmd &amp;&amp; 
+<a id='L597' name='L597'></a>        (<a href='../S/259.html#L505' title='Defined at 505 in lib/routemap.c.'>rulecmp</a> (rule-&gt;rule_str, match_arg) == 0 || match_arg == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>))
+<a id='L598' name='L598'></a>      <em class='brace'>{</em>
+<a id='L599' name='L599'></a>        <a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (&amp;index-&gt;match_list, rule);
+<a id='L600' name='L600'></a>        <em class='comment'>/* Execute event hook. */</em>
+<a id='L601' name='L601'></a>        <strong class='reserved'>if</strong> (route_map_master.event_hook)
+<a id='L602' name='L602'></a>          (*route_map_master.event_hook) (<a href='../S/235.html#L66' title='Defined at 66 in lib/routemap.h.'>RMAP_EVENT_MATCH_DELETED</a>,
+<a id='L603' name='L603'></a>                                          index-&gt;map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L604' name='L604'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L605' name='L605'></a>      <em class='brace'>}</em>
+<a id='L606' name='L606'></a>  <em class='comment'>/* Can't find matched rule. */</em>
+<a id='L607' name='L607'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L608' name='L608'></a><em class='brace'>}</em>
+<a id='L609' name='L609'></a>
+<a id='L610' name='L610'></a><em class='comment'>/* Add route-map set statement to the route map. */</em>
+<a id='L611' name='L611'></a><strong class='reserved'>int</strong>
+<a id='L612' name='L612'></a><a href='../R/9406.html' title='Multiple referred from 9 places.'>route_map_add_set</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *set_name,
+<a id='L613' name='L613'></a>                   <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a>)
+<a id='L614' name='L614'></a><em class='brace'>{</em>
+<a id='L615' name='L615'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L616' name='L616'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *next;
+<a id='L617' name='L617'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd;
+<a id='L618' name='L618'></a>  <strong class='reserved'>void</strong> *compile;
+<a id='L619' name='L619'></a>  <strong class='reserved'>int</strong> replaced = 0;
+<a id='L620' name='L620'></a>
+<a id='L621' name='L621'></a>  cmd = <a href='../S/259.html#L454' title='Defined at 454 in lib/routemap.c.'>route_map_lookup_set</a> (set_name);
+<a id='L622' name='L622'></a>  <strong class='reserved'>if</strong> (cmd == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L623' name='L623'></a>    <strong class='reserved'>return</strong> RMAP_RULE_MISSING;
+<a id='L624' name='L624'></a>
+<a id='L625' name='L625'></a>  <em class='comment'>/* Next call compile function for this match statement. */</em>
+<a id='L626' name='L626'></a>  <strong class='reserved'>if</strong> (cmd-&gt;func_compile)
+<a id='L627' name='L627'></a>    <em class='brace'>{</em>
+<a id='L628' name='L628'></a>      compile= (*cmd-&gt;func_compile)(<a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a>);
+<a id='L629' name='L629'></a>      <strong class='reserved'>if</strong> (compile == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L630' name='L630'></a>        <strong class='reserved'>return</strong> RMAP_COMPILE_ERROR;
+<a id='L631' name='L631'></a>    <em class='brace'>}</em>
+<a id='L632' name='L632'></a>  <strong class='reserved'>else</strong>
+<a id='L633' name='L633'></a>    compile = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L634' name='L634'></a>
+<a id='L635' name='L635'></a> <em class='comment'>/* Add by WJL. if old set command of same kind exist, delete it first</em>
+<a id='L636' name='L636'></a><em class='comment'>    to ensure only one set command of same kind exist under a</em>
+<a id='L637' name='L637'></a><em class='comment'>    route_map_index. */</em>
+<a id='L638' name='L638'></a>  <strong class='reserved'>for</strong> (rule = index-&gt;set_list.head; rule; rule = next)
+<a id='L639' name='L639'></a>    <em class='brace'>{</em>
+<a id='L640' name='L640'></a>      next = rule-&gt;next;
+<a id='L641' name='L641'></a>      <strong class='reserved'>if</strong> (rule-&gt;cmd == cmd)
+<a id='L642' name='L642'></a>        <em class='brace'>{</em>
+<a id='L643' name='L643'></a>          <a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (&amp;index-&gt;set_list, rule);
+<a id='L644' name='L644'></a>          replaced = 1;
+<a id='L645' name='L645'></a>        <em class='brace'>}</em>
+<a id='L646' name='L646'></a>    <em class='brace'>}</em>
+<a id='L647' name='L647'></a>
+<a id='L648' name='L648'></a>  <em class='comment'>/* Add new route map match rule. */</em>
+<a id='L649' name='L649'></a>  rule = <a href='../S/259.html#L416' title='Defined at 416 in lib/routemap.c.'>route_map_rule_new</a> ();
+<a id='L650' name='L650'></a>  rule-&gt;cmd = cmd;
+<a id='L651' name='L651'></a>  rule-&gt;value = compile;
+<a id='L652' name='L652'></a>  <strong class='reserved'>if</strong> (<a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a>)
+<a id='L653' name='L653'></a>    rule-&gt;rule_str = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_ROUTE_MAP_RULE_STR, <a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a>);
+<a id='L654' name='L654'></a>  <strong class='reserved'>else</strong>
+<a id='L655' name='L655'></a>    rule-&gt;rule_str = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L656' name='L656'></a>
+<a id='L657' name='L657'></a>  <em class='comment'>/* Add new route match rule to linked list. */</em>
+<a id='L658' name='L658'></a>  <a href='../S/259.html#L468' title='Defined at 468 in lib/routemap.c.'>route_map_rule_add</a> (&amp;index-&gt;set_list, rule);
+<a id='L659' name='L659'></a>
+<a id='L660' name='L660'></a>  <em class='comment'>/* Execute event hook. */</em>
+<a id='L661' name='L661'></a>  <strong class='reserved'>if</strong> (route_map_master.event_hook)
+<a id='L662' name='L662'></a>    (*route_map_master.event_hook) (replaced ?
+<a id='L663' name='L663'></a>                                    <a href='../S/235.html#L64' title='Defined at 64 in lib/routemap.h.'>RMAP_EVENT_SET_REPLACED</a>:
+<a id='L664' name='L664'></a>                                    <a href='../S/235.html#L62' title='Defined at 62 in lib/routemap.h.'>RMAP_EVENT_SET_ADDED</a>,
+<a id='L665' name='L665'></a>                                    index-&gt;map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L666' name='L666'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L667' name='L667'></a><em class='brace'>}</em>
+<a id='L668' name='L668'></a>
+<a id='L669' name='L669'></a><em class='comment'>/* Delete route map set rule. */</em>
+<a id='L670' name='L670'></a><strong class='reserved'>int</strong>
+<a id='L671' name='L671'></a><a href='../R/9414.html' title='Multiple referred from 9 places.'>route_map_delete_set</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *set_name,
+<a id='L672' name='L672'></a>                      <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a>)
+<a id='L673' name='L673'></a><em class='brace'>{</em>
+<a id='L674' name='L674'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L675' name='L675'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L76' title='Defined at 76 in lib/routemap.h.'>route_map_rule_cmd</a> *cmd;
+<a id='L676' name='L676'></a>
+<a id='L677' name='L677'></a>  cmd = <a href='../S/259.html#L454' title='Defined at 454 in lib/routemap.c.'>route_map_lookup_set</a> (set_name);
+<a id='L678' name='L678'></a>  <strong class='reserved'>if</strong> (cmd == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L679' name='L679'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L680' name='L680'></a>  
+<a id='L681' name='L681'></a>  <strong class='reserved'>for</strong> (rule = index-&gt;set_list.head; rule; rule = rule-&gt;next)
+<a id='L682' name='L682'></a>    <strong class='reserved'>if</strong> ((rule-&gt;cmd == cmd) &amp;&amp;
+<a id='L683' name='L683'></a>         (<a href='../S/259.html#L505' title='Defined at 505 in lib/routemap.c.'>rulecmp</a> (rule-&gt;rule_str, <a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a>) == 0 || <a href='../D/10646.html' title='Multiple defined in 3 places.'>set_arg</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>))
+<a id='L684' name='L684'></a>      <em class='brace'>{</em>
+<a id='L685' name='L685'></a>        <a href='../S/259.html#L482' title='Defined at 482 in lib/routemap.c.'>route_map_rule_delete</a> (&amp;index-&gt;set_list, rule);
+<a id='L686' name='L686'></a>        <em class='comment'>/* Execute event hook. */</em>
+<a id='L687' name='L687'></a>        <strong class='reserved'>if</strong> (route_map_master.event_hook)
+<a id='L688' name='L688'></a>          (*route_map_master.event_hook) (<a href='../S/235.html#L63' title='Defined at 63 in lib/routemap.h.'>RMAP_EVENT_SET_DELETED</a>,
+<a id='L689' name='L689'></a>                                          index-&gt;map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L690' name='L690'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L691' name='L691'></a>      <em class='brace'>}</em>
+<a id='L692' name='L692'></a>  <em class='comment'>/* Can't find matched rule. */</em>
+<a id='L693' name='L693'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L694' name='L694'></a><em class='brace'>}</em>
+<a id='L695' name='L695'></a>
+<a id='L696' name='L696'></a><em class='comment'>/* Apply route map's each index to the object.</em>
+<a id='L697' name='L697'></a><em class='comment'></em>
+<a id='L698' name='L698'></a><em class='comment'>   The matrix for a route-map looks like this:</em>
+<a id='L699' name='L699'></a><em class='comment'>   (note, this includes the description for the "NEXT"</em>
+<a id='L700' name='L700'></a><em class='comment'>   and "GOTO" frobs now</em>
+<a id='L701' name='L701'></a><em class='comment'>  </em>
+<a id='L702' name='L702'></a><em class='comment'>              Match   |   No Match</em>
+<a id='L703' name='L703'></a><em class='comment'>                      |</em>
+<a id='L704' name='L704'></a><em class='comment'>    permit    action  |     cont</em>
+<a id='L705' name='L705'></a><em class='comment'>                      |</em>
+<a id='L706' name='L706'></a><em class='comment'>    ------------------+---------------</em>
+<a id='L707' name='L707'></a><em class='comment'>                      |</em>
+<a id='L708' name='L708'></a><em class='comment'>    deny      deny    |     cont</em>
+<a id='L709' name='L709'></a><em class='comment'>                      |</em>
+<a id='L710' name='L710'></a><em class='comment'>  </em>
+<a id='L711' name='L711'></a><em class='comment'>   action)</em>
+<a id='L712' name='L712'></a><em class='comment'>      -Apply Set statements, accept route</em>
+<a id='L713' name='L713'></a><em class='comment'>      -If Call statement is present jump to the specified route-map, if it</em>
+<a id='L714' name='L714'></a><em class='comment'>         denies the route we finish.</em>
+<a id='L715' name='L715'></a><em class='comment'>      -If NEXT is specified, goto NEXT statement</em>
+<a id='L716' name='L716'></a><em class='comment'>      -If GOTO is specified, goto the first clause where pref &gt; nextpref</em>
+<a id='L717' name='L717'></a><em class='comment'>      -If nothing is specified, do as Cisco and finish</em>
+<a id='L718' name='L718'></a><em class='comment'>   deny)</em>
+<a id='L719' name='L719'></a><em class='comment'>      -Route is denied by route-map.</em>
+<a id='L720' name='L720'></a><em class='comment'>   cont)</em>
+<a id='L721' name='L721'></a><em class='comment'>      -Goto Next index</em>
+<a id='L722' name='L722'></a><em class='comment'>  </em>
+<a id='L723' name='L723'></a><em class='comment'>   If we get no matches after we've processed all updates, then the route</em>
+<a id='L724' name='L724'></a><em class='comment'>   is dropped too.</em>
+<a id='L725' name='L725'></a><em class='comment'>  </em>
+<a id='L726' name='L726'></a><em class='comment'>   Some notes on the new "CALL", "NEXT" and "GOTO"</em>
+<a id='L727' name='L727'></a><em class='comment'>     call WORD        - If this clause is matched, then the set statements</em>
+<a id='L728' name='L728'></a><em class='comment'>                        are executed and then we jump to route-map 'WORD'. If</em>
+<a id='L729' name='L729'></a><em class='comment'>                        this route-map denies the route, we finish, in other case we</em>
+<a id='L730' name='L730'></a><em class='comment'>                        do whatever the exit policy (EXIT, NEXT or GOTO) tells.</em>
+<a id='L731' name='L731'></a><em class='comment'>     on-match next    - If this clause is matched, then the set statements</em>
+<a id='L732' name='L732'></a><em class='comment'>                        are executed and then we drop through to the next clause</em>
+<a id='L733' name='L733'></a><em class='comment'>     on-match goto n  - If this clause is matched, then the set statments</em>
+<a id='L734' name='L734'></a><em class='comment'>                        are executed and then we goto the nth clause, or the</em>
+<a id='L735' name='L735'></a><em class='comment'>                        first clause greater than this. In order to ensure</em>
+<a id='L736' name='L736'></a><em class='comment'>                        route-maps *always* exit, you cannot jump backwards.</em>
+<a id='L737' name='L737'></a><em class='comment'>                        Sorry ;)</em>
+<a id='L738' name='L738'></a><em class='comment'>  </em>
+<a id='L739' name='L739'></a><em class='comment'>   We need to make sure our route-map processing matches the above</em>
+<a id='L740' name='L740'></a><em class='comment'>*/</em>
+<a id='L741' name='L741'></a>
+<a id='L742' name='L742'></a><strong class='reserved'>static</strong> <a href='../S/235.html#L40' title='Defined at 40 in lib/routemap.h.'>route_map_result_t</a>
+<a id='L743' name='L743'></a><a href='../S/259.html#L797' title='Referred from 797 in lib/routemap.c.'>route_map_apply_match</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L103' title='Defined at 103 in lib/routemap.h.'>route_map_rule_list</a> *match_list,
+<a id='L744' name='L744'></a>                       <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, <a href='../S/235.html#L51' title='Defined at 51 in lib/routemap.h.'>route_map_object_t</a> type,
+<a id='L745' name='L745'></a>                       <strong class='reserved'>void</strong> *object)
+<a id='L746' name='L746'></a><em class='brace'>{</em>
+<a id='L747' name='L747'></a>  <a href='../S/235.html#L40' title='Defined at 40 in lib/routemap.h.'>route_map_result_t</a> ret = <a href='../S/235.html#L37' title='Defined at 37 in lib/routemap.h.'>RMAP_NOMATCH</a>;
+<a id='L748' name='L748'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *match;
+<a id='L749' name='L749'></a>
+<a id='L750' name='L750'></a>
+<a id='L751' name='L751'></a>  <em class='comment'>/* Check all match rule and if there is no match rule, go to the</em>
+<a id='L752' name='L752'></a><em class='comment'>     set statement. */</em>
+<a id='L753' name='L753'></a>  <strong class='reserved'>if</strong> (!match_list-&gt;head)
+<a id='L754' name='L754'></a>    ret = <a href='../S/235.html#L35' title='Defined at 35 in lib/routemap.h.'>RMAP_MATCH</a>;
+<a id='L755' name='L755'></a>  <strong class='reserved'>else</strong>
+<a id='L756' name='L756'></a>    <em class='brace'>{</em>
+<a id='L757' name='L757'></a>      <strong class='reserved'>for</strong> (match = match_list-&gt;head; match; match = match-&gt;next)
+<a id='L758' name='L758'></a>        <em class='brace'>{</em>
+<a id='L759' name='L759'></a>          <em class='comment'>/* Try each match statement in turn, If any do not return</em>
+<a id='L760' name='L760'></a><em class='comment'>             RMAP_MATCH, return, otherwise continue on to next match </em>
+<a id='L761' name='L761'></a><em class='comment'>             statement. All match statements must match for end-result</em>
+<a id='L762' name='L762'></a><em class='comment'>             to be a match. */</em>
+<a id='L763' name='L763'></a>          ret = (*match-&gt;cmd-&gt;func_apply) (match-&gt;value, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L764' name='L764'></a>                                           type, object);
+<a id='L765' name='L765'></a>          <strong class='reserved'>if</strong> (ret != <a href='../S/235.html#L35' title='Defined at 35 in lib/routemap.h.'>RMAP_MATCH</a>)
+<a id='L766' name='L766'></a>            <strong class='reserved'>return</strong> ret;
+<a id='L767' name='L767'></a>        <em class='brace'>}</em>
+<a id='L768' name='L768'></a>    <em class='brace'>}</em>
+<a id='L769' name='L769'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L770' name='L770'></a><em class='brace'>}</em>
+<a id='L771' name='L771'></a>
+<a id='L772' name='L772'></a><em class='comment'>/* Apply route map to the object. */</em>
+<a id='L773' name='L773'></a><a href='../S/235.html#L40' title='Defined at 40 in lib/routemap.h.'>route_map_result_t</a>
+<a id='L774' name='L774'></a><a href='../R/9407.html' title='Multiple referred from 24 places.'>route_map_apply</a> (<strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L775' name='L775'></a>                 <a href='../S/235.html#L51' title='Defined at 51 in lib/routemap.h.'>route_map_object_t</a> type, <strong class='reserved'>void</strong> *object)
+<a id='L776' name='L776'></a><em class='brace'>{</em>
+<a id='L777' name='L777'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>int</strong> recursion = 0;
+<a id='L778' name='L778'></a>  <strong class='reserved'>int</strong> ret = 0;
+<a id='L779' name='L779'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L780' name='L780'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *set;
+<a id='L781' name='L781'></a>
+<a id='L782' name='L782'></a>  <strong class='reserved'>if</strong> (recursion &gt; <a href='../S/235.html#L73' title='Defined at 73 in lib/routemap.h.'>RMAP_RECURSION_LIMIT</a>)
+<a id='L783' name='L783'></a>    <em class='brace'>{</em>
+<a id='L784' name='L784'></a>      <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_WARNING,
+<a id='L785' name='L785'></a>            "route-map recursion limit (%d) reached, discarding route",
+<a id='L786' name='L786'></a>            <a href='../S/235.html#L73' title='Defined at 73 in lib/routemap.h.'>RMAP_RECURSION_LIMIT</a>);
+<a id='L787' name='L787'></a>      recursion = 0;
+<a id='L788' name='L788'></a>      <strong class='reserved'>return</strong> <a href='../S/235.html#L36' title='Defined at 36 in lib/routemap.h.'>RMAP_DENYMATCH</a>;
+<a id='L789' name='L789'></a>    <em class='brace'>}</em>
+<a id='L790' name='L790'></a>
+<a id='L791' name='L791'></a>  <strong class='reserved'>if</strong> (map == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L792' name='L792'></a>    <strong class='reserved'>return</strong> <a href='../S/235.html#L36' title='Defined at 36 in lib/routemap.h.'>RMAP_DENYMATCH</a>;
+<a id='L793' name='L793'></a>
+<a id='L794' name='L794'></a>  <strong class='reserved'>for</strong> (index = map-&gt;head; index; index = index-&gt;next)
+<a id='L795' name='L795'></a>    <em class='brace'>{</em>
+<a id='L796' name='L796'></a>      <em class='comment'>/* Apply this index. */</em>
+<a id='L797' name='L797'></a>      ret = <a href='../S/259.html#L743' title='Defined at 743 in lib/routemap.c.'>route_map_apply_match</a> (&amp;index-&gt;match_list, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, type, object);
+<a id='L798' name='L798'></a>
+<a id='L799' name='L799'></a>      <em class='comment'>/* Now we apply the matrix from above */</em>
+<a id='L800' name='L800'></a>      <strong class='reserved'>if</strong> (ret == <a href='../S/235.html#L37' title='Defined at 37 in lib/routemap.h.'>RMAP_NOMATCH</a>)
+<a id='L801' name='L801'></a>        <em class='comment'>/* 'cont' from matrix - continue to next route-map sequence */</em>
+<a id='L802' name='L802'></a>        <strong class='reserved'>continue</strong>;
+<a id='L803' name='L803'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ret == <a href='../S/235.html#L35' title='Defined at 35 in lib/routemap.h.'>RMAP_MATCH</a>)
+<a id='L804' name='L804'></a>        <em class='brace'>{</em>
+<a id='L805' name='L805'></a>          <strong class='reserved'>if</strong> (index-&gt;type == RMAP_PERMIT)
+<a id='L806' name='L806'></a>            <em class='comment'>/* 'action' */</em>
+<a id='L807' name='L807'></a>            <em class='brace'>{</em>
+<a id='L808' name='L808'></a>              <em class='comment'>/* permit+match must execute sets */</em>
+<a id='L809' name='L809'></a>              <strong class='reserved'>for</strong> (set = index-&gt;set_list.head; set; set = set-&gt;next)
+<a id='L810' name='L810'></a>                ret = (*set-&gt;cmd-&gt;func_apply) (set-&gt;value, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L811' name='L811'></a>                                               type, object);
+<a id='L812' name='L812'></a>
+<a id='L813' name='L813'></a>              <em class='comment'>/* Call another route-map if available */</em>
+<a id='L814' name='L814'></a>              <strong class='reserved'>if</strong> (index-&gt;nextrm)
+<a id='L815' name='L815'></a>                <em class='brace'>{</em>
+<a id='L816' name='L816'></a>                  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *nextrm =
+<a id='L817' name='L817'></a>                                    <a href='../S/259.html#L151' title='Defined at 151 in lib/routemap.c.'>route_map_lookup_by_name</a> (index-&gt;nextrm);
+<a id='L818' name='L818'></a>
+<a id='L819' name='L819'></a>                  <strong class='reserved'>if</strong> (nextrm) <em class='comment'>/* Target route-map found, jump to it */</em>
+<a id='L820' name='L820'></a>                    <em class='brace'>{</em>
+<a id='L821' name='L821'></a>                      recursion++;
+<a id='L822' name='L822'></a>                      ret = <a href='../S/259.html#L774' title='Defined at 774 in lib/routemap.c.'>route_map_apply</a> (nextrm, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, type, object);
+<a id='L823' name='L823'></a>                      recursion--;
+<a id='L824' name='L824'></a>                    <em class='brace'>}</em>
+<a id='L825' name='L825'></a>
+<a id='L826' name='L826'></a>                  <em class='comment'>/* If nextrm returned 'deny', finish. */</em>
+<a id='L827' name='L827'></a>                  <strong class='reserved'>if</strong> (ret == <a href='../S/235.html#L36' title='Defined at 36 in lib/routemap.h.'>RMAP_DENYMATCH</a>)
+<a id='L828' name='L828'></a>                    <strong class='reserved'>return</strong> ret;
+<a id='L829' name='L829'></a>                <em class='brace'>}</em>
+<a id='L830' name='L830'></a>                
+<a id='L831' name='L831'></a>              <strong class='reserved'>switch</strong> (index-&gt;exitpolicy)
+<a id='L832' name='L832'></a>                <em class='brace'>{</em>
+<a id='L833' name='L833'></a>                  <strong class='reserved'>case</strong> <a href='../S/235.html#L55' title='Defined at 55 in lib/routemap.h.'>RMAP_EXIT</a>:
+<a id='L834' name='L834'></a>                    <strong class='reserved'>return</strong> ret;
+<a id='L835' name='L835'></a>                  <strong class='reserved'>case</strong> RMAP_NEXT:
+<a id='L836' name='L836'></a>                    <strong class='reserved'>continue</strong>;
+<a id='L837' name='L837'></a>                  <strong class='reserved'>case</strong> <a href='../S/235.html#L56' title='Defined at 56 in lib/routemap.h.'>RMAP_GOTO</a>:
+<a id='L838' name='L838'></a>                    <em class='brace'>{</em>
+<a id='L839' name='L839'></a>                      <em class='comment'>/* Find the next clause to jump to */</em>
+<a id='L840' name='L840'></a>                      <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *next = index-&gt;next;
+<a id='L841' name='L841'></a>                      <strong class='reserved'>int</strong> nextpref = index-&gt;nextpref;
+<a id='L842' name='L842'></a>
+<a id='L843' name='L843'></a>                      <strong class='reserved'>while</strong> (next &amp;&amp; next-&gt;pref &lt; nextpref)
+<a id='L844' name='L844'></a>                        <em class='brace'>{</em>
+<a id='L845' name='L845'></a>                          index = next;
+<a id='L846' name='L846'></a>                          next = next-&gt;next;
+<a id='L847' name='L847'></a>                        <em class='brace'>}</em>
+<a id='L848' name='L848'></a>                      <strong class='reserved'>if</strong> (next == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L849' name='L849'></a>                        <em class='brace'>{</em>
+<a id='L850' name='L850'></a>                          <em class='comment'>/* No clauses match! */</em>
+<a id='L851' name='L851'></a>                          <strong class='reserved'>return</strong> ret;
+<a id='L852' name='L852'></a>                        <em class='brace'>}</em>
+<a id='L853' name='L853'></a>                    <em class='brace'>}</em>
+<a id='L854' name='L854'></a>                <em class='brace'>}</em>
+<a id='L855' name='L855'></a>            <em class='brace'>}</em>
+<a id='L856' name='L856'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (index-&gt;type == RMAP_DENY)
+<a id='L857' name='L857'></a>            <em class='comment'>/* 'deny' */</em>
+<a id='L858' name='L858'></a>            <em class='brace'>{</em>
+<a id='L859' name='L859'></a>                <strong class='reserved'>return</strong> <a href='../S/235.html#L36' title='Defined at 36 in lib/routemap.h.'>RMAP_DENYMATCH</a>;
+<a id='L860' name='L860'></a>            <em class='brace'>}</em>
+<a id='L861' name='L861'></a>        <em class='brace'>}</em>
+<a id='L862' name='L862'></a>    <em class='brace'>}</em>
+<a id='L863' name='L863'></a>  <em class='comment'>/* Finally route-map does not match at all. */</em>
+<a id='L864' name='L864'></a>  <strong class='reserved'>return</strong> <a href='../S/235.html#L36' title='Defined at 36 in lib/routemap.h.'>RMAP_DENYMATCH</a>;
+<a id='L865' name='L865'></a><em class='brace'>}</em>
+<a id='L866' name='L866'></a>
+<a id='L867' name='L867'></a><strong class='reserved'>void</strong>
+<a id='L868' name='L868'></a><a href='../R/9404.html' title='Multiple referred from 8 places.'>route_map_add_hook</a> (<strong class='reserved'>void</strong> (*func) (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *))
+<a id='L869' name='L869'></a><em class='brace'>{</em>
+<a id='L870' name='L870'></a>  route_map_master.add_hook = func;
+<a id='L871' name='L871'></a><em class='brace'>}</em>
+<a id='L872' name='L872'></a>
+<a id='L873' name='L873'></a><strong class='reserved'>void</strong>
+<a id='L874' name='L874'></a><a href='../R/9412.html' title='Multiple referred from 8 places.'>route_map_delete_hook</a> (<strong class='reserved'>void</strong> (*func) (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *))
+<a id='L875' name='L875'></a><em class='brace'>{</em>
+<a id='L876' name='L876'></a>  route_map_master.delete_hook = func;
+<a id='L877' name='L877'></a><em class='brace'>}</em>
+<a id='L878' name='L878'></a>
+<a id='L879' name='L879'></a><strong class='reserved'>void</strong>
+<a id='L880' name='L880'></a><a href='../R/9417.html' title='Multiple referred from 3 places.'>route_map_event_hook</a> (<strong class='reserved'>void</strong> (*func) (<a href='../S/235.html#L70' title='Defined at 70 in lib/routemap.h.'>route_map_event_t</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *))
+<a id='L881' name='L881'></a><em class='brace'>{</em>
+<a id='L882' name='L882'></a>  route_map_master.event_hook = func;
+<a id='L883' name='L883'></a><em class='brace'>}</em>
+<a id='L884' name='L884'></a>
+<a id='L885' name='L885'></a><strong class='reserved'>void</strong>
+<a id='L886' name='L886'></a><a href='../R/9427.html' title='Multiple referred from 8 places.'>route_map_init</a> (<strong class='reserved'>void</strong>)
+<a id='L887' name='L887'></a><em class='brace'>{</em>
+<a id='L888' name='L888'></a>  <em class='comment'>/* Make vector for match and set. */</em>
+<a id='L889' name='L889'></a>  route_match_vec = <a href='../S/204.html#L29' title='Defined at 29 in lib/vector.c.'>vector_init</a> (1);
+<a id='L890' name='L890'></a>  route_set_vec = <a href='../S/204.html#L29' title='Defined at 29 in lib/vector.c.'>vector_init</a> (1);
+<a id='L891' name='L891'></a><em class='brace'>}</em>
+<a id='L892' name='L892'></a>
+<a id='L893' name='L893'></a><strong class='reserved'>void</strong>
+<a id='L894' name='L894'></a><a href='../R/9419.html' title='Multiple referred from 3 places.'>route_map_finish</a> (<strong class='reserved'>void</strong>)
+<a id='L895' name='L895'></a><em class='brace'>{</em>
+<a id='L896' name='L896'></a>  <a href='../S/204.html#L56' title='Defined at 56 in lib/vector.c.'>vector_free</a> (route_match_vec);
+<a id='L897' name='L897'></a>  route_match_vec = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L898' name='L898'></a>  <a href='../S/204.html#L56' title='Defined at 56 in lib/vector.c.'>vector_free</a> (route_set_vec);
+<a id='L899' name='L899'></a>  route_set_vec = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L900' name='L900'></a><em class='brace'>}</em>
+<a id='L901' name='L901'></a>
+<a id='L902' name='L902'></a><em class='comment'>/* VTY related functions. */</em>
+<a id='L903' name='L903'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (<a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a>,
+<a id='L904' name='L904'></a>       route_map_cmd,
+<a id='L905' name='L905'></a>       "route-map WORD (deny|permit) &lt;1-65535&gt;",
+<a id='L906' name='L906'></a>       "Create route-map or enter route-map command mode\n"
+<a id='L907' name='L907'></a>       "Route map tag\n"
+<a id='L908' name='L908'></a>       "Route map denies set operations\n"
+<a id='L909' name='L909'></a>       "Route map permits set operations\n"
+<a id='L910' name='L910'></a>       "Sequence to insert to/delete from existing route-map entry\n")
+<a id='L911' name='L911'></a><em class='brace'>{</em>
+<a id='L912' name='L912'></a>  <strong class='reserved'>int</strong> permit;
+<a id='L913' name='L913'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> pref;
+<a id='L914' name='L914'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L915' name='L915'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L916' name='L916'></a>  <strong class='reserved'>char</strong> *endptr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L917' name='L917'></a>
+<a id='L918' name='L918'></a>  <em class='comment'>/* Permit check. */</em>
+<a id='L919' name='L919'></a>  <strong class='reserved'>if</strong> (strncmp (argv[1], "permit", strlen (argv[1])) == 0)
+<a id='L920' name='L920'></a>    permit = RMAP_PERMIT;
+<a id='L921' name='L921'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (argv[1], "deny", strlen (argv[1])) == 0)
+<a id='L922' name='L922'></a>    permit = RMAP_DENY;
+<a id='L923' name='L923'></a>  <strong class='reserved'>else</strong>
+<a id='L924' name='L924'></a>    <em class='brace'>{</em>
+<a id='L925' name='L925'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "the third field must be [permit|deny]%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L926' name='L926'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L927' name='L927'></a>    <em class='brace'>}</em>
+<a id='L928' name='L928'></a>
+<a id='L929' name='L929'></a>  <em class='comment'>/* Preference check. */</em>
+<a id='L930' name='L930'></a>  pref = strtoul (argv[2], &amp;endptr, 10);
+<a id='L931' name='L931'></a>  <strong class='reserved'>if</strong> (pref == ULONG_MAX || *endptr != '\0')
+<a id='L932' name='L932'></a>    <em class='brace'>{</em>
+<a id='L933' name='L933'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "the fourth field must be positive integer%s",
+<a id='L934' name='L934'></a>               <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L935' name='L935'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L936' name='L936'></a>    <em class='brace'>}</em>
+<a id='L937' name='L937'></a>  <strong class='reserved'>if</strong> (pref == 0 || pref &gt; 65535)
+<a id='L938' name='L938'></a>    <em class='brace'>{</em>
+<a id='L939' name='L939'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "the fourth field must be &lt;1-65535&gt;%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L940' name='L940'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L941' name='L941'></a>    <em class='brace'>}</em>
+<a id='L942' name='L942'></a>
+<a id='L943' name='L943'></a>  <em class='comment'>/* Get route map. */</em>
+<a id='L944' name='L944'></a>  map = <a href='../S/259.html#L164' title='Defined at 164 in lib/routemap.c.'>route_map_get</a> (argv[0]);
+<a id='L945' name='L945'></a>  index = <a href='../S/259.html#L397' title='Defined at 397 in lib/routemap.c.'>route_map_index_get</a> (map, permit, pref);
+<a id='L946' name='L946'></a>
+<a id='L947' name='L947'></a>  <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index = index;
+<a id='L948' name='L948'></a>  <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RMAP_NODE;
+<a id='L949' name='L949'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L950' name='L950'></a><em class='brace'>}</em>
+<a id='L951' name='L951'></a>
+<a id='L952' name='L952'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_route_map_all,
+<a id='L953' name='L953'></a>       no_route_map_all_cmd,
+<a id='L954' name='L954'></a>       "no route-map WORD",
+<a id='L955' name='L955'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L956' name='L956'></a>       "Create route-map or enter route-map command mode\n"
+<a id='L957' name='L957'></a>       "Route map tag\n")
+<a id='L958' name='L958'></a><em class='brace'>{</em>
+<a id='L959' name='L959'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L960' name='L960'></a>
+<a id='L961' name='L961'></a>  map = <a href='../S/259.html#L151' title='Defined at 151 in lib/routemap.c.'>route_map_lookup_by_name</a> (argv[0]);
+<a id='L962' name='L962'></a>  <strong class='reserved'>if</strong> (map == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L963' name='L963'></a>    <em class='brace'>{</em>
+<a id='L964' name='L964'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Could not find route-map %s%s",
+<a id='L965' name='L965'></a>               argv[0], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L966' name='L966'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L967' name='L967'></a>    <em class='brace'>}</em>
+<a id='L968' name='L968'></a>
+<a id='L969' name='L969'></a>  <a href='../S/259.html#L115' title='Defined at 115 in lib/routemap.c.'>route_map_delete</a> (map);
+<a id='L970' name='L970'></a>
+<a id='L971' name='L971'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L972' name='L972'></a><em class='brace'>}</em>
+<a id='L973' name='L973'></a>
+<a id='L974' name='L974'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_route_map,
+<a id='L975' name='L975'></a>       no_route_map_cmd,
+<a id='L976' name='L976'></a>       "no route-map WORD (deny|permit) &lt;1-65535&gt;",
+<a id='L977' name='L977'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L978' name='L978'></a>       "Create route-map or enter route-map command mode\n"
+<a id='L979' name='L979'></a>       "Route map tag\n"
+<a id='L980' name='L980'></a>       "Route map denies set operations\n"
+<a id='L981' name='L981'></a>       "Route map permits set operations\n"
+<a id='L982' name='L982'></a>       "Sequence to insert to/delete from existing route-map entry\n")
+<a id='L983' name='L983'></a><em class='brace'>{</em>
+<a id='L984' name='L984'></a>  <strong class='reserved'>int</strong> permit;
+<a id='L985' name='L985'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> pref;
+<a id='L986' name='L986'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L987' name='L987'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L988' name='L988'></a>  <strong class='reserved'>char</strong> *endptr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L989' name='L989'></a>
+<a id='L990' name='L990'></a>  <em class='comment'>/* Permit check. */</em>
+<a id='L991' name='L991'></a>  <strong class='reserved'>if</strong> (strncmp (argv[1], "permit", strlen (argv[1])) == 0)
+<a id='L992' name='L992'></a>    permit = RMAP_PERMIT;
+<a id='L993' name='L993'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (argv[1], "deny", strlen (argv[1])) == 0)
+<a id='L994' name='L994'></a>    permit = RMAP_DENY;
+<a id='L995' name='L995'></a>  <strong class='reserved'>else</strong>
+<a id='L996' name='L996'></a>    <em class='brace'>{</em>
+<a id='L997' name='L997'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "the third field must be [permit|deny]%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L998' name='L998'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L999' name='L999'></a>    <em class='brace'>}</em>
+<a id='L1000' name='L1000'></a>
+<a id='L1001' name='L1001'></a>  <em class='comment'>/* Preference. */</em>
+<a id='L1002' name='L1002'></a>  pref = strtoul (argv[2], &amp;endptr, 10);
+<a id='L1003' name='L1003'></a>  <strong class='reserved'>if</strong> (pref == ULONG_MAX || *endptr != '\0')
+<a id='L1004' name='L1004'></a>    <em class='brace'>{</em>
+<a id='L1005' name='L1005'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "the fourth field must be positive integer%s",
+<a id='L1006' name='L1006'></a>               <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1007' name='L1007'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1008' name='L1008'></a>    <em class='brace'>}</em>
+<a id='L1009' name='L1009'></a>  <strong class='reserved'>if</strong> (pref == 0 || pref &gt; 65535)
+<a id='L1010' name='L1010'></a>    <em class='brace'>{</em>
+<a id='L1011' name='L1011'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "the fourth field must be &lt;1-65535&gt;%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1012' name='L1012'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1013' name='L1013'></a>    <em class='brace'>}</em>
+<a id='L1014' name='L1014'></a>
+<a id='L1015' name='L1015'></a>  <em class='comment'>/* Existence check. */</em>
+<a id='L1016' name='L1016'></a>  map = <a href='../S/259.html#L151' title='Defined at 151 in lib/routemap.c.'>route_map_lookup_by_name</a> (argv[0]);
+<a id='L1017' name='L1017'></a>  <strong class='reserved'>if</strong> (map == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1018' name='L1018'></a>    <em class='brace'>{</em>
+<a id='L1019' name='L1019'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Could not find route-map %s%s",
+<a id='L1020' name='L1020'></a>               argv[0], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1021' name='L1021'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1022' name='L1022'></a>    <em class='brace'>}</em>
+<a id='L1023' name='L1023'></a>
+<a id='L1024' name='L1024'></a>  <em class='comment'>/* Lookup route map index. */</em>
+<a id='L1025' name='L1025'></a>  index = <a href='../S/259.html#L331' title='Defined at 331 in lib/routemap.c.'>route_map_index_lookup</a> (map, permit, pref);
+<a id='L1026' name='L1026'></a>  <strong class='reserved'>if</strong> (index == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1027' name='L1027'></a>    <em class='brace'>{</em>
+<a id='L1028' name='L1028'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Could not find route-map entry %s %s%s", 
+<a id='L1029' name='L1029'></a>               argv[0], argv[2], <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1030' name='L1030'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1031' name='L1031'></a>    <em class='brace'>}</em>
+<a id='L1032' name='L1032'></a>
+<a id='L1033' name='L1033'></a>  <em class='comment'>/* Delete index from route map. */</em>
+<a id='L1034' name='L1034'></a>  <a href='../S/259.html#L294' title='Defined at 294 in lib/routemap.c.'>route_map_index_delete</a> (index, 1);
+<a id='L1035' name='L1035'></a>
+<a id='L1036' name='L1036'></a>  <em class='comment'>/* If this route rule is the last one, delete route map itself. */</em>
+<a id='L1037' name='L1037'></a>  <strong class='reserved'>if</strong> (<a href='../S/259.html#L193' title='Defined at 193 in lib/routemap.c.'>route_map_empty</a> (map))
+<a id='L1038' name='L1038'></a>    <a href='../S/259.html#L115' title='Defined at 115 in lib/routemap.c.'>route_map_delete</a> (map);
+<a id='L1039' name='L1039'></a>
+<a id='L1040' name='L1040'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1041' name='L1041'></a><em class='brace'>}</em>
+<a id='L1042' name='L1042'></a>
+<a id='L1043' name='L1043'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (rmap_onmatch_next,
+<a id='L1044' name='L1044'></a>       rmap_onmatch_next_cmd,
+<a id='L1045' name='L1045'></a>       "on-match next",
+<a id='L1046' name='L1046'></a>       "Exit policy on matches\n"
+<a id='L1047' name='L1047'></a>       "Next clause\n")
+<a id='L1048' name='L1048'></a><em class='brace'>{</em>
+<a id='L1049' name='L1049'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1050' name='L1050'></a>
+<a id='L1051' name='L1051'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1052' name='L1052'></a>
+<a id='L1053' name='L1053'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1054' name='L1054'></a>    index-&gt;exitpolicy = RMAP_NEXT;
+<a id='L1055' name='L1055'></a>
+<a id='L1056' name='L1056'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1057' name='L1057'></a><em class='brace'>}</em>
+<a id='L1058' name='L1058'></a>
+<a id='L1059' name='L1059'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_rmap_onmatch_next,
+<a id='L1060' name='L1060'></a>       no_rmap_onmatch_next_cmd,
+<a id='L1061' name='L1061'></a>       "no on-match next",
+<a id='L1062' name='L1062'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1063' name='L1063'></a>       "Exit policy on matches\n"
+<a id='L1064' name='L1064'></a>       "Next clause\n")
+<a id='L1065' name='L1065'></a><em class='brace'>{</em>
+<a id='L1066' name='L1066'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1067' name='L1067'></a>
+<a id='L1068' name='L1068'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1069' name='L1069'></a>  
+<a id='L1070' name='L1070'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1071' name='L1071'></a>    index-&gt;exitpolicy = <a href='../S/235.html#L55' title='Defined at 55 in lib/routemap.h.'>RMAP_EXIT</a>;
+<a id='L1072' name='L1072'></a>
+<a id='L1073' name='L1073'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1074' name='L1074'></a><em class='brace'>}</em>
+<a id='L1075' name='L1075'></a>
+<a id='L1076' name='L1076'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (rmap_onmatch_goto,
+<a id='L1077' name='L1077'></a>       rmap_onmatch_goto_cmd,
+<a id='L1078' name='L1078'></a>       "on-match goto &lt;1-65535&gt;",
+<a id='L1079' name='L1079'></a>       "Exit policy on matches\n"
+<a id='L1080' name='L1080'></a>       "Goto Clause number\n"
+<a id='L1081' name='L1081'></a>       "Number\n")
+<a id='L1082' name='L1082'></a><em class='brace'>{</em>
+<a id='L1083' name='L1083'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1084' name='L1084'></a>  <strong class='reserved'>int</strong> d = 0;
+<a id='L1085' name='L1085'></a>
+<a id='L1086' name='L1086'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1087' name='L1087'></a>    <em class='brace'>{</em>
+<a id='L1088' name='L1088'></a>      <strong class='reserved'>if</strong> (argc == 1 &amp;&amp; argv[0])
+<a id='L1089' name='L1089'></a>        <a href='../S/304.html#L182' title='Defined at 182 in lib/vty.h.'>VTY_GET_INTEGER_RANGE</a>("route-map index", d, argv[0], 1, 65536);
+<a id='L1090' name='L1090'></a>      <strong class='reserved'>else</strong>
+<a id='L1091' name='L1091'></a>        d = index-&gt;pref + 1;
+<a id='L1092' name='L1092'></a>      
+<a id='L1093' name='L1093'></a>      <strong class='reserved'>if</strong> (d &lt;= index-&gt;pref)
+<a id='L1094' name='L1094'></a>        <em class='brace'>{</em>
+<a id='L1095' name='L1095'></a>          <em class='comment'>/* Can't allow you to do that, Dave */</em>
+<a id='L1096' name='L1096'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "can't jump backwards in route-maps%s", 
+<a id='L1097' name='L1097'></a>                   <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1098' name='L1098'></a>          <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L1099' name='L1099'></a>        <em class='brace'>}</em>
+<a id='L1100' name='L1100'></a>      <strong class='reserved'>else</strong>
+<a id='L1101' name='L1101'></a>        <em class='brace'>{</em>
+<a id='L1102' name='L1102'></a>          index-&gt;exitpolicy = <a href='../S/235.html#L56' title='Defined at 56 in lib/routemap.h.'>RMAP_GOTO</a>;
+<a id='L1103' name='L1103'></a>          index-&gt;nextpref = d;
+<a id='L1104' name='L1104'></a>        <em class='brace'>}</em>
+<a id='L1105' name='L1105'></a>    <em class='brace'>}</em>
+<a id='L1106' name='L1106'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1107' name='L1107'></a><em class='brace'>}</em>
+<a id='L1108' name='L1108'></a>
+<a id='L1109' name='L1109'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_rmap_onmatch_goto,
+<a id='L1110' name='L1110'></a>       no_rmap_onmatch_goto_cmd,
+<a id='L1111' name='L1111'></a>       "no on-match goto",
+<a id='L1112' name='L1112'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1113' name='L1113'></a>       "Exit policy on matches\n"
+<a id='L1114' name='L1114'></a>       "Goto Clause number\n")
+<a id='L1115' name='L1115'></a><em class='brace'>{</em>
+<a id='L1116' name='L1116'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1117' name='L1117'></a>
+<a id='L1118' name='L1118'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1119' name='L1119'></a>
+<a id='L1120' name='L1120'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1121' name='L1121'></a>    index-&gt;exitpolicy = <a href='../S/235.html#L55' title='Defined at 55 in lib/routemap.h.'>RMAP_EXIT</a>;
+<a id='L1122' name='L1122'></a>  
+<a id='L1123' name='L1123'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1124' name='L1124'></a><em class='brace'>}</em>
+<a id='L1125' name='L1125'></a>
+<a id='L1126' name='L1126'></a><em class='comment'>/* Cisco/GNU Zebra compatible ALIASes for on-match next */</em>
+<a id='L1127' name='L1127'></a><a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a> (rmap_onmatch_goto,
+<a id='L1128' name='L1128'></a>       rmap_continue_cmd,
+<a id='L1129' name='L1129'></a>       "continue",
+<a id='L1130' name='L1130'></a>       "Continue on a different entry within the route-map\n")
+<a id='L1131' name='L1131'></a>
+<a id='L1132' name='L1132'></a><a href='../D/25.html' title='Multiple defined in 427 places.'>ALIAS</a> (no_rmap_onmatch_goto,
+<a id='L1133' name='L1133'></a>       no_rmap_continue_cmd,
+<a id='L1134' name='L1134'></a>       "no continue",
+<a id='L1135' name='L1135'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1136' name='L1136'></a>       "Continue on a different entry within the route-map\n")
+<a id='L1137' name='L1137'></a>
+<a id='L1138' name='L1138'></a><em class='comment'>/* GNU Zebra compatible */</em>
+<a id='L1139' name='L1139'></a><a href='../D/25.html' title='Multiple defined in 427 places.'>ALIAS</a> (rmap_onmatch_goto,
+<a id='L1140' name='L1140'></a>       rmap_continue_seq_cmd,
+<a id='L1141' name='L1141'></a>       "continue &lt;1-65535&gt;",
+<a id='L1142' name='L1142'></a>       "Continue on a different entry within the route-map\n"
+<a id='L1143' name='L1143'></a>       "Route-map entry sequence number\n")
+<a id='L1144' name='L1144'></a>
+<a id='L1145' name='L1145'></a><a href='../D/25.html' title='Multiple defined in 427 places.'>ALIAS</a> (no_rmap_onmatch_goto,
+<a id='L1146' name='L1146'></a>       no_rmap_continue_seq,
+<a id='L1147' name='L1147'></a>       "no continue &lt;1-65535&gt;",
+<a id='L1148' name='L1148'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1149' name='L1149'></a>       "Continue on a different entry within the route-map\n"
+<a id='L1150' name='L1150'></a>       "Route-map entry sequence number\n")
+<a id='L1151' name='L1151'></a>
+<a id='L1152' name='L1152'></a><a href='../D/726.html' title='Multiple defined in 1524 places.'>DEFUN</a> (rmap_show_name,
+<a id='L1153' name='L1153'></a>       rmap_show_name_cmd,
+<a id='L1154' name='L1154'></a>       "show route-map [WORD]",
+<a id='L1155' name='L1155'></a>       <a href='../S/214.html#L283' title='Defined at 283 in lib/command.h.'>SHOW_STR</a>
+<a id='L1156' name='L1156'></a>       "route-map information\n"
+<a id='L1157' name='L1157'></a>       "route-map name\n")
+<a id='L1158' name='L1158'></a><em class='brace'>{</em>
+<a id='L1159' name='L1159'></a>    <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1160' name='L1160'></a>    <strong class='reserved'>if</strong> (argc)
+<a id='L1161' name='L1161'></a>      <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = argv[0];
+<a id='L1162' name='L1162'></a>    <strong class='reserved'>return</strong> <a href='../S/259.html#L252' title='Defined at 252 in lib/routemap.c.'>vty_show_route_map</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L1163' name='L1163'></a><em class='brace'>}</em>
+<a id='L1164' name='L1164'></a>
+<a id='L1165' name='L1165'></a><a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a> (rmap_onmatch_goto,
+<a id='L1166' name='L1166'></a>      rmap_continue_index_cmd,
+<a id='L1167' name='L1167'></a>      "continue &lt;1-65536&gt;",
+<a id='L1168' name='L1168'></a>      "Exit policy on matches\n"
+<a id='L1169' name='L1169'></a>      "Goto Clause number\n")
+<a id='L1170' name='L1170'></a>
+<a id='L1171' name='L1171'></a><a href='../D/726.html' title='Multiple defined in 1524 places.'>DEFUN</a> (rmap_call,
+<a id='L1172' name='L1172'></a>       rmap_call_cmd,
+<a id='L1173' name='L1173'></a>       "call WORD",
+<a id='L1174' name='L1174'></a>       "Jump to another Route-Map after match+set\n"
+<a id='L1175' name='L1175'></a>       "Target route-map name\n")
+<a id='L1176' name='L1176'></a><em class='brace'>{</em>
+<a id='L1177' name='L1177'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1178' name='L1178'></a>
+<a id='L1179' name='L1179'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1180' name='L1180'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1181' name='L1181'></a>    <em class='brace'>{</em>
+<a id='L1182' name='L1182'></a>      <strong class='reserved'>if</strong> (index-&gt;nextrm)
+<a id='L1183' name='L1183'></a>          <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_NAME, index-&gt;nextrm);
+<a id='L1184' name='L1184'></a>      index-&gt;nextrm = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_ROUTE_MAP_NAME, argv[0]);
+<a id='L1185' name='L1185'></a>    <em class='brace'>}</em>
+<a id='L1186' name='L1186'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1187' name='L1187'></a><em class='brace'>}</em>
+<a id='L1188' name='L1188'></a>
+<a id='L1189' name='L1189'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_rmap_call,
+<a id='L1190' name='L1190'></a>       no_rmap_call_cmd,
+<a id='L1191' name='L1191'></a>       "no call",
+<a id='L1192' name='L1192'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1193' name='L1193'></a>       "Jump to another Route-Map after match+set\n")
+<a id='L1194' name='L1194'></a><em class='brace'>{</em>
+<a id='L1195' name='L1195'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1196' name='L1196'></a>
+<a id='L1197' name='L1197'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1198' name='L1198'></a>
+<a id='L1199' name='L1199'></a>  <strong class='reserved'>if</strong> (index-&gt;nextrm)
+<a id='L1200' name='L1200'></a>    <em class='brace'>{</em>
+<a id='L1201' name='L1201'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_MAP_NAME, index-&gt;nextrm);
+<a id='L1202' name='L1202'></a>      index-&gt;nextrm = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1203' name='L1203'></a>    <em class='brace'>}</em>
+<a id='L1204' name='L1204'></a>
+<a id='L1205' name='L1205'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1206' name='L1206'></a><em class='brace'>}</em>
+<a id='L1207' name='L1207'></a>
+<a id='L1208' name='L1208'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (rmap_description,
+<a id='L1209' name='L1209'></a>       rmap_description_cmd,
+<a id='L1210' name='L1210'></a>       "description .LINE",
+<a id='L1211' name='L1211'></a>       "Route-map comment\n"
+<a id='L1212' name='L1212'></a>       "Comment describing this route-map rule\n")
+<a id='L1213' name='L1213'></a><em class='brace'>{</em>
+<a id='L1214' name='L1214'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1215' name='L1215'></a>
+<a id='L1216' name='L1216'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1217' name='L1217'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1218' name='L1218'></a>    <em class='brace'>{</em>
+<a id='L1219' name='L1219'></a>      <strong class='reserved'>if</strong> (index-&gt;description)
+<a id='L1220' name='L1220'></a>        <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, index-&gt;description);
+<a id='L1221' name='L1221'></a>      index-&gt;description = <a href='../S/264.html#L165' title='Defined at 165 in lib/command.c.'>argv_concat</a> (argv, argc, 0);
+<a id='L1222' name='L1222'></a>    <em class='brace'>}</em>
+<a id='L1223' name='L1223'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1224' name='L1224'></a><em class='brace'>}</em>
+<a id='L1225' name='L1225'></a>
+<a id='L1226' name='L1226'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_rmap_description,
+<a id='L1227' name='L1227'></a>       no_rmap_description_cmd,
+<a id='L1228' name='L1228'></a>       "no description",
+<a id='L1229' name='L1229'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L1230' name='L1230'></a>       "Route-map comment\n")
+<a id='L1231' name='L1231'></a><em class='brace'>{</em>
+<a id='L1232' name='L1232'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1233' name='L1233'></a>
+<a id='L1234' name='L1234'></a>  index = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;index;
+<a id='L1235' name='L1235'></a>  <strong class='reserved'>if</strong> (index)
+<a id='L1236' name='L1236'></a>    <em class='brace'>{</em>
+<a id='L1237' name='L1237'></a>      <strong class='reserved'>if</strong> (index-&gt;description)
+<a id='L1238' name='L1238'></a>        <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, index-&gt;description);
+<a id='L1239' name='L1239'></a>      index-&gt;description = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1240' name='L1240'></a>    <em class='brace'>}</em>
+<a id='L1241' name='L1241'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L1242' name='L1242'></a><em class='brace'>}</em>
+<a id='L1243' name='L1243'></a>
+<a id='L1244' name='L1244'></a><em class='comment'>/* Configuration write function. */</em>
+<a id='L1245' name='L1245'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1246' name='L1246'></a><a href='../S/259.html#L1304' title='Referred from 1304 in lib/routemap.c.'>route_map_config_write</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L1247' name='L1247'></a><em class='brace'>{</em>
+<a id='L1248' name='L1248'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L1249' name='L1249'></a>  <strong class='reserved'>struct</strong> <a href='../S/235.html#L110' title='Defined at 110 in lib/routemap.h.'>route_map_index</a> *index;
+<a id='L1250' name='L1250'></a>  <strong class='reserved'>struct</strong> <a href='../S/259.html#L39' title='Defined at 39 in lib/routemap.c.'>route_map_rule</a> *rule;
+<a id='L1251' name='L1251'></a>  <strong class='reserved'>int</strong> first = 1;
+<a id='L1252' name='L1252'></a>  <strong class='reserved'>int</strong> write = 0;
+<a id='L1253' name='L1253'></a>
+<a id='L1254' name='L1254'></a>  <strong class='reserved'>for</strong> (map = route_map_master.head; map; map = map-&gt;next)
+<a id='L1255' name='L1255'></a>    <strong class='reserved'>for</strong> (index = map-&gt;head; index; index = index-&gt;next)
+<a id='L1256' name='L1256'></a>      <em class='brace'>{</em>
+<a id='L1257' name='L1257'></a>        <strong class='reserved'>if</strong> (!first)
+<a id='L1258' name='L1258'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "!%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1259' name='L1259'></a>        <strong class='reserved'>else</strong>
+<a id='L1260' name='L1260'></a>          first = 0;
+<a id='L1261' name='L1261'></a>
+<a id='L1262' name='L1262'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "route-map %s %s %d%s", 
+<a id='L1263' name='L1263'></a>                 map-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>,
+<a id='L1264' name='L1264'></a>                 <a href='../S/259.html#L176' title='Defined at 176 in lib/routemap.c.'>route_map_type_str</a> (index-&gt;type),
+<a id='L1265' name='L1265'></a>                 index-&gt;pref, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1266' name='L1266'></a>
+<a id='L1267' name='L1267'></a>        <strong class='reserved'>if</strong> (index-&gt;description)
+<a id='L1268' name='L1268'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " description %s%s", index-&gt;description, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1269' name='L1269'></a>
+<a id='L1270' name='L1270'></a>        <strong class='reserved'>for</strong> (rule = index-&gt;match_list.head; rule; rule = rule-&gt;next)
+<a id='L1271' name='L1271'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " match %s %s%s", rule-&gt;cmd-&gt;str, 
+<a id='L1272' name='L1272'></a>                   rule-&gt;rule_str ? rule-&gt;rule_str : "",
+<a id='L1273' name='L1273'></a>                   <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1274' name='L1274'></a>
+<a id='L1275' name='L1275'></a>        <strong class='reserved'>for</strong> (rule = index-&gt;set_list.head; rule; rule = rule-&gt;next)
+<a id='L1276' name='L1276'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " set %s %s%s", rule-&gt;cmd-&gt;str,
+<a id='L1277' name='L1277'></a>                   rule-&gt;rule_str ? rule-&gt;rule_str : "",
+<a id='L1278' name='L1278'></a>                   <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1279' name='L1279'></a>   <strong class='reserved'>if</strong> (index-&gt;nextrm)
+<a id='L1280' name='L1280'></a>     <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " call %s%s", index-&gt;nextrm, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1281' name='L1281'></a>        <strong class='reserved'>if</strong> (index-&gt;exitpolicy == <a href='../S/235.html#L56' title='Defined at 56 in lib/routemap.h.'>RMAP_GOTO</a>)
+<a id='L1282' name='L1282'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " on-match goto %d%s", index-&gt;nextpref, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1283' name='L1283'></a>        <strong class='reserved'>if</strong> (index-&gt;exitpolicy == RMAP_NEXT)
+<a id='L1284' name='L1284'></a>          <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>," on-match next%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L1285' name='L1285'></a>        
+<a id='L1286' name='L1286'></a>        write++;
+<a id='L1287' name='L1287'></a>      <em class='brace'>}</em>
+<a id='L1288' name='L1288'></a>  <strong class='reserved'>return</strong> write;
+<a id='L1289' name='L1289'></a><em class='brace'>}</em>
+<a id='L1290' name='L1290'></a>
+<a id='L1291' name='L1291'></a><em class='comment'>/* Route map node structure. */</em>
+<a id='L1292' name='L1292'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> rmap_node =
+<a id='L1293' name='L1293'></a><em class='brace'>{</em>
+<a id='L1294' name='L1294'></a>  RMAP_NODE,
+<a id='L1295' name='L1295'></a>  "%s(config-route-map)# ",
+<a id='L1296' name='L1296'></a>  1
+<a id='L1297' name='L1297'></a><em class='brace'>}</em>;
+<a id='L1298' name='L1298'></a>
+<a id='L1299' name='L1299'></a><em class='comment'>/* Initialization of route map vector. */</em>
+<a id='L1300' name='L1300'></a><strong class='reserved'>void</strong>
+<a id='L1301' name='L1301'></a><a href='../R/9428.html' title='Multiple referred from 8 places.'>route_map_init_vty</a> (<strong class='reserved'>void</strong>)
+<a id='L1302' name='L1302'></a><em class='brace'>{</em>
+<a id='L1303' name='L1303'></a>  <em class='comment'>/* Install route map top node. */</em>
+<a id='L1304' name='L1304'></a>  <a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a> (&amp;rmap_node, <a href='../S/259.html#L1246' title='Defined at 1246 in lib/routemap.c.'>route_map_config_write</a>);
+<a id='L1305' name='L1305'></a>
+<a id='L1306' name='L1306'></a>  <em class='comment'>/* Install route map commands. */</em>
+<a id='L1307' name='L1307'></a>  <a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a> (RMAP_NODE);
+<a id='L1308' name='L1308'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;route_map_cmd);
+<a id='L1309' name='L1309'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_route_map_cmd);
+<a id='L1310' name='L1310'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_route_map_all_cmd);
+<a id='L1311' name='L1311'></a>
+<a id='L1312' name='L1312'></a>  <em class='comment'>/* Install the on-match stuff */</em>
+<a id='L1313' name='L1313'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;route_map_cmd);
+<a id='L1314' name='L1314'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;rmap_onmatch_next_cmd);
+<a id='L1315' name='L1315'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;no_rmap_onmatch_next_cmd);
+<a id='L1316' name='L1316'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;rmap_onmatch_goto_cmd);
+<a id='L1317' name='L1317'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;no_rmap_onmatch_goto_cmd);
+<a id='L1318' name='L1318'></a>  
+<a id='L1319' name='L1319'></a>  <em class='comment'>/* Install the continue stuff (ALIAS of on-match). */</em>
+<a id='L1320' name='L1320'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;rmap_continue_cmd);
+<a id='L1321' name='L1321'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;no_rmap_continue_cmd);
+<a id='L1322' name='L1322'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;rmap_continue_index_cmd);
+<a id='L1323' name='L1323'></a>  
+<a id='L1324' name='L1324'></a>  <em class='comment'>/* Install the call stuff. */</em>
+<a id='L1325' name='L1325'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;rmap_call_cmd);
+<a id='L1326' name='L1326'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;no_rmap_call_cmd);
+<a id='L1327' name='L1327'></a>
+<a id='L1328' name='L1328'></a>  <em class='comment'>/* Install description commands. */</em>
+<a id='L1329' name='L1329'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;rmap_description_cmd);
+<a id='L1330' name='L1330'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RMAP_NODE, &amp;no_rmap_description_cmd);
+<a id='L1331' name='L1331'></a>   
+<a id='L1332' name='L1332'></a>  <em class='comment'>/* Install show command */</em>
+<a id='L1333' name='L1333'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;rmap_show_name_cmd);
+<a id='L1334' name='L1334'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L79'>[^]</a><a href='#L1301'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_adj.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_adj.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L28'>[^]</a><a href='#L277'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L28' title='Defined at 28.'>ldp_adj_create</a></li>
+<li><a href='#L76' title='Defined at 76.'>ldp_adj_delete</a></li>
+<li><a href='#L83' title='Defined at 83.'>ldp_adj_startup</a></li>
+<li><a href='#L134' title='Defined at 134.'>ldp_adj_restart</a></li>
+<li><a href='#L152' title='Defined at 152.'>ldp_adj_shutdown</a></li>
+<li><a href='#L189' title='Defined at 189.'>ldp_adj_maintain_timer</a></li>
+<li><a href='#L204' title='Defined at 204.'>ldp_adj_recv_start</a></li>
+<li><a href='#L225' title='Defined at 225.'>ldp_adj_recv_stop</a></li>
+<li><a href='#L243' title='Defined at 243.'>_ldp_adj_add_entity</a></li>
+<li><a href='#L250' title='Defined at 250.'>_ldp_adj_del_entity</a></li>
+<li><a href='#L257' title='Defined at 257.'>ldp_adj_add_session</a></li>
+<li><a href='#L269' title='Defined at 269.'>ldp_adj_del_session</a></li>
+<li><a href='#L277' title='Defined at 277.'>_ldp_adj_get_next_index</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2000</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L11' name='L11'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L12' name='L12'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='443.html'>ldp_global.h</a>"
+<a id='L14' name='L14'></a><em class='sharp'>#include</em> "<a href='411.html'>ldp_session.h</a>"
+<a id='L15' name='L15'></a><em class='sharp'>#include</em> "<a href='414.html'>ldp_hello.h</a>"
+<a id='L16' name='L16'></a><em class='sharp'>#include</em> "<a href='443.html'>ldp_global.h</a>"
+<a id='L17' name='L17'></a><em class='sharp'>#include</em> "<a href='459.html'>ldp_entity.h</a>"
+<a id='L18' name='L18'></a><em class='sharp'>#include</em> "<a href='362.html'>ldp_adj.h</a>"
+<a id='L19' name='L19'></a><em class='sharp'>#include</em> "<a href='380.html'>ldp_peer.h</a>"
+<a id='L20' name='L20'></a><em class='sharp'>#include</em> "<a href='381.html'>mpls_mm_impl.h</a>"
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> "<a href='359.html'>mpls_assert.h</a>"
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> "<a href='416.html'>mpls_timer_impl.h</a>"
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='455.html'>mpls_lock_impl.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='415.html'>mpls_trace_impl.h</a>"
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><strong class='reserved'>static</strong> <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> _ldp_adj_next_index = 1;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> *<a href='../R/6369.html' title='Multiple referred from 2 places.'>ldp_adj_create</a>(<a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * <a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a>, <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * lsraddr,
+<a id='L29' name='L29'></a>  <strong class='reserved'>int</strong> labelspace, <strong class='reserved'>int</strong> remote_hellotime,
+<a id='L30' name='L30'></a>  <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * remote_transport_address, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> remote_csn)
+<a id='L31' name='L31'></a><em class='brace'>{</em>
+<a id='L32' name='L32'></a>  <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> = (<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> *) <a href='../S/341.html#L10' title='Defined at 10 in ldpd/impl_mm.c.'>mpls_malloc</a>(<strong class='reserved'>sizeof</strong>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a>));
+<a id='L33' name='L33'></a>  <strong class='reserved'>struct</strong> in_addr addr;
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a>  <strong class='reserved'>if</strong> (lsraddr == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || <a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L36' name='L36'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) <em class='brace'>{</em>
+<a id='L39' name='L39'></a>    memset(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, 0, <strong class='reserved'>sizeof</strong>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a>));
+<a id='L40' name='L40'></a>    <a href='../S/457.html#L19' title='Defined at 19 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_INIT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, 0);
+<a id='L41' name='L41'></a>    <a href='../S/373.html#L103' title='Defined at 103 in ldpd/mpls_list.h.'>MPLS_LIST_ELEM_INIT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, _global);
+<a id='L42' name='L42'></a>    <a href='../S/373.html#L103' title='Defined at 103 in ldpd/mpls_list.h.'>MPLS_LIST_ELEM_INIT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, _session);
+<a id='L43' name='L43'></a>    <a href='../S/373.html#L103' title='Defined at 103 in ldpd/mpls_list.h.'>MPLS_LIST_ELEM_INIT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, _entity);
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;index = <a href='../S/449.html#L277' title='Defined at 277 in ldpd/ldp_adj.c.'>_ldp_adj_get_next_index</a>();
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a>    <em class='comment'>/* these are operational values */</em>
+<a id='L48' name='L48'></a>    <em class='comment'>/* JLEU: where do I grab these values from */</em>
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>    <em class='comment'>/* these values are learned form the remote peer */</em>
+<a id='L51' name='L51'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;remote_source_address, <a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a>, <strong class='reserved'>sizeof</strong>(<a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a>));
+<a id='L52' name='L52'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;remote_lsr_address, lsraddr, <strong class='reserved'>sizeof</strong>(<a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a>));
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a>    addr.s_addr = htonl(lsraddr-&gt;u.ipv4);
+<a id='L55' name='L55'></a>    <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L96' title='Defined at 96 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_ALL</a>, <a href='../S/409.html#L146' title='Defined at 146 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_PERIODIC</a>,
+<a id='L56' name='L56'></a>        "Adj(%d) created for %s/",<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;index, inet_ntoa(addr));
+<a id='L57' name='L57'></a>    addr.s_addr = htonl(<a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a>-&gt;u.ipv4);
+<a id='L58' name='L58'></a>    <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L96' title='Defined at 96 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_ALL</a>, <a href='../S/409.html#L146' title='Defined at 146 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_PERIODIC</a>,
+<a id='L59' name='L59'></a>        "%s\n",inet_ntoa(addr));
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>    <strong class='reserved'>if</strong> (remote_transport_address) <em class='brace'>{</em>
+<a id='L62' name='L62'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;remote_transport_address, remote_transport_address,
+<a id='L63' name='L63'></a>        <strong class='reserved'>sizeof</strong>(<a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a>));
+<a id='L64' name='L64'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L65' name='L65'></a>      memset(&amp;<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;remote_transport_address, 0, <strong class='reserved'>sizeof</strong>(<a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a>));
+<a id='L66' name='L66'></a>    <em class='brace'>}</em>
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;remote_hellotime = remote_hellotime;
+<a id='L69' name='L69'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;remote_csn = remote_csn;
+<a id='L70' name='L70'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;state = <a href='../S/383.html#L37' title='Defined at 37 in ldpd/mpls_struct.h.'>MPLS_OPER_DOWN</a>;
+<a id='L71' name='L71'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;role = <a href='../S/409.html#L81' title='Defined at 81 in ldpd/ldp_struct.h.'>LDP_NONE</a>;
+<a id='L72' name='L72'></a>  <em class='brace'>}</em>
+<a id='L73' name='L73'></a>  <strong class='reserved'>return</strong> <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>;
+<a id='L74' name='L74'></a><em class='brace'>}</em>
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>void</strong> <a href='../R/6371.html' title='Multiple referred from 8 places.'>ldp_adj_delete</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L77' name='L77'></a><em class='brace'>{</em>
+<a id='L78' name='L78'></a>  fprintf(stderr,"adj delete\n");
+<a id='L79' name='L79'></a>  <a href='../S/457.html#L49' title='Defined at 49 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, 0);
+<a id='L80' name='L80'></a>  <a href='../S/341.html#L19' title='Defined at 19 in ldpd/impl_mm.c.'>mpls_free</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L81' name='L81'></a><em class='brace'>}</em>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6376.html' title='Multiple referred from 2 places.'>ldp_adj_startup</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>int</strong> request)
+<a id='L84' name='L84'></a><em class='brace'>{</em>
+<a id='L85' name='L85'></a>  <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> *e;
+<a id='L86' name='L86'></a>
+<a id='L87' name='L87'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; (e = <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;entity));
+<a id='L88' name='L88'></a>  <em class='comment'>/* with recent changes to when the session gets created I think this</em>
+<a id='L89' name='L89'></a><em class='comment'>   * assert is not longer valid - jleu 2003-02-20</em>
+<a id='L90' name='L90'></a><em class='comment'>  MPLS_ASSERT(!a-&gt;session);</em>
+<a id='L91' name='L91'></a><em class='comment'>   */</em>
+<a id='L92' name='L92'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;state != <a href='../S/409.html#L81' title='Defined at 81 in ldpd/ldp_struct.h.'>LDP_NONE</a>);
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_adj_startup");
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  <em class='comment'>/* ldp-11 3.5.2. Hello Message */</em>
+<a id='L97' name='L97'></a>  <strong class='reserved'>if</strong> (e-&gt;hellotime_timer != 0xFFFF) <em class='brace'>{</em>
+<a id='L98' name='L98'></a>    <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L99' name='L99'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer = <a href='../S/387.html#L42' title='Defined at 42 in ldpd/impl_timer.c.'>mpls_timer_create</a>(g-&gt;timer_handle, <a href='../S/383.html#L47' title='Defined at 47 in ldpd/mpls_struct.h.'>MPLS_UNIT_SEC</a>,
+<a id='L100' name='L100'></a>      e-&gt;hellotime_timer, (<strong class='reserved'>void</strong> *)<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, g, <a href='../S/369.html#L30' title='Defined at 30 in ldpd/ldp_hello.c.'>ldp_hello_timeout_callback</a>);
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a>    <strong class='reserved'>if</strong> (<a href='../S/448.html#L52' title='Defined at 52 in ldpd/mpls_handle_type.h.'>mpls_timer_handle_verify</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer) ==
+<a id='L103' name='L103'></a>      <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>) <em class='brace'>{</em>
+<a id='L104' name='L104'></a>      <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/449.html#L76' title='Defined at 76 in ldpd/ldp_adj.c.'>ldp_adj_delete</a>);
+<a id='L105' name='L105'></a>      <strong class='reserved'>goto</strong> ldp_adj_startup_error;
+<a id='L106' name='L106'></a>    <em class='brace'>}</em>
+<a id='L107' name='L107'></a>  <em class='brace'>}</em>
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a>  <strong class='reserved'>if</strong> (request &amp;&amp; <a href='../S/448.html#L52' title='Defined at 52 in ldpd/mpls_handle_type.h.'>mpls_timer_handle_verify</a>(g-&gt;timer_handle,
+<a id='L110' name='L110'></a>      e-&gt;p.<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;hellotime_send_timer) == <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>) <em class='brace'>{</em>
+<a id='L111' name='L111'></a>    <em class='comment'>/* request is ONLY specific with indirect adj */</em>
+<a id='L112' name='L112'></a>    <a href='../S/369.html#L68' title='Defined at 68 in ldpd/ldp_hello.c.'>ldp_hello_send</a>(g, e);
+<a id='L113' name='L113'></a>  <em class='brace'>}</em>
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a>  <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;state = <a href='../S/383.html#L36' title='Defined at 36 in ldpd/mpls_struct.h.'>MPLS_OPER_UP</a>;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <strong class='reserved'>if</strong> (e-&gt;hellotime_timer != 0xFFFF) <em class='brace'>{</em>
+<a id='L118' name='L118'></a>    <a href='../S/387.html#L75' title='Defined at 75 in ldpd/impl_timer.c.'>mpls_timer_start</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer,
+<a id='L119' name='L119'></a>      <a href='../S/383.html#L41' title='Defined at 41 in ldpd/mpls_struct.h.'>MPLS_TIMER_ONESHOT</a>);
+<a id='L120' name='L120'></a>  <em class='brace'>}</em>
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_startup");
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a>ldp_adj_startup_error:
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_startup: error");
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L131' name='L131'></a><em class='brace'>}</em>
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a><em class='sharp'>#if</em> 0                           <em class='comment'>/* no one used this? */</em>
+<a id='L134' name='L134'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/362.html#L22' title='Referred from 22 in ldpd/ldp_adj.h.'>ldp_adj_restart</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L135' name='L135'></a><em class='brace'>{</em>
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_adj_restart");
+<a id='L138' name='L138'></a>
+<a id='L139' name='L139'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;session != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L140' name='L140'></a>    <a href='../S/447.html#L352' title='Defined at 352 in ldpd/ldp_session.c.'>ldp_session_shutdown</a>(g, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;session);
+<a id='L141' name='L141'></a>    <em class='comment'>/* session_shutdown does this already ldp_adj_del_session(a); */</em>
+<a id='L142' name='L142'></a>  <em class='brace'>}</em>
+<a id='L143' name='L143'></a>  <a href='../S/387.html#L87' title='Defined at 87 in ldpd/impl_timer.c.'>mpls_timer_stop</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer);
+<a id='L144' name='L144'></a>  <a href='../S/387.html#L75' title='Defined at 75 in ldpd/impl_timer.c.'>mpls_timer_start</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer, <a href='../S/383.html#L41' title='Defined at 41 in ldpd/mpls_struct.h.'>MPLS_TIMER_ONESHOT</a>);
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_restart");
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L149' name='L149'></a><em class='brace'>}</em>
+<a id='L150' name='L150'></a><em class='sharp'>#endif</em>
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6375.html' title='Multiple referred from 3 places.'>ldp_adj_shutdown</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L153' name='L153'></a><em class='brace'>{</em>
+<a id='L154' name='L154'></a>  <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> *e;
+<a id='L155' name='L155'></a>
+<a id='L156' name='L156'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(g &amp;&amp; <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; (e = <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;entity));
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_adj_shutdown");
+<a id='L159' name='L159'></a>
+<a id='L160' name='L160'></a>  <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;session) <em class='brace'>{</em>
+<a id='L163' name='L163'></a>    <a href='../S/447.html#L352' title='Defined at 352 in ldpd/ldp_session.c.'>ldp_session_shutdown</a>(g, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;session, <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>);
+<a id='L164' name='L164'></a>    <em class='comment'>/* session_shutdown does ldp_adj_del_session(a); */</em>
+<a id='L165' name='L165'></a>  <em class='brace'>}</em>
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a>  <a href='../S/449.html#L225' title='Defined at 225 in ldpd/ldp_adj.c.'>ldp_adj_recv_stop</a>(g, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L168' name='L168'></a>
+<a id='L169' name='L169'></a>  <strong class='reserved'>if</strong> (e-&gt;entity_type == <a href='../S/409.html#L39' title='Defined at 39 in ldpd/ldp_struct.h.'>LDP_INDIRECT</a> &amp;&amp;
+<a id='L170' name='L170'></a>    e-&gt;p.<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;target_role == <a href='../S/409.html#L82' title='Defined at 82 in ldpd/ldp_struct.h.'>LDP_PASSIVE</a>) <em class='brace'>{</em>
+<a id='L171' name='L171'></a>    <em class='comment'>/* we started sending due to a targeted hello with "request"</em>
+<a id='L172' name='L172'></a><em class='comment'>     * now that the adj is down we can stop</em>
+<a id='L173' name='L173'></a><em class='comment'>     */</em>
+<a id='L174' name='L174'></a>    <a href='../S/454.html#L143' title='Defined at 143 in ldpd/ldp_peer.c.'>ldp_peer_send_stop</a>(g, e-&gt;p.<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L175' name='L175'></a>  <em class='brace'>}</em>
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a>  <a href='../S/386.html#L286' title='Defined at 286 in ldpd/ldp_entity.c.'>ldp_entity_del_adj</a>(e, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L178' name='L178'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;state == <a href='../S/383.html#L36' title='Defined at 36 in ldpd/mpls_struct.h.'>MPLS_OPER_UP</a>) <em class='brace'>{</em>
+<a id='L179' name='L179'></a>    <a href='../S/410.html#L532' title='Defined at 532 in ldpd/ldp_global.c.'>_ldp_global_del_adj</a>(g, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L180' name='L180'></a>  <em class='brace'>}</em>
+<a id='L181' name='L181'></a>
+<a id='L182' name='L182'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_shutdown");
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>  <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/449.html#L76' title='Defined at 76 in ldpd/ldp_adj.c.'>ldp_adj_delete</a>);
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L187' name='L187'></a><em class='brace'>}</em>
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6372.html' title='Multiple referred from 2 places.'>ldp_adj_maintain_timer</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L190' name='L190'></a><em class='brace'>{</em>
+<a id='L191' name='L191'></a>  <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> retval;
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_adj_maintain_timer");
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a>  <a href='../S/387.html#L87' title='Defined at 87 in ldpd/impl_timer.c.'>mpls_timer_stop</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer);
+<a id='L196' name='L196'></a>  retval =
+<a id='L197' name='L197'></a>    <a href='../S/387.html#L75' title='Defined at 75 in ldpd/impl_timer.c.'>mpls_timer_start</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer, <a href='../S/383.html#L41' title='Defined at 41 in ldpd/mpls_struct.h.'>MPLS_TIMER_ONESHOT</a>);
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_maintain_timer");
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L202' name='L202'></a><em class='brace'>}</em>
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> ldp_adj_recv_start(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L205' name='L205'></a><em class='brace'>{</em>
+<a id='L206' name='L206'></a>  <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> result = <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L207' name='L207'></a>
+<a id='L208' name='L208'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_adj_recv_start");
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a>  <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L211' name='L211'></a>  <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer = <a href='../S/387.html#L42' title='Defined at 42 in ldpd/impl_timer.c.'>mpls_timer_create</a>(g-&gt;timer_handle, <a href='../S/383.html#L47' title='Defined at 47 in ldpd/mpls_struct.h.'>MPLS_UNIT_SEC</a>,
+<a id='L212' name='L212'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;entity-&gt;hellotime_timer, (<strong class='reserved'>void</strong> *)<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, g, <a href='../S/369.html#L30' title='Defined at 30 in ldpd/ldp_hello.c.'>ldp_hello_timeout_callback</a>);
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a>  <strong class='reserved'>if</strong> (<a href='../S/448.html#L52' title='Defined at 52 in ldpd/mpls_handle_type.h.'>mpls_timer_handle_verify</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer) ==
+<a id='L215' name='L215'></a>    <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>) <em class='brace'>{</em>
+<a id='L216' name='L216'></a>    <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/449.html#L76' title='Defined at 76 in ldpd/ldp_adj.c.'>ldp_adj_delete</a>);
+<a id='L217' name='L217'></a>    result = <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L218' name='L218'></a>  <em class='brace'>}</em>
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_recv_start");
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a>  <strong class='reserved'>return</strong> result;
+<a id='L223' name='L223'></a><em class='brace'>}</em>
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/6373.html' title='Multiple referred from 2 places.'>ldp_adj_recv_stop</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L226' name='L226'></a><em class='brace'>{</em>
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a>  <a href='../S/453.html#L47' title='Defined at 47 in ldpd/mpls_trace.h.'>LDP_ENTER</a>(g-&gt;user_data, "ldp_adj_recv_stop");
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a>  <strong class='reserved'>if</strong> (<a href='../S/448.html#L52' title='Defined at 52 in ldpd/mpls_handle_type.h.'>mpls_timer_handle_verify</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer) ==
+<a id='L231' name='L231'></a>    <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>) <em class='brace'>{</em>
+<a id='L232' name='L232'></a>    <a href='../S/387.html#L87' title='Defined at 87 in ldpd/impl_timer.c.'>mpls_timer_stop</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer);
+<a id='L233' name='L233'></a>    <a href='../S/387.html#L68' title='Defined at 68 in ldpd/impl_timer.c.'>mpls_timer_delete</a>(g-&gt;timer_handle, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer);
+<a id='L234' name='L234'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;hellotime_recv_timer = (<a href='../S/448.html#L50' title='Defined at 50 in ldpd/mpls_handle_type.h.'>mpls_timer_handle</a>) 0;
+<a id='L235' name='L235'></a>    <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/449.html#L76' title='Defined at 76 in ldpd/ldp_adj.c.'>ldp_adj_delete</a>);
+<a id='L236' name='L236'></a>  <em class='brace'>}</em>
+<a id='L237' name='L237'></a>
+<a id='L238' name='L238'></a>  <a href='../S/453.html#L53' title='Defined at 53 in ldpd/mpls_trace.h.'>LDP_EXIT</a>(g-&gt;user_data, "ldp_adj_recv_stop");
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L241' name='L241'></a><em class='brace'>}</em>
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a><strong class='reserved'>void</strong> <a href='../R/4240.html' title='Multiple referred from 2 places.'>_ldp_adj_add_entity</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e)
+<a id='L244' name='L244'></a><em class='brace'>{</em>
+<a id='L245' name='L245'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; e);
+<a id='L246' name='L246'></a>  <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(e);
+<a id='L247' name='L247'></a>  <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;entity = e;
+<a id='L248' name='L248'></a><em class='brace'>}</em>
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a><strong class='reserved'>void</strong> <a href='../R/4241.html' title='Multiple referred from 2 places.'>_ldp_adj_del_entity</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> *e)
+<a id='L251' name='L251'></a><em class='brace'>{</em>
+<a id='L252' name='L252'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; e);
+<a id='L253' name='L253'></a>  <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(e, <a href='../S/386.html#L81' title='Defined at 81 in ldpd/ldp_entity.c.'>ldp_entity_delete</a>);
+<a id='L254' name='L254'></a>  <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;entity = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L255' name='L255'></a><em class='brace'>}</em>
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a><strong class='reserved'>void</strong> <a href='../R/6368.html' title='Multiple referred from 4 places.'>ldp_adj_add_session</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s)
+<a id='L258' name='L258'></a><em class='brace'>{</em>
+<a id='L259' name='L259'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; s);
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>  <a href='../S/453.html#L26' title='Defined at 26 in ldpd/mpls_trace.h.'>LDP_TRACE_LOG</a>(g-&gt;user_data, <a href='../S/383.html#L96' title='Defined at 96 in ldpd/mpls_struct.h.'>MPLS_TRACE_STATE_ALL</a>, <a href='../S/409.html#L146' title='Defined at 146 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_PERIODIC</a>,
+<a id='L262' name='L262'></a>        "Adj(%d) bound to sesssion(%d)\n",<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;index,s-&gt;index);
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a>  <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(s);
+<a id='L265' name='L265'></a>  <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;session = s;
+<a id='L266' name='L266'></a>  <a href='../S/447.html#L583' title='Defined at 583 in ldpd/ldp_session.c.'>_ldp_session_add_adj</a>(s, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L267' name='L267'></a><em class='brace'>}</em>
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a><strong class='reserved'>void</strong> <a href='../R/6370.html' title='Multiple referred from 2 places.'>ldp_adj_del_session</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s)
+<a id='L270' name='L270'></a><em class='brace'>{</em>
+<a id='L271' name='L271'></a>  <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; s);
+<a id='L272' name='L272'></a>  <a href='../S/447.html#L619' title='Defined at 619 in ldpd/ldp_session.c.'>_ldp_session_del_adj</a>(s, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L273' name='L273'></a>  <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(s, <a href='../S/447.html#L251' title='Defined at 251 in ldpd/ldp_session.c.'>ldp_session_delete</a>);
+<a id='L274' name='L274'></a>  <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;session = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L275' name='L275'></a><em class='brace'>}</em>
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a><a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> <a href='../R/4242.html' title='Multiple referred from 2 places.'>_ldp_adj_get_next_index</a>()
+<a id='L278' name='L278'></a><em class='brace'>{</em>
+<a id='L279' name='L279'></a>  <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> retval = _ldp_adj_next_index;
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>  _ldp_adj_next_index++;
+<a id='L282' name='L282'></a>  <strong class='reserved'>if</strong> (retval &gt; _ldp_adj_next_index) <em class='brace'>{</em>
+<a id='L283' name='L283'></a>    _ldp_adj_next_index = 1;
+<a id='L284' name='L284'></a>  <em class='brace'>}</em>
+<a id='L285' name='L285'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L286' name='L286'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L28'>[^]</a><a href='#L277'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

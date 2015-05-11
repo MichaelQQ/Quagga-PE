@@ -1,0 +1,268 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>babeld/net.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1012.html'>babeld</a>/net.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L55'>[^]</a><a href='#L186'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L55' title='Defined at 55.'>babel_socket</a></li>
+<li><a href='#L132' title='Defined at 132.'>babel_recv</a></li>
+<li><a href='#L151' title='Defined at 151.'>babel_send</a></li>
+<li><a href='#L186' title='Defined at 186.'>tcp_server_socket</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*  </em>
+<a id='L2' name='L2'></a><em class='comment'> *  This file is free software: you may copy, redistribute and/or modify it  </em>
+<a id='L3' name='L3'></a><em class='comment'> *  under the terms of the GNU General Public License as published by the  </em>
+<a id='L4' name='L4'></a><em class='comment'> *  Free Software Foundation, either version 2 of the License, or (at your  </em>
+<a id='L5' name='L5'></a><em class='comment'> *  option) any later version.  </em>
+<a id='L6' name='L6'></a><em class='comment'> *  </em>
+<a id='L7' name='L7'></a><em class='comment'> *  This file is distributed in the hope that it will be useful, but  </em>
+<a id='L8' name='L8'></a><em class='comment'> *  WITHOUT ANY WARRANTY; without even the implied warranty of  </em>
+<a id='L9' name='L9'></a><em class='comment'> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  </em>
+<a id='L10' name='L10'></a><em class='comment'> *  General Public License for more details.  </em>
+<a id='L11' name='L11'></a><em class='comment'> *  </em>
+<a id='L12' name='L12'></a><em class='comment'> *  You should have received a copy of the GNU General Public License  </em>
+<a id='L13' name='L13'></a><em class='comment'> *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.  </em>
+<a id='L14' name='L14'></a><em class='comment'> *  </em>
+<a id='L15' name='L15'></a><em class='comment'> * This file incorporates work covered by the following copyright and  </em>
+<a id='L16' name='L16'></a><em class='comment'> * permission notice:  </em>
+<a id='L17' name='L17'></a><em class='comment'> *  </em>
+<a id='L18' name='L18'></a><em class='comment'>Copyright (c) 2007, 2008 by Juliusz Chroboczek</em>
+<a id='L19' name='L19'></a><em class='comment'></em>
+<a id='L20' name='L20'></a><em class='comment'>Permission is hereby granted, free of charge, to any person obtaining a copy</em>
+<a id='L21' name='L21'></a><em class='comment'>of this software and associated documentation files (the "Software"), to deal</em>
+<a id='L22' name='L22'></a><em class='comment'>in the Software without restriction, including without limitation the rights</em>
+<a id='L23' name='L23'></a><em class='comment'>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</em>
+<a id='L24' name='L24'></a><em class='comment'>copies of the Software, and to permit persons to whom the Software is</em>
+<a id='L25' name='L25'></a><em class='comment'>furnished to do so, subject to the following conditions:</em>
+<a id='L26' name='L26'></a><em class='comment'></em>
+<a id='L27' name='L27'></a><em class='comment'>The above copyright notice and this permission notice shall be included in</em>
+<a id='L28' name='L28'></a><em class='comment'>all copies or substantial portions of the Software.</em>
+<a id='L29' name='L29'></a><em class='comment'></em>
+<a id='L30' name='L30'></a><em class='comment'>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</em>
+<a id='L31' name='L31'></a><em class='comment'>IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</em>
+<a id='L32' name='L32'></a><em class='comment'>FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE</em>
+<a id='L33' name='L33'></a><em class='comment'>AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</em>
+<a id='L34' name='L34'></a><em class='comment'>LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</em>
+<a id='L35' name='L35'></a><em class='comment'>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</em>
+<a id='L36' name='L36'></a><em class='comment'>THE SOFTWARE.</em>
+<a id='L37' name='L37'></a><em class='comment'>*/</em>
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> &lt;fcntl.h&gt;
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> &lt;<a href='1008.html'>sys/ioctl.h</a>&gt;
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> &lt;sys/uio.h&gt;
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> &lt;arpa/inet.h&gt;
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> &lt;errno.h&gt;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><em class='sharp'>#include</em> "<a href='165.html'>babeld.h</a>"
+<a id='L51' name='L51'></a><em class='sharp'>#include</em> "<a href='168.html'>util.h</a>"
+<a id='L52' name='L52'></a><em class='sharp'>#include</em> "<a href='161.html'>net.h</a>"
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a><strong class='reserved'>int</strong>
+<a id='L55' name='L55'></a><a href='../R/4628.html' title='Multiple referred from 2 places.'>babel_socket</a>(<strong class='reserved'>int</strong> port)
+<a id='L56' name='L56'></a><em class='brace'>{</em>
+<a id='L57' name='L57'></a>    <strong class='reserved'>struct</strong> sockaddr_in6 sin6;
+<a id='L58' name='L58'></a>    <strong class='reserved'>int</strong> s, rc;
+<a id='L59' name='L59'></a>    <strong class='reserved'>int</strong> saved_errno;
+<a id='L60' name='L60'></a>    <strong class='reserved'>int</strong> one = 1, zero = 0;
+<a id='L61' name='L61'></a>    <strong class='reserved'>const</strong> <strong class='reserved'>int</strong> <a href='../D/6402.html' title='Multiple defined in 2 places.'>ds</a> = 0xc0;        <em class='comment'>/* CS6 - Network Control */</em>
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a>    s = socket(PF_INET6, SOCK_DGRAM, 0);
+<a id='L64' name='L64'></a>    <strong class='reserved'>if</strong>(s &lt; 0)
+<a id='L65' name='L65'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a>    rc = setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &amp;one, <strong class='reserved'>sizeof</strong>(one));
+<a id='L68' name='L68'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L69' name='L69'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a>    rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &amp;one, <strong class='reserved'>sizeof</strong>(one));
+<a id='L72' name='L72'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L73' name='L73'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a>    rc = setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_LOOP,
+<a id='L76' name='L76'></a>                    &amp;zero, <strong class='reserved'>sizeof</strong>(zero));
+<a id='L77' name='L77'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L78' name='L78'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a>    rc = setsockopt(s, IPPROTO_IPV6, IPV6_UNICAST_HOPS,
+<a id='L81' name='L81'></a>                    &amp;one, <strong class='reserved'>sizeof</strong>(one));
+<a id='L82' name='L82'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L83' name='L83'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a>    rc = setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
+<a id='L86' name='L86'></a>                    &amp;one, <strong class='reserved'>sizeof</strong>(one));
+<a id='L87' name='L87'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L88' name='L88'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><em class='sharp'>#ifdef</em> IPV6_TCLASS
+<a id='L91' name='L91'></a>    rc = setsockopt(s, IPPROTO_IPV6, IPV6_TCLASS, &amp;<a href='../D/6402.html' title='Multiple defined in 2 places.'>ds</a>, <strong class='reserved'>sizeof</strong>(<a href='../D/6402.html' title='Multiple defined in 2 places.'>ds</a>));
+<a id='L92' name='L92'></a><em class='sharp'>#else</em>
+<a id='L93' name='L93'></a>    rc = -1;
+<a id='L94' name='L94'></a>    errno = ENOSYS;
+<a id='L95' name='L95'></a><em class='sharp'>#endif</em>
+<a id='L96' name='L96'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L97' name='L97'></a>        perror("Couldn't set traffic class");
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a>    rc = fcntl(s, F_GETFL, 0);
+<a id='L100' name='L100'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L101' name='L101'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>    rc = fcntl(s, F_SETFL, (rc | O_NONBLOCK));
+<a id='L104' name='L104'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L105' name='L105'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a>    rc = fcntl(s, F_GETFD, 0);
+<a id='L108' name='L108'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L109' name='L109'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>    rc = fcntl(s, F_SETFD, rc | FD_CLOEXEC);
+<a id='L112' name='L112'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L113' name='L113'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a>    memset(&amp;sin6, 0, <strong class='reserved'>sizeof</strong>(sin6));
+<a id='L116' name='L116'></a>    sin6.sin6_family = AF_INET6;
+<a id='L117' name='L117'></a>    sin6.sin6_port = htons(port);
+<a id='L118' name='L118'></a>    rc = bind(s, (<strong class='reserved'>struct</strong> sockaddr*)&amp;sin6, <strong class='reserved'>sizeof</strong>(sin6));
+<a id='L119' name='L119'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L120' name='L120'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a>    <strong class='reserved'>return</strong> s;
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a> fail:
+<a id='L125' name='L125'></a>    saved_errno = errno;
+<a id='L126' name='L126'></a>    close(s);
+<a id='L127' name='L127'></a>    errno = saved_errno;
+<a id='L128' name='L128'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L129' name='L129'></a><em class='brace'>}</em>
+<a id='L130' name='L130'></a>
+<a id='L131' name='L131'></a><strong class='reserved'>int</strong>
+<a id='L132' name='L132'></a><a href='../R/4619.html' title='Multiple referred from 2 places.'>babel_recv</a>(<strong class='reserved'>int</strong> s, <strong class='reserved'>void</strong> *buf, <strong class='reserved'>int</strong> buflen, <strong class='reserved'>struct</strong> sockaddr *sin, <strong class='reserved'>int</strong> slen)
+<a id='L133' name='L133'></a><em class='brace'>{</em>
+<a id='L134' name='L134'></a>    <strong class='reserved'>struct</strong> iovec iovec;
+<a id='L135' name='L135'></a>    <strong class='reserved'>struct</strong> msghdr <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>;
+<a id='L136' name='L136'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>    memset(&amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, 0, <strong class='reserved'>sizeof</strong>(<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>));
+<a id='L139' name='L139'></a>    iovec.iov_base = buf;
+<a id='L140' name='L140'></a>    iovec.iov_len = buflen;
+<a id='L141' name='L141'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_name = sin;
+<a id='L142' name='L142'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_namelen = slen;
+<a id='L143' name='L143'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_iov = &amp;iovec;
+<a id='L144' name='L144'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_iovlen = 1;
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a>    rc = recvmsg(s, &amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, 0);
+<a id='L147' name='L147'></a>    <strong class='reserved'>return</strong> rc;
+<a id='L148' name='L148'></a><em class='brace'>}</em>
+<a id='L149' name='L149'></a>
+<a id='L150' name='L150'></a><strong class='reserved'>int</strong>
+<a id='L151' name='L151'></a><a href='../R/4623.html' title='Multiple referred from 3 places.'>babel_send</a>(<strong class='reserved'>int</strong> s,
+<a id='L152' name='L152'></a>           <strong class='reserved'>void</strong> *buf1, <strong class='reserved'>int</strong> buflen1, <strong class='reserved'>void</strong> *buf2, <strong class='reserved'>int</strong> buflen2,
+<a id='L153' name='L153'></a>           <strong class='reserved'>struct</strong> sockaddr *sin, <strong class='reserved'>int</strong> slen)
+<a id='L154' name='L154'></a><em class='brace'>{</em>
+<a id='L155' name='L155'></a>    <strong class='reserved'>struct</strong> iovec iovec[2];
+<a id='L156' name='L156'></a>    <strong class='reserved'>struct</strong> msghdr <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>;
+<a id='L157' name='L157'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L158' name='L158'></a>
+<a id='L159' name='L159'></a>    iovec[0].iov_base = buf1;
+<a id='L160' name='L160'></a>    iovec[0].iov_len = buflen1;
+<a id='L161' name='L161'></a>    iovec[1].iov_base = buf2;
+<a id='L162' name='L162'></a>    iovec[1].iov_len = buflen2;
+<a id='L163' name='L163'></a>    memset(&amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, 0, <strong class='reserved'>sizeof</strong>(<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>));
+<a id='L164' name='L164'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_name = (<strong class='reserved'>struct</strong> sockaddr*)sin;
+<a id='L165' name='L165'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_namelen = slen;
+<a id='L166' name='L166'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_iov = iovec;
+<a id='L167' name='L167'></a>    <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>.msg_iovlen = 2;
+<a id='L168' name='L168'></a>
+<a id='L169' name='L169'></a> again:
+<a id='L170' name='L170'></a>    rc = sendmsg(s, &amp;<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, 0);
+<a id='L171' name='L171'></a>    <strong class='reserved'>if</strong>(rc &lt; 0) <em class='brace'>{</em>
+<a id='L172' name='L172'></a>        <strong class='reserved'>if</strong>(errno == EINTR)
+<a id='L173' name='L173'></a>            <strong class='reserved'>goto</strong> again;
+<a id='L174' name='L174'></a>        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong>(errno == EAGAIN) <em class='brace'>{</em>
+<a id='L175' name='L175'></a>            <strong class='reserved'>int</strong> rc2;
+<a id='L176' name='L176'></a>            rc2 = <a href='../S/151.html#L347' title='Defined at 347 in babeld/util.c.'>wait_for_fd</a>(1, s, 5);
+<a id='L177' name='L177'></a>            <strong class='reserved'>if</strong>(rc2 &gt; 0)
+<a id='L178' name='L178'></a>                <strong class='reserved'>goto</strong> again;
+<a id='L179' name='L179'></a>            errno = EAGAIN;
+<a id='L180' name='L180'></a>        <em class='brace'>}</em>
+<a id='L181' name='L181'></a>    <em class='brace'>}</em>
+<a id='L182' name='L182'></a>    <strong class='reserved'>return</strong> rc;
+<a id='L183' name='L183'></a><em class='brace'>}</em>
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a><strong class='reserved'>int</strong>
+<a id='L186' name='L186'></a><a href='../S/161.html#L44' title='Referred from 44 in babeld/net.h.'>tcp_server_socket</a>(<strong class='reserved'>int</strong> port, <strong class='reserved'>int</strong> local)
+<a id='L187' name='L187'></a><em class='brace'>{</em>
+<a id='L188' name='L188'></a>    <strong class='reserved'>struct</strong> sockaddr_in6 sin6;
+<a id='L189' name='L189'></a>    <strong class='reserved'>int</strong> s, rc, saved_errno;
+<a id='L190' name='L190'></a>    <strong class='reserved'>int</strong> one = 1;
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>    s = socket(PF_INET6, SOCK_STREAM, 0);
+<a id='L193' name='L193'></a>    <strong class='reserved'>if</strong>(s &lt; 0)
+<a id='L194' name='L194'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>    rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &amp;one, <strong class='reserved'>sizeof</strong>(one));
+<a id='L197' name='L197'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L198' name='L198'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a>    rc = fcntl(s, F_GETFL, 0);
+<a id='L201' name='L201'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L202' name='L202'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a>    rc = fcntl(s, F_SETFL, (rc | O_NONBLOCK));
+<a id='L205' name='L205'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L206' name='L206'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L207' name='L207'></a>
+<a id='L208' name='L208'></a>    rc = fcntl(s, F_GETFD, 0);
+<a id='L209' name='L209'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L210' name='L210'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>    rc = fcntl(s, F_SETFD, rc | FD_CLOEXEC);
+<a id='L213' name='L213'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L214' name='L214'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a>    memset(&amp;sin6, 0, <strong class='reserved'>sizeof</strong>(sin6));
+<a id='L217' name='L217'></a>    sin6.sin6_family = AF_INET6;
+<a id='L218' name='L218'></a>    sin6.sin6_port = htons(port);
+<a id='L219' name='L219'></a>    <strong class='reserved'>if</strong>(local) <em class='brace'>{</em>
+<a id='L220' name='L220'></a>        rc = <a href='../S/213.html#L74' title='Defined at 74 in lib/sockunion.c.'>inet_pton</a>(AF_INET6, "::1", &amp;sin6.sin6_addr);
+<a id='L221' name='L221'></a>        <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L222' name='L222'></a>            <strong class='reserved'>goto</strong> fail;
+<a id='L223' name='L223'></a>    <em class='brace'>}</em>
+<a id='L224' name='L224'></a>    rc = bind(s, (<strong class='reserved'>struct</strong> sockaddr*)&amp;sin6, <strong class='reserved'>sizeof</strong>(sin6));
+<a id='L225' name='L225'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L226' name='L226'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a>    rc = listen(s, 2);
+<a id='L229' name='L229'></a>    <strong class='reserved'>if</strong>(rc &lt; 0)
+<a id='L230' name='L230'></a>        <strong class='reserved'>goto</strong> fail;
+<a id='L231' name='L231'></a>
+<a id='L232' name='L232'></a>    <strong class='reserved'>return</strong> s;
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a> fail:
+<a id='L235' name='L235'></a>    saved_errno = errno;
+<a id='L236' name='L236'></a>    close(s);
+<a id='L237' name='L237'></a>    errno = saved_errno;
+<a id='L238' name='L238'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L239' name='L239'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L55'>[^]</a><a href='#L186'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

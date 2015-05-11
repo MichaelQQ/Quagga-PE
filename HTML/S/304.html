@@ -1,0 +1,269 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/vty.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/vty.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/354.html' title='Multiple included from 105 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* Virtual terminal [aka TeletYpe] interface routine</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1997 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/304.html#L22' title='Defined at 22 in lib/vty.h.'>_ZEBRA_VTY_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/304.html#L21' title='Referred from 21 in lib/vty.h.'>_ZEBRA_VTY_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='293.html'>sockunion.h</a>"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#define</em> <a href='../R/3795.html' title='Multiple referred from 4 places.'>VTY_BUFSIZ</a> 512
+<a id='L29' name='L29'></a><em class='sharp'>#define</em> <a href='../R/3810.html' title='Multiple referred from 7 places.'>VTY_MAXHIST</a> 20
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='comment'>/* VTY struct. */</em>
+<a id='L32' name='L32'></a><strong class='reserved'>struct</strong> <a href='../R/10369.html' title='Multiple referred from 7047 places.'>vty</a> 
+<a id='L33' name='L33'></a><em class='brace'>{</em>
+<a id='L34' name='L34'></a>  <em class='comment'>/* File descripter of this vty. */</em>
+<a id='L35' name='L35'></a>  <strong class='reserved'>int</strong> fd;
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a>  <em class='comment'>/* Is this vty connect to file or not */</em>
+<a id='L38' name='L38'></a>  <strong class='reserved'>enum</strong> <em class='brace'>{</em><a href='../R/3819.html' title='Multiple referred from 6 places.'>VTY_TERM</a>, <a href='../R/3799.html' title='Multiple referred from 4 places.'>VTY_FILE</a>, <a href='../R/3817.html' title='Multiple referred from 2 places.'>VTY_SHELL</a>, <a href='../R/3818.html' title='Multiple referred from 4 places.'>VTY_SHELL_SERV</a><em class='brace'>}</em> type;
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a>  <em class='comment'>/* Node status of this vty */</em>
+<a id='L41' name='L41'></a>  <strong class='reserved'>int</strong> node;
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a>  <em class='comment'>/* Failure count */</em>
+<a id='L44' name='L44'></a>  <strong class='reserved'>int</strong> fail;
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a>  <em class='comment'>/* Output buffer. */</em>
+<a id='L47' name='L47'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *obuf;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a>  <em class='comment'>/* Command input buffer */</em>
+<a id='L50' name='L50'></a>  <strong class='reserved'>char</strong> *buf;
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a>  <em class='comment'>/* Command cursor point */</em>
+<a id='L53' name='L53'></a>  <strong class='reserved'>int</strong> cp;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>  <em class='comment'>/* Command length */</em>
+<a id='L56' name='L56'></a>  <strong class='reserved'>int</strong> length;
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>  <em class='comment'>/* Command max length. */</em>
+<a id='L59' name='L59'></a>  <strong class='reserved'>int</strong> max;
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>  <em class='comment'>/* Histry of command */</em>
+<a id='L62' name='L62'></a>  <strong class='reserved'>char</strong> *hist[<a href='../S/304.html#L29' title='Defined at 29 in lib/vty.h.'>VTY_MAXHIST</a>];
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a>  <em class='comment'>/* History lookup current point */</em>
+<a id='L65' name='L65'></a>  <strong class='reserved'>int</strong> hp;
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a>  <em class='comment'>/* History insert end point */</em>
+<a id='L68' name='L68'></a>  <strong class='reserved'>int</strong> hindex;
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a>  <em class='comment'>/* For current referencing point of interface, route-map,</em>
+<a id='L71' name='L71'></a><em class='comment'>     access-list etc... */</em>
+<a id='L72' name='L72'></a>  <strong class='reserved'>void</strong> *index;
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <em class='comment'>/* For multiple level index treatment such as key chain and key. */</em>
+<a id='L75' name='L75'></a>  <strong class='reserved'>void</strong> *index_sub;
+<a id='L76' name='L76'></a>
+<a id='L77' name='L77'></a>  <em class='comment'>/* For escape character. */</em>
+<a id='L78' name='L78'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> escape;
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a>  <em class='comment'>/* Current vty status. */</em>
+<a id='L81' name='L81'></a>  <strong class='reserved'>enum</strong> <em class='brace'>{</em><a href='../R/3814.html' title='Multiple referred from 8 places.'>VTY_NORMAL</a>, <a href='../R/3797.html' title='Multiple referred from 10 places.'>VTY_CLOSE</a>, <a href='../R/3811.html' title='Multiple referred from 3 places.'>VTY_MORE</a>, <a href='../R/3812.html' title='Multiple referred from 3 places.'>VTY_MORELINE</a><em class='brace'>}</em> status;
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a>  <em class='comment'>/* IAC handling: was the last character received the</em>
+<a id='L84' name='L84'></a><em class='comment'>     IAC (interpret-as-command) escape character (and therefore the next</em>
+<a id='L85' name='L85'></a><em class='comment'>     character will be the command code)?  Refer to Telnet RFC 854. */</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> iac;
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a>  <em class='comment'>/* IAC SB (option subnegotiation) handling */</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> iac_sb_in_progress;
+<a id='L90' name='L90'></a>  <em class='comment'>/* At the moment, we care only about the NAWS (window size) negotiation,</em>
+<a id='L91' name='L91'></a><em class='comment'>     and that requires just a 5-character buffer (RFC 1073):</em>
+<a id='L92' name='L92'></a><em class='comment'>       &lt;NAWS char&gt; &lt;16-bit width&gt; &lt;16-bit height&gt; */</em>
+<a id='L93' name='L93'></a><em class='sharp'>#define</em> <a href='../R/3610.html' title='Multiple referred from 5 places.'>TELNET_NAWS_SB_LEN</a> 5
+<a id='L94' name='L94'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> sb_buf[<a href='../S/304.html#L93' title='Defined at 93 in lib/vty.h.'>TELNET_NAWS_SB_LEN</a>];
+<a id='L95' name='L95'></a>  <em class='comment'>/* How many subnegotiation characters have we received?  We just drop</em>
+<a id='L96' name='L96'></a><em class='comment'>     those that do not fit in the buffer. */</em>
+<a id='L97' name='L97'></a>  size_t sb_len;
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a>  <em class='comment'>/* Window width/height. */</em>
+<a id='L100' name='L100'></a>  <strong class='reserved'>int</strong> width;
+<a id='L101' name='L101'></a>  <strong class='reserved'>int</strong> height;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>  <em class='comment'>/* Configure lines. */</em>
+<a id='L104' name='L104'></a>  <strong class='reserved'>int</strong> lines;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>  <em class='comment'>/* Terminal monitor. */</em>
+<a id='L107' name='L107'></a>  <strong class='reserved'>int</strong> monitor;
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a>  <em class='comment'>/* In configure mode. */</em>
+<a id='L110' name='L110'></a>  <strong class='reserved'>int</strong> <a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L111' name='L111'></a>
+<a id='L112' name='L112'></a>  <em class='comment'>/* Read and write thread. */</em>
+<a id='L113' name='L113'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_read;
+<a id='L114' name='L114'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_write;
+<a id='L115' name='L115'></a>
+<a id='L116' name='L116'></a>  <em class='comment'>/* Timeout seconds and thread. */</em>
+<a id='L117' name='L117'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> v_timeout;
+<a id='L118' name='L118'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_timeout;
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>  <em class='comment'>/* What address is this vty comming from. */</em>
+<a id='L121' name='L121'></a>  <strong class='reserved'>char</strong> address[<a href='../S/293.html#L65' title='Defined at 65 in lib/sockunion.h.'>SU_ADDRSTRLEN</a>];
+<a id='L122' name='L122'></a><em class='brace'>}</em>;
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a><em class='comment'>/* Integrated configuration file. */</em>
+<a id='L125' name='L125'></a><em class='sharp'>#define</em> <a href='../S/200.html#L90' title='Referred from 90 in lib/vty.c.'>INTEGRATE_DEFAULT_CONFIG</a> "Quagga.conf"
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a><em class='comment'>/* Small macro to determine newline is newline only or linefeed needed. */</em>
+<a id='L128' name='L128'></a><em class='sharp'>#define</em> <a href='../R/3813.html' title='Multiple referred from 2364 places.'>VTY_NEWLINE</a>  ((<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;type == <a href='../S/304.html#L38' title='Defined at 38 in lib/vty.h.'>VTY_TERM</a>) ? "\r\n" : "\n")
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><em class='comment'>/* Default time out value */</em>
+<a id='L131' name='L131'></a><em class='sharp'>#define</em> <a href='../R/3820.html' title='Multiple referred from 3 places.'>VTY_TIMEOUT_DEFAULT</a> 600
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a><em class='comment'>/* Vty read buffer size. */</em>
+<a id='L134' name='L134'></a><em class='sharp'>#define</em> <a href='../R/3816.html' title='Multiple referred from 4 places.'>VTY_READ_BUFSIZ</a> 512
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><em class='comment'>/* Directory separator. */</em>
+<a id='L137' name='L137'></a><em class='sharp'>#ifndef</em> <a href='../S/304.html#L138' title='Defined at 138 in lib/vty.h.'>DIRECTORY_SEP</a>
+<a id='L138' name='L138'></a><em class='sharp'>#define</em> <a href='../R/656.html' title='Multiple referred from 3 places.'>DIRECTORY_SEP</a> '/'
+<a id='L139' name='L139'></a><em class='sharp'>#endif</em> <em class='comment'>/* DIRECTORY_SEP */</em>
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a><em class='sharp'>#ifndef</em> <a href='../S/304.html#L142' title='Defined at 142 in lib/vty.h.'>IS_DIRECTORY_SEP</a>
+<a id='L142' name='L142'></a><em class='sharp'>#define</em> <a href='../R/1110.html' title='Multiple referred from 3 places.'>IS_DIRECTORY_SEP</a>(c) ((c) == <a href='../S/304.html#L138' title='Defined at 138 in lib/vty.h.'>DIRECTORY_SEP</a>)
+<a id='L143' name='L143'></a><em class='sharp'>#endif</em>
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a><em class='comment'>/* GCC have printf type attribute check.  */</em>
+<a id='L146' name='L146'></a><em class='sharp'>#ifdef</em> __GNUC__
+<a id='L147' name='L147'></a><em class='sharp'>#define</em> <a href='../R/3012.html' title='Multiple referred from 12 places.'>PRINTF_ATTRIBUTE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) <strong class='reserved'>__attribute__</strong> ((__format__ (__printf__, <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)))
+<a id='L148' name='L148'></a><em class='sharp'>#else</em>
+<a id='L149' name='L149'></a><em class='sharp'>#define</em> <a href='../R/3012.html' title='Multiple referred from 12 places.'>PRINTF_ATTRIBUTE</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L150' name='L150'></a><em class='sharp'>#endif</em> <em class='comment'>/* __GNUC__ */</em>
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a><em class='comment'>/* Utility macros to convert VTY argument to unsigned long */</em>
+<a id='L153' name='L153'></a><em class='sharp'>#define</em> <a href='../S/304.html#L174' title='Referred from 174 in lib/vty.h.'>VTY_GET_ULONG</a>(NAME,V,STR) \
+<a id='L154' name='L154'></a><strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L155' name='L155'></a>  <strong class='reserved'>char</strong> *endptr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>; \
+<a id='L156' name='L156'></a>  errno = 0; \
+<a id='L157' name='L157'></a>  (V) = strtoul ((STR), &amp;endptr, 10); \
+<a id='L158' name='L158'></a>  <strong class='reserved'>if</strong> (*(STR) == '-' || *endptr != '\0' || errno) \
+<a id='L159' name='L159'></a>    <em class='brace'>{</em> \
+<a id='L160' name='L160'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Invalid %s value%s", NAME, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>); \
+<a id='L161' name='L161'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>; \
+<a id='L162' name='L162'></a>    <em class='brace'>}</em> \
+<a id='L163' name='L163'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L164' name='L164'></a>
+<a id='L165' name='L165'></a><em class='comment'>/*</em>
+<a id='L166' name='L166'></a><em class='comment'> * The logic below ((TMPL) &lt;= ((MIN) &amp;&amp; (TMPL) != (MIN)) is</em>
+<a id='L167' name='L167'></a><em class='comment'> * done to circumvent the compiler complaining about</em>
+<a id='L168' name='L168'></a><em class='comment'> * comparing unsigned numbers against zero, if MIN is zero.</em>
+<a id='L169' name='L169'></a><em class='comment'> * NB: The compiler isn't smart enough to supress the warning</em>
+<a id='L170' name='L170'></a><em class='comment'> * if you write (MIN) != 0 &amp;&amp; tmpl &lt; (MIN).</em>
+<a id='L171' name='L171'></a><em class='comment'> */</em>
+<a id='L172' name='L172'></a><em class='sharp'>#define</em> <a href='../R/3802.html' title='Multiple referred from 2 places.'>VTY_GET_INTEGER_RANGE_HEART</a>(NAME,TMPL,STR,<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>,<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>)      \
+<a id='L173' name='L173'></a><strong class='reserved'>do</strong> <em class='brace'>{</em>                                                            \
+<a id='L174' name='L174'></a>  <a href='../S/304.html#L153' title='Defined at 153 in lib/vty.h.'>VTY_GET_ULONG</a>(NAME, (TMPL), STR);                             \
+<a id='L175' name='L175'></a>  <strong class='reserved'>if</strong> ( ((TMPL) &lt;= (<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>) &amp;&amp; (TMPL) != (<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>)) || (TMPL) &gt; (<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>) ) \
+<a id='L176' name='L176'></a>    <em class='brace'>{</em>                                                           \
+<a id='L177' name='L177'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Invalid %s value%s", NAME, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);\
+<a id='L178' name='L178'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;                                       \
+<a id='L179' name='L179'></a>    <em class='brace'>}</em>                                                           \
+<a id='L180' name='L180'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L181' name='L181'></a>
+<a id='L182' name='L182'></a><em class='sharp'>#define</em> <a href='../R/3801.html' title='Multiple referred from 52 places.'>VTY_GET_INTEGER_RANGE</a>(NAME,V,STR,<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>,<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>)               \
+<a id='L183' name='L183'></a><strong class='reserved'>do</strong> <em class='brace'>{</em>                                                            \
+<a id='L184' name='L184'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> tmpl;                                           \
+<a id='L185' name='L185'></a>  <a href='../S/304.html#L172' title='Defined at 172 in lib/vty.h.'>VTY_GET_INTEGER_RANGE_HEART</a>(NAME,tmpl,STR,<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>,<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>);           \
+<a id='L186' name='L186'></a>  (V) = tmpl;                                                   \
+<a id='L187' name='L187'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a><em class='sharp'>#define</em> <a href='../S/738.html#L1749' title='Referred from 1749 in ospfd/ospf_vty.c.'>VTY_CHECK_INTEGER_RANGE</a>(NAME,STR,<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>,<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>)               \
+<a id='L190' name='L190'></a><strong class='reserved'>do</strong> <em class='brace'>{</em>                                                            \
+<a id='L191' name='L191'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> tmpl;                                           \
+<a id='L192' name='L192'></a>  <a href='../S/304.html#L172' title='Defined at 172 in lib/vty.h.'>VTY_GET_INTEGER_RANGE_HEART</a>(NAME,tmpl,STR,<a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>,<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>);           \
+<a id='L193' name='L193'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a><em class='sharp'>#define</em> <a href='../R/3800.html' title='Multiple referred from 19 places.'>VTY_GET_INTEGER</a>(NAME,V,STR)                             \
+<a id='L196' name='L196'></a>    <a href='../S/304.html#L182' title='Defined at 182 in lib/vty.h.'>VTY_GET_INTEGER_RANGE</a>(NAME,V,STR,0U,<a href='../S/191.html#L241' title='Defined at 241 in lib/zebra.h.'>UINT32_MAX</a>)
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a><em class='sharp'>#define</em> <a href='../R/3803.html' title='Multiple referred from 5 places.'>VTY_GET_IPV4_ADDRESS</a>(NAME,V,STR)                                      \
+<a id='L199' name='L199'></a><strong class='reserved'>do</strong> <em class='brace'>{</em>                                                                             \
+<a id='L200' name='L200'></a>  <strong class='reserved'>int</strong> retv;                                                                   \
+<a id='L201' name='L201'></a>  retv = <a href='../S/213.html#L33' title='Defined at 33 in lib/sockunion.c.'>inet_aton</a> ((STR), &amp;(V));                                             \
+<a id='L202' name='L202'></a>  <strong class='reserved'>if</strong> (!retv)                                                                  \
+<a id='L203' name='L203'></a>    <em class='brace'>{</em>                                                                         \
+<a id='L204' name='L204'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Invalid %s value%s", NAME, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);              \
+<a id='L205' name='L205'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;                                                     \
+<a id='L206' name='L206'></a>    <em class='brace'>}</em>                                                                         \
+<a id='L207' name='L207'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a><em class='sharp'>#define</em> <a href='../R/3804.html' title='Multiple referred from 9 places.'>VTY_GET_IPV4_PREFIX</a>(NAME,V,STR)                                       \
+<a id='L210' name='L210'></a><strong class='reserved'>do</strong> <em class='brace'>{</em>                                                                             \
+<a id='L211' name='L211'></a>  <strong class='reserved'>int</strong> retv;                                                                   \
+<a id='L212' name='L212'></a>  retv = <a href='../S/250.html#L408' title='Defined at 408 in lib/prefix.c.'>str2prefix_ipv4</a> ((STR), &amp;(V));                                       \
+<a id='L213' name='L213'></a>  <strong class='reserved'>if</strong> (retv &lt;= 0)                                                              \
+<a id='L214' name='L214'></a>    <em class='brace'>{</em>                                                                         \
+<a id='L215' name='L215'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% Invalid %s value%s", NAME, <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);              \
+<a id='L216' name='L216'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;                                                     \
+<a id='L217' name='L217'></a>    <em class='brace'>}</em>                                                                         \
+<a id='L218' name='L218'></a><em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a><em class='comment'>/* Exported variables */</em>
+<a id='L221' name='L221'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> integrate_default[];
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L224' name='L224'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2952' title='Defined at 2952 in lib/vty.c.'>vty_init</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *);
+<a id='L225' name='L225'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2945' title='Defined at 2945 in lib/vty.c.'>vty_init_vtysh</a> (<strong class='reserved'>void</strong>);
+<a id='L226' name='L226'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2998' title='Defined at 2998 in lib/vty.c.'>vty_terminate</a> (<strong class='reserved'>void</strong>);
+<a id='L227' name='L227'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2871' title='Defined at 2871 in lib/vty.c.'>vty_reset</a> (<strong class='reserved'>void</strong>);
+<a id='L228' name='L228'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/200.html#L319' title='Defined at 319 in lib/vty.c.'>vty_new</a> (<strong class='reserved'>void</strong>);
+<a id='L229' name='L229'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, ...) <a href='../D/3529.html' title='Multiple defined in 4 places.'>PRINTF_ATTRIBUTE</a>(2, 3);
+<a id='L230' name='L230'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2325' title='Defined at 2325 in lib/vty.c.'>vty_read_config</a> (<strong class='reserved'>char</strong> *, <strong class='reserved'>char</strong> *);
+<a id='L231' name='L231'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L209' title='Defined at 209 in lib/vty.c.'>vty_time_print</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>int</strong>);
+<a id='L232' name='L232'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2135' title='Defined at 2135 in lib/vty.c.'>vty_serv_sock</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L233' name='L233'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2163' title='Defined at 2163 in lib/vty.c.'>vty_close</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L234' name='L234'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> *<a href='../S/200.html#L2927' title='Defined at 2927 in lib/vty.c.'>vty_get_cwd</a> (<strong class='reserved'>void</strong>);
+<a id='L235' name='L235'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2428' title='Defined at 2428 in lib/vty.c.'>vty_log</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *level, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *proto, 
+<a id='L236' name='L236'></a>                     <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *fmt, <strong class='reserved'>struct</strong> timestamp_control *, va_list);
+<a id='L237' name='L237'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/200.html#L2475' title='Defined at 2475 in lib/vty.c.'>vty_config_lock</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L238' name='L238'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/200.html#L2486' title='Defined at 2486 in lib/vty.c.'>vty_config_unlock</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L239' name='L239'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/200.html#L2933' title='Defined at 2933 in lib/vty.c.'>vty_shell</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L240' name='L240'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/200.html#L2939' title='Defined at 2939 in lib/vty.c.'>vty_shell_serv</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L241' name='L241'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L228' title='Defined at 228 in lib/vty.c.'>vty_hello</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a><em class='comment'>/* Send a fixed-size message to all vty terminal monitors; this should be</em>
+<a id='L244' name='L244'></a><em class='comment'>   an async-signal-safe function. */</em>
+<a id='L245' name='L245'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/200.html#L2450' title='Defined at 2450 in lib/vty.c.'>vty_log_fixed</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *buf, size_t len);
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_VTY_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

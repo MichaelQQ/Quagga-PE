@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_ase.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_ase.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/450.html' title='Multiple included from 10 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * OSPF AS External route calculation.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999, 2000 Alex Zinin, Toshiaki Takada</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/809.html#L24' title='Defined at 24 in ospfd/ospf_ase.h.'>_ZEBRA_OSPF_ASE_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/809.html#L23' title='Referred from 23 in ospfd/ospf_ase.h.'>_ZEBRA_OSPF_ASE_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *<a href='../S/740.html#L50' title='Defined at 50 in ospfd/ospf_ase.c.'>ospf_find_asbr_route</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *,
+<a id='L28' name='L28'></a>                                                <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *,
+<a id='L29' name='L29'></a>                                                <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *);
+<a id='L30' name='L30'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *<a href='../S/740.html#L106' title='Defined at 106 in ospfd/ospf_ase.c.'>ospf_find_asbr_route_through_area</a> (<strong class='reserved'>struct</strong>
+<a id='L31' name='L31'></a>                                                             <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *,
+<a id='L32' name='L32'></a>                                                             <strong class='reserved'>struct</strong>
+<a id='L33' name='L33'></a>                                                             <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *,
+<a id='L34' name='L34'></a>                                                             <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a>
+<a id='L35' name='L35'></a>                                                             *);
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/740.html#L287' title='Defined at 287 in ospfd/ospf_ase.c.'>ospf_ase_calculate_route</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L38' name='L38'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/740.html#L681' title='Defined at 681 in ospfd/ospf_ase.c.'>ospf_ase_calculate_schedule</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *);
+<a id='L39' name='L39'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/740.html#L690' title='Defined at 690 in ospfd/ospf_ase.c.'>ospf_ase_calculate_timer_add</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *);
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/740.html#L748' title='Defined at 748 in ospfd/ospf_ase.c.'>ospf_ase_external_lsas_finish</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *);
+<a id='L42' name='L42'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/740.html#L767' title='Defined at 767 in ospfd/ospf_ase.c.'>ospf_ase_incremental_update</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *);
+<a id='L43' name='L43'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/740.html#L701' title='Defined at 701 in ospfd/ospf_ase.c.'>ospf_ase_register_external_lsa</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *, <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *);
+<a id='L44' name='L44'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/740.html#L724' title='Defined at 724 in ospfd/ospf_ase.c.'>ospf_ase_unregister_external_lsa</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *,
+<a id='L45' name='L45'></a>                                              <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *);
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_OSPF_ASE_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

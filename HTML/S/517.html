@@ -1,0 +1,415 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_dr.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_dr.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L51'>[^]</a><a href='#L301'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L51' title='Defined at 51.'>isis_disflag2string</a></li>
+<li><a href='#L69' title='Defined at 69.'>isis_run_dr_l1</a></li>
+<li><a href='#L86' title='Defined at 86.'>isis_run_dr_l2</a></li>
+<li><a href='#L104' title='Defined at 104.'>isis_check_dr_change</a></li>
+<li><a href='#L127' title='Defined at 127.'>isis_dr_elect</a></li>
+<li><a href='#L239' title='Defined at 239.'>isis_dr_resign</a></li>
+<li><a href='#L301' title='Defined at 301.'>isis_dr_commence</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_dr.c</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             IS-IS designated router related routines   </em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='227.html'>hash.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='480.html'>isisd/dict.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='488.html'>isisd/isis_common.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='530.html'>isisd/isis_misc.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='497.html'>isisd/isis_flags.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='524.html'>isisd/isis_circuit.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='510.html'>isisd/isisd.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='481.html'>isisd/isis_adjacency.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='528.html'>isisd/isis_pdu.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='483.html'>isisd/isis_tlv.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='501.html'>isisd/isis_lsp.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='508.html'>isisd/isis_dr.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='507.html'>isisd/isis_events.h</a>"
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L51' name='L51'></a><a href='../R/6158.html' title='Multiple referred from 2 places.'>isis_disflag2string</a> (<strong class='reserved'>int</strong> disflag)
+<a id='L52' name='L52'></a><em class='brace'>{</em>
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a>  <strong class='reserved'>switch</strong> (disflag)
+<a id='L55' name='L55'></a>    <em class='brace'>{</em>
+<a id='L56' name='L56'></a>    <strong class='reserved'>case</strong> ISIS_IS_NOT_DIS:
+<a id='L57' name='L57'></a>      <strong class='reserved'>return</strong> "is not DIS";
+<a id='L58' name='L58'></a>    <strong class='reserved'>case</strong> ISIS_IS_DIS:
+<a id='L59' name='L59'></a>      <strong class='reserved'>return</strong> "is DIS";
+<a id='L60' name='L60'></a>    <strong class='reserved'>case</strong> ISIS_WAS_DIS:
+<a id='L61' name='L61'></a>      <strong class='reserved'>return</strong> "was DIS";
+<a id='L62' name='L62'></a>    <strong class='reserved'>default</strong>:
+<a id='L63' name='L63'></a>      <strong class='reserved'>return</strong> "unknown DIS state";
+<a id='L64' name='L64'></a>    <em class='brace'>}</em>
+<a id='L65' name='L65'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;                  <em class='comment'>/* not reached */</em>
+<a id='L66' name='L66'></a><em class='brace'>}</em>
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><strong class='reserved'>int</strong>
+<a id='L69' name='L69'></a><a href='../R/6218.html' title='Multiple referred from 6 places.'>isis_run_dr_l1</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L70' name='L70'></a><em class='brace'>{</em>
+<a id='L71' name='L71'></a>  <strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit;
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a>  circuit = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L74' name='L74'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (circuit);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>  <strong class='reserved'>if</strong> (circuit-&gt;u.bc.run_dr_elect[0])
+<a id='L77' name='L77'></a>    zlog_warn ("isis_run_dr(): run_dr_elect already set for l1");
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a>  circuit-&gt;u.bc.t_run_dr[0] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L80' name='L80'></a>  circuit-&gt;u.bc.run_dr_elect[0] = 1;
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L83' name='L83'></a><em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><strong class='reserved'>int</strong>
+<a id='L86' name='L86'></a><a href='../R/6219.html' title='Multiple referred from 6 places.'>isis_run_dr_l2</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L87' name='L87'></a><em class='brace'>{</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit;
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a>  circuit = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L91' name='L91'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (circuit);
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a>  <strong class='reserved'>if</strong> (circuit-&gt;u.bc.run_dr_elect[1])
+<a id='L94' name='L94'></a>    zlog_warn ("isis_run_dr(): run_dr_elect already set for l2");
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a>  circuit-&gt;u.bc.t_run_dr[1] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L98' name='L98'></a>  circuit-&gt;u.bc.run_dr_elect[1] = 1;
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L101' name='L101'></a><em class='brace'>}</em>
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L104' name='L104'></a><a href='../R/6134.html' title='Multiple referred from 2 places.'>isis_check_dr_change</a> (<strong class='reserved'>struct</strong> <a href='../S/481.html#L74' title='Defined at 74 in isisd/isis_adjacency.h.'>isis_adjacency</a> *adj, <strong class='reserved'>int</strong> level)
+<a id='L105' name='L105'></a><em class='brace'>{</em>
+<a id='L106' name='L106'></a>  <strong class='reserved'>int</strong> i;
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a>  <strong class='reserved'>if</strong> (adj-&gt;dis_record[level - 1].dis !=
+<a id='L109' name='L109'></a>      adj-&gt;dis_record[(1 * <a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>) + level - 1].dis)
+<a id='L110' name='L110'></a>    <em class='comment'>/* was there a DIS state transition ? */</em>
+<a id='L111' name='L111'></a>    <em class='brace'>{</em>
+<a id='L112' name='L112'></a>      adj-&gt;dischanges[level - 1]++;
+<a id='L113' name='L113'></a>      <em class='comment'>/* ok rotate the history list through */</em>
+<a id='L114' name='L114'></a>      <strong class='reserved'>for</strong> (i = <a href='../S/481.html#L66' title='Defined at 66 in isisd/isis_adjacency.h.'>DIS_RECORDS</a> - 1; i &gt; 0; i--)
+<a id='L115' name='L115'></a>        <em class='brace'>{</em>
+<a id='L116' name='L116'></a>          adj-&gt;dis_record[(i * <a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>) + level - 1].dis =
+<a id='L117' name='L117'></a>            adj-&gt;dis_record[((i - 1) * <a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>) + level - 1].dis;
+<a id='L118' name='L118'></a>          adj-&gt;dis_record[(i * <a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>) + level - 1].last_dis_change =
+<a id='L119' name='L119'></a>            adj-&gt;dis_record[((i - 1) * <a href='../S/518.html#L51' title='Defined at 51 in isisd/isis_constants.h.'>ISIS_LEVELS</a>) + level -
+<a id='L120' name='L120'></a>                            1].last_dis_change;
+<a id='L121' name='L121'></a>        <em class='brace'>}</em>
+<a id='L122' name='L122'></a>    <em class='brace'>}</em>
+<a id='L123' name='L123'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L124' name='L124'></a><em class='brace'>}</em>
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a><strong class='reserved'>int</strong>
+<a id='L127' name='L127'></a><a href='../R/6161.html' title='Multiple referred from 3 places.'>isis_dr_elect</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level)
+<a id='L128' name='L128'></a><em class='brace'>{</em>
+<a id='L129' name='L129'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *adjdb;
+<a id='L130' name='L130'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L131' name='L131'></a>  <strong class='reserved'>struct</strong> <a href='../S/481.html#L74' title='Defined at 74 in isisd/isis_adjacency.h.'>isis_adjacency</a> *adj, *adj_dr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L132' name='L132'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L133' name='L133'></a>  u_char own_prio;
+<a id='L134' name='L134'></a>  <strong class='reserved'>int</strong> biggest_prio = -1;
+<a id='L135' name='L135'></a>  <strong class='reserved'>int</strong> cmp_res, retval = <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a>  own_prio = circuit-&gt;priority[level - 1];
+<a id='L138' name='L138'></a>  adjdb = circuit-&gt;u.bc.adjdb[level - 1];
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a>  <strong class='reserved'>if</strong> (!adjdb)
+<a id='L141' name='L141'></a>    <em class='brace'>{</em>
+<a id='L142' name='L142'></a>      zlog_warn ("isis_dr_elect() adjdb == NULL");
+<a id='L143' name='L143'></a>      <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L144' name='L144'></a>      <strong class='reserved'>return</strong> <a href='../S/518.html#L124' title='Defined at 124 in isisd/isis_constants.h.'>ISIS_WARNING</a>;
+<a id='L145' name='L145'></a>    <em class='brace'>}</em>
+<a id='L146' name='L146'></a>  <a href='../S/521.html#L513' title='Defined at 513 in isisd/isis_adjacency.c.'>isis_adj_build_up_list</a> (adjdb, <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a>  <em class='comment'>/*</em>
+<a id='L149' name='L149'></a><em class='comment'>   * Loop the adjacencies and find the one with the biggest priority</em>
+<a id='L150' name='L150'></a><em class='comment'>   */</em>
+<a id='L151' name='L151'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, node, adj))
+<a id='L152' name='L152'></a>    <em class='brace'>{</em>
+<a id='L153' name='L153'></a>      <em class='comment'>/* clear flag for show output */</em>
+<a id='L154' name='L154'></a>      adj-&gt;dis_record[level - 1].dis = ISIS_IS_NOT_DIS;
+<a id='L155' name='L155'></a>      adj-&gt;dis_record[level - 1].last_dis_change = time (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a>      <strong class='reserved'>if</strong> (adj-&gt;prio[level - 1] &gt; biggest_prio)
+<a id='L158' name='L158'></a>        <em class='brace'>{</em>
+<a id='L159' name='L159'></a>          biggest_prio = adj-&gt;prio[level - 1];
+<a id='L160' name='L160'></a>          adj_dr = adj;
+<a id='L161' name='L161'></a>        <em class='brace'>}</em>
+<a id='L162' name='L162'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (adj-&gt;prio[level - 1] == biggest_prio)
+<a id='L163' name='L163'></a>        <em class='brace'>{</em>
+<a id='L164' name='L164'></a>          <em class='comment'>/*</em>
+<a id='L165' name='L165'></a><em class='comment'>           * Comparison of MACs breaks a tie</em>
+<a id='L166' name='L166'></a><em class='comment'>           */</em>
+<a id='L167' name='L167'></a>          <strong class='reserved'>if</strong> (adj_dr)
+<a id='L168' name='L168'></a>            <em class='brace'>{</em>
+<a id='L169' name='L169'></a>              cmp_res = <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (adj_dr-&gt;snpa, adj-&gt;snpa, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>);
+<a id='L170' name='L170'></a>              <strong class='reserved'>if</strong> (cmp_res &lt; 0)
+<a id='L171' name='L171'></a>                <em class='brace'>{</em>
+<a id='L172' name='L172'></a>                  adj_dr = adj;
+<a id='L173' name='L173'></a>                <em class='brace'>}</em>
+<a id='L174' name='L174'></a>              <strong class='reserved'>if</strong> (cmp_res == 0)
+<a id='L175' name='L175'></a>                zlog_warn
+<a id='L176' name='L176'></a>                  ("isis_dr_elect(): multiple adjacencies with same SNPA");
+<a id='L177' name='L177'></a>            <em class='brace'>}</em>
+<a id='L178' name='L178'></a>          <strong class='reserved'>else</strong>
+<a id='L179' name='L179'></a>            <em class='brace'>{</em>
+<a id='L180' name='L180'></a>              adj_dr = adj;
+<a id='L181' name='L181'></a>            <em class='brace'>}</em>
+<a id='L182' name='L182'></a>        <em class='brace'>}</em>
+<a id='L183' name='L183'></a>    <em class='brace'>}</em>
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a>  <strong class='reserved'>if</strong> (!adj_dr)
+<a id='L186' name='L186'></a>    <em class='brace'>{</em>
+<a id='L187' name='L187'></a>      <em class='comment'>/*</em>
+<a id='L188' name='L188'></a><em class='comment'>       * Could not find the DR - means we are alone. Resign if we were DR.</em>
+<a id='L189' name='L189'></a><em class='comment'>       */</em>
+<a id='L190' name='L190'></a>      <strong class='reserved'>if</strong> (circuit-&gt;u.bc.is_dr[level - 1])
+<a id='L191' name='L191'></a>        retval = <a href='../S/517.html#L239' title='Defined at 239 in isisd/isis_dr.c.'>isis_dr_resign</a> (circuit, level);
+<a id='L192' name='L192'></a>      <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L193' name='L193'></a>      <strong class='reserved'>return</strong> retval;
+<a id='L194' name='L194'></a>    <em class='brace'>}</em>
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>  <em class='comment'>/*</em>
+<a id='L197' name='L197'></a><em class='comment'>   * Now we have the DR adjacency, compare it to self</em>
+<a id='L198' name='L198'></a><em class='comment'>   */</em>
+<a id='L199' name='L199'></a>  <strong class='reserved'>if</strong> (adj_dr-&gt;prio[level - 1] &lt; own_prio ||
+<a id='L200' name='L200'></a>      (adj_dr-&gt;prio[level - 1] == own_prio &amp;&amp;
+<a id='L201' name='L201'></a>       <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (adj_dr-&gt;snpa, circuit-&gt;u.bc.snpa, <a href='../S/518.html#L175' title='Defined at 175 in isisd/isis_constants.h.'>ETH_ALEN</a>) &lt; 0))
+<a id='L202' name='L202'></a>    <em class='brace'>{</em>
+<a id='L203' name='L203'></a>      adj_dr-&gt;dis_record[level - 1].dis = ISIS_IS_NOT_DIS;
+<a id='L204' name='L204'></a>      adj_dr-&gt;dis_record[level - 1].last_dis_change = time (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L205' name='L205'></a>
+<a id='L206' name='L206'></a>      <em class='comment'>/* rotate the history log */</em>
+<a id='L207' name='L207'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, node, adj))
+<a id='L208' name='L208'></a>        <a href='../S/517.html#L104' title='Defined at 104 in isisd/isis_dr.c.'>isis_check_dr_change</a> (adj, level);
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a>      <em class='comment'>/* We are the DR, commence DR */</em>
+<a id='L211' name='L211'></a>      <strong class='reserved'>if</strong> (circuit-&gt;u.bc.is_dr[level - 1] == 0 &amp;&amp; <a href='../S/262.html#L60' title='Defined at 60 in lib/linklist.h.'>listcount</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>) &gt; 0)
+<a id='L212' name='L212'></a>        retval = <a href='../S/517.html#L301' title='Defined at 301 in isisd/isis_dr.c.'>isis_dr_commence</a> (circuit, level);
+<a id='L213' name='L213'></a>    <em class='brace'>}</em>
+<a id='L214' name='L214'></a>  <strong class='reserved'>else</strong>
+<a id='L215' name='L215'></a>    <em class='brace'>{</em>
+<a id='L216' name='L216'></a>      <em class='comment'>/* ok we have found the DIS - lets mark the adjacency */</em>
+<a id='L217' name='L217'></a>      <em class='comment'>/* set flag for show output */</em>
+<a id='L218' name='L218'></a>      adj_dr-&gt;dis_record[level - 1].dis = ISIS_IS_DIS;
+<a id='L219' name='L219'></a>      adj_dr-&gt;dis_record[level - 1].last_dis_change = time (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a>      <em class='comment'>/* now loop through a second time to check if there has been a DIS change</em>
+<a id='L222' name='L222'></a><em class='comment'>       * if yes rotate the history log</em>
+<a id='L223' name='L223'></a><em class='comment'>       */</em>
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, node, adj))
+<a id='L226' name='L226'></a>        <a href='../S/517.html#L104' title='Defined at 104 in isisd/isis_dr.c.'>isis_check_dr_change</a> (adj, level);
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a>      <em class='comment'>/*</em>
+<a id='L229' name='L229'></a><em class='comment'>       * We are not DR - if we were -&gt; resign</em>
+<a id='L230' name='L230'></a><em class='comment'>       */</em>
+<a id='L231' name='L231'></a>      <strong class='reserved'>if</strong> (circuit-&gt;u.bc.is_dr[level - 1])
+<a id='L232' name='L232'></a>        retval = <a href='../S/517.html#L239' title='Defined at 239 in isisd/isis_dr.c.'>isis_dr_resign</a> (circuit, level);
+<a id='L233' name='L233'></a>    <em class='brace'>}</em>
+<a id='L234' name='L234'></a>  <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>);
+<a id='L235' name='L235'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L236' name='L236'></a><em class='brace'>}</em>
+<a id='L237' name='L237'></a>
+<a id='L238' name='L238'></a><strong class='reserved'>int</strong>
+<a id='L239' name='L239'></a><a href='../R/6162.html' title='Multiple referred from 5 places.'>isis_dr_resign</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level)
+<a id='L240' name='L240'></a><em class='brace'>{</em>
+<a id='L241' name='L241'></a>  u_char id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 2];
+<a id='L242' name='L242'></a>  <strong class='reserved'>int</strong> <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>, precision;
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>  zlog_debug ("isis_dr_resign l%d", level);
+<a id='L245' name='L245'></a>
+<a id='L246' name='L246'></a>  circuit-&gt;u.bc.is_dr[level - 1] = 0;
+<a id='L247' name='L247'></a>  circuit-&gt;u.bc.run_dr_elect[level - 1] = 0;
+<a id='L248' name='L248'></a>  <a href='../S/279.html#L163' title='Defined at 163 in lib/thread.h.'>THREAD_TIMER_OFF</a> (circuit-&gt;u.bc.t_run_dr[level - 1]);
+<a id='L249' name='L249'></a>  <a href='../S/279.html#L163' title='Defined at 163 in lib/thread.h.'>THREAD_TIMER_OFF</a> (circuit-&gt;u.bc.t_refresh_pseudo_lsp[level - 1]);
+<a id='L250' name='L250'></a>  circuit-&gt;lsp_regenerate_pending[level - 1] = 0;
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (id, <a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a>-&gt;sysid, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>);
+<a id='L253' name='L253'></a>  <a href='../S/501.html#L97' title='Defined at 97 in isisd/isis_lsp.h.'>LSP_PSEUDO_ID</a> (id) = circuit-&gt;circuit_id;
+<a id='L254' name='L254'></a>  <a href='../S/501.html#L98' title='Defined at 98 in isisd/isis_lsp.h.'>LSP_FRAGMENT</a> (id) = 0;
+<a id='L255' name='L255'></a>  <a href='../S/511.html#L2365' title='Defined at 2365 in isisd/isis_lsp.c.'>lsp_purge_pseudo</a> (id, circuit, level);
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a>  <strong class='reserved'>if</strong> (level == 1)
+<a id='L258' name='L258'></a>    <em class='brace'>{</em>
+<a id='L259' name='L259'></a>      memset (circuit-&gt;u.bc.l1_desig_is, 0, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1);
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>      <a href='../S/279.html#L163' title='Defined at 163 in lib/thread.h.'>THREAD_TIMER_OFF</a> (circuit-&gt;t_send_csnp[0]);
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a>      <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;u.bc.t_run_dr[0], <a href='../S/517.html#L69' title='Defined at 69 in isisd/isis_dr.c.'>isis_run_dr_l1</a>,
+<a id='L264' name='L264'></a>                       circuit, 2 * circuit-&gt;hello_interval[0]);
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a>      <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a> = <a href='../S/526.html#L504' title='Defined at 504 in isisd/isis_misc.c.'>isis_jitter</a> (circuit-&gt;psnp_interval[level - 1],
+<a id='L267' name='L267'></a>                           <a href='../S/518.html#L47' title='Defined at 47 in isisd/isis_constants.h.'>PSNP_JITTER</a>, &amp;precision);
+<a id='L268' name='L268'></a>      <strong class='reserved'>if</strong> (precision == ISIS_S_PRECISION)
+<a id='L269' name='L269'></a>        <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;t_send_psnp[0], <a href='../S/527.html#L3038' title='Defined at 3038 in isisd/isis_pdu.c.'>send_l1_psnp</a>,
+<a id='L270' name='L270'></a>                         circuit, <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L271' name='L271'></a>      <strong class='reserved'>else</strong>
+<a id='L272' name='L272'></a>        <a href='../S/279.html#L146' title='Defined at 146 in lib/thread.h.'>THREAD_TIMER_MSEC_ON</a> (master, circuit-&gt;t_send_psnp[0], <a href='../S/527.html#L3038' title='Defined at 3038 in isisd/isis_pdu.c.'>send_l1_psnp</a>,
+<a id='L273' name='L273'></a>                         circuit, <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L274' name='L274'></a>    <em class='brace'>}</em>
+<a id='L275' name='L275'></a>  <strong class='reserved'>else</strong>
+<a id='L276' name='L276'></a>    <em class='brace'>{</em>
+<a id='L277' name='L277'></a>      memset (circuit-&gt;u.bc.l2_desig_is, 0, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1);
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a>      <a href='../S/279.html#L163' title='Defined at 163 in lib/thread.h.'>THREAD_TIMER_OFF</a> (circuit-&gt;t_send_csnp[1]);
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>      <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;u.bc.t_run_dr[1], <a href='../S/517.html#L86' title='Defined at 86 in isisd/isis_dr.c.'>isis_run_dr_l2</a>,
+<a id='L282' name='L282'></a>                       circuit, 2 * circuit-&gt;hello_interval[1]);
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a>      <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a> = <a href='../S/526.html#L504' title='Defined at 504 in isisd/isis_misc.c.'>isis_jitter</a> (circuit-&gt;psnp_interval[level - 1],
+<a id='L285' name='L285'></a>                           <a href='../S/518.html#L47' title='Defined at 47 in isisd/isis_constants.h.'>PSNP_JITTER</a>, &amp;precision);
+<a id='L286' name='L286'></a>      <strong class='reserved'>if</strong> (precision == ISIS_S_PRECISION)
+<a id='L287' name='L287'></a>        <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;t_send_psnp[1], <a href='../S/527.html#L3067' title='Defined at 3067 in isisd/isis_pdu.c.'>send_l2_psnp</a>,
+<a id='L288' name='L288'></a>                         circuit, <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L289' name='L289'></a>      <strong class='reserved'>else</strong>
+<a id='L290' name='L290'></a>        <a href='../S/279.html#L146' title='Defined at 146 in lib/thread.h.'>THREAD_TIMER_MSEC_ON</a> (master, circuit-&gt;t_send_psnp[1], <a href='../S/527.html#L3067' title='Defined at 3067 in isisd/isis_pdu.c.'>send_l2_psnp</a>,
+<a id='L291' name='L291'></a>                         circuit, <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L292' name='L292'></a>
+<a id='L293' name='L293'></a>    <em class='brace'>}</em>
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a>  <a href='../S/279.html#L169' title='Defined at 169 in lib/thread.h.'>thread_add_event</a> (master, <a href='../S/489.html#L377' title='Defined at 377 in isisd/isis_events.c.'>isis_event_dis_status_change</a>, circuit, 0);
+<a id='L296' name='L296'></a>
+<a id='L297' name='L297'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L298' name='L298'></a><em class='brace'>}</em>
+<a id='L299' name='L299'></a>
+<a id='L300' name='L300'></a><strong class='reserved'>int</strong>
+<a id='L301' name='L301'></a><a href='../R/6160.html' title='Multiple referred from 2 places.'>isis_dr_commence</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level)
+<a id='L302' name='L302'></a><em class='brace'>{</em>
+<a id='L303' name='L303'></a>  u_char old_dr[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 2];
+<a id='L304' name='L304'></a>  <strong class='reserved'>int</strong> <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>, precision;
+<a id='L305' name='L305'></a>
+<a id='L306' name='L306'></a>  <strong class='reserved'>if</strong> (<a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a>-&gt;debugs &amp; <a href='../S/510.html#L168' title='Defined at 168 in isisd/isisd.h.'>DEBUG_EVENTS</a>)
+<a id='L307' name='L307'></a>    zlog_debug ("isis_dr_commence l%d", level);
+<a id='L308' name='L308'></a>
+<a id='L309' name='L309'></a>  <em class='comment'>/* Lets keep a pause in DR election */</em>
+<a id='L310' name='L310'></a>  circuit-&gt;u.bc.run_dr_elect[level - 1] = 0;
+<a id='L311' name='L311'></a>  <strong class='reserved'>if</strong> (level == 1)
+<a id='L312' name='L312'></a>    <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;u.bc.t_run_dr[0], <a href='../S/517.html#L69' title='Defined at 69 in isisd/isis_dr.c.'>isis_run_dr_l1</a>,
+<a id='L313' name='L313'></a>                     circuit, 2 * circuit-&gt;hello_interval[0]);
+<a id='L314' name='L314'></a>  <strong class='reserved'>else</strong>
+<a id='L315' name='L315'></a>    <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;u.bc.t_run_dr[1], <a href='../S/517.html#L86' title='Defined at 86 in isisd/isis_dr.c.'>isis_run_dr_l2</a>,
+<a id='L316' name='L316'></a>                     circuit, 2 * circuit-&gt;hello_interval[1]);
+<a id='L317' name='L317'></a>  circuit-&gt;u.bc.is_dr[level - 1] = 1;
+<a id='L318' name='L318'></a>
+<a id='L319' name='L319'></a>  <strong class='reserved'>if</strong> (level == 1)
+<a id='L320' name='L320'></a>    <em class='brace'>{</em>
+<a id='L321' name='L321'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (old_dr, circuit-&gt;u.bc.l1_desig_is, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1);
+<a id='L322' name='L322'></a>      <a href='../S/501.html#L98' title='Defined at 98 in isisd/isis_lsp.h.'>LSP_FRAGMENT</a> (old_dr) = 0;
+<a id='L323' name='L323'></a>      <strong class='reserved'>if</strong> (<a href='../S/501.html#L97' title='Defined at 97 in isisd/isis_lsp.h.'>LSP_PSEUDO_ID</a> (old_dr))
+<a id='L324' name='L324'></a>        <em class='brace'>{</em>
+<a id='L325' name='L325'></a>          <em class='comment'>/* there was a dr elected, purge its LSPs from the db */</em>
+<a id='L326' name='L326'></a>          <a href='../S/511.html#L2365' title='Defined at 2365 in isisd/isis_lsp.c.'>lsp_purge_pseudo</a> (old_dr, circuit, level);
+<a id='L327' name='L327'></a>        <em class='brace'>}</em>
+<a id='L328' name='L328'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (circuit-&gt;u.bc.l1_desig_is, <a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a>-&gt;sysid, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>);
+<a id='L329' name='L329'></a>      *(circuit-&gt;u.bc.l1_desig_is + <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>) = circuit-&gt;circuit_id;
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (circuit-&gt;circuit_id);     <em class='comment'>/* must be non-zero */</em>
+<a id='L332' name='L332'></a>      <em class='comment'>/*    if (circuit-&gt;t_send_l1_psnp)</em>
+<a id='L333' name='L333'></a><em class='comment'>         thread_cancel (circuit-&gt;t_send_l1_psnp); */</em>
+<a id='L334' name='L334'></a>      <a href='../S/511.html#L2010' title='Defined at 2010 in isisd/isis_lsp.c.'>lsp_generate_pseudo</a> (circuit, 1);
+<a id='L335' name='L335'></a>
+<a id='L336' name='L336'></a>      <a href='../S/279.html#L163' title='Defined at 163 in lib/thread.h.'>THREAD_TIMER_OFF</a> (circuit-&gt;u.bc.t_run_dr[0]);
+<a id='L337' name='L337'></a>      <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;u.bc.t_run_dr[0], <a href='../S/517.html#L69' title='Defined at 69 in isisd/isis_dr.c.'>isis_run_dr_l1</a>,
+<a id='L338' name='L338'></a>                       circuit, 2 * circuit-&gt;hello_interval[0]);
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a>      <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a> = <a href='../S/526.html#L504' title='Defined at 504 in isisd/isis_misc.c.'>isis_jitter</a> (circuit-&gt;csnp_interval[level - 1],
+<a id='L341' name='L341'></a>                           <a href='../S/518.html#L46' title='Defined at 46 in isisd/isis_constants.h.'>CSNP_JITTER</a>, &amp;precision);
+<a id='L342' name='L342'></a>      <strong class='reserved'>if</strong> (precision == ISIS_S_PRECISION)
+<a id='L343' name='L343'></a>        <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;t_send_csnp[0], <a href='../S/527.html#L2796' title='Defined at 2796 in isisd/isis_pdu.c.'>send_l1_csnp</a>, circuit,
+<a id='L344' name='L344'></a>                         <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L345' name='L345'></a>        <strong class='reserved'>else</strong>
+<a id='L346' name='L346'></a>          <a href='../S/279.html#L146' title='Defined at 146 in lib/thread.h.'>THREAD_TIMER_MSEC_ON</a> (master, circuit-&gt;t_send_csnp[0], <a href='../S/527.html#L2796' title='Defined at 2796 in isisd/isis_pdu.c.'>send_l1_csnp</a>,
+<a id='L347' name='L347'></a>                                circuit, <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a>    <em class='brace'>}</em>
+<a id='L350' name='L350'></a>  <strong class='reserved'>else</strong>
+<a id='L351' name='L351'></a>    <em class='brace'>{</em>
+<a id='L352' name='L352'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (old_dr, circuit-&gt;u.bc.l2_desig_is, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1);
+<a id='L353' name='L353'></a>      <a href='../S/501.html#L98' title='Defined at 98 in isisd/isis_lsp.h.'>LSP_FRAGMENT</a> (old_dr) = 0;
+<a id='L354' name='L354'></a>      <strong class='reserved'>if</strong> (<a href='../S/501.html#L97' title='Defined at 97 in isisd/isis_lsp.h.'>LSP_PSEUDO_ID</a> (old_dr))
+<a id='L355' name='L355'></a>        <em class='brace'>{</em>
+<a id='L356' name='L356'></a>          <em class='comment'>/* there was a dr elected, purge its LSPs from the db */</em>
+<a id='L357' name='L357'></a>          <a href='../S/511.html#L2365' title='Defined at 2365 in isisd/isis_lsp.c.'>lsp_purge_pseudo</a> (old_dr, circuit, level);
+<a id='L358' name='L358'></a>        <em class='brace'>}</em>
+<a id='L359' name='L359'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (circuit-&gt;u.bc.l2_desig_is, <a href='../S/510.html#L38' title='Defined at 38 in isisd/isisd.h.'>isis</a>-&gt;sysid, <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>);
+<a id='L360' name='L360'></a>      *(circuit-&gt;u.bc.l2_desig_is + <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>) = circuit-&gt;circuit_id;
+<a id='L361' name='L361'></a>
+<a id='L362' name='L362'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (circuit-&gt;circuit_id);     <em class='comment'>/* must be non-zero */</em>
+<a id='L363' name='L363'></a>      <em class='comment'>/*    if (circuit-&gt;t_send_l1_psnp)</em>
+<a id='L364' name='L364'></a><em class='comment'>         thread_cancel (circuit-&gt;t_send_l1_psnp); */</em>
+<a id='L365' name='L365'></a>      <a href='../S/511.html#L2010' title='Defined at 2010 in isisd/isis_lsp.c.'>lsp_generate_pseudo</a> (circuit, 2);
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a>      <a href='../S/279.html#L163' title='Defined at 163 in lib/thread.h.'>THREAD_TIMER_OFF</a> (circuit-&gt;u.bc.t_run_dr[1]);
+<a id='L368' name='L368'></a>      <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;u.bc.t_run_dr[1], <a href='../S/517.html#L86' title='Defined at 86 in isisd/isis_dr.c.'>isis_run_dr_l2</a>,
+<a id='L369' name='L369'></a>                       circuit, 2 * circuit-&gt;hello_interval[1]);
+<a id='L370' name='L370'></a>      <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a> = <a href='../S/526.html#L504' title='Defined at 504 in isisd/isis_misc.c.'>isis_jitter</a> (circuit-&gt;csnp_interval[level - 1],
+<a id='L371' name='L371'></a>                           <a href='../S/518.html#L46' title='Defined at 46 in isisd/isis_constants.h.'>CSNP_JITTER</a>, &amp;precision);
+<a id='L372' name='L372'></a>      <strong class='reserved'>if</strong> (precision == ISIS_S_PRECISION)
+<a id='L373' name='L373'></a>        <a href='../S/279.html#L140' title='Defined at 140 in lib/thread.h.'>THREAD_TIMER_ON</a> (master, circuit-&gt;t_send_csnp[1], <a href='../S/527.html#L2823' title='Defined at 2823 in isisd/isis_pdu.c.'>send_l2_csnp</a>, circuit,
+<a id='L374' name='L374'></a>                       <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L375' name='L375'></a>      <strong class='reserved'>else</strong>
+<a id='L376' name='L376'></a>        <a href='../S/279.html#L146' title='Defined at 146 in lib/thread.h.'>THREAD_TIMER_MSEC_ON</a> (master, circuit-&gt;t_send_csnp[1], <a href='../S/527.html#L2823' title='Defined at 2823 in isisd/isis_pdu.c.'>send_l2_csnp</a>,
+<a id='L377' name='L377'></a>                              circuit, <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>);
+<a id='L378' name='L378'></a>    <em class='brace'>}</em>
+<a id='L379' name='L379'></a>
+<a id='L380' name='L380'></a>  <a href='../S/279.html#L169' title='Defined at 169 in lib/thread.h.'>thread_add_event</a> (master, <a href='../S/489.html#L377' title='Defined at 377 in isisd/isis_events.c.'>isis_event_dis_status_change</a>, circuit, 0);
+<a id='L381' name='L381'></a>
+<a id='L382' name='L382'></a>  <strong class='reserved'>return</strong> <a href='../S/518.html#L123' title='Defined at 123 in isisd/isis_constants.h.'>ISIS_OK</a>;
+<a id='L383' name='L383'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L51'>[^]</a><a href='#L301'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

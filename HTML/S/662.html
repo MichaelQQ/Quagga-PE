@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_debug.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_debug.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/43.html' title='Multiple included from 16 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP message debug header.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1996, 97, 98 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/662.html#L22' title='Defined at 22 in bgpd/bgp_debug.h.'>_QUAGGA_BGP_DEBUG_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/662.html#L21' title='Referred from 21 in bgpd/bgp_debug.h.'>_QUAGGA_BGP_DEBUG_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='642.html'>bgp_attr.h</a>"
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='comment'>/* sort of packet direction */</em>
+<a id='L27' name='L27'></a><em class='sharp'>#define</em> DUMP_ON        1
+<a id='L28' name='L28'></a><em class='sharp'>#define</em> DUMP_SEND      2
+<a id='L29' name='L29'></a><em class='sharp'>#define</em> DUMP_RECV      4
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='comment'>/* for dump_update */</em>
+<a id='L32' name='L32'></a><em class='sharp'>#define</em> DUMP_WITHDRAW  8
+<a id='L33' name='L33'></a><em class='sharp'>#define</em> DUMP_NLRI     16
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='comment'>/* dump detail */</em>
+<a id='L36' name='L36'></a><em class='sharp'>#define</em> DUMP_DETAIL   32
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> dump_open;
+<a id='L39' name='L39'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> dump_update;
+<a id='L40' name='L40'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> dump_keepalive;
+<a id='L41' name='L41'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> dump_notify;
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> Debug_Event;
+<a id='L44' name='L44'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> Debug_Keepalive;
+<a id='L45' name='L45'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> Debug_Update;
+<a id='L46' name='L46'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> Debug_Radix;
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><em class='sharp'>#define</em> NLRI     1
+<a id='L49' name='L49'></a><em class='sharp'>#define</em> WITHDRAW 2
+<a id='L50' name='L50'></a><em class='sharp'>#define</em> NO_OPT   3
+<a id='L51' name='L51'></a><em class='sharp'>#define</em> <a href='../R/3438.html' title='Multiple referred from 30 places.'>SEND</a>     4
+<a id='L52' name='L52'></a><em class='sharp'>#define</em> <a href='../R/3088.html' title='Multiple referred from 127 places.'>RECV</a>     5
+<a id='L53' name='L53'></a><em class='sharp'>#define</em> <a href='../R/651.html' title='Multiple referred from 8 places.'>DETAIL</a>   6
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L56' name='L56'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/613.html#L874' title='Defined at 874 in bgpd/bgp_debug.c.'>bgp_debug_init</a> (<strong class='reserved'>void</strong>);
+<a id='L57' name='L57'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> bgp_packet_dump (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a>);
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_as4;
+<a id='L62' name='L62'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_fsm;
+<a id='L63' name='L63'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_events;
+<a id='L64' name='L64'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_packet;
+<a id='L65' name='L65'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_filter;
+<a id='L66' name='L66'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_keepalive;
+<a id='L67' name='L67'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_update;
+<a id='L68' name='L68'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_normal;
+<a id='L69' name='L69'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> conf_bgp_debug_zebra;
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_as4;
+<a id='L72' name='L72'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_fsm;
+<a id='L73' name='L73'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_events;
+<a id='L74' name='L74'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_packet;
+<a id='L75' name='L75'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_filter;
+<a id='L76' name='L76'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_keepalive;
+<a id='L77' name='L77'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_update;
+<a id='L78' name='L78'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_normal;
+<a id='L79' name='L79'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> term_bgp_debug_zebra;
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a><em class='sharp'>#define</em> BGP_DEBUG_AS4                 0x01
+<a id='L82' name='L82'></a><em class='sharp'>#define</em> BGP_DEBUG_AS4_SEGMENT         0x02
+<a id='L83' name='L83'></a>
+<a id='L84' name='L84'></a><em class='sharp'>#define</em> BGP_DEBUG_FSM                 0x01
+<a id='L85' name='L85'></a><em class='sharp'>#define</em> BGP_DEBUG_EVENTS              0x01
+<a id='L86' name='L86'></a><em class='sharp'>#define</em> BGP_DEBUG_PACKET              0x01
+<a id='L87' name='L87'></a><em class='sharp'>#define</em> BGP_DEBUG_FILTER              0x01
+<a id='L88' name='L88'></a><em class='sharp'>#define</em> BGP_DEBUG_KEEPALIVE           0x01
+<a id='L89' name='L89'></a><em class='sharp'>#define</em> BGP_DEBUG_UPDATE_IN           0x01
+<a id='L90' name='L90'></a><em class='sharp'>#define</em> BGP_DEBUG_UPDATE_OUT          0x02
+<a id='L91' name='L91'></a><em class='sharp'>#define</em> BGP_DEBUG_NORMAL              0x01
+<a id='L92' name='L92'></a><em class='sharp'>#define</em> BGP_DEBUG_ZEBRA               0x01
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a><em class='sharp'>#define</em> BGP_DEBUG_PACKET_SEND         0x01
+<a id='L95' name='L95'></a><em class='sharp'>#define</em> BGP_DEBUG_PACKET_SEND_DETAIL  0x02
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a><em class='sharp'>#define</em> BGP_DEBUG_PACKET_RECV         0x01
+<a id='L98' name='L98'></a><em class='sharp'>#define</em> BGP_DEBUG_PACKET_RECV_DETAIL  0x02
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a><em class='sharp'>#define</em> <a href='../R/535.html' title='Multiple referred from 4 places.'>CONF_DEBUG_ON</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)     (conf_bgp_debug_ ## <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> |= (BGP_DEBUG_ ## <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>))
+<a id='L101' name='L101'></a><em class='sharp'>#define</em> <a href='../R/534.html' title='Multiple referred from 4 places.'>CONF_DEBUG_OFF</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)    (conf_bgp_debug_ ## <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;= ~(BGP_DEBUG_ ## <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>))
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><em class='sharp'>#define</em> <a href='../R/3612.html' title='Multiple referred from 32 places.'>TERM_DEBUG_ON</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)     (term_bgp_debug_ ## <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> |= (BGP_DEBUG_ ## <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>))
+<a id='L104' name='L104'></a><em class='sharp'>#define</em> <a href='../R/3611.html' title='Multiple referred from 42 places.'>TERM_DEBUG_OFF</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)    (term_bgp_debug_ ## <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;= ~(BGP_DEBUG_ ## <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>))
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><em class='sharp'>#define</em> <a href='../R/584.html' title='Multiple referred from 28 places.'>DEBUG_ON</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) \
+<a id='L107' name='L107'></a>    <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L108' name='L108'></a>        <a href='../D/615.html' title='Multiple defined in 2 places.'>CONF_DEBUG_ON</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>); \
+<a id='L109' name='L109'></a>        <a href='../D/4290.html' title='Multiple defined in 2 places.'>TERM_DEBUG_ON</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>); \
+<a id='L110' name='L110'></a>    <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L111' name='L111'></a><em class='sharp'>#define</em> <a href='../R/583.html' title='Multiple referred from 28 places.'>DEBUG_OFF</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) \
+<a id='L112' name='L112'></a>    <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L113' name='L113'></a>        <a href='../D/614.html' title='Multiple defined in 2 places.'>CONF_DEBUG_OFF</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>); \
+<a id='L114' name='L114'></a>        <a href='../D/4289.html' title='Multiple defined in 2 places.'>TERM_DEBUG_OFF</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>); \
+<a id='L115' name='L115'></a>    <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> <a href='../R/211.html' title='Multiple referred from 165 places.'>BGP_DEBUG</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)         (term_bgp_debug_ ## <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp; BGP_DEBUG_ ## <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L118' name='L118'></a><em class='sharp'>#define</em> <a href='../R/533.html' title='Multiple referred from 12 places.'>CONF_BGP_DEBUG</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)    (conf_bgp_debug_ ## <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp; BGP_DEBUG_ ## <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *bgp_type_str[];
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/613.html#L165' title='Defined at 165 in bgpd/bgp_debug.c.'>bgp_dump_attr</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *, <strong class='reserved'>char</strong> *, size_t);
+<a id='L123' name='L123'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/613.html#L242' title='Defined at 242 in bgpd/bgp_debug.c.'>bgp_notify_print</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <strong class='reserved'>struct</strong> <a href='../S/608.html#L191' title='Defined at 191 in bgpd/bgpd.h.'>bgp_notify</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> bgp_status_msg[];
+<a id='L126' name='L126'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>int</strong> bgp_status_msg_max;
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a><em class='sharp'>#endif</em> <em class='comment'>/* _QUAGGA_BGP_DEBUG_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

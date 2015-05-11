@@ -1,0 +1,1444 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_spf.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_spf.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L59'>[^]</a><a href='#L1336'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L59' title='Defined at 59.'>cmp</a></li>
+<li><a href='#L86' title='Defined at 86.'>update_stat</a></li>
+<li><a href='#L95' title='Defined at 95.'>vertex_nexthop_new</a></li>
+<li><a href='#L101' title='Defined at 101.'>vertex_nexthop_free</a></li>
+<li><a href='#L111' title='Defined at 111.'>ospf_canonical_nexthops_free</a></li>
+<li><a href='#L142' title='Defined at 142.'>vertex_parent_new</a></li>
+<li><a href='#L158' title='Defined at 158.'>vertex_parent_free</a></li>
+<li><a href='#L164' title='Defined at 164.'>ospf_vertex_new</a></li>
+<li><a href='#L189' title='Defined at 189.'>ospf_vertex_free</a></li>
+<li><a href='#L218' title='Defined at 218.'>ospf_vertex_dump</a></li>
+<li><a href='#L263' title='Defined at 263.'>ospf_vertex_add_parent</a></li>
+<li><a href='#L281' title='Defined at 281.'>ospf_spf_init</a></li>
+<li><a href='#L297' title='Defined at 297.'>ospf_lsa_has_link</a></li>
+<li><a href='#L364' title='Defined at 364.'>ospf_get_next_link</a></li>
+<li><a href='#L403' title='Defined at 403.'>ospf_spf_flush_parents</a></li>
+<li><a href='#L421' title='Defined at 421.'>ospf_spf_add_parent</a></li>
+<li><a href='#L491' title='Defined at 491.'>ospf_nexthop_calculation</a></li>
+<li><a href='#L748' title='Defined at 748.'>ospf_spf_next</a></li>
+<li><a href='#L951' title='Defined at 951.'>ospf_spf_dump</a></li>
+<li><a href='#L988' title='Defined at 988.'>ospf_spf_process_stubs</a></li>
+<li><a href='#L1054' title='Defined at 1054.'>ospf_rtrs_free</a></li>
+<li><a href='#L1081' title='Defined at 1081.'>ospf_rtrs_print</a></li>
+<li><a href='#L1143' title='Defined at 1143.'>ospf_spf_calculate</a></li>
+<li><a href='#L1260' title='Defined at 1260.'>ospf_spf_calculate_timer</a></li>
+<li><a href='#L1336' title='Defined at 1336.'>ospf_spf_calculate_schedule</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* OSPF SPF calculation.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1999, 2000 Kunihiro Ishiguro, Toshiaki Takada</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='227.html'>hash.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='293.html'>sockunion.h</a>"          <em class='comment'>/* for inet_ntop () */</em>
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='233.html'>pqueue.h</a>"
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='790.html'>ospfd/ospfd.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='791.html'>ospfd/ospf_interface.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='807.html'>ospfd/ospf_ism.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='814.html'>ospfd/ospf_asbr.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='733.html'>ospfd/ospf_lsa.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='755.html'>ospfd/ospf_lsdb.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='772.html'>ospfd/ospf_neighbor.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='737.html'>ospfd/ospf_nsm.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='812.html'>ospfd/ospf_spf.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='759.html'>ospfd/ospf_route.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='789.html'>ospfd/ospf_ia.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='809.html'>ospfd/ospf_ase.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='803.html'>ospfd/ospf_abr.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='776.html'>ospfd/ospf_dump.h</a>"
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/805.html#L189' title='Defined at 189 in ospfd/ospf_spf.c.'>ospf_vertex_free</a> (<strong class='reserved'>void</strong> *);
+<a id='L50' name='L50'></a><em class='comment'>/* List of allocated vertices, to simplify cleanup of SPF.</em>
+<a id='L51' name='L51'></a><em class='comment'> * Not thread-safe obviously. If it ever needs to be, it'd have to be</em>
+<a id='L52' name='L52'></a><em class='comment'> * dynamically allocated at begin of ospf_spf_calculate</em>
+<a id='L53' name='L53'></a><em class='comment'> */</em>
+<a id='L54' name='L54'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> vertex_list = <em class='brace'>{</em> .del = <a href='../S/805.html#L189' title='Defined at 189 in ospfd/ospf_spf.c.'>ospf_vertex_free</a> <em class='brace'>}</em>;
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><em class='comment'>/* Heap related functions, for the managment of the candidates, to</em>
+<a id='L57' name='L57'></a><em class='comment'> * be used with pqueue. */</em>
+<a id='L58' name='L58'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L59' name='L59'></a><a href='../R/5315.html' title='Multiple referred from 45 places.'>cmp</a> (<strong class='reserved'>void</strong> * node1 , <strong class='reserved'>void</strong> * node2)
+<a id='L60' name='L60'></a><em class='brace'>{</em>
+<a id='L61' name='L61'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> * v1 = (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *) node1;
+<a id='L62' name='L62'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> * v2 = (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *) node2;
+<a id='L63' name='L63'></a>  <strong class='reserved'>if</strong> (v1 != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; v2 != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> )
+<a id='L64' name='L64'></a>    <em class='brace'>{</em>
+<a id='L65' name='L65'></a>      <em class='comment'>/* network vertices must be chosen before router vertices of same</em>
+<a id='L66' name='L66'></a><em class='comment'>       * cost in order to find all shortest paths</em>
+<a id='L67' name='L67'></a><em class='comment'>       */</em>
+<a id='L68' name='L68'></a>      <strong class='reserved'>if</strong> ( ((v1-&gt;distance - v2-&gt;distance) == 0)
+<a id='L69' name='L69'></a>          &amp;&amp; (v1-&gt;type != v2-&gt;type))
+<a id='L70' name='L70'></a>        <em class='brace'>{</em>
+<a id='L71' name='L71'></a>          <strong class='reserved'>switch</strong> (v1-&gt;type)
+<a id='L72' name='L72'></a>            <em class='brace'>{</em>
+<a id='L73' name='L73'></a>              <strong class='reserved'>case</strong> <a href='../S/812.html#L28' title='Defined at 28 in ospfd/ospf_spf.h.'>OSPF_VERTEX_NETWORK</a>:
+<a id='L74' name='L74'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L75' name='L75'></a>              <strong class='reserved'>case</strong> <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>:
+<a id='L76' name='L76'></a>                <strong class='reserved'>return</strong> 1;
+<a id='L77' name='L77'></a>            <em class='brace'>}</em>
+<a id='L78' name='L78'></a>        <em class='brace'>}</em>
+<a id='L79' name='L79'></a>      <strong class='reserved'>else</strong>
+<a id='L80' name='L80'></a>        <strong class='reserved'>return</strong> (v1-&gt;distance - v2-&gt;distance);
+<a id='L81' name='L81'></a>    <em class='brace'>}</em>
+<a id='L82' name='L82'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L83' name='L83'></a><em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L86' name='L86'></a><a href='../S/805.html#L1176' title='Referred from 1176 in ospfd/ospf_spf.c.'>update_stat</a> (<strong class='reserved'>void</strong> *node , <strong class='reserved'>int</strong> position)
+<a id='L87' name='L87'></a><em class='brace'>{</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v = node;
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a>  <em class='comment'>/* Set the status of the vertex, when its position changes. */</em>
+<a id='L91' name='L91'></a>  *(v-&gt;stat) = position;
+<a id='L92' name='L92'></a><em class='brace'>}</em>
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a> *
+<a id='L95' name='L95'></a><a href='../R/10337.html' title='Multiple referred from 4 places.'>vertex_nexthop_new</a> (<strong class='reserved'>void</strong>)
+<a id='L96' name='L96'></a><em class='brace'>{</em>
+<a id='L97' name='L97'></a>  <strong class='reserved'>return</strong> <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF_NEXTHOP, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a>));
+<a id='L98' name='L98'></a><em class='brace'>}</em>
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L101' name='L101'></a><a href='../S/805.html#L134' title='Referred from 134 in ospfd/ospf_spf.c.'>vertex_nexthop_free</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a> *nh)
+<a id='L102' name='L102'></a><em class='brace'>{</em>
+<a id='L103' name='L103'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF_NEXTHOP, nh);
+<a id='L104' name='L104'></a><em class='brace'>}</em>
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><em class='comment'>/* Free the canonical nexthop objects for an area, ie the nexthop objects</em>
+<a id='L107' name='L107'></a><em class='comment'> * attached to the first-hop router vertices, and any intervening network</em>
+<a id='L108' name='L108'></a><em class='comment'> * vertices.</em>
+<a id='L109' name='L109'></a><em class='comment'> */</em>
+<a id='L110' name='L110'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L111' name='L111'></a><a href='../R/8008.html' title='Multiple referred from 2 places.'>ospf_canonical_nexthops_free</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *root)
+<a id='L112' name='L112'></a><em class='brace'>{</em>
+<a id='L113' name='L113'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L114' name='L114'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *child;
+<a id='L115' name='L115'></a>  
+<a id='L116' name='L116'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (root-&gt;children, node, nnode, child))
+<a id='L117' name='L117'></a>    <em class='brace'>{</em>
+<a id='L118' name='L118'></a>      <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *n2, *nn2;
+<a id='L119' name='L119'></a>      <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp;
+<a id='L120' name='L120'></a>      
+<a id='L121' name='L121'></a>      <em class='comment'>/* router vertices through an attached network each</em>
+<a id='L122' name='L122'></a><em class='comment'>       * have a distinct (canonical / not inherited) nexthop</em>
+<a id='L123' name='L123'></a><em class='comment'>       * which must be freed.</em>
+<a id='L124' name='L124'></a><em class='comment'>       *</em>
+<a id='L125' name='L125'></a><em class='comment'>       * A network vertex can only have router vertices as its</em>
+<a id='L126' name='L126'></a><em class='comment'>       * children, so only one level of recursion is possible.</em>
+<a id='L127' name='L127'></a><em class='comment'>       */</em>
+<a id='L128' name='L128'></a>      <strong class='reserved'>if</strong> (child-&gt;type == <a href='../S/812.html#L28' title='Defined at 28 in ospfd/ospf_spf.h.'>OSPF_VERTEX_NETWORK</a>)
+<a id='L129' name='L129'></a>        <a href='../S/805.html#L111' title='Defined at 111 in ospfd/ospf_spf.c.'>ospf_canonical_nexthops_free</a> (child);
+<a id='L130' name='L130'></a>      
+<a id='L131' name='L131'></a>      <em class='comment'>/* Free child nexthops pointing back to this root vertex */</em>
+<a id='L132' name='L132'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (child-&gt;parents, n2, nn2, vp))
+<a id='L133' name='L133'></a>        <strong class='reserved'>if</strong> (vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> == root &amp;&amp; vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>)
+<a id='L134' name='L134'></a>          <a href='../S/805.html#L101' title='Defined at 101 in ospfd/ospf_spf.c.'>vertex_nexthop_free</a> (vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L135' name='L135'></a>    <em class='brace'>}</em>
+<a id='L136' name='L136'></a><em class='brace'>}</em>      
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a><em class='comment'>/* TODO: Parent list should be excised, in favour of maintaining only</em>
+<a id='L139' name='L139'></a><em class='comment'> * vertex_nexthop, with refcounts.</em>
+<a id='L140' name='L140'></a><em class='comment'> */</em>
+<a id='L141' name='L141'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *
+<a id='L142' name='L142'></a><a href='../S/805.html#L473' title='Referred from 473 in ospfd/ospf_spf.c.'>vertex_parent_new</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v, <strong class='reserved'>int</strong> backlink, <strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a> *hop)
+<a id='L143' name='L143'></a><em class='brace'>{</em>
+<a id='L144' name='L144'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *new;
+<a id='L145' name='L145'></a>  
+<a id='L146' name='L146'></a>  new = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_OSPF_VERTEX_PARENT, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a>));
+<a id='L147' name='L147'></a>  
+<a id='L148' name='L148'></a>  <strong class='reserved'>if</strong> (new == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L149' name='L149'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L150' name='L150'></a>  
+<a id='L151' name='L151'></a>  new-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> = v;
+<a id='L152' name='L152'></a>  new-&gt;backlink = backlink;
+<a id='L153' name='L153'></a>  new-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = hop;
+<a id='L154' name='L154'></a>  <strong class='reserved'>return</strong> new;
+<a id='L155' name='L155'></a><em class='brace'>}</em>
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L158' name='L158'></a><a href='../R/10339.html' title='Multiple referred from 2 places.'>vertex_parent_free</a> (<strong class='reserved'>void</strong> *p)
+<a id='L159' name='L159'></a><em class='brace'>{</em>
+<a id='L160' name='L160'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF_VERTEX_PARENT, p);
+<a id='L161' name='L161'></a><em class='brace'>}</em>
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *
+<a id='L164' name='L164'></a><a href='../R/8548.html' title='Multiple referred from 2 places.'>ospf_vertex_new</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L165' name='L165'></a><em class='brace'>{</em>
+<a id='L166' name='L166'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *new;
+<a id='L167' name='L167'></a>
+<a id='L168' name='L168'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF_VERTEX, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a>));
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>  new-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = 0;
+<a id='L171' name='L171'></a>  new-&gt;stat = &amp;(lsa-&gt;stat);
+<a id='L172' name='L172'></a>  new-&gt;type = lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type;
+<a id='L173' name='L173'></a>  new-&gt;id = lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;id;
+<a id='L174' name='L174'></a>  new-&gt;lsa = lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L175' name='L175'></a>  new-&gt;children = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L176' name='L176'></a>  new-&gt;parents = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L177' name='L177'></a>  new-&gt;parents-&gt;del = <a href='../S/805.html#L158' title='Defined at 158 in ospfd/ospf_spf.c.'>vertex_parent_free</a>;
+<a id='L178' name='L178'></a>  
+<a id='L179' name='L179'></a>  <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (&amp;vertex_list, new);
+<a id='L180' name='L180'></a>  
+<a id='L181' name='L181'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L182' name='L182'></a>    zlog_debug ("%s: Created %s vertex %s", __func__,
+<a id='L183' name='L183'></a>                new-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a> ? "Router" : "Network",
+<a id='L184' name='L184'></a>                inet_ntoa (new-&gt;lsa-&gt;id));
+<a id='L185' name='L185'></a>  <strong class='reserved'>return</strong> new;
+<a id='L186' name='L186'></a><em class='brace'>}</em>
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L189' name='L189'></a><a href='../R/8547.html' title='Multiple referred from 2 places.'>ospf_vertex_free</a> (<strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>)
+<a id='L190' name='L190'></a><em class='brace'>{</em>
+<a id='L191' name='L191'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L192' name='L192'></a>  
+<a id='L193' name='L193'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L194' name='L194'></a>    zlog_debug ("%s: Free %s vertex %s", __func__,
+<a id='L195' name='L195'></a>                v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a> ? "Router" : "Network",
+<a id='L196' name='L196'></a>                inet_ntoa (v-&gt;lsa-&gt;id));
+<a id='L197' name='L197'></a>  
+<a id='L198' name='L198'></a>  <em class='comment'>/* There should be no parents potentially holding references to this vertex</em>
+<a id='L199' name='L199'></a><em class='comment'>   * Children however may still be there, but presumably referenced by other</em>
+<a id='L200' name='L200'></a><em class='comment'>   * vertices</em>
+<a id='L201' name='L201'></a><em class='comment'>   */</em>
+<a id='L202' name='L202'></a>  <em class='comment'>//assert (listcount (v-&gt;parents) == 0);</em>
+<a id='L203' name='L203'></a>  
+<a id='L204' name='L204'></a>  <strong class='reserved'>if</strong> (v-&gt;children)
+<a id='L205' name='L205'></a>    <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (v-&gt;children);
+<a id='L206' name='L206'></a>  v-&gt;children = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L207' name='L207'></a>  
+<a id='L208' name='L208'></a>  <strong class='reserved'>if</strong> (v-&gt;parents)
+<a id='L209' name='L209'></a>    <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (v-&gt;parents);
+<a id='L210' name='L210'></a>  v-&gt;parents = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L211' name='L211'></a>  
+<a id='L212' name='L212'></a>  v-&gt;lsa = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L213' name='L213'></a>  
+<a id='L214' name='L214'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF_VERTEX, v);
+<a id='L215' name='L215'></a><em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L218' name='L218'></a><a href='../R/8546.html' title='Multiple referred from 5 places.'>ospf_vertex_dump</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v,
+<a id='L219' name='L219'></a>                 <strong class='reserved'>int</strong> print_parents, <strong class='reserved'>int</strong> print_children)
+<a id='L220' name='L220'></a><em class='brace'>{</em>
+<a id='L221' name='L221'></a>  <strong class='reserved'>if</strong> ( ! <a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L222' name='L222'></a>    <strong class='reserved'>return</strong>;
+<a id='L223' name='L223'></a>
+<a id='L224' name='L224'></a>  zlog_debug("%s %s vertex %s  distance %u flags %u",
+<a id='L225' name='L225'></a>            <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>,
+<a id='L226' name='L226'></a>            v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a> ? "Router" : "Network",
+<a id='L227' name='L227'></a>            inet_ntoa(v-&gt;lsa-&gt;id),
+<a id='L228' name='L228'></a>            v-&gt;distance,
+<a id='L229' name='L229'></a>            (<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>)v-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>);
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a>  <strong class='reserved'>if</strong> (print_parents)
+<a id='L232' name='L232'></a>    <em class='brace'>{</em>
+<a id='L233' name='L233'></a>      <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L234' name='L234'></a>      <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp;
+<a id='L235' name='L235'></a>      
+<a id='L236' name='L236'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (v-&gt;parents, node, vp))
+<a id='L237' name='L237'></a>        <em class='brace'>{</em>
+<a id='L238' name='L238'></a>          <strong class='reserved'>char</strong> buf1[BUFSIZ];
+<a id='L239' name='L239'></a>          
+<a id='L240' name='L240'></a>          <strong class='reserved'>if</strong> (vp)
+<a id='L241' name='L241'></a>            <em class='brace'>{</em>
+<a id='L242' name='L242'></a>              zlog_debug ("parent %s backlink %d nexthop %s  interface %s",
+<a id='L243' name='L243'></a>                         inet_ntoa(vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;lsa-&gt;id), vp-&gt;backlink,
+<a id='L244' name='L244'></a>                         <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;router, buf1, BUFSIZ),
+<a id='L245' name='L245'></a>                         vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi ? <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a>(vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi) : "NULL");
+<a id='L246' name='L246'></a>            <em class='brace'>}</em>
+<a id='L247' name='L247'></a>        <em class='brace'>}</em>
+<a id='L248' name='L248'></a>    <em class='brace'>}</em>
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a>  <strong class='reserved'>if</strong> (print_children)
+<a id='L251' name='L251'></a>    <em class='brace'>{</em>
+<a id='L252' name='L252'></a>      <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *cnode;
+<a id='L253' name='L253'></a>      <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *cv;
+<a id='L254' name='L254'></a>      
+<a id='L255' name='L255'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (v-&gt;children, cnode, cv))
+<a id='L256' name='L256'></a>        <a href='../S/805.html#L218' title='Defined at 218 in ospfd/ospf_spf.c.'>ospf_vertex_dump</a>(" child:", cv, 0, 0);
+<a id='L257' name='L257'></a>    <em class='brace'>}</em>
+<a id='L258' name='L258'></a><em class='brace'>}</em>
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a><em class='comment'>/* Add a vertex to the list of children in each of its parents. */</em>
+<a id='L262' name='L262'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L263' name='L263'></a><a href='../S/805.html#L1211' title='Referred from 1211 in ospfd/ospf_spf.c.'>ospf_vertex_add_parent</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v)
+<a id='L264' name='L264'></a><em class='brace'>{</em>
+<a id='L265' name='L265'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp;
+<a id='L266' name='L266'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L267' name='L267'></a>  
+<a id='L268' name='L268'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (v &amp;&amp; v-&gt;parents);
+<a id='L269' name='L269'></a>  
+<a id='L270' name='L270'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (v-&gt;parents, node, vp))
+<a id='L271' name='L271'></a>    <em class='brace'>{</em>
+<a id='L272' name='L272'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> &amp;&amp; vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;children);
+<a id='L273' name='L273'></a>      
+<a id='L274' name='L274'></a>      <em class='comment'>/* No need to add two links from the same parent. */</em>
+<a id='L275' name='L275'></a>      <strong class='reserved'>if</strong> (<a href='../S/243.html#L235' title='Defined at 235 in lib/linklist.c.'>listnode_lookup</a> (vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;children, v) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L276' name='L276'></a>        <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;children, v);
+<a id='L277' name='L277'></a>    <em class='brace'>}</em>
+<a id='L278' name='L278'></a><em class='brace'>}</em>
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L281' name='L281'></a><a href='../S/805.html#L1180' title='Referred from 1180 in ospfd/ospf_spf.c.'>ospf_spf_init</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area)
+<a id='L282' name='L282'></a><em class='brace'>{</em>
+<a id='L283' name='L283'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v;
+<a id='L284' name='L284'></a>  
+<a id='L285' name='L285'></a>  <em class='comment'>/* Create root node. */</em>
+<a id='L286' name='L286'></a>  v = <a href='../S/805.html#L164' title='Defined at 164 in ospfd/ospf_spf.c.'>ospf_vertex_new</a> (area-&gt;router_lsa_self);
+<a id='L287' name='L287'></a>  
+<a id='L288' name='L288'></a>  area-&gt;spf = v;
+<a id='L289' name='L289'></a>
+<a id='L290' name='L290'></a>  <em class='comment'>/* Reset ABR and ASBR router counts. */</em>
+<a id='L291' name='L291'></a>  area-&gt;abr_count = 0;
+<a id='L292' name='L292'></a>  area-&gt;asbr_count = 0;
+<a id='L293' name='L293'></a><em class='brace'>}</em>
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a><em class='comment'>/* return index of link back to V from W, or -1 if no link found */</em>
+<a id='L296' name='L296'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L297' name='L297'></a><a href='../R/8233.html' title='Multiple referred from 2 places.'>ospf_lsa_has_link</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *w, <strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *v)
+<a id='L298' name='L298'></a><em class='brace'>{</em>
+<a id='L299' name='L299'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i, length;
+<a id='L300' name='L300'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *rl;
+<a id='L301' name='L301'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L182' title='Defined at 182 in ospfd/ospf_lsa.h.'>network_lsa</a> *nl;
+<a id='L302' name='L302'></a>
+<a id='L303' name='L303'></a>  <em class='comment'>/* In case of W is Network LSA. */</em>
+<a id='L304' name='L304'></a>  <strong class='reserved'>if</strong> (w-&gt;type == <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>)
+<a id='L305' name='L305'></a>    <em class='brace'>{</em>
+<a id='L306' name='L306'></a>      <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>)
+<a id='L307' name='L307'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L308' name='L308'></a>
+<a id='L309' name='L309'></a>      nl = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L182' title='Defined at 182 in ospfd/ospf_lsa.h.'>network_lsa</a> *) w;
+<a id='L310' name='L310'></a>      length = (ntohs (w-&gt;length) - <a href='../S/733.html#L50' title='Defined at 50 in ospfd/ospf_lsa.h.'>OSPF_LSA_HEADER_SIZE</a> - 4) / 4;
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a>      <strong class='reserved'>for</strong> (i = 0; i &lt; length; i++)
+<a id='L313' name='L313'></a>        <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;nl-&gt;routers[i], &amp;v-&gt;id))
+<a id='L314' name='L314'></a>          <strong class='reserved'>return</strong> i;
+<a id='L315' name='L315'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L316' name='L316'></a>    <em class='brace'>}</em>
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a>  <em class='comment'>/* In case of W is Router LSA. */</em>
+<a id='L319' name='L319'></a>  <strong class='reserved'>if</strong> (w-&gt;type == <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>)
+<a id='L320' name='L320'></a>    <em class='brace'>{</em>
+<a id='L321' name='L321'></a>      rl = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *) w;
+<a id='L322' name='L322'></a>
+<a id='L323' name='L323'></a>      length = ntohs (w-&gt;length);
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a>      <strong class='reserved'>for</strong> (i = 0;
+<a id='L326' name='L326'></a>           i &lt; ntohs (rl-&gt;links) &amp;&amp; length &gt;= <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>);
+<a id='L327' name='L327'></a>           i++, length -= 12)
+<a id='L328' name='L328'></a>        <em class='brace'>{</em>
+<a id='L329' name='L329'></a>          <strong class='reserved'>switch</strong> (rl-&gt;link[i].type)
+<a id='L330' name='L330'></a>            <em class='brace'>{</em>
+<a id='L331' name='L331'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L124' title='Defined at 124 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_POINTOPOINT</a>:
+<a id='L332' name='L332'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L127' title='Defined at 127 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_VIRTUALLINK</a>:
+<a id='L333' name='L333'></a>              <em class='comment'>/* Router LSA ID. */</em>
+<a id='L334' name='L334'></a>              <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a> &amp;&amp;
+<a id='L335' name='L335'></a>                  <a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;rl-&gt;link[i].link_id, &amp;v-&gt;id))
+<a id='L336' name='L336'></a>                <em class='brace'>{</em>
+<a id='L337' name='L337'></a>                  <strong class='reserved'>return</strong> i;
+<a id='L338' name='L338'></a>                <em class='brace'>}</em>
+<a id='L339' name='L339'></a>              <strong class='reserved'>break</strong>;
+<a id='L340' name='L340'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L125' title='Defined at 125 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_TRANSIT</a>:
+<a id='L341' name='L341'></a>              <em class='comment'>/* Network LSA ID. */</em>
+<a id='L342' name='L342'></a>              <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a> &amp;&amp;
+<a id='L343' name='L343'></a>                  <a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;rl-&gt;link[i].link_id, &amp;v-&gt;id))
+<a id='L344' name='L344'></a>                <em class='brace'>{</em>
+<a id='L345' name='L345'></a>                  <strong class='reserved'>return</strong> i;
+<a id='L346' name='L346'></a>                <em class='brace'>}</em>
+<a id='L347' name='L347'></a>              <strong class='reserved'>break</strong>;
+<a id='L348' name='L348'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L126' title='Defined at 126 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_STUB</a>:
+<a id='L349' name='L349'></a>              <em class='comment'>/* Stub can't lead anywhere, carry on */</em>
+<a id='L350' name='L350'></a>              <strong class='reserved'>continue</strong>;
+<a id='L351' name='L351'></a>            <strong class='reserved'>default</strong>:
+<a id='L352' name='L352'></a>              <strong class='reserved'>break</strong>;
+<a id='L353' name='L353'></a>            <em class='brace'>}</em>
+<a id='L354' name='L354'></a>        <em class='brace'>}</em>
+<a id='L355' name='L355'></a>    <em class='brace'>}</em>
+<a id='L356' name='L356'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L357' name='L357'></a><em class='brace'>}</em>
+<a id='L358' name='L358'></a>
+<a id='L359' name='L359'></a><em class='comment'>/* Find the next link after prev_link from v to w.  If prev_link is</em>
+<a id='L360' name='L360'></a><em class='comment'> * NULL, return the first link from v to w.  Ignore stub and virtual links;</em>
+<a id='L361' name='L361'></a><em class='comment'> * these link types will never be returned.</em>
+<a id='L362' name='L362'></a><em class='comment'> */</em>
+<a id='L363' name='L363'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *
+<a id='L364' name='L364'></a><a href='../R/8114.html' title='Multiple referred from 2 places.'>ospf_get_next_link</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *w,
+<a id='L365' name='L365'></a>                    <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *prev_link)
+<a id='L366' name='L366'></a><em class='brace'>{</em>
+<a id='L367' name='L367'></a>  u_char *p;
+<a id='L368' name='L368'></a>  u_char *lim;
+<a id='L369' name='L369'></a>  u_char lsa_type =  <a href='../S/733.html#L125' title='Defined at 125 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_TRANSIT</a>;
+<a id='L370' name='L370'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *l;
+<a id='L371' name='L371'></a>
+<a id='L372' name='L372'></a>  <strong class='reserved'>if</strong> (w-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L373' name='L373'></a>    lsa_type = <a href='../S/733.html#L124' title='Defined at 124 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_POINTOPOINT</a>;
+<a id='L374' name='L374'></a>
+<a id='L375' name='L375'></a>  <strong class='reserved'>if</strong> (prev_link == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L376' name='L376'></a>    p = ((u_char *) v-&gt;lsa) + <a href='../S/733.html#L50' title='Defined at 50 in ospfd/ospf_lsa.h.'>OSPF_LSA_HEADER_SIZE</a> + 4;
+<a id='L377' name='L377'></a>  <strong class='reserved'>else</strong>
+<a id='L378' name='L378'></a>    <em class='brace'>{</em>
+<a id='L379' name='L379'></a>      p = (u_char *) prev_link;
+<a id='L380' name='L380'></a>      p += (<a href='../S/733.html#L51' title='Defined at 51 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_LINK_SIZE</a> +
+<a id='L381' name='L381'></a>            (prev_link-&gt;m[0].tos_count * <a href='../S/733.html#L52' title='Defined at 52 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_TOS_SIZE</a>));
+<a id='L382' name='L382'></a>    <em class='brace'>}</em>
+<a id='L383' name='L383'></a>
+<a id='L384' name='L384'></a>  lim = ((u_char *) v-&gt;lsa) + ntohs (v-&gt;lsa-&gt;length);
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a>  <strong class='reserved'>while</strong> (p &lt; lim)
+<a id='L387' name='L387'></a>    <em class='brace'>{</em>
+<a id='L388' name='L388'></a>      l = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *) p;
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a>      p += (<a href='../S/733.html#L51' title='Defined at 51 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_LINK_SIZE</a> + (l-&gt;m[0].tos_count * <a href='../S/733.html#L52' title='Defined at 52 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_TOS_SIZE</a>));
+<a id='L391' name='L391'></a>
+<a id='L392' name='L392'></a>      <strong class='reserved'>if</strong> (l-&gt;m[0].type != lsa_type)
+<a id='L393' name='L393'></a>        <strong class='reserved'>continue</strong>;
+<a id='L394' name='L394'></a>
+<a id='L395' name='L395'></a>      <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;l-&gt;link_id, &amp;w-&gt;id))
+<a id='L396' name='L396'></a>        <strong class='reserved'>return</strong> l;
+<a id='L397' name='L397'></a>    <em class='brace'>}</em>
+<a id='L398' name='L398'></a>
+<a id='L399' name='L399'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L400' name='L400'></a><em class='brace'>}</em>
+<a id='L401' name='L401'></a>
+<a id='L402' name='L402'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L403' name='L403'></a><a href='../S/805.html#L456' title='Referred from 456 in ospfd/ospf_spf.c.'>ospf_spf_flush_parents</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *w)
+<a id='L404' name='L404'></a><em class='brace'>{</em>
+<a id='L405' name='L405'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp;
+<a id='L406' name='L406'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *ln, *nn;
+<a id='L407' name='L407'></a>  
+<a id='L408' name='L408'></a>  <em class='comment'>/* delete the existing nexthops */</em>
+<a id='L409' name='L409'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (w-&gt;parents, ln, nn, vp))
+<a id='L410' name='L410'></a>    <em class='brace'>{</em>
+<a id='L411' name='L411'></a>      <a href='../S/243.html#L248' title='Defined at 248 in lib/linklist.c.'>list_delete_node</a> (w-&gt;parents, ln);
+<a id='L412' name='L412'></a>      <a href='../S/805.html#L158' title='Defined at 158 in ospfd/ospf_spf.c.'>vertex_parent_free</a> (vp);
+<a id='L413' name='L413'></a>    <em class='brace'>}</em>
+<a id='L414' name='L414'></a><em class='brace'>}</em>
+<a id='L415' name='L415'></a>
+<a id='L416' name='L416'></a><em class='comment'>/* </em>
+<a id='L417' name='L417'></a><em class='comment'> * Consider supplied next-hop for inclusion to the supplied list of</em>
+<a id='L418' name='L418'></a><em class='comment'> * equal-cost next-hops, adjust list as neccessary.  </em>
+<a id='L419' name='L419'></a><em class='comment'> */</em>
+<a id='L420' name='L420'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L421' name='L421'></a><a href='../R/8510.html' title='Multiple referred from 5 places.'>ospf_spf_add_parent</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *w,
+<a id='L422' name='L422'></a>                     <strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a> *newhop,
+<a id='L423' name='L423'></a>                     <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> distance)
+<a id='L424' name='L424'></a><em class='brace'>{</em>
+<a id='L425' name='L425'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp, *wp;
+<a id='L426' name='L426'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L427' name='L427'></a>    
+<a id='L428' name='L428'></a>  <em class='comment'>/* we must have a newhop, and a distance */</em>
+<a id='L429' name='L429'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (v &amp;&amp; w &amp;&amp; newhop);
+<a id='L430' name='L430'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (distance);
+<a id='L431' name='L431'></a>  
+<a id='L432' name='L432'></a>  <em class='comment'>/* IFF w has already been assigned a distance, then we shouldn't get here</em>
+<a id='L433' name='L433'></a><em class='comment'>   * unless callers have determined V(l)-&gt;W is shortest / equal-shortest</em>
+<a id='L434' name='L434'></a><em class='comment'>   * path (0 is a special case distance (no distance yet assigned)).</em>
+<a id='L435' name='L435'></a><em class='comment'>   */</em>
+<a id='L436' name='L436'></a>  <strong class='reserved'>if</strong> (w-&gt;distance)
+<a id='L437' name='L437'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (distance &lt;= w-&gt;distance);
+<a id='L438' name='L438'></a>  <strong class='reserved'>else</strong>
+<a id='L439' name='L439'></a>    w-&gt;distance = distance;
+<a id='L440' name='L440'></a>  
+<a id='L441' name='L441'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L442' name='L442'></a>    <em class='brace'>{</em>
+<a id='L443' name='L443'></a>      <strong class='reserved'>char</strong> buf[2][<a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a>];
+<a id='L444' name='L444'></a>      zlog_debug ("%s: Adding %s as parent of %s",
+<a id='L445' name='L445'></a>                __func__,
+<a id='L446' name='L446'></a>                <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;v-&gt;lsa-&gt;id, buf[0], <strong class='reserved'>sizeof</strong>(buf[0])),
+<a id='L447' name='L447'></a>                <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a>(AF_INET, &amp;w-&gt;lsa-&gt;id, buf[1], <strong class='reserved'>sizeof</strong>(buf[1])));
+<a id='L448' name='L448'></a>    <em class='brace'>}</em>           
+<a id='L449' name='L449'></a>
+<a id='L450' name='L450'></a>  <em class='comment'>/* Adding parent for a new, better path: flush existing parents from W. */</em>
+<a id='L451' name='L451'></a>  <strong class='reserved'>if</strong> (distance &lt; w-&gt;distance)
+<a id='L452' name='L452'></a>    <em class='brace'>{</em>
+<a id='L453' name='L453'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L454' name='L454'></a>        zlog_debug ("%s: distance %d better than %d, flushing existing parents",
+<a id='L455' name='L455'></a>                    __func__, distance, w-&gt;distance);
+<a id='L456' name='L456'></a>      <a href='../S/805.html#L403' title='Defined at 403 in ospfd/ospf_spf.c.'>ospf_spf_flush_parents</a> (w);
+<a id='L457' name='L457'></a>      w-&gt;distance = distance;
+<a id='L458' name='L458'></a>    <em class='brace'>}</em>
+<a id='L459' name='L459'></a>  
+<a id='L460' name='L460'></a>  <em class='comment'>/* new parent is &lt;= existing parents, add it to parent list (if nexthop</em>
+<a id='L461' name='L461'></a><em class='comment'>   * not on parent list)</em>
+<a id='L462' name='L462'></a><em class='comment'>   */</em>  
+<a id='L463' name='L463'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a>(w-&gt;parents, node, wp))
+<a id='L464' name='L464'></a>    <em class='brace'>{</em>
+<a id='L465' name='L465'></a>      <strong class='reserved'>if</strong> (<a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(newhop, wp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, <strong class='reserved'>sizeof</strong>(*newhop)) == 0)
+<a id='L466' name='L466'></a>        <em class='brace'>{</em>
+<a id='L467' name='L467'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L468' name='L468'></a>            zlog_debug ("%s: ... nexthop already on parent list, skipping add", __func__);
+<a id='L469' name='L469'></a>          <strong class='reserved'>return</strong>;
+<a id='L470' name='L470'></a>        <em class='brace'>}</em>
+<a id='L471' name='L471'></a>    <em class='brace'>}</em>
+<a id='L472' name='L472'></a>
+<a id='L473' name='L473'></a>  vp = <a href='../S/805.html#L142' title='Defined at 142 in ospfd/ospf_spf.c.'>vertex_parent_new</a> (v, <a href='../S/805.html#L297' title='Defined at 297 in ospfd/ospf_spf.c.'>ospf_lsa_has_link</a> (w-&gt;lsa, v-&gt;lsa), newhop);
+<a id='L474' name='L474'></a>  <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (w-&gt;parents, vp);
+<a id='L475' name='L475'></a>
+<a id='L476' name='L476'></a>  <strong class='reserved'>return</strong>;
+<a id='L477' name='L477'></a><em class='brace'>}</em>
+<a id='L478' name='L478'></a>
+<a id='L479' name='L479'></a><em class='comment'>/* 16.1.1.  Calculate nexthop from root through V (parent) to</em>
+<a id='L480' name='L480'></a><em class='comment'> * vertex W (destination), with given distance from root-&gt;W.</em>
+<a id='L481' name='L481'></a><em class='comment'> *</em>
+<a id='L482' name='L482'></a><em class='comment'> * The link must be supplied if V is the root vertex. In all other cases</em>
+<a id='L483' name='L483'></a><em class='comment'> * it may be NULL.</em>
+<a id='L484' name='L484'></a><em class='comment'> *</em>
+<a id='L485' name='L485'></a><em class='comment'> * Note that this function may fail, hence the state of the destination</em>
+<a id='L486' name='L486'></a><em class='comment'> * vertex, W, should /not/ be modified in a dependent manner until</em>
+<a id='L487' name='L487'></a><em class='comment'> * this function returns. This function will update the W vertex with the</em>
+<a id='L488' name='L488'></a><em class='comment'> * provided distance as appropriate.</em>
+<a id='L489' name='L489'></a><em class='comment'> */</em>
+<a id='L490' name='L490'></a><strong class='reserved'>static</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>
+<a id='L491' name='L491'></a><a href='../R/8352.html' title='Multiple referred from 3 places.'>ospf_nexthop_calculation</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v,
+<a id='L492' name='L492'></a>                          <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *w, <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *l,
+<a id='L493' name='L493'></a>                          <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> distance, <strong class='reserved'>int</strong> lsa_pos)
+<a id='L494' name='L494'></a><em class='brace'>{</em>
+<a id='L495' name='L495'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L496' name='L496'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a> *nh;
+<a id='L497' name='L497'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp;
+<a id='L498' name='L498'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L499' name='L499'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> added = 0;
+<a id='L500' name='L500'></a>  <strong class='reserved'>char</strong> buf1[BUFSIZ];
+<a id='L501' name='L501'></a>  <strong class='reserved'>char</strong> buf2[BUFSIZ];
+<a id='L502' name='L502'></a>
+<a id='L503' name='L503'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L504' name='L504'></a>    <em class='brace'>{</em>
+<a id='L505' name='L505'></a>      zlog_debug ("ospf_nexthop_calculation(): Start");
+<a id='L506' name='L506'></a>      <a href='../S/805.html#L218' title='Defined at 218 in ospfd/ospf_spf.c.'>ospf_vertex_dump</a>("V (parent):", v, 1, 1);
+<a id='L507' name='L507'></a>      <a href='../S/805.html#L218' title='Defined at 218 in ospfd/ospf_spf.c.'>ospf_vertex_dump</a>("W (dest)  :", w, 1, 1);
+<a id='L508' name='L508'></a>      zlog_debug ("V-&gt;W distance: %d", distance);
+<a id='L509' name='L509'></a>    <em class='brace'>}</em>
+<a id='L510' name='L510'></a>
+<a id='L511' name='L511'></a>  <strong class='reserved'>if</strong> (v == area-&gt;spf)
+<a id='L512' name='L512'></a>    <em class='brace'>{</em>      
+<a id='L513' name='L513'></a>      <em class='comment'>/* 16.1.1 para 4.  In the first case, the parent vertex (V) is the</em>
+<a id='L514' name='L514'></a><em class='comment'>         root (the calculating router itself).  This means that the </em>
+<a id='L515' name='L515'></a><em class='comment'>         destination is either a directly connected network or directly</em>
+<a id='L516' name='L516'></a><em class='comment'>         connected router.  The outgoing interface in this case is simply </em>
+<a id='L517' name='L517'></a><em class='comment'>         the OSPF interface connecting to the destination network/router.</em>
+<a id='L518' name='L518'></a><em class='comment'>      */</em>
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a>      <em class='comment'>/* we *must* be supplied with the link data */</em>
+<a id='L521' name='L521'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (l != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L522' name='L522'></a>      oi = <a href='../S/788.html#L397' title='Defined at 397 in ospfd/ospf_interface.c.'>ospf_if_lookup_by_lsa_pos</a> (area, lsa_pos);
+<a id='L523' name='L523'></a>      <strong class='reserved'>if</strong> (!oi)
+<a id='L524' name='L524'></a>        <em class='brace'>{</em>
+<a id='L525' name='L525'></a>          zlog_debug("%s: OI not found in LSA: lsa_pos:%d link_id:%s link_data:%s",
+<a id='L526' name='L526'></a>                     __func__, lsa_pos,
+<a id='L527' name='L527'></a>                     <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;l-&gt;link_id, buf1, BUFSIZ),
+<a id='L528' name='L528'></a>                     <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;l-&gt;link_data, buf2, BUFSIZ));
+<a id='L529' name='L529'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L530' name='L530'></a>        <em class='brace'>}</em>
+<a id='L531' name='L531'></a>
+<a id='L532' name='L532'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L533' name='L533'></a>        <em class='brace'>{</em>
+<a id='L534' name='L534'></a>          zlog_debug("%s: considering link:%s "
+<a id='L535' name='L535'></a>                     "type:%d link_id:%s link_data:%s",
+<a id='L536' name='L536'></a>                     __func__, oi-&gt;ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, l-&gt;m[0].type,
+<a id='L537' name='L537'></a>                     <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;l-&gt;link_id, buf1, BUFSIZ),
+<a id='L538' name='L538'></a>                     <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;l-&gt;link_data, buf2, BUFSIZ));
+<a id='L539' name='L539'></a>        <em class='brace'>}</em>
+<a id='L540' name='L540'></a>
+<a id='L541' name='L541'></a>      <strong class='reserved'>if</strong> (w-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L542' name='L542'></a>        <em class='brace'>{</em>
+<a id='L543' name='L543'></a>          <em class='comment'>/* l  is a link from v to w</em>
+<a id='L544' name='L544'></a><em class='comment'>           * l2 will be link from w to v</em>
+<a id='L545' name='L545'></a><em class='comment'>           */</em>
+<a id='L546' name='L546'></a>          <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *l2 = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L547' name='L547'></a>
+<a id='L548' name='L548'></a>          <strong class='reserved'>if</strong> (l-&gt;m[0].type == <a href='../S/733.html#L124' title='Defined at 124 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_POINTOPOINT</a>)
+<a id='L549' name='L549'></a>            <em class='brace'>{</em>
+<a id='L550' name='L550'></a>              <strong class='reserved'>struct</strong> in_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L551' name='L551'></a>
+<a id='L552' name='L552'></a>              <em class='comment'>/* If the destination is a router which connects to</em>
+<a id='L553' name='L553'></a><em class='comment'>                 the calculating router via a Point-to-MultiPoint</em>
+<a id='L554' name='L554'></a><em class='comment'>                 network, the destination's next hop IP address(es)</em>
+<a id='L555' name='L555'></a><em class='comment'>                 can be determined by examining the destination's</em>
+<a id='L556' name='L556'></a><em class='comment'>                 router-LSA: each link pointing back to the</em>
+<a id='L557' name='L557'></a><em class='comment'>                 calculating router and having a Link Data field</em>
+<a id='L558' name='L558'></a><em class='comment'>                 belonging to the Point-to-MultiPoint network</em>
+<a id='L559' name='L559'></a><em class='comment'>                 provides an IP address of the next hop router.</em>
+<a id='L560' name='L560'></a><em class='comment'></em>
+<a id='L561' name='L561'></a><em class='comment'>                 At this point l is a link from V to W, and V is the</em>
+<a id='L562' name='L562'></a><em class='comment'>                 root ("us"). If it is a point-to-multipoint interface,</em>
+<a id='L563' name='L563'></a><em class='comment'>                 then look through the links in the opposite direction (W to V).</em>
+<a id='L564' name='L564'></a><em class='comment'>                 If any of them have an address that lands within the</em>
+<a id='L565' name='L565'></a><em class='comment'>                 subnet declared by the PtMP link, then that link</em>
+<a id='L566' name='L566'></a><em class='comment'>                 is a constituent of the PtMP link, and its address is</em>
+<a id='L567' name='L567'></a><em class='comment'>                 a nexthop address for V.</em>
+<a id='L568' name='L568'></a><em class='comment'>              */</em>
+<a id='L569' name='L569'></a>              <strong class='reserved'>if</strong> (oi-&gt;type == <a href='../S/791.html#L144' title='Defined at 144 in ospfd/ospf_interface.h.'>OSPF_IFTYPE_POINTOPOINT</a>)
+<a id='L570' name='L570'></a>                <em class='brace'>{</em>
+<a id='L571' name='L571'></a>                  <em class='comment'>/* Having nexthop = 0 is tempting, but NOT acceptable.</em>
+<a id='L572' name='L572'></a><em class='comment'>                     It breaks AS-External routes with a forwarding address,</em>
+<a id='L573' name='L573'></a><em class='comment'>                     since ospf_ase_complete_direct_routes() will mistakenly</em>
+<a id='L574' name='L574'></a><em class='comment'>                     assume we've reached the last hop and should place the</em>
+<a id='L575' name='L575'></a><em class='comment'>                     forwarding address as nexthop.</em>
+<a id='L576' name='L576'></a><em class='comment'>                     Also, users may configure multi-access links in p2p mode,</em>
+<a id='L577' name='L577'></a><em class='comment'>                     so we need the IP to ARP the nexthop.</em>
+<a id='L578' name='L578'></a><em class='comment'>                  */</em>
+<a id='L579' name='L579'></a>                  <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr_w;
+<a id='L580' name='L580'></a>
+<a id='L581' name='L581'></a>                  nbr_w = <a href='../S/756.html#L320' title='Defined at 320 in ospfd/ospf_neighbor.c.'>ospf_nbr_lookup_by_routerid</a> (oi-&gt;nbrs, &amp;l-&gt;link_id);
+<a id='L582' name='L582'></a>                  <strong class='reserved'>if</strong> (nbr_w != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L583' name='L583'></a>                    <em class='brace'>{</em>
+<a id='L584' name='L584'></a>                      added = 1;
+<a id='L585' name='L585'></a>                      <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = nbr_w-&gt;src;
+<a id='L586' name='L586'></a>                    <em class='brace'>}</em>
+<a id='L587' name='L587'></a>                <em class='brace'>}</em>
+<a id='L588' name='L588'></a>              <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (oi-&gt;type == <a href='../S/791.html#L147' title='Defined at 147 in ospfd/ospf_interface.h.'>OSPF_IFTYPE_POINTOMULTIPOINT</a>)
+<a id='L589' name='L589'></a>                <em class='brace'>{</em>
+<a id='L590' name='L590'></a>                  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> la;
+<a id='L591' name='L591'></a>
+<a id='L592' name='L592'></a>                  la.family = AF_INET;
+<a id='L593' name='L593'></a>                  la.prefixlen = oi-&gt;address-&gt;prefixlen;
+<a id='L594' name='L594'></a>
+<a id='L595' name='L595'></a>                  <em class='comment'>/* V links to W on PtMP interface</em>
+<a id='L596' name='L596'></a><em class='comment'>                     - find the interface address on W */</em>
+<a id='L597' name='L597'></a>                  <strong class='reserved'>while</strong> ((l2 = <a href='../S/805.html#L364' title='Defined at 364 in ospfd/ospf_spf.c.'>ospf_get_next_link</a> (w, v, l2)))
+<a id='L598' name='L598'></a>                    <em class='brace'>{</em>
+<a id='L599' name='L599'></a>                      la.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = l2-&gt;link_data;
+<a id='L600' name='L600'></a>
+<a id='L601' name='L601'></a>                      <strong class='reserved'>if</strong> (<a href='../S/250.html#L306' title='Defined at 306 in lib/prefix.c.'>prefix_cmp</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;la,
+<a id='L602' name='L602'></a>                                      oi-&gt;address) != 0)
+<a id='L603' name='L603'></a>                        <strong class='reserved'>continue</strong>;
+<a id='L604' name='L604'></a>                      <em class='comment'>/* link_data is on our PtMP network */</em>
+<a id='L605' name='L605'></a>                      added = 1;
+<a id='L606' name='L606'></a>                      <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = l2-&gt;link_data;
+<a id='L607' name='L607'></a>                      <strong class='reserved'>break</strong>;
+<a id='L608' name='L608'></a>                    <em class='brace'>}</em>
+<a id='L609' name='L609'></a>                <em class='brace'>}</em>
+<a id='L610' name='L610'></a>
+<a id='L611' name='L611'></a>              <strong class='reserved'>if</strong> (added)
+<a id='L612' name='L612'></a>                <em class='brace'>{</em>
+<a id='L613' name='L613'></a>                  <em class='comment'>/* found all necessary info to build nexthop */</em>
+<a id='L614' name='L614'></a>                  nh = <a href='../S/805.html#L95' title='Defined at 95 in ospfd/ospf_spf.c.'>vertex_nexthop_new</a> ();
+<a id='L615' name='L615'></a>                  nh-&gt;oi = oi;
+<a id='L616' name='L616'></a>                  nh-&gt;router = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L617' name='L617'></a>                  <a href='../S/805.html#L421' title='Defined at 421 in ospfd/ospf_spf.c.'>ospf_spf_add_parent</a> (v, w, nh, distance);
+<a id='L618' name='L618'></a>                  <strong class='reserved'>return</strong> 1;
+<a id='L619' name='L619'></a>                <em class='brace'>}</em>
+<a id='L620' name='L620'></a>              <strong class='reserved'>else</strong>
+<a id='L621' name='L621'></a>                zlog_info("%s: could not determine nexthop for link %s",
+<a id='L622' name='L622'></a>                          __func__, oi-&gt;ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L623' name='L623'></a>            <em class='brace'>}</em> <em class='comment'>/* end point-to-point link from V to W */</em>
+<a id='L624' name='L624'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (l-&gt;m[0].type == <a href='../S/733.html#L127' title='Defined at 127 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_VIRTUALLINK</a>)
+<a id='L625' name='L625'></a>            <em class='brace'>{</em>
+<a id='L626' name='L626'></a>              <strong class='reserved'>struct</strong> <a href='../S/791.html#L98' title='Defined at 98 in ospfd/ospf_interface.h.'>ospf_vl_data</a> *vl_data;
+<a id='L627' name='L627'></a>              
+<a id='L628' name='L628'></a>              <em class='comment'>/* VLink implementation limitations: </em>
+<a id='L629' name='L629'></a><em class='comment'>               * a) vl_data can only reference one nexthop, so no ECMP</em>
+<a id='L630' name='L630'></a><em class='comment'>               *    to backbone through VLinks. Though transit-area </em>
+<a id='L631' name='L631'></a><em class='comment'>               *    summaries may be considered, and those can be ECMP.</em>
+<a id='L632' name='L632'></a><em class='comment'>               * b) We can only use /one/ VLink, even if multiple ones</em>
+<a id='L633' name='L633'></a><em class='comment'>               *    exist this router through multiple transit-areas.</em>
+<a id='L634' name='L634'></a><em class='comment'>               */</em>
+<a id='L635' name='L635'></a>              vl_data = <a href='../S/788.html#L940' title='Defined at 940 in ospfd/ospf_interface.c.'>ospf_vl_lookup</a> (area-&gt;<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, l-&gt;link_id);
+<a id='L636' name='L636'></a>              
+<a id='L637' name='L637'></a>              <strong class='reserved'>if</strong> (vl_data 
+<a id='L638' name='L638'></a>                  &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (vl_data-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/791.html#L113' title='Defined at 113 in ospfd/ospf_interface.h.'>OSPF_VL_FLAG_APPROVED</a>))
+<a id='L639' name='L639'></a>                <em class='brace'>{</em>
+<a id='L640' name='L640'></a>                  nh = <a href='../S/805.html#L95' title='Defined at 95 in ospfd/ospf_spf.c.'>vertex_nexthop_new</a> ();
+<a id='L641' name='L641'></a>                  nh-&gt;oi = vl_data-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.oi;
+<a id='L642' name='L642'></a>                  nh-&gt;router = vl_data-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.router;
+<a id='L643' name='L643'></a>                  <a href='../S/805.html#L421' title='Defined at 421 in ospfd/ospf_spf.c.'>ospf_spf_add_parent</a> (v, w, nh, distance);
+<a id='L644' name='L644'></a>                  <strong class='reserved'>return</strong> 1;
+<a id='L645' name='L645'></a>                <em class='brace'>}</em>
+<a id='L646' name='L646'></a>              <strong class='reserved'>else</strong>
+<a id='L647' name='L647'></a>                  zlog_info("ospf_nexthop_calculation(): "
+<a id='L648' name='L648'></a>                            "vl_data for VL link not found");
+<a id='L649' name='L649'></a>            <em class='brace'>}</em> <em class='comment'>/* end virtual-link from V to W */</em>
+<a id='L650' name='L650'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L651' name='L651'></a>        <em class='brace'>}</em> <em class='comment'>/* end W is a Router vertex */</em>
+<a id='L652' name='L652'></a>      <strong class='reserved'>else</strong>
+<a id='L653' name='L653'></a>        <em class='brace'>{</em>
+<a id='L654' name='L654'></a>          <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(w-&gt;type == <a href='../S/812.html#L28' title='Defined at 28 in ospfd/ospf_spf.h.'>OSPF_VERTEX_NETWORK</a>);
+<a id='L655' name='L655'></a>
+<a id='L656' name='L656'></a>          nh = <a href='../S/805.html#L95' title='Defined at 95 in ospfd/ospf_spf.c.'>vertex_nexthop_new</a> ();
+<a id='L657' name='L657'></a>          nh-&gt;oi = oi;
+<a id='L658' name='L658'></a>          nh-&gt;router.s_addr = 0; <em class='comment'>/* Nexthop not required */</em>
+<a id='L659' name='L659'></a>          <a href='../S/805.html#L421' title='Defined at 421 in ospfd/ospf_spf.c.'>ospf_spf_add_parent</a> (v, w, nh, distance);
+<a id='L660' name='L660'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L661' name='L661'></a>        <em class='brace'>}</em>
+<a id='L662' name='L662'></a>    <em class='brace'>}</em> <em class='comment'>/* end V is the root */</em>
+<a id='L663' name='L663'></a>  <em class='comment'>/* Check if W's parent is a network connected to root. */</em>
+<a id='L664' name='L664'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/812.html#L28' title='Defined at 28 in ospfd/ospf_spf.h.'>OSPF_VERTEX_NETWORK</a>)
+<a id='L665' name='L665'></a>    <em class='brace'>{</em>
+<a id='L666' name='L666'></a>      <em class='comment'>/* See if any of V's parents are the root. */</em>
+<a id='L667' name='L667'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (v-&gt;parents, node, nnode, vp))
+<a id='L668' name='L668'></a>        <em class='brace'>{</em>
+<a id='L669' name='L669'></a>          <strong class='reserved'>if</strong> (vp-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> == area-&gt;spf) <em class='comment'>/* connects to root? */</em>
+<a id='L670' name='L670'></a>            <em class='brace'>{</em>
+<a id='L671' name='L671'></a>              <em class='comment'>/* 16.1.1 para 5. ...the parent vertex is a network that</em>
+<a id='L672' name='L672'></a><em class='comment'>               * directly connects the calculating router to the destination</em>
+<a id='L673' name='L673'></a><em class='comment'>               * router.  The list of next hops is then determined by</em>
+<a id='L674' name='L674'></a><em class='comment'>               * examining the destination's router-LSA...</em>
+<a id='L675' name='L675'></a><em class='comment'>               */</em>
+<a id='L676' name='L676'></a>
+<a id='L677' name='L677'></a>              <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(w-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>);
+<a id='L678' name='L678'></a>              <strong class='reserved'>while</strong> ((l = <a href='../S/805.html#L364' title='Defined at 364 in ospfd/ospf_spf.c.'>ospf_get_next_link</a> (w, v, l)))
+<a id='L679' name='L679'></a>                <em class='brace'>{</em>
+<a id='L680' name='L680'></a>                  <em class='comment'>/* ...For each link in the router-LSA that points back to the</em>
+<a id='L681' name='L681'></a><em class='comment'>                   * parent network, the link's Link Data field provides the IP</em>
+<a id='L682' name='L682'></a><em class='comment'>                   * address of a next hop router.  The outgoing interface to</em>
+<a id='L683' name='L683'></a><em class='comment'>                   * use can then be derived from the next hop IP address (or </em>
+<a id='L684' name='L684'></a><em class='comment'>                   * it can be inherited from the parent network).</em>
+<a id='L685' name='L685'></a><em class='comment'>                   */</em>
+<a id='L686' name='L686'></a>                  nh = <a href='../S/805.html#L95' title='Defined at 95 in ospfd/ospf_spf.c.'>vertex_nexthop_new</a> ();
+<a id='L687' name='L687'></a>                  nh-&gt;oi = vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi;
+<a id='L688' name='L688'></a>                  nh-&gt;router = l-&gt;link_data;
+<a id='L689' name='L689'></a>                  added = 1;
+<a id='L690' name='L690'></a>                  <a href='../S/805.html#L421' title='Defined at 421 in ospfd/ospf_spf.c.'>ospf_spf_add_parent</a> (v, w, nh, distance);
+<a id='L691' name='L691'></a>                <em class='brace'>}</em>
+<a id='L692' name='L692'></a>              <em class='comment'>/* Note lack of return is deliberate. See next comment. */</em>
+<a id='L693' name='L693'></a>          <em class='brace'>}</em>
+<a id='L694' name='L694'></a>        <em class='brace'>}</em>
+<a id='L695' name='L695'></a>      <em class='comment'>/* NB: This code is non-trivial.</em>
+<a id='L696' name='L696'></a><em class='comment'>       * </em>
+<a id='L697' name='L697'></a><em class='comment'>       * E.g. it is not enough to know that V connects to the root. It is</em>
+<a id='L698' name='L698'></a><em class='comment'>       * also important that the while above, looping through all links from</em>
+<a id='L699' name='L699'></a><em class='comment'>       * W-&gt;V found at least one link, so that we know there is</em>
+<a id='L700' name='L700'></a><em class='comment'>       * bi-directional connectivity between V and W (which need not be the</em>
+<a id='L701' name='L701'></a><em class='comment'>       * case, e.g.  when OSPF has not yet converged fully).  Otherwise, if</em>
+<a id='L702' name='L702'></a><em class='comment'>       * we /always/ return here, without having checked that root-&gt;V-&gt;-W</em>
+<a id='L703' name='L703'></a><em class='comment'>       * actually resulted in a valid nexthop being created, then we we will</em>
+<a id='L704' name='L704'></a><em class='comment'>       * prevent SPF from finding/using higher cost paths.</em>
+<a id='L705' name='L705'></a><em class='comment'>       *</em>
+<a id='L706' name='L706'></a><em class='comment'>       * It is important, if root-&gt;V-&gt;W has not been added, that we continue</em>
+<a id='L707' name='L707'></a><em class='comment'>       * through to the intervening-router nexthop code below.  So as to</em>
+<a id='L708' name='L708'></a><em class='comment'>       * ensure other paths to V may be used.  This avoids unnecessary</em>
+<a id='L709' name='L709'></a><em class='comment'>       * blackholes while OSPF is convergening.</em>
+<a id='L710' name='L710'></a><em class='comment'>       *</em>
+<a id='L711' name='L711'></a><em class='comment'>       * I.e. we may have arrived at this function, examining V -&gt; W, via</em>
+<a id='L712' name='L712'></a><em class='comment'>       * workable paths other than root -&gt; V, and it's important to avoid</em>
+<a id='L713' name='L713'></a><em class='comment'>       * getting "confused" by non-working root-&gt;V-&gt;W path - it's important</em>
+<a id='L714' name='L714'></a><em class='comment'>       * to *not* lose the working non-root paths, just because of a</em>
+<a id='L715' name='L715'></a><em class='comment'>       * non-viable root-&gt;V-&gt;W.</em>
+<a id='L716' name='L716'></a><em class='comment'>       *</em>
+<a id='L717' name='L717'></a><em class='comment'>       * See also bug #330 (required reading!), and:</em>
+<a id='L718' name='L718'></a><em class='comment'>       *</em>
+<a id='L719' name='L719'></a><em class='comment'>       * http://blogs.oracle.com/paulj/entry/the_difference_a_line_makes</em>
+<a id='L720' name='L720'></a><em class='comment'>       */</em>
+<a id='L721' name='L721'></a>      <strong class='reserved'>if</strong> (added)
+<a id='L722' name='L722'></a>        <strong class='reserved'>return</strong> added;
+<a id='L723' name='L723'></a>    <em class='brace'>}</em>
+<a id='L724' name='L724'></a>
+<a id='L725' name='L725'></a>  <em class='comment'>/* 16.1.1 para 4.  If there is at least one intervening router in the</em>
+<a id='L726' name='L726'></a><em class='comment'>   * current shortest path between the destination and the root, the</em>
+<a id='L727' name='L727'></a><em class='comment'>   * destination simply inherits the set of next hops from the</em>
+<a id='L728' name='L728'></a><em class='comment'>   * parent.</em>
+<a id='L729' name='L729'></a><em class='comment'>   */</em>
+<a id='L730' name='L730'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L731' name='L731'></a>    zlog_debug ("%s: Intervening routers, adding parent(s)", __func__);
+<a id='L732' name='L732'></a>
+<a id='L733' name='L733'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (v-&gt;parents, node, nnode, vp))
+<a id='L734' name='L734'></a>    <em class='brace'>{</em>
+<a id='L735' name='L735'></a>      added = 1;
+<a id='L736' name='L736'></a>      <a href='../S/805.html#L421' title='Defined at 421 in ospfd/ospf_spf.c.'>ospf_spf_add_parent</a> (v, w, vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, distance);
+<a id='L737' name='L737'></a>    <em class='brace'>}</em>
+<a id='L738' name='L738'></a>  
+<a id='L739' name='L739'></a>  <strong class='reserved'>return</strong> added;
+<a id='L740' name='L740'></a><em class='brace'>}</em>
+<a id='L741' name='L741'></a>
+<a id='L742' name='L742'></a><em class='comment'>/* RFC2328 Section 16.1 (2).</em>
+<a id='L743' name='L743'></a><em class='comment'> * v is on the SPF tree.  Examine the links in v's LSA.  Update the list</em>
+<a id='L744' name='L744'></a><em class='comment'> * of candidates with any vertices not already on the list.  If a lower-cost</em>
+<a id='L745' name='L745'></a><em class='comment'> * path is found to a vertex already on the candidate list, store the new cost.</em>
+<a id='L746' name='L746'></a><em class='comment'> */</em>
+<a id='L747' name='L747'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L748' name='L748'></a><a href='../S/805.html#L1193' title='Referred from 1193 in ospfd/ospf_spf.c.'>ospf_spf_next</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v, <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area,
+<a id='L749' name='L749'></a>               <strong class='reserved'>struct</strong> <a href='../S/233.html#L24' title='Defined at 24 in lib/pqueue.h.'>pqueue</a> * candidate)
+<a id='L750' name='L750'></a><em class='brace'>{</em>
+<a id='L751' name='L751'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *w_lsa = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L752' name='L752'></a>  u_char *p;
+<a id='L753' name='L753'></a>  u_char *lim;
+<a id='L754' name='L754'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *l = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L755' name='L755'></a>  <strong class='reserved'>struct</strong> in_addr *r;
+<a id='L756' name='L756'></a>  <strong class='reserved'>int</strong> type = 0, lsa_pos=-1, lsa_pos_next=0;
+<a id='L757' name='L757'></a>
+<a id='L758' name='L758'></a>  <em class='comment'>/* If this is a router-LSA, and bit V of the router-LSA (see Section</em>
+<a id='L759' name='L759'></a><em class='comment'>     A.4.2:RFC2328) is set, set Area A's TransitCapability to TRUE.  */</em>
+<a id='L760' name='L760'></a>  <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L761' name='L761'></a>    <em class='brace'>{</em>
+<a id='L762' name='L762'></a>      <strong class='reserved'>if</strong> (<a href='../S/733.html#L136' title='Defined at 136 in ospfd/ospf_lsa.h.'>IS_ROUTER_LSA_VIRTUAL</a> ((<strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *) v-&gt;lsa))
+<a id='L763' name='L763'></a>        area-&gt;<a href='../S/642.html#L126' title='Defined at 126 in bgpd/bgp_attr.h.'>transit</a> = <a href='../S/790.html#L384' title='Defined at 384 in ospfd/ospfd.h.'>OSPF_TRANSIT_TRUE</a>;
+<a id='L764' name='L764'></a>    <em class='brace'>}</em>
+<a id='L765' name='L765'></a>  
+<a id='L766' name='L766'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L767' name='L767'></a>    zlog_debug ("%s: Next vertex of %s vertex %s",
+<a id='L768' name='L768'></a>                __func__, 
+<a id='L769' name='L769'></a>                v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a> ? "Router" : "Network",
+<a id='L770' name='L770'></a>                inet_ntoa(v-&gt;lsa-&gt;id));
+<a id='L771' name='L771'></a>  
+<a id='L772' name='L772'></a>  p = ((u_char *) v-&gt;lsa) + <a href='../S/733.html#L50' title='Defined at 50 in ospfd/ospf_lsa.h.'>OSPF_LSA_HEADER_SIZE</a> + 4;
+<a id='L773' name='L773'></a>  lim = ((u_char *) v-&gt;lsa) + ntohs (v-&gt;lsa-&gt;length);
+<a id='L774' name='L774'></a>
+<a id='L775' name='L775'></a>  <strong class='reserved'>while</strong> (p &lt; lim)
+<a id='L776' name='L776'></a>    <em class='brace'>{</em>
+<a id='L777' name='L777'></a>      <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *w;
+<a id='L778' name='L778'></a>      <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> distance;
+<a id='L779' name='L779'></a>      
+<a id='L780' name='L780'></a>      <em class='comment'>/* In case of V is Router-LSA. */</em>
+<a id='L781' name='L781'></a>      <strong class='reserved'>if</strong> (v-&gt;lsa-&gt;type == <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>)
+<a id='L782' name='L782'></a>        <em class='brace'>{</em>
+<a id='L783' name='L783'></a>          l = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *) p;
+<a id='L784' name='L784'></a>
+<a id='L785' name='L785'></a>          lsa_pos = lsa_pos_next; <em class='comment'>/* LSA link position */</em>
+<a id='L786' name='L786'></a>          lsa_pos_next++;
+<a id='L787' name='L787'></a>          p += (<a href='../S/733.html#L51' title='Defined at 51 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_LINK_SIZE</a> +
+<a id='L788' name='L788'></a>                (l-&gt;m[0].tos_count * <a href='../S/733.html#L52' title='Defined at 52 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_TOS_SIZE</a>));
+<a id='L789' name='L789'></a>
+<a id='L790' name='L790'></a>          <em class='comment'>/* (a) If this is a link to a stub network, examine the next</em>
+<a id='L791' name='L791'></a><em class='comment'>             link in V's LSA.  Links to stub networks will be</em>
+<a id='L792' name='L792'></a><em class='comment'>             considered in the second stage of the shortest path</em>
+<a id='L793' name='L793'></a><em class='comment'>             calculation. */</em>
+<a id='L794' name='L794'></a>          <strong class='reserved'>if</strong> ((type = l-&gt;m[0].type) == <a href='../S/733.html#L126' title='Defined at 126 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_STUB</a>)
+<a id='L795' name='L795'></a>            <strong class='reserved'>continue</strong>;
+<a id='L796' name='L796'></a>          
+<a id='L797' name='L797'></a>          <em class='comment'>/* Infinite distance links shouldn't be followed, except</em>
+<a id='L798' name='L798'></a><em class='comment'>           * for local links (a stub-routed router still wants to</em>
+<a id='L799' name='L799'></a><em class='comment'>           * calculate tree, so must follow its own links).</em>
+<a id='L800' name='L800'></a><em class='comment'>           */</em>
+<a id='L801' name='L801'></a>          <strong class='reserved'>if</strong> ((v != area-&gt;spf) &amp;&amp; l-&gt;m[0].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &gt;= <a href='../S/790.html#L95' title='Defined at 95 in ospfd/ospfd.h.'>OSPF_OUTPUT_COST_INFINITE</a>)
+<a id='L802' name='L802'></a>            <strong class='reserved'>continue</strong>;
+<a id='L803' name='L803'></a>
+<a id='L804' name='L804'></a>          <em class='comment'>/* (b) Otherwise, W is a transit vertex (router or transit</em>
+<a id='L805' name='L805'></a><em class='comment'>             network).  Look up the vertex W's LSA (router-LSA or</em>
+<a id='L806' name='L806'></a><em class='comment'>             network-LSA) in Area A's link state database. */</em>
+<a id='L807' name='L807'></a>          <strong class='reserved'>switch</strong> (type)
+<a id='L808' name='L808'></a>            <em class='brace'>{</em>
+<a id='L809' name='L809'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L124' title='Defined at 124 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_POINTOPOINT</a>:
+<a id='L810' name='L810'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L127' title='Defined at 127 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_VIRTUALLINK</a>:
+<a id='L811' name='L811'></a>              <strong class='reserved'>if</strong> (type == <a href='../S/733.html#L127' title='Defined at 127 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_VIRTUALLINK</a>)
+<a id='L812' name='L812'></a>                <em class='brace'>{</em>
+<a id='L813' name='L813'></a>                  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L814' name='L814'></a>                    zlog_debug ("looking up LSA through VL: %s",
+<a id='L815' name='L815'></a>                               inet_ntoa (l-&gt;link_id));
+<a id='L816' name='L816'></a>                <em class='brace'>}</em>
+<a id='L817' name='L817'></a>
+<a id='L818' name='L818'></a>              w_lsa = <a href='../S/747.html#L3094' title='Defined at 3094 in ospfd/ospf_lsa.c.'>ospf_lsa_lookup</a> (area, <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>, l-&gt;link_id,
+<a id='L819' name='L819'></a>                                       l-&gt;link_id);
+<a id='L820' name='L820'></a>              <strong class='reserved'>if</strong> (w_lsa)
+<a id='L821' name='L821'></a>                <em class='brace'>{</em>
+<a id='L822' name='L822'></a>                  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L823' name='L823'></a>                    zlog_debug ("found Router LSA %s", inet_ntoa (l-&gt;link_id));
+<a id='L824' name='L824'></a>                <em class='brace'>}</em>
+<a id='L825' name='L825'></a>              <strong class='reserved'>break</strong>;
+<a id='L826' name='L826'></a>            <strong class='reserved'>case</strong> <a href='../S/733.html#L125' title='Defined at 125 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_TRANSIT</a>:
+<a id='L827' name='L827'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L828' name='L828'></a>                zlog_debug ("Looking up Network LSA, ID: %s",
+<a id='L829' name='L829'></a>                           inet_ntoa (l-&gt;link_id));
+<a id='L830' name='L830'></a>              w_lsa = <a href='../S/747.html#L3125' title='Defined at 3125 in ospfd/ospf_lsa.c.'>ospf_lsa_lookup_by_id</a> (area, <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>,
+<a id='L831' name='L831'></a>                                             l-&gt;link_id);
+<a id='L832' name='L832'></a>              <strong class='reserved'>if</strong> (w_lsa)
+<a id='L833' name='L833'></a>                <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L834' name='L834'></a>                  zlog_debug ("found the LSA");
+<a id='L835' name='L835'></a>              <strong class='reserved'>break</strong>;
+<a id='L836' name='L836'></a>            <strong class='reserved'>default</strong>:
+<a id='L837' name='L837'></a>              zlog_warn ("Invalid LSA link type %d", type);
+<a id='L838' name='L838'></a>              <strong class='reserved'>continue</strong>;
+<a id='L839' name='L839'></a>            <em class='brace'>}</em>
+<a id='L840' name='L840'></a>        <em class='brace'>}</em>
+<a id='L841' name='L841'></a>      <strong class='reserved'>else</strong>
+<a id='L842' name='L842'></a>        <em class='brace'>{</em>
+<a id='L843' name='L843'></a>          <em class='comment'>/* In case of V is Network-LSA. */</em>
+<a id='L844' name='L844'></a>          r = (<strong class='reserved'>struct</strong> in_addr *) p;
+<a id='L845' name='L845'></a>          p += <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> in_addr);
+<a id='L846' name='L846'></a>
+<a id='L847' name='L847'></a>          <em class='comment'>/* Lookup the vertex W's LSA. */</em>
+<a id='L848' name='L848'></a>          w_lsa = <a href='../S/747.html#L3125' title='Defined at 3125 in ospfd/ospf_lsa.c.'>ospf_lsa_lookup_by_id</a> (area, <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>, *r);
+<a id='L849' name='L849'></a>          <strong class='reserved'>if</strong> (w_lsa)
+<a id='L850' name='L850'></a>            <em class='brace'>{</em>
+<a id='L851' name='L851'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L852' name='L852'></a>                zlog_debug ("found Router LSA %s", inet_ntoa (w_lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;id));
+<a id='L853' name='L853'></a>            <em class='brace'>}</em>
+<a id='L854' name='L854'></a>        <em class='brace'>}</em>
+<a id='L855' name='L855'></a>
+<a id='L856' name='L856'></a>      <em class='comment'>/* (b cont.) If the LSA does not exist, or its LS age is equal</em>
+<a id='L857' name='L857'></a><em class='comment'>         to MaxAge, or it does not have a link back to vertex V,</em>
+<a id='L858' name='L858'></a><em class='comment'>         examine the next link in V's LSA.[23] */</em>
+<a id='L859' name='L859'></a>      <strong class='reserved'>if</strong> (w_lsa == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L860' name='L860'></a>        <em class='brace'>{</em>
+<a id='L861' name='L861'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L862' name='L862'></a>            zlog_debug ("No LSA found");
+<a id='L863' name='L863'></a>          <strong class='reserved'>continue</strong>;
+<a id='L864' name='L864'></a>        <em class='brace'>}</em>
+<a id='L865' name='L865'></a>
+<a id='L866' name='L866'></a>      <strong class='reserved'>if</strong> (<a href='../S/733.html#L226' title='Defined at 226 in ospfd/ospf_lsa.h.'>IS_LSA_MAXAGE</a> (w_lsa))
+<a id='L867' name='L867'></a>        <em class='brace'>{</em>
+<a id='L868' name='L868'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L869' name='L869'></a>            zlog_debug ("LSA is MaxAge");
+<a id='L870' name='L870'></a>          <strong class='reserved'>continue</strong>;
+<a id='L871' name='L871'></a>        <em class='brace'>}</em>
+<a id='L872' name='L872'></a>
+<a id='L873' name='L873'></a>      <strong class='reserved'>if</strong> (<a href='../S/805.html#L297' title='Defined at 297 in ospfd/ospf_spf.c.'>ospf_lsa_has_link</a> (w_lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, v-&gt;lsa) &lt; 0 )
+<a id='L874' name='L874'></a>        <em class='brace'>{</em>
+<a id='L875' name='L875'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L876' name='L876'></a>            zlog_debug ("The LSA doesn't have a link back");
+<a id='L877' name='L877'></a>          <strong class='reserved'>continue</strong>;
+<a id='L878' name='L878'></a>        <em class='brace'>}</em>
+<a id='L879' name='L879'></a>
+<a id='L880' name='L880'></a>      <em class='comment'>/* (c) If vertex W is already on the shortest-path tree, examine</em>
+<a id='L881' name='L881'></a><em class='comment'>         the next link in the LSA. */</em>
+<a id='L882' name='L882'></a>      <strong class='reserved'>if</strong> (w_lsa-&gt;stat == <a href='../S/733.html#L101' title='Defined at 101 in ospfd/ospf_lsa.h.'>LSA_SPF_IN_SPFTREE</a>)
+<a id='L883' name='L883'></a>        <em class='brace'>{</em>
+<a id='L884' name='L884'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L885' name='L885'></a>            zlog_debug ("The LSA is already in SPF");
+<a id='L886' name='L886'></a>          <strong class='reserved'>continue</strong>;
+<a id='L887' name='L887'></a>        <em class='brace'>}</em>
+<a id='L888' name='L888'></a>
+<a id='L889' name='L889'></a>      <em class='comment'>/* (d) Calculate the link state cost D of the resulting path</em>
+<a id='L890' name='L890'></a><em class='comment'>         from the root to vertex W.  D is equal to the sum of the link</em>
+<a id='L891' name='L891'></a><em class='comment'>         state cost of the (already calculated) shortest path to</em>
+<a id='L892' name='L892'></a><em class='comment'>         vertex V and the advertised cost of the link between vertices</em>
+<a id='L893' name='L893'></a><em class='comment'>         V and W.  If D is: */</em>
+<a id='L894' name='L894'></a>
+<a id='L895' name='L895'></a>      <em class='comment'>/* calculate link cost D. */</em>
+<a id='L896' name='L896'></a>      <strong class='reserved'>if</strong> (v-&gt;lsa-&gt;type == <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>)
+<a id='L897' name='L897'></a>        distance = v-&gt;distance + ntohs (l-&gt;m[0].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L898' name='L898'></a>      <strong class='reserved'>else</strong> <em class='comment'>/* v is not a Router-LSA */</em>
+<a id='L899' name='L899'></a>        distance = v-&gt;distance;
+<a id='L900' name='L900'></a>
+<a id='L901' name='L901'></a>      <em class='comment'>/* Is there already vertex W in candidate list? */</em>
+<a id='L902' name='L902'></a>      <strong class='reserved'>if</strong> (w_lsa-&gt;stat == <a href='../S/733.html#L100' title='Defined at 100 in ospfd/ospf_lsa.h.'>LSA_SPF_NOT_EXPLORED</a>)
+<a id='L903' name='L903'></a>        <em class='brace'>{</em>
+<a id='L904' name='L904'></a>          <em class='comment'>/* prepare vertex W. */</em>
+<a id='L905' name='L905'></a>          w = <a href='../S/805.html#L164' title='Defined at 164 in ospfd/ospf_spf.c.'>ospf_vertex_new</a> (w_lsa);
+<a id='L906' name='L906'></a>
+<a id='L907' name='L907'></a>          <em class='comment'>/* Calculate nexthop to W. */</em>
+<a id='L908' name='L908'></a>          <strong class='reserved'>if</strong> (<a href='../S/805.html#L491' title='Defined at 491 in ospfd/ospf_spf.c.'>ospf_nexthop_calculation</a> (area, v, w, l, distance, lsa_pos))
+<a id='L909' name='L909'></a>            <a href='../S/299.html#L151' title='Defined at 151 in lib/pqueue.c.'>pqueue_enqueue</a> (w, candidate);
+<a id='L910' name='L910'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L911' name='L911'></a>            zlog_debug ("Nexthop Calc failed");
+<a id='L912' name='L912'></a>        <em class='brace'>}</em>
+<a id='L913' name='L913'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (w_lsa-&gt;stat &gt;= 0)
+<a id='L914' name='L914'></a>        <em class='brace'>{</em>
+<a id='L915' name='L915'></a>          <em class='comment'>/* Get the vertex from candidates. */</em>
+<a id='L916' name='L916'></a>          w = candidate-&gt;array[w_lsa-&gt;stat];
+<a id='L917' name='L917'></a>
+<a id='L918' name='L918'></a>          <em class='comment'>/* if D is greater than. */</em>  
+<a id='L919' name='L919'></a>          <strong class='reserved'>if</strong> (w-&gt;distance &lt; distance)
+<a id='L920' name='L920'></a>            <em class='brace'>{</em>
+<a id='L921' name='L921'></a>              <strong class='reserved'>continue</strong>;
+<a id='L922' name='L922'></a>            <em class='brace'>}</em>
+<a id='L923' name='L923'></a>          <em class='comment'>/* equal to. */</em>
+<a id='L924' name='L924'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (w-&gt;distance == distance)
+<a id='L925' name='L925'></a>            <em class='brace'>{</em>
+<a id='L926' name='L926'></a>              <em class='comment'>/* Found an equal-cost path to W.  </em>
+<a id='L927' name='L927'></a><em class='comment'>               * Calculate nexthop of to W from V. */</em>
+<a id='L928' name='L928'></a>              <a href='../S/805.html#L491' title='Defined at 491 in ospfd/ospf_spf.c.'>ospf_nexthop_calculation</a> (area, v, w, l, distance, lsa_pos);
+<a id='L929' name='L929'></a>            <em class='brace'>}</em>
+<a id='L930' name='L930'></a>           <em class='comment'>/* less than. */</em>
+<a id='L931' name='L931'></a>          <strong class='reserved'>else</strong>
+<a id='L932' name='L932'></a>            <em class='brace'>{</em>
+<a id='L933' name='L933'></a>              <em class='comment'>/* Found a lower-cost path to W.</em>
+<a id='L934' name='L934'></a><em class='comment'>               * nexthop_calculation is conditional, if it finds</em>
+<a id='L935' name='L935'></a><em class='comment'>               * valid nexthop it will call spf_add_parents, which</em>
+<a id='L936' name='L936'></a><em class='comment'>               * will flush the old parents</em>
+<a id='L937' name='L937'></a><em class='comment'>               */</em>
+<a id='L938' name='L938'></a>              <strong class='reserved'>if</strong> (<a href='../S/805.html#L491' title='Defined at 491 in ospfd/ospf_spf.c.'>ospf_nexthop_calculation</a> (area, v, w, l, distance, lsa_pos))
+<a id='L939' name='L939'></a>                <em class='comment'>/* Decrease the key of the node in the heap.</em>
+<a id='L940' name='L940'></a><em class='comment'>                 * trickle-sort it up towards root, just in case this</em>
+<a id='L941' name='L941'></a><em class='comment'>                 * node should now be the new root due the cost change. </em>
+<a id='L942' name='L942'></a><em class='comment'>                 * (next pqueu_{de,en}queue will fully re-heap the queue).</em>
+<a id='L943' name='L943'></a><em class='comment'>                 */</em>
+<a id='L944' name='L944'></a>                <a href='../S/299.html#L46' title='Defined at 46 in lib/pqueue.c.'>trickle_up</a> (w_lsa-&gt;stat, candidate);
+<a id='L945' name='L945'></a>            <em class='brace'>}</em>
+<a id='L946' name='L946'></a>        <em class='brace'>}</em> <em class='comment'>/* end W is already on the candidate list */</em>
+<a id='L947' name='L947'></a>    <em class='brace'>}</em> <em class='comment'>/* end loop over the links in V's LSA */</em>
+<a id='L948' name='L948'></a><em class='brace'>}</em>
+<a id='L949' name='L949'></a>
+<a id='L950' name='L950'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L951' name='L951'></a><a href='../R/8514.html' title='Multiple referred from 2 places.'>ospf_spf_dump</a> (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v, <strong class='reserved'>int</strong> i)
+<a id='L952' name='L952'></a><em class='brace'>{</em>
+<a id='L953' name='L953'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *cnode;
+<a id='L954' name='L954'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *nnode;
+<a id='L955' name='L955'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L956' name='L956'></a>
+<a id='L957' name='L957'></a>  <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L958' name='L958'></a>    <em class='brace'>{</em>
+<a id='L959' name='L959'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L960' name='L960'></a>        zlog_debug ("SPF Result: %d [R] %s", i, inet_ntoa (v-&gt;lsa-&gt;id));
+<a id='L961' name='L961'></a>    <em class='brace'>}</em>
+<a id='L962' name='L962'></a>  <strong class='reserved'>else</strong>
+<a id='L963' name='L963'></a>    <em class='brace'>{</em>
+<a id='L964' name='L964'></a>      <strong class='reserved'>struct</strong> <a href='../S/733.html#L182' title='Defined at 182 in ospfd/ospf_lsa.h.'>network_lsa</a> *lsa = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L182' title='Defined at 182 in ospfd/ospf_lsa.h.'>network_lsa</a> *) v-&gt;lsa;
+<a id='L965' name='L965'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L966' name='L966'></a>        zlog_debug ("SPF Result: %d [N] %s/%d", i, inet_ntoa (v-&gt;lsa-&gt;id),
+<a id='L967' name='L967'></a>                   <a href='../S/250.html#L471' title='Defined at 471 in lib/prefix.c.'>ip_masklen</a> (lsa-&gt;mask));
+<a id='L968' name='L968'></a>    <em class='brace'>}</em>
+<a id='L969' name='L969'></a>
+<a id='L970' name='L970'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L971' name='L971'></a>    <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (v-&gt;parents, nnode, <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>))
+<a id='L972' name='L972'></a>      <em class='brace'>{</em>
+<a id='L973' name='L973'></a>        zlog_debug (" nexthop %p %s %s", 
+<a id='L974' name='L974'></a>                    <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L975' name='L975'></a>                    inet_ntoa (<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;router),
+<a id='L976' name='L976'></a>                    <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi ? <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a>(<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi)
+<a id='L977' name='L977'></a>                                        : "NULL");
+<a id='L978' name='L978'></a>      <em class='brace'>}</em>
+<a id='L979' name='L979'></a>
+<a id='L980' name='L980'></a>  i++;
+<a id='L981' name='L981'></a>
+<a id='L982' name='L982'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (v-&gt;children, cnode, v))
+<a id='L983' name='L983'></a>    <a href='../S/805.html#L951' title='Defined at 951 in ospfd/ospf_spf.c.'>ospf_spf_dump</a> (v, i);
+<a id='L984' name='L984'></a><em class='brace'>}</em>
+<a id='L985' name='L985'></a>
+<a id='L986' name='L986'></a><em class='comment'>/* Second stage of SPF calculation. */</em>
+<a id='L987' name='L987'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L988' name='L988'></a><a href='../R/8518.html' title='Multiple referred from 2 places.'>ospf_spf_process_stubs</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v,
+<a id='L989' name='L989'></a>                        <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt,
+<a id='L990' name='L990'></a>                        <strong class='reserved'>int</strong> parent_is_root)
+<a id='L991' name='L991'></a><em class='brace'>{</em>
+<a id='L992' name='L992'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *cnode, *cnnode;
+<a id='L993' name='L993'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *child;
+<a id='L994' name='L994'></a>
+<a id='L995' name='L995'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L996' name='L996'></a>    zlog_debug ("ospf_process_stub():processing stubs for area %s",
+<a id='L997' name='L997'></a>               inet_ntoa (area-&gt;area_id));
+<a id='L998' name='L998'></a>  <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L999' name='L999'></a>    <em class='brace'>{</em>
+<a id='L1000' name='L1000'></a>      u_char *p;
+<a id='L1001' name='L1001'></a>      u_char *lim;
+<a id='L1002' name='L1002'></a>      <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *l;
+<a id='L1003' name='L1003'></a>      <strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *rlsa;
+<a id='L1004' name='L1004'></a>      <strong class='reserved'>int</strong> lsa_pos = 0;
+<a id='L1005' name='L1005'></a>
+<a id='L1006' name='L1006'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1007' name='L1007'></a>        zlog_debug ("ospf_process_stubs():processing router LSA, id: %s",
+<a id='L1008' name='L1008'></a>                   inet_ntoa (v-&gt;lsa-&gt;id));
+<a id='L1009' name='L1009'></a>      rlsa = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *) v-&gt;lsa;
+<a id='L1010' name='L1010'></a>
+<a id='L1011' name='L1011'></a>
+<a id='L1012' name='L1012'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1013' name='L1013'></a>        zlog_debug ("ospf_process_stubs(): we have %d links to process",
+<a id='L1014' name='L1014'></a>                   ntohs (rlsa-&gt;links));
+<a id='L1015' name='L1015'></a>      p = ((u_char *) v-&gt;lsa) + <a href='../S/733.html#L50' title='Defined at 50 in ospfd/ospf_lsa.h.'>OSPF_LSA_HEADER_SIZE</a> + 4;
+<a id='L1016' name='L1016'></a>      lim = ((u_char *) v-&gt;lsa) + ntohs (v-&gt;lsa-&gt;length);
+<a id='L1017' name='L1017'></a>
+<a id='L1018' name='L1018'></a>      <strong class='reserved'>while</strong> (p &lt; lim)
+<a id='L1019' name='L1019'></a>        <em class='brace'>{</em>
+<a id='L1020' name='L1020'></a>          l = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *) p;
+<a id='L1021' name='L1021'></a>
+<a id='L1022' name='L1022'></a>          p += (<a href='../S/733.html#L51' title='Defined at 51 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_LINK_SIZE</a> +
+<a id='L1023' name='L1023'></a>                (l-&gt;m[0].tos_count * <a href='../S/733.html#L52' title='Defined at 52 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA_TOS_SIZE</a>));
+<a id='L1024' name='L1024'></a>
+<a id='L1025' name='L1025'></a>          <strong class='reserved'>if</strong> (l-&gt;m[0].type == <a href='../S/733.html#L126' title='Defined at 126 in ospfd/ospf_lsa.h.'>LSA_LINK_TYPE_STUB</a>)
+<a id='L1026' name='L1026'></a>            <a href='../S/813.html#L455' title='Defined at 455 in ospfd/ospf_route.c.'>ospf_intra_add_stub</a> (rt, l, v, area, parent_is_root, lsa_pos);
+<a id='L1027' name='L1027'></a>          lsa_pos++;
+<a id='L1028' name='L1028'></a>        <em class='brace'>}</em>
+<a id='L1029' name='L1029'></a>    <em class='brace'>}</em>
+<a id='L1030' name='L1030'></a>
+<a id='L1031' name='L1031'></a>  <a href='../S/805.html#L218' title='Defined at 218 in ospfd/ospf_spf.c.'>ospf_vertex_dump</a>("ospf_process_stubs(): after examining links: ", v, 1, 1);
+<a id='L1032' name='L1032'></a>
+<a id='L1033' name='L1033'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (v-&gt;children, cnode, cnnode, child))
+<a id='L1034' name='L1034'></a>    <em class='brace'>{</em>
+<a id='L1035' name='L1035'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (child-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/812.html#L31' title='Defined at 31 in ospfd/ospf_spf.h.'>OSPF_VERTEX_PROCESSED</a>))
+<a id='L1036' name='L1036'></a>        <strong class='reserved'>continue</strong>;
+<a id='L1037' name='L1037'></a>      
+<a id='L1038' name='L1038'></a>      <em class='comment'>/* the first level of routers connected to the root</em>
+<a id='L1039' name='L1039'></a><em class='comment'>       * should have 'parent_is_root' set, including those </em>
+<a id='L1040' name='L1040'></a><em class='comment'>       * connected via a network vertex.</em>
+<a id='L1041' name='L1041'></a><em class='comment'>       */</em>
+<a id='L1042' name='L1042'></a>      <strong class='reserved'>if</strong> (area-&gt;spf == v)
+<a id='L1043' name='L1043'></a>        parent_is_root = 1;
+<a id='L1044' name='L1044'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L1045' name='L1045'></a>        parent_is_root = 0;
+<a id='L1046' name='L1046'></a>        
+<a id='L1047' name='L1047'></a>      <a href='../S/805.html#L988' title='Defined at 988 in ospfd/ospf_spf.c.'>ospf_spf_process_stubs</a> (area, child, rt, parent_is_root);
+<a id='L1048' name='L1048'></a>
+<a id='L1049' name='L1049'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (child-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/812.html#L31' title='Defined at 31 in ospfd/ospf_spf.h.'>OSPF_VERTEX_PROCESSED</a>);
+<a id='L1050' name='L1050'></a>    <em class='brace'>}</em>
+<a id='L1051' name='L1051'></a><em class='brace'>}</em>
+<a id='L1052' name='L1052'></a>
+<a id='L1053' name='L1053'></a><strong class='reserved'>void</strong>
+<a id='L1054' name='L1054'></a><a href='../R/8485.html' title='Multiple referred from 4 places.'>ospf_rtrs_free</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rtrs)
+<a id='L1055' name='L1055'></a><em class='brace'>{</em>
+<a id='L1056' name='L1056'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L1057' name='L1057'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *or_list;
+<a id='L1058' name='L1058'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L1059' name='L1059'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L1060' name='L1060'></a>
+<a id='L1061' name='L1061'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1062' name='L1062'></a>    zlog_debug ("Route: Router Routing Table free");
+<a id='L1063' name='L1063'></a>
+<a id='L1064' name='L1064'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rtrs); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L1065' name='L1065'></a>    <strong class='reserved'>if</strong> ((or_list = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1066' name='L1066'></a>      <em class='brace'>{</em>
+<a id='L1067' name='L1067'></a>        <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (or_list, node, nnode, or))
+<a id='L1068' name='L1068'></a>          <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (or);
+<a id='L1069' name='L1069'></a>
+<a id='L1070' name='L1070'></a>        <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (or_list);
+<a id='L1071' name='L1071'></a>
+<a id='L1072' name='L1072'></a>        <em class='comment'>/* Unlock the node. */</em>
+<a id='L1073' name='L1073'></a>        rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1074' name='L1074'></a>        <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1075' name='L1075'></a>      <em class='brace'>}</em>
+<a id='L1076' name='L1076'></a>  <a href='../S/236.html#L48' title='Defined at 48 in lib/table.c.'>route_table_finish</a> (rtrs);
+<a id='L1077' name='L1077'></a><em class='brace'>}</em>
+<a id='L1078' name='L1078'></a>
+<a id='L1079' name='L1079'></a><em class='sharp'>#if</em> 0
+<a id='L1080' name='L1080'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L1081' name='L1081'></a>ospf_rtrs_print (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rtrs)
+<a id='L1082' name='L1082'></a><em class='brace'>{</em>
+<a id='L1083' name='L1083'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L1084' name='L1084'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *or_list;
+<a id='L1085' name='L1085'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *ln;
+<a id='L1086' name='L1086'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *pnode;
+<a id='L1087' name='L1087'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L1088' name='L1088'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L1089' name='L1089'></a>  <strong class='reserved'>char</strong> buf1[BUFSIZ];
+<a id='L1090' name='L1090'></a>  <strong class='reserved'>char</strong> buf2[BUFSIZ];
+<a id='L1091' name='L1091'></a>
+<a id='L1092' name='L1092'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1093' name='L1093'></a>    zlog_debug ("ospf_rtrs_print() start");
+<a id='L1094' name='L1094'></a>
+<a id='L1095' name='L1095'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rtrs); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L1096' name='L1096'></a>    <strong class='reserved'>if</strong> ((or_list = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1097' name='L1097'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (or_list, ln, or))
+<a id='L1098' name='L1098'></a>        <em class='brace'>{</em>
+<a id='L1099' name='L1099'></a>          <strong class='reserved'>switch</strong> (or-&gt;path_type)
+<a id='L1100' name='L1100'></a>            <em class='brace'>{</em>
+<a id='L1101' name='L1101'></a>            <strong class='reserved'>case</strong> <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>:
+<a id='L1102' name='L1102'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1103' name='L1103'></a>                zlog_debug ("%s   [%d] area: %s",
+<a id='L1104' name='L1104'></a>                           <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;or-&gt;id, buf1, BUFSIZ),
+<a id='L1105' name='L1105'></a>                           or-&gt;cost, <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;or-&gt;u.std.area_id,
+<a id='L1106' name='L1106'></a>                                                buf2, BUFSIZ));
+<a id='L1107' name='L1107'></a>              <strong class='reserved'>break</strong>;
+<a id='L1108' name='L1108'></a>            <strong class='reserved'>case</strong> <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>:
+<a id='L1109' name='L1109'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1110' name='L1110'></a>                zlog_debug ("%s IA [%d] area: %s",
+<a id='L1111' name='L1111'></a>                           <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;or-&gt;id, buf1, BUFSIZ),
+<a id='L1112' name='L1112'></a>                           or-&gt;cost, <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;or-&gt;u.std.area_id,
+<a id='L1113' name='L1113'></a>                                                buf2, BUFSIZ));
+<a id='L1114' name='L1114'></a>              <strong class='reserved'>break</strong>;
+<a id='L1115' name='L1115'></a>            <strong class='reserved'>default</strong>:
+<a id='L1116' name='L1116'></a>              <strong class='reserved'>break</strong>;
+<a id='L1117' name='L1117'></a>            <em class='brace'>}</em>
+<a id='L1118' name='L1118'></a>
+<a id='L1119' name='L1119'></a>          <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (or-&gt;paths, pnode, path))
+<a id='L1120' name='L1120'></a>            <em class='brace'>{</em>
+<a id='L1121' name='L1121'></a>              <strong class='reserved'>if</strong> (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr == 0)
+<a id='L1122' name='L1122'></a>                <em class='brace'>{</em>
+<a id='L1123' name='L1123'></a>                  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1124' name='L1124'></a>                    zlog_debug ("   directly attached to %s\r\n",
+<a id='L1125' name='L1125'></a>                                <a href='../S/240.html#L197' title='Defined at 197 in lib/if.c.'>ifindex2ifname</a> (path-&gt;ifindex));
+<a id='L1126' name='L1126'></a>                <em class='brace'>}</em>
+<a id='L1127' name='L1127'></a>              <strong class='reserved'>else</strong>
+<a id='L1128' name='L1128'></a>                <em class='brace'>{</em>
+<a id='L1129' name='L1129'></a>                  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1130' name='L1130'></a>                    zlog_debug ("   via %s, %s\r\n",
+<a id='L1131' name='L1131'></a>                                inet_ntoa (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>),
+<a id='L1132' name='L1132'></a>                                <a href='../S/240.html#L197' title='Defined at 197 in lib/if.c.'>ifindex2ifname</a> (path-&gt;ifindex));
+<a id='L1133' name='L1133'></a>                <em class='brace'>}</em>
+<a id='L1134' name='L1134'></a>            <em class='brace'>}</em>
+<a id='L1135' name='L1135'></a>        <em class='brace'>}</em>
+<a id='L1136' name='L1136'></a>
+<a id='L1137' name='L1137'></a>  zlog_debug ("ospf_rtrs_print() end");
+<a id='L1138' name='L1138'></a><em class='brace'>}</em>
+<a id='L1139' name='L1139'></a><em class='sharp'>#endif</em>
+<a id='L1140' name='L1140'></a>
+<a id='L1141' name='L1141'></a><em class='comment'>/* Calculating the shortest-path tree for an area. */</em>
+<a id='L1142' name='L1142'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L1143' name='L1143'></a><a href='../R/8511.html' title='Multiple referred from 2 places.'>ospf_spf_calculate</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area, <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *new_table,
+<a id='L1144' name='L1144'></a>                    <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *new_rtrs)
+<a id='L1145' name='L1145'></a><em class='brace'>{</em>
+<a id='L1146' name='L1146'></a>  <strong class='reserved'>struct</strong> <a href='../S/233.html#L24' title='Defined at 24 in lib/pqueue.h.'>pqueue</a> *candidate;
+<a id='L1147' name='L1147'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v;
+<a id='L1148' name='L1148'></a>  
+<a id='L1149' name='L1149'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1150' name='L1150'></a>    <em class='brace'>{</em>
+<a id='L1151' name='L1151'></a>      zlog_debug ("ospf_spf_calculate: Start");
+<a id='L1152' name='L1152'></a>      zlog_debug ("ospf_spf_calculate: running Dijkstra for area %s",
+<a id='L1153' name='L1153'></a>                 inet_ntoa (area-&gt;area_id));
+<a id='L1154' name='L1154'></a>    <em class='brace'>}</em>
+<a id='L1155' name='L1155'></a>
+<a id='L1156' name='L1156'></a>  <em class='comment'>/* Check router-lsa-self.  If self-router-lsa is not yet allocated,</em>
+<a id='L1157' name='L1157'></a><em class='comment'>     return this area's calculation. */</em>
+<a id='L1158' name='L1158'></a>  <strong class='reserved'>if</strong> (!area-&gt;router_lsa_self)
+<a id='L1159' name='L1159'></a>    <em class='brace'>{</em>
+<a id='L1160' name='L1160'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1161' name='L1161'></a>        zlog_debug ("ospf_spf_calculate: "
+<a id='L1162' name='L1162'></a>                   "Skip area %s's calculation due to empty router_lsa_self",
+<a id='L1163' name='L1163'></a>                   inet_ntoa (area-&gt;area_id));
+<a id='L1164' name='L1164'></a>      <strong class='reserved'>return</strong>;
+<a id='L1165' name='L1165'></a>    <em class='brace'>}</em>
+<a id='L1166' name='L1166'></a>
+<a id='L1167' name='L1167'></a>  <em class='comment'>/* RFC2328 16.1. (1). */</em>
+<a id='L1168' name='L1168'></a>  <em class='comment'>/* Initialize the algorithm's data structures. */</em>
+<a id='L1169' name='L1169'></a>  
+<a id='L1170' name='L1170'></a>  <em class='comment'>/* This function scans all the LSA database and set the stat field to</em>
+<a id='L1171' name='L1171'></a><em class='comment'>   * LSA_SPF_NOT_EXPLORED. */</em>
+<a id='L1172' name='L1172'></a>  <a href='../S/778.html#L199' title='Defined at 199 in ospfd/ospf_lsdb.c.'>ospf_lsdb_clean_stat</a> (area-&gt;lsdb);
+<a id='L1173' name='L1173'></a>  <em class='comment'>/* Create a new heap for the candidates. */</em> 
+<a id='L1174' name='L1174'></a>  candidate = <a href='../S/299.html#L110' title='Defined at 110 in lib/pqueue.c.'>pqueue_create</a>();
+<a id='L1175' name='L1175'></a>  candidate-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = <a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a>;
+<a id='L1176' name='L1176'></a>  candidate-&gt;update = <a href='../S/805.html#L86' title='Defined at 86 in ospfd/ospf_spf.c.'>update_stat</a>;
+<a id='L1177' name='L1177'></a>
+<a id='L1178' name='L1178'></a>  <em class='comment'>/* Initialize the shortest-path tree to only the root (which is the</em>
+<a id='L1179' name='L1179'></a><em class='comment'>     router doing the calculation). */</em>
+<a id='L1180' name='L1180'></a>  <a href='../S/805.html#L281' title='Defined at 281 in ospfd/ospf_spf.c.'>ospf_spf_init</a> (area);
+<a id='L1181' name='L1181'></a>  v = area-&gt;spf;
+<a id='L1182' name='L1182'></a>  <em class='comment'>/* Set LSA position to LSA_SPF_IN_SPFTREE. This vertex is the root of the</em>
+<a id='L1183' name='L1183'></a><em class='comment'>   * spanning tree. */</em>
+<a id='L1184' name='L1184'></a>  *(v-&gt;stat) = <a href='../S/733.html#L101' title='Defined at 101 in ospfd/ospf_lsa.h.'>LSA_SPF_IN_SPFTREE</a>;
+<a id='L1185' name='L1185'></a>
+<a id='L1186' name='L1186'></a>  <em class='comment'>/* Set Area A's TransitCapability to FALSE. */</em>
+<a id='L1187' name='L1187'></a>  area-&gt;<a href='../S/642.html#L126' title='Defined at 126 in bgpd/bgp_attr.h.'>transit</a> = <a href='../S/790.html#L383' title='Defined at 383 in ospfd/ospfd.h.'>OSPF_TRANSIT_FALSE</a>;
+<a id='L1188' name='L1188'></a>  area-&gt;shortcut_capability = 1;
+<a id='L1189' name='L1189'></a>  
+<a id='L1190' name='L1190'></a>  <strong class='reserved'>for</strong> (;;)
+<a id='L1191' name='L1191'></a>    <em class='brace'>{</em>
+<a id='L1192' name='L1192'></a>      <em class='comment'>/* RFC2328 16.1. (2). */</em>
+<a id='L1193' name='L1193'></a>      <a href='../S/805.html#L748' title='Defined at 748 in ospfd/ospf_spf.c.'>ospf_spf_next</a> (v, area, candidate);
+<a id='L1194' name='L1194'></a>
+<a id='L1195' name='L1195'></a>      <em class='comment'>/* RFC2328 16.1. (3). */</em>
+<a id='L1196' name='L1196'></a>      <em class='comment'>/* If at this step the candidate list is empty, the shortest-</em>
+<a id='L1197' name='L1197'></a><em class='comment'>         path tree (of transit vertices) has been completely built and</em>
+<a id='L1198' name='L1198'></a><em class='comment'>         this stage of the procedure terminates. */</em>
+<a id='L1199' name='L1199'></a>      <strong class='reserved'>if</strong> (candidate-&gt;size == 0)
+<a id='L1200' name='L1200'></a>        <strong class='reserved'>break</strong>;
+<a id='L1201' name='L1201'></a>
+<a id='L1202' name='L1202'></a>      <em class='comment'>/* Otherwise, choose the vertex belonging to the candidate list</em>
+<a id='L1203' name='L1203'></a><em class='comment'>         that is closest to the root, and add it to the shortest-path</em>
+<a id='L1204' name='L1204'></a><em class='comment'>         tree (removing it from the candidate list in the</em>
+<a id='L1205' name='L1205'></a><em class='comment'>         process). */</em>
+<a id='L1206' name='L1206'></a>      <em class='comment'>/* Extract from the candidates the node with the lower key. */</em>
+<a id='L1207' name='L1207'></a>      v = (<strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *) <a href='../S/299.html#L164' title='Defined at 164 in lib/pqueue.c.'>pqueue_dequeue</a> (candidate);
+<a id='L1208' name='L1208'></a>      <em class='comment'>/* Update stat field in vertex. */</em>
+<a id='L1209' name='L1209'></a>      *(v-&gt;stat) = <a href='../S/733.html#L101' title='Defined at 101 in ospfd/ospf_lsa.h.'>LSA_SPF_IN_SPFTREE</a>;
+<a id='L1210' name='L1210'></a>
+<a id='L1211' name='L1211'></a>      <a href='../S/805.html#L263' title='Defined at 263 in ospfd/ospf_spf.c.'>ospf_vertex_add_parent</a> (v);
+<a id='L1212' name='L1212'></a>
+<a id='L1213' name='L1213'></a>      <em class='comment'>/* RFC2328 16.1. (4). */</em>
+<a id='L1214' name='L1214'></a>      <strong class='reserved'>if</strong> (v-&gt;type == <a href='../S/812.html#L27' title='Defined at 27 in ospfd/ospf_spf.h.'>OSPF_VERTEX_ROUTER</a>)
+<a id='L1215' name='L1215'></a>        <a href='../S/813.html#L302' title='Defined at 302 in ospfd/ospf_route.c.'>ospf_intra_add_router</a> (new_rtrs, v, area);
+<a id='L1216' name='L1216'></a>      <strong class='reserved'>else</strong>
+<a id='L1217' name='L1217'></a>        <a href='../S/813.html#L394' title='Defined at 394 in ospfd/ospf_route.c.'>ospf_intra_add_transit</a> (new_table, v, area);
+<a id='L1218' name='L1218'></a>
+<a id='L1219' name='L1219'></a>      <em class='comment'>/* RFC2328 16.1. (5). */</em>
+<a id='L1220' name='L1220'></a>      <em class='comment'>/* Iterate the algorithm by returning to Step 2. */</em>
+<a id='L1221' name='L1221'></a>
+<a id='L1222' name='L1222'></a>    <em class='brace'>}</em> <em class='comment'>/* end loop until no more candidate vertices */</em>
+<a id='L1223' name='L1223'></a>
+<a id='L1224' name='L1224'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1225' name='L1225'></a>    <em class='brace'>{</em>
+<a id='L1226' name='L1226'></a>      <a href='../S/805.html#L951' title='Defined at 951 in ospfd/ospf_spf.c.'>ospf_spf_dump</a> (area-&gt;spf, 0);
+<a id='L1227' name='L1227'></a>      <a href='../S/813.html#L639' title='Defined at 639 in ospfd/ospf_route.c.'>ospf_route_table_dump</a> (new_table);
+<a id='L1228' name='L1228'></a>    <em class='brace'>}</em>
+<a id='L1229' name='L1229'></a>
+<a id='L1230' name='L1230'></a>  <em class='comment'>/* Second stage of SPF calculation procedure's  */</em>
+<a id='L1231' name='L1231'></a>  <a href='../S/805.html#L988' title='Defined at 988 in ospfd/ospf_spf.c.'>ospf_spf_process_stubs</a> (area, area-&gt;spf, new_table, 0);
+<a id='L1232' name='L1232'></a>
+<a id='L1233' name='L1233'></a>  <em class='comment'>/* Free candidate queue. */</em>
+<a id='L1234' name='L1234'></a>  <a href='../S/299.html#L126' title='Defined at 126 in lib/pqueue.c.'>pqueue_delete</a> (candidate);
+<a id='L1235' name='L1235'></a>  
+<a id='L1236' name='L1236'></a>  <a href='../S/805.html#L218' title='Defined at 218 in ospfd/ospf_spf.c.'>ospf_vertex_dump</a> (__func__, area-&gt;spf, 0, 1);
+<a id='L1237' name='L1237'></a>  <em class='comment'>/* Free nexthop information, canonical versions of which are attached</em>
+<a id='L1238' name='L1238'></a><em class='comment'>   * the first level of router vertices attached to the root vertex, see</em>
+<a id='L1239' name='L1239'></a><em class='comment'>   * ospf_nexthop_calculation.</em>
+<a id='L1240' name='L1240'></a><em class='comment'>   */</em>
+<a id='L1241' name='L1241'></a>  <a href='../S/805.html#L111' title='Defined at 111 in ospfd/ospf_spf.c.'>ospf_canonical_nexthops_free</a> (area-&gt;spf);
+<a id='L1242' name='L1242'></a>  
+<a id='L1243' name='L1243'></a>  <em class='comment'>/* Free SPF vertices, but not the list. List has ospf_vertex_free</em>
+<a id='L1244' name='L1244'></a><em class='comment'>   * as deconstructor.</em>
+<a id='L1245' name='L1245'></a><em class='comment'>   */</em>
+<a id='L1246' name='L1246'></a>  <a href='../S/243.html#L207' title='Defined at 207 in lib/linklist.c.'>list_delete_all_node</a> (&amp;vertex_list);
+<a id='L1247' name='L1247'></a>  
+<a id='L1248' name='L1248'></a>  <em class='comment'>/* Increment SPF Calculation Counter. */</em>
+<a id='L1249' name='L1249'></a>  area-&gt;spf_calculation++;
+<a id='L1250' name='L1250'></a>
+<a id='L1251' name='L1251'></a>  <a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a> (<a href='../S/279.html#L106' title='Defined at 106 in lib/thread.h.'>QUAGGA_CLK_MONOTONIC</a>, &amp;area-&gt;<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;ts_spf);
+<a id='L1252' name='L1252'></a>
+<a id='L1253' name='L1253'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1254' name='L1254'></a>    zlog_debug ("ospf_spf_calculate: Stop. %ld vertices",
+<a id='L1255' name='L1255'></a>                <a href='../S/220.html#L626' title='Defined at 626 in lib/memory.c.'>mtype_stats_alloc</a>(MTYPE_OSPF_VERTEX));
+<a id='L1256' name='L1256'></a><em class='brace'>}</em>
+<a id='L1257' name='L1257'></a>
+<a id='L1258' name='L1258'></a><em class='comment'>/* Timer for SPF calculation. */</em>
+<a id='L1259' name='L1259'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L1260' name='L1260'></a><a href='../S/805.html#L1393' title='Referred from 1393 in ospfd/ospf_spf.c.'>ospf_spf_calculate_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L1261' name='L1261'></a><em class='brace'>{</em>
+<a id='L1262' name='L1262'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L1263' name='L1263'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *new_table, *new_rtrs;
+<a id='L1264' name='L1264'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area;
+<a id='L1265' name='L1265'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L1266' name='L1266'></a>
+<a id='L1267' name='L1267'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1268' name='L1268'></a>    zlog_debug ("SPF: Timer (SPF calculation expire)");
+<a id='L1269' name='L1269'></a>
+<a id='L1270' name='L1270'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_spf_calc = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1271' name='L1271'></a>
+<a id='L1272' name='L1272'></a>  <em class='comment'>/* Allocate new table tree. */</em>
+<a id='L1273' name='L1273'></a>  new_table = <a href='../S/236.html#L574' title='Defined at 574 in lib/table.c.'>route_table_init</a> ();
+<a id='L1274' name='L1274'></a>  new_rtrs = <a href='../S/236.html#L574' title='Defined at 574 in lib/table.c.'>route_table_init</a> ();
+<a id='L1275' name='L1275'></a>
+<a id='L1276' name='L1276'></a>  <a href='../S/788.html#L1150' title='Defined at 1150 in ospfd/ospf_interface.c.'>ospf_vl_unapprove</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1277' name='L1277'></a>
+<a id='L1278' name='L1278'></a>  <em class='comment'>/* Calculate SPF for each area. */</em>
+<a id='L1279' name='L1279'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;areas, node, nnode, area))
+<a id='L1280' name='L1280'></a>    <em class='brace'>{</em>
+<a id='L1281' name='L1281'></a>      <em class='comment'>/* Do backbone last, so as to first discover intra-area paths</em>
+<a id='L1282' name='L1282'></a><em class='comment'>       * for any back-bone virtual-links</em>
+<a id='L1283' name='L1283'></a><em class='comment'>       */</em>
+<a id='L1284' name='L1284'></a>      <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;backbone &amp;&amp; <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;backbone == area)
+<a id='L1285' name='L1285'></a>        <strong class='reserved'>continue</strong>;
+<a id='L1286' name='L1286'></a>      
+<a id='L1287' name='L1287'></a>      <a href='../S/805.html#L1143' title='Defined at 1143 in ospfd/ospf_spf.c.'>ospf_spf_calculate</a> (area, new_table, new_rtrs);
+<a id='L1288' name='L1288'></a>    <em class='brace'>}</em>
+<a id='L1289' name='L1289'></a>  
+<a id='L1290' name='L1290'></a>  <em class='comment'>/* SPF for backbone, if required */</em>
+<a id='L1291' name='L1291'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;backbone)
+<a id='L1292' name='L1292'></a>    <a href='../S/805.html#L1143' title='Defined at 1143 in ospfd/ospf_spf.c.'>ospf_spf_calculate</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;backbone, new_table, new_rtrs);
+<a id='L1293' name='L1293'></a>  
+<a id='L1294' name='L1294'></a>  <a href='../S/788.html#L1160' title='Defined at 1160 in ospfd/ospf_interface.c.'>ospf_vl_shut_unapproved</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1295' name='L1295'></a>
+<a id='L1296' name='L1296'></a>  <a href='../S/766.html#L604' title='Defined at 604 in ospfd/ospf_ia.c.'>ospf_ia_routing</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new_table, new_rtrs);
+<a id='L1297' name='L1297'></a>
+<a id='L1298' name='L1298'></a>  <a href='../S/813.html#L867' title='Defined at 867 in ospfd/ospf_route.c.'>ospf_prune_unreachable_networks</a> (new_table);
+<a id='L1299' name='L1299'></a>  <a href='../S/813.html#L896' title='Defined at 896 in ospfd/ospf_route.c.'>ospf_prune_unreachable_routers</a> (new_rtrs);
+<a id='L1300' name='L1300'></a>
+<a id='L1301' name='L1301'></a>  <em class='comment'>/* AS-external-LSA calculation should not be performed here. */</em>
+<a id='L1302' name='L1302'></a>
+<a id='L1303' name='L1303'></a>  <em class='comment'>/* If new Router Route is installed,</em>
+<a id='L1304' name='L1304'></a><em class='comment'>     then schedule re-calculate External routes. */</em>
+<a id='L1305' name='L1305'></a>  <strong class='reserved'>if</strong> (1)
+<a id='L1306' name='L1306'></a>    <a href='../S/740.html#L681' title='Defined at 681 in ospfd/ospf_ase.c.'>ospf_ase_calculate_schedule</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1307' name='L1307'></a>
+<a id='L1308' name='L1308'></a>  <a href='../S/740.html#L690' title='Defined at 690 in ospfd/ospf_ase.c.'>ospf_ase_calculate_timer_add</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1309' name='L1309'></a>
+<a id='L1310' name='L1310'></a>  <em class='comment'>/* Update routing table. */</em>
+<a id='L1311' name='L1311'></a>  <a href='../S/813.html#L264' title='Defined at 264 in ospfd/ospf_route.c.'>ospf_route_install</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new_table);
+<a id='L1312' name='L1312'></a>
+<a id='L1313' name='L1313'></a>  <em class='comment'>/* Update ABR/ASBR routing table */</em>
+<a id='L1314' name='L1314'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_rtrs)
+<a id='L1315' name='L1315'></a>    <em class='brace'>{</em>
+<a id='L1316' name='L1316'></a>      <em class='comment'>/* old_rtrs's node holds linked list of ospf_route. --kunihiro. */</em>
+<a id='L1317' name='L1317'></a>      <em class='comment'>/* ospf_route_delete (ospf-&gt;old_rtrs); */</em>
+<a id='L1318' name='L1318'></a>      <a href='../S/805.html#L1054' title='Defined at 1054 in ospfd/ospf_spf.c.'>ospf_rtrs_free</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_rtrs);
+<a id='L1319' name='L1319'></a>    <em class='brace'>}</em>
+<a id='L1320' name='L1320'></a>
+<a id='L1321' name='L1321'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_rtrs = <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;new_rtrs;
+<a id='L1322' name='L1322'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;new_rtrs = new_rtrs;
+<a id='L1323' name='L1323'></a>
+<a id='L1324' name='L1324'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L496' title='Defined at 496 in ospfd/ospfd.h.'>IS_OSPF_ABR</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>))
+<a id='L1325' name='L1325'></a>    <a href='../S/800.html#L1810' title='Defined at 1810 in ospfd/ospf_abr.c.'>ospf_abr_task</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L1326' name='L1326'></a>
+<a id='L1327' name='L1327'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1328' name='L1328'></a>    zlog_debug ("SPF: calculation complete");
+<a id='L1329' name='L1329'></a>
+<a id='L1330' name='L1330'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1331' name='L1331'></a><em class='brace'>}</em>
+<a id='L1332' name='L1332'></a>
+<a id='L1333' name='L1333'></a><em class='comment'>/* Add schedule for SPF calculation.  To avoid frequenst SPF calc, we</em>
+<a id='L1334' name='L1334'></a><em class='comment'>   set timer for SPF calc. */</em>
+<a id='L1335' name='L1335'></a><strong class='reserved'>void</strong>
+<a id='L1336' name='L1336'></a><a href='../R/8512.html' title='Multiple referred from 11 places.'>ospf_spf_calculate_schedule</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>)
+<a id='L1337' name='L1337'></a><em class='brace'>{</em>
+<a id='L1338' name='L1338'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> delay, elapsed, ht;
+<a id='L1339' name='L1339'></a>  <strong class='reserved'>struct</strong> timeval result;
+<a id='L1340' name='L1340'></a>
+<a id='L1341' name='L1341'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1342' name='L1342'></a>    zlog_debug ("SPF: calculation timer scheduled");
+<a id='L1343' name='L1343'></a>
+<a id='L1344' name='L1344'></a>  <em class='comment'>/* OSPF instance does not exist. */</em>
+<a id='L1345' name='L1345'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1346' name='L1346'></a>    <strong class='reserved'>return</strong>;
+<a id='L1347' name='L1347'></a>  
+<a id='L1348' name='L1348'></a>  <em class='comment'>/* SPF calculation timer is already scheduled. */</em>
+<a id='L1349' name='L1349'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_spf_calc)
+<a id='L1350' name='L1350'></a>    <em class='brace'>{</em>
+<a id='L1351' name='L1351'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1352' name='L1352'></a>        zlog_debug ("SPF: calculation timer is already scheduled: %p",
+<a id='L1353' name='L1353'></a>                   <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_spf_calc);
+<a id='L1354' name='L1354'></a>      <strong class='reserved'>return</strong>;
+<a id='L1355' name='L1355'></a>    <em class='brace'>}</em>
+<a id='L1356' name='L1356'></a>  
+<a id='L1357' name='L1357'></a>  <em class='comment'>/* XXX Monotic timers: we only care about relative time here. */</em>
+<a id='L1358' name='L1358'></a>  result = <a href='../S/747.html#L122' title='Defined at 122 in ospfd/ospf_lsa.c.'>tv_sub</a> (<a href='../S/208.html#L245' title='Defined at 245 in lib/thread.c.'>recent_relative_time</a> (), <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;ts_spf);
+<a id='L1359' name='L1359'></a>  
+<a id='L1360' name='L1360'></a>  elapsed = (result.tv_sec * 1000) + (result.tv_usec / 1000);
+<a id='L1361' name='L1361'></a>  ht = <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_holdtime * <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_hold_multiplier;
+<a id='L1362' name='L1362'></a>  
+<a id='L1363' name='L1363'></a>  <strong class='reserved'>if</strong> (ht &gt; <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_max_holdtime)
+<a id='L1364' name='L1364'></a>    ht = <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_max_holdtime;
+<a id='L1365' name='L1365'></a>  
+<a id='L1366' name='L1366'></a>  <em class='comment'>/* Get SPF calculation delay time. */</em>
+<a id='L1367' name='L1367'></a>  <strong class='reserved'>if</strong> (elapsed &lt; ht)
+<a id='L1368' name='L1368'></a>    <em class='brace'>{</em>
+<a id='L1369' name='L1369'></a>      <em class='comment'>/* Got an event within the hold time of last SPF. We need to</em>
+<a id='L1370' name='L1370'></a><em class='comment'>       * increase the hold_multiplier, if it's not already at/past</em>
+<a id='L1371' name='L1371'></a><em class='comment'>       * maximum value, and wasn't already increased..</em>
+<a id='L1372' name='L1372'></a><em class='comment'>       */</em>
+<a id='L1373' name='L1373'></a>      <strong class='reserved'>if</strong> (ht &lt; <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_max_holdtime)
+<a id='L1374' name='L1374'></a>        <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_hold_multiplier++;
+<a id='L1375' name='L1375'></a>      
+<a id='L1376' name='L1376'></a>      <em class='comment'>/* always honour the SPF initial delay */</em>
+<a id='L1377' name='L1377'></a>      <strong class='reserved'>if</strong> ( (ht - elapsed) &lt; <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_delay)
+<a id='L1378' name='L1378'></a>        delay = <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_delay;
+<a id='L1379' name='L1379'></a>      <strong class='reserved'>else</strong>
+<a id='L1380' name='L1380'></a>        delay = ht - elapsed;
+<a id='L1381' name='L1381'></a>    <em class='brace'>}</em>
+<a id='L1382' name='L1382'></a>  <strong class='reserved'>else</strong>
+<a id='L1383' name='L1383'></a>    <em class='brace'>{</em>
+<a id='L1384' name='L1384'></a>      <em class='comment'>/* Event is past required hold-time of last SPF */</em>
+<a id='L1385' name='L1385'></a>      delay = <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_delay;
+<a id='L1386' name='L1386'></a>      <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;spf_hold_multiplier = 1;
+<a id='L1387' name='L1387'></a>    <em class='brace'>}</em>
+<a id='L1388' name='L1388'></a>  
+<a id='L1389' name='L1389'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1390' name='L1390'></a>    zlog_debug ("SPF: calculation timer delay = %ld", delay);
+<a id='L1391' name='L1391'></a>
+<a id='L1392' name='L1392'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;t_spf_calc =
+<a id='L1393' name='L1393'></a>    <a href='../S/279.html#L168' title='Defined at 168 in lib/thread.h.'>thread_add_timer_msec</a> (master, <a href='../S/805.html#L1260' title='Defined at 1260 in ospfd/ospf_spf.c.'>ospf_spf_calculate_timer</a>, <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, delay);
+<a id='L1394' name='L1394'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L59'>[^]</a><a href='#L1336'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

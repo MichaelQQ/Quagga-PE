@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>transit</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/643.html#L215'>transit</a>           215 bgpd/bgp_attr.c transit_free (struct transit *transit)</span>
+<span class='curline'><a href='../S/643.html#L217'>transit</a>           217 bgpd/bgp_attr.c   if (transit-&gt;val)</span>
+<span class='curline'><a href='../S/643.html#L218'>transit</a>           218 bgpd/bgp_attr.c     XFREE (MTYPE_TRANSIT_VAL, transit-&gt;val);</span>
+<span class='curline'><a href='../S/643.html#L219'>transit</a>           219 bgpd/bgp_attr.c   XFREE (MTYPE_TRANSIT, transit);</span>
+<span class='curline'><a href='../S/643.html#L230'>transit</a>           230 bgpd/bgp_attr.c static struct transit *</span>
+<span class='curline'><a href='../S/643.html#L231'>transit</a>           231 bgpd/bgp_attr.c transit_intern (struct transit *transit)</span>
+<span class='curline'><a href='../S/643.html#L233'>transit</a>           233 bgpd/bgp_attr.c   struct transit *find;</span>
+<span class='curline'><a href='../S/643.html#L235'>transit</a>           235 bgpd/bgp_attr.c   find = hash_get (transit_hash, transit, transit_hash_alloc);</span>
+<span class='curline'><a href='../S/643.html#L236'>transit</a>           236 bgpd/bgp_attr.c   if (find != transit)</span>
+<span class='curline'><a href='../S/643.html#L237'>transit</a>           237 bgpd/bgp_attr.c     transit_free (transit);</span>
+<span class='curline'><a href='../S/643.html#L244'>transit</a>           244 bgpd/bgp_attr.c transit_unintern (struct transit *transit)</span>
+<span class='curline'><a href='../S/643.html#L246'>transit</a>           246 bgpd/bgp_attr.c   if (transit-&gt;refcnt)</span>
+<span class='curline'><a href='../S/643.html#L247'>transit</a>           247 bgpd/bgp_attr.c     transit-&gt;refcnt--;</span>
+<span class='curline'><a href='../S/643.html#L249'>transit</a>           249 bgpd/bgp_attr.c   if (transit-&gt;refcnt == 0)</span>
+<span class='curline'><a href='../S/643.html#L251'>transit</a>           251 bgpd/bgp_attr.c       hash_release (transit_hash, transit);</span>
+<span class='curline'><a href='../S/643.html#L252'>transit</a>           252 bgpd/bgp_attr.c       transit_free (transit);</span>
+<span class='curline'><a href='../S/643.html#L259'>transit</a>           259 bgpd/bgp_attr.c   const struct transit * transit = p;</span>
+<span class='curline'><a href='../S/643.html#L261'>transit</a>           261 bgpd/bgp_attr.c   return jhash(transit-&gt;val, transit-&gt;length, 0);</span>
+<span class='curline'><a href='../S/643.html#L267'>transit</a>           267 bgpd/bgp_attr.c   const struct transit * transit1 = p1;</span>
+<span class='curline'><a href='../S/643.html#L268'>transit</a>           268 bgpd/bgp_attr.c   const struct transit * transit2 = p2;</span>
+<span class='curline'><a href='../S/643.html#L395'>transit</a>           395 bgpd/bgp_attr.c       if (extra-&gt;transit)</span>
+<span class='curline'><a href='../S/643.html#L396'>transit</a>           396 bgpd/bgp_attr.c         MIX(transit_hash_key_make (extra-&gt;transit));</span>
+<span class='curline'><a href='../S/643.html#L437'>transit</a>           437 bgpd/bgp_attr.c           &amp;&amp; ae1-&gt;transit == ae2-&gt;transit)</span>
+<span class='curline'><a href='../S/643.html#L536'>transit</a>           536 bgpd/bgp_attr.c       if (attre-&gt;transit)</span>
+<span class='curline'><a href='../S/643.html#L538'>transit</a>           538 bgpd/bgp_attr.c           if (! attre-&gt;transit-&gt;refcnt)</span>
+<span class='curline'><a href='../S/643.html#L539'>transit</a>           539 bgpd/bgp_attr.c             attre-&gt;transit = transit_intern (attre-&gt;transit);</span>
+<span class='curline'><a href='../S/643.html#L541'>transit</a>           541 bgpd/bgp_attr.c             attre-&gt;transit-&gt;refcnt++;</span>
+<span class='curline'><a href='../S/643.html#L664'>transit</a>           664 bgpd/bgp_attr.c       if (attr-&gt;extra-&gt;transit)</span>
+<span class='curline'><a href='../S/643.html#L665'>transit</a>           665 bgpd/bgp_attr.c         transit_unintern (attr-&gt;extra-&gt;transit);</span>
+<span class='curline'><a href='../S/643.html#L717'>transit</a>           717 bgpd/bgp_attr.c       if (attre-&gt;transit &amp;&amp; ! attre-&gt;transit-&gt;refcnt)</span>
+<span class='curline'><a href='../S/643.html#L718'>transit</a>           718 bgpd/bgp_attr.c         transit_free (attre-&gt;transit);</span>
+<span class='curline'><a href='../S/643.html#L1666'>transit</a>          1666 bgpd/bgp_attr.c   struct transit *transit;</span>
+<span class='curline'><a href='../S/643.html#L1710'>transit</a>          1710 bgpd/bgp_attr.c   if (! ((attre = bgp_attr_extra_get(attr))-&gt;transit) )</span>
+<span class='curline'><a href='../S/643.html#L1711'>transit</a>          1711 bgpd/bgp_attr.c       attre-&gt;transit = XCALLOC (MTYPE_TRANSIT, sizeof (struct transit));</span>
+<span class='curline'><a href='../S/643.html#L1713'>transit</a>          1713 bgpd/bgp_attr.c   transit = attre-&gt;transit;</span>
+<span class='curline'><a href='../S/643.html#L1715'>transit</a>          1715 bgpd/bgp_attr.c   if (transit-&gt;val)</span>
+<span class='curline'><a href='../S/643.html#L1716'>transit</a>          1716 bgpd/bgp_attr.c     transit-&gt;val = XREALLOC (MTYPE_TRANSIT_VAL, transit-&gt;val, </span>
+<span class='curline'><a href='../S/643.html#L1717'>transit</a>          1717 bgpd/bgp_attr.c 			     transit-&gt;length + total);</span>
+<span class='curline'><a href='../S/643.html#L1719'>transit</a>          1719 bgpd/bgp_attr.c     transit-&gt;val = XMALLOC (MTYPE_TRANSIT_VAL, total);</span>
+<span class='curline'><a href='../S/643.html#L1721'>transit</a>          1721 bgpd/bgp_attr.c   memcpy (transit-&gt;val + transit-&gt;length, startp, total);</span>
+<span class='curline'><a href='../S/643.html#L1722'>transit</a>          1722 bgpd/bgp_attr.c   transit-&gt;length += total;</span>
+<span class='curline'><a href='../S/643.html#L2018'>transit</a>          2018 bgpd/bgp_attr.c   if (attr-&gt;extra &amp;&amp; attr-&gt;extra-&gt;transit)</span>
+<span class='curline'><a href='../S/643.html#L2019'>transit</a>          2019 bgpd/bgp_attr.c     attr-&gt;extra-&gt;transit = transit_intern (attr-&gt;extra-&gt;transit);</span>
+<span class='curline'><a href='../S/643.html#L2491'>transit</a>          2491 bgpd/bgp_attr.c   if (attr-&gt;extra &amp;&amp; attr-&gt;extra-&gt;transit)</span>
+<span class='curline'><a href='../S/643.html#L2492'>transit</a>          2492 bgpd/bgp_attr.c     stream_put (s, attr-&gt;extra-&gt;transit-&gt;val, attr-&gt;extra-&gt;transit-&gt;length);</span>
+<span class='curline'><a href='../S/642.html#L69'>transit</a>            69 bgpd/bgp_attr.h   struct transit *transit;</span>
+<span class='curline'><a href='../S/642.html#L180'>transit</a>           180 bgpd/bgp_attr.h void transit_unintern (struct transit *);</span>
+<span class='curline'><a href='../S/766.html#L302'>transit</a>           302 ospfd/ospf_ia.c   return (area-&gt;transit == OSPF_TRANSIT_TRUE) ||</span>
+<span class='curline'><a href='../S/805.html#L763'>transit</a>           763 ospfd/ospf_spf.c         area-&gt;transit = OSPF_TRANSIT_TRUE;</span>
+<span class='curline'><a href='../S/805.html#L1187'>transit</a>          1187 ospfd/ospf_spf.c   area-&gt;transit = OSPF_TRANSIT_FALSE;</span>
+<span class='curline'><a href='../S/790.html#L382'>transit</a>           382 ospfd/ospfd.h    u_char transit;			/* TransitCapability. */</span>
+</pre>
+</body>
+</html>

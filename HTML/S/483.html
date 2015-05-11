@@ -1,0 +1,661 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_tlv.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_tlv.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/149.html' title='Multiple included from 18 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_tlv.h</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             IS-IS TLV related routines</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'> *</em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#ifndef</em> <a href='../S/483.html#L25' title='Defined at 25 in isisd/isis_tlv.h.'>_ZEBRA_ISIS_TLV_H</a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../S/483.html#L24' title='Referred from 24 in isisd/isis_tlv.h.'>_ZEBRA_ISIS_TLV_H</a>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='comment'>/*</em>
+<a id='L28' name='L28'></a><em class='comment'> * The list of TLVs we (should) support.</em>
+<a id='L29' name='L29'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L30' name='L30'></a><em class='comment'> * Name                   Value  IIH LSP SNP Status</em>
+<a id='L31' name='L31'></a><em class='comment'> *                               LAN</em>
+<a id='L32' name='L32'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L33' name='L33'></a><em class='comment'> *</em>
+<a id='L34' name='L34'></a><em class='comment'> * Area Addresses             1   y   y   n  ISO10589</em>
+<a id='L35' name='L35'></a><em class='comment'> * IIS Neighbors              2   n   y   n  ISO10589</em>
+<a id='L36' name='L36'></a><em class='comment'> * ES Neighbors               3   n   y   n  ISO10589</em>
+<a id='L37' name='L37'></a><em class='comment'> * IIS Neighbors              6   y   n   n  ISO10589</em>
+<a id='L38' name='L38'></a><em class='comment'> * Padding                    8   y   n   n  ISO10589</em>
+<a id='L39' name='L39'></a><em class='comment'> * LSP Entries                9   n   n   y  ISO10589</em>
+<a id='L40' name='L40'></a><em class='comment'> * Authentication            10   y   y   y  ISO10589, RFC3567</em>
+<a id='L41' name='L41'></a><em class='comment'> * Checksum                  12   y   n   y  RFC3358</em>
+<a id='L42' name='L42'></a><em class='comment'> * TE IS Reachability        22   n   y   n  RFC5305</em>
+<a id='L43' name='L43'></a><em class='comment'> * IS Alias                  24   n   y   n  RFC3786</em>
+<a id='L44' name='L44'></a><em class='comment'> * IP Int. Reachability     128   n   y   n  RFC1195</em>
+<a id='L45' name='L45'></a><em class='comment'> * Protocols Supported      129   y   y   n  RFC1195</em>
+<a id='L46' name='L46'></a><em class='comment'> * IP Ext. Reachability     130   n   y   n  RFC1195</em>
+<a id='L47' name='L47'></a><em class='comment'> * IDRPI                    131   n   y   y  RFC1195</em>
+<a id='L48' name='L48'></a><em class='comment'> * IP Interface Address     132   y   y   n  RFC1195</em>
+<a id='L49' name='L49'></a><em class='comment'> * TE Router ID             134   n   y   n  RFC5305</em>
+<a id='L50' name='L50'></a><em class='comment'> * Extended IP Reachability 135   n   y   n  RFC5305</em>
+<a id='L51' name='L51'></a><em class='comment'> * Dynamic Hostname         137   n   y   n  RFC2763</em>
+<a id='L52' name='L52'></a><em class='comment'> * Shared Risk Link Group   138   n   y   y  RFC5307</em>
+<a id='L53' name='L53'></a><em class='comment'> * Restart TLV              211   y   n   n  RFC3847</em>
+<a id='L54' name='L54'></a><em class='comment'> * MT IS Reachability       222   n   y   n  RFC5120</em>
+<a id='L55' name='L55'></a><em class='comment'> * MT Supported             229   y   y   n  RFC5120</em>
+<a id='L56' name='L56'></a><em class='comment'> * IPv6 Interface Address   232   y   y   n  RFC5308</em>
+<a id='L57' name='L57'></a><em class='comment'> * MT IP Reachability       235   n   y   n  RFC5120</em>
+<a id='L58' name='L58'></a><em class='comment'> * IPv6 IP Reachability     236   n   y   n  RFC5308</em>
+<a id='L59' name='L59'></a><em class='comment'> * MT IPv6 IP Reachability  237   n   y   n  RFC5120</em>
+<a id='L60' name='L60'></a><em class='comment'> * P2P Adjacency State      240   y   n   n  RFC3373</em>
+<a id='L61' name='L61'></a><em class='comment'> * IIH Sequence Number      241   y   n   n  draft-shen-isis-iih-sequence</em>
+<a id='L62' name='L62'></a><em class='comment'> * Router Capability        242   -   -   -  draft-ietf-isis-caps</em>
+<a id='L63' name='L63'></a><em class='comment'> *</em>
+<a id='L64' name='L64'></a><em class='comment'> *</em>
+<a id='L65' name='L65'></a><em class='comment'> * IS Reachability sub-TLVs we (should) support.</em>
+<a id='L66' name='L66'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L67' name='L67'></a><em class='comment'> * Name                           Value   Status</em>
+<a id='L68' name='L68'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L69' name='L69'></a><em class='comment'> * Administartive group (color)       3   RFC5305</em>
+<a id='L70' name='L70'></a><em class='comment'> * Link Local/Remote Identifiers      4   RFC5307</em>
+<a id='L71' name='L71'></a><em class='comment'> * IPv4 interface address             6   RFC5305</em>
+<a id='L72' name='L72'></a><em class='comment'> * IPv4 neighbor address              8   RFC5305</em>
+<a id='L73' name='L73'></a><em class='comment'> * Maximum link bandwidth             9   RFC5305</em>
+<a id='L74' name='L74'></a><em class='comment'> * Reservable link bandwidth         10   RFC5305</em>
+<a id='L75' name='L75'></a><em class='comment'> * Unreserved bandwidth              11   RFC5305</em>
+<a id='L76' name='L76'></a><em class='comment'> * TE Default metric                 18   RFC5305</em>
+<a id='L77' name='L77'></a><em class='comment'> * Link Protection Type              20   RFC5307</em>
+<a id='L78' name='L78'></a><em class='comment'> * Interface Switching Capability    21   RFC5307</em>
+<a id='L79' name='L79'></a><em class='comment'> *</em>
+<a id='L80' name='L80'></a><em class='comment'> *</em>
+<a id='L81' name='L81'></a><em class='comment'> * IP Reachability sub-TLVs we (should) support.</em>
+<a id='L82' name='L82'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L83' name='L83'></a><em class='comment'> * Name                           Value   Status</em>
+<a id='L84' name='L84'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L85' name='L85'></a><em class='comment'> * 32bit administrative tag           1   RFC5130</em>
+<a id='L86' name='L86'></a><em class='comment'> * 64bit administrative tag           2   RFC5130</em>
+<a id='L87' name='L87'></a><em class='comment'> * Management prefix color          117   RFC5120</em>
+<a id='L88' name='L88'></a><em class='comment'> *  Router Capability sub-TLVs we support</em>
+<a id='L89' name='L89'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L90' name='L90'></a><em class='comment'> * Name                           Value   Status</em>
+<a id='L91' name='L91'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L92' name='L92'></a><em class='comment'> * TRILL Nickname                    6    RFC 6326</em>
+<a id='L93' name='L93'></a><em class='comment'> * TRILL Distribution Tree           7    RFC 6326</em>
+<a id='L94' name='L94'></a><em class='comment'> * TRILL Distribution Tree Roots     8    RFC 6326</em>
+<a id='L95' name='L95'></a><em class='comment'> * TRILL Distribution Tree Roots IDs 9    RFC 6326</em>
+<a id='L96' name='L96'></a><em class='comment'> * TRILL INT VLANS                   10   RFC 6326</em>
+<a id='L97' name='L97'></a><em class='comment'> * TRILL VERSION                     13   RFC 6326</em>
+<a id='L98' name='L98'></a><em class='comment'> * TRILL VLAN Groups                 14   RFC 6326</em>
+<a id='L99' name='L99'></a><em class='comment'> *</em>
+<a id='L100' name='L100'></a><em class='comment'> *</em>
+<a id='L101' name='L101'></a><em class='comment'> * Port Capability sub-TLVs we support</em>
+<a id='L102' name='L102'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L103' name='L103'></a><em class='comment'> * Name                           Value   Status</em>
+<a id='L104' name='L104'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L105' name='L105'></a><em class='comment'> * TRILL Special VLANs and Flags     1    RFC 6326</em>
+<a id='L106' name='L106'></a><em class='comment'> * TRILL Enabled VLANs               2    RFC 6326</em>
+<a id='L107' name='L107'></a><em class='comment'> * TRILL Appointed Forwarders        3</em>
+<a id='L108' name='L108'></a><em class='comment'> *</em>
+<a id='L109' name='L109'></a><em class='comment'> *</em>
+<a id='L110' name='L110'></a><em class='comment'> * Reachability sub-TLVs we support</em>
+<a id='L111' name='L111'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L112' name='L112'></a><em class='comment'> * Name                           Value   Status</em>
+<a id='L113' name='L113'></a><em class='comment'> * ____________________________________________________________________________</em>
+<a id='L114' name='L114'></a><em class='comment'> * TRILL MTU                        28    RFC 6326</em>
+<a id='L115' name='L115'></a><em class='comment'> */</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> <a href='../R/31.html' title='Multiple referred from 2 places.'>AREA_ADDRESSES</a>            1
+<a id='L118' name='L118'></a><em class='sharp'>#define</em> <a href='../R/1119.html' title='Multiple referred from 3 places.'>IS_NEIGHBOURS</a>             2
+<a id='L119' name='L119'></a><em class='sharp'>#define</em> <a href='../S/479.html#L257' title='Referred from 257 in isisd/isis_tlv.c.'>ES_NEIGHBOURS</a>             3
+<a id='L120' name='L120'></a><em class='sharp'>#define</em> <a href='../R/1190.html' title='Multiple referred from 3 places.'>LAN_NEIGHBOURS</a>            6
+<a id='L121' name='L121'></a><em class='sharp'>#define</em> <a href='../R/2869.html' title='Multiple referred from 4 places.'>PADDING</a>                   8
+<a id='L122' name='L122'></a><em class='sharp'>#define</em> <a href='../R/1540.html' title='Multiple referred from 3 places.'>LSP_ENTRIES</a>               9
+<a id='L123' name='L123'></a><em class='sharp'>#define</em> <a href='../R/64.html' title='Multiple referred from 2 places.'>AUTH_INFO</a>                 10
+<a id='L124' name='L124'></a><em class='sharp'>#define</em> <a href='../R/459.html' title='Multiple referred from 2 places.'>CHECKSUM</a>                  12
+<a id='L125' name='L125'></a><em class='sharp'>#define</em> <a href='../R/3619.html' title='Multiple referred from 3 places.'>TE_IS_NEIGHBOURS</a>          22
+<a id='L126' name='L126'></a><em class='sharp'>#define</em> IS_ALIAS                  24
+<a id='L127' name='L127'></a><em class='sharp'>#define</em> <a href='../R/982.html' title='Multiple referred from 3 places.'>IPV4_INT_REACHABILITY</a>     128
+<a id='L128' name='L128'></a><em class='sharp'>#define</em> <a href='../R/3022.html' title='Multiple referred from 2 places.'>PROTOCOLS_SUPPORTED</a>       129
+<a id='L129' name='L129'></a><em class='sharp'>#define</em> <a href='../S/479.html#L537' title='Referred from 537 in isisd/isis_tlv.c.'>IPV4_EXT_REACHABILITY</a>     130
+<a id='L130' name='L130'></a><em class='sharp'>#define</em> IDRP_INFO                 131
+<a id='L131' name='L131'></a><em class='sharp'>#define</em> <a href='../R/976.html' title='Multiple referred from 3 places.'>IPV4_ADDR</a>                 132
+<a id='L132' name='L132'></a><em class='sharp'>#define</em> <a href='../R/3629.html' title='Multiple referred from 2 places.'>TE_ROUTER_ID</a>              134
+<a id='L133' name='L133'></a><em class='sharp'>#define</em> <a href='../R/3617.html' title='Multiple referred from 3 places.'>TE_IPV4_REACHABILITY</a>      135
+<a id='L134' name='L134'></a><em class='sharp'>#define</em> <a href='../R/689.html' title='Multiple referred from 2 places.'>DYNAMIC_HOSTNAME</a>          137
+<a id='L135' name='L135'></a><em class='sharp'>#define</em> <a href='../S/479.html#L730' title='Referred from 730 in isisd/isis_tlv.c.'>GRACEFUL_RESTART</a>          211
+<a id='L136' name='L136'></a><em class='sharp'>#define</em> <a href='../R/990.html' title='Multiple referred from 3 places.'>IPV6_ADDR</a>                 232
+<a id='L137' name='L137'></a><em class='sharp'>#define</em> <a href='../R/1003.html' title='Multiple referred from 3 places.'>IPV6_REACHABILITY</a>         236
+<a id='L138' name='L138'></a><em class='sharp'>#define</em> <a href='../S/479.html#L694' title='Referred from 694 in isisd/isis_tlv.c.'>WAY3_HELLO</a>                240
+<a id='L139' name='L139'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L140' name='L140'></a><em class='sharp'>#define</em> <a href='../R/3360.html' title='Multiple referred from 5 places.'>ROUTER_CAPABILITY</a>         242
+<a id='L141' name='L141'></a><em class='sharp'>#define</em> PORT_CAPABILITY           243   <em class='comment'>/* TBD TRILL port capability TLV */</em>
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a><em class='comment'>/* PORT_CAPABILITY sub-TLVs for TRILL */</em>
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a><em class='comment'>/**     RFC6326  2.2.1  Special VLANs and Flags</em>
+<a id='L146' name='L146'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L147' name='L147'></a><em class='comment'>   |     Type      |                  (1 byte)</em>
+<a id='L148' name='L148'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L149' name='L149'></a><em class='comment'>   |   Length      |                  (1 byte)</em>
+<a id='L150' name='L150'></a><em class='comment'>   +---------------+---------------+</em>
+<a id='L151' name='L151'></a><em class='comment'>   |    Port ID                    |  (2 bytes)</em>
+<a id='L152' name='L152'></a><em class='comment'>   +-------------------------------+</em>
+<a id='L153' name='L153'></a><em class='comment'>   |     Sender Nickname           |  (2 bytes)</em>
+<a id='L154' name='L154'></a><em class='comment'>   +--+--+--+--+-------------------+</em>
+<a id='L155' name='L155'></a><em class='comment'>   |AF|AC|VM|BY|    Outer.VLAN     |  (2 bytes)</em>
+<a id='L156' name='L156'></a><em class='comment'>   +--+--+--+--+-------------------+</em>
+<a id='L157' name='L157'></a><em class='comment'>   |TR|R |R |R |    Desig.VLAN     |  (2 bytes)</em>
+<a id='L158' name='L158'></a><em class='comment'>   +--+--+--+--+-------------------+</em>
+<a id='L159' name='L159'></a><em class='comment'>*/</em>
+<a id='L160' name='L160'></a><em class='sharp'>#define</em> PCSTLV_VLANS              1
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a><em class='comment'>/**     RFC6326  2.2.2  Enabled VLANs</em>
+<a id='L163' name='L163'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L164' name='L164'></a><em class='comment'>   |     Type      |                  (1 byte)</em>
+<a id='L165' name='L165'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L166' name='L166'></a><em class='comment'>   |   Length      |                  (1 byte)</em>
+<a id='L167' name='L167'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L168' name='L168'></a><em class='comment'>   | RESV  |  Start VLAN ID        |  (2 bytes)</em>
+<a id='L169' name='L169'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L170' name='L170'></a><em class='comment'>   | VLAN bit-map....</em>
+<a id='L171' name='L171'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L172' name='L172'></a><em class='comment'></em>
+<a id='L173' name='L173'></a><em class='comment'>*/</em>
+<a id='L174' name='L174'></a><em class='sharp'>#define</em> PCSTLV_ENABLEDVLANS       2
+<a id='L175' name='L175'></a><em class='comment'>/**     RFC6326  2.2.3   Appointed Forwarders</em>
+<a id='L176' name='L176'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L177' name='L177'></a><em class='comment'>   |     Type      |                          (1 byte)</em>
+<a id='L178' name='L178'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L179' name='L179'></a><em class='comment'>   |   Length      |                          (1 byte)</em>
+<a id='L180' name='L180'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L181' name='L181'></a><em class='comment'>   |   Appointment Information (1)         |  (6 bytes)</em>
+<a id='L182' name='L182'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L183' name='L183'></a><em class='comment'>   |   .................                   |</em>
+<a id='L184' name='L184'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L185' name='L185'></a><em class='comment'>   |   Appointment Information (N)         |  (6 bytes)</em>
+<a id='L186' name='L186'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L187' name='L187'></a><em class='comment'></em>
+<a id='L188' name='L188'></a><em class='comment'>   where each appointment is of the form:</em>
+<a id='L189' name='L189'></a><em class='comment'></em>
+<a id='L190' name='L190'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L191' name='L191'></a><em class='comment'>   |       Appointee Nickname              |  (2 bytes)</em>
+<a id='L192' name='L192'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L193' name='L193'></a><em class='comment'>   | RESV  |        Start.VLAN             |  (2 bytes)</em>
+<a id='L194' name='L194'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L195' name='L195'></a><em class='comment'>   | RESV  |        End.VLAN               |  (2 bytes)</em>
+<a id='L196' name='L196'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L197' name='L197'></a><em class='comment'>*/</em>
+<a id='L198' name='L198'></a><em class='sharp'>#define</em> PCSTLV_APPFORWARDERS      3
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a><em class='comment'>/* ROUTER_CAPABILITY sub-TLVs for TRILL */</em>
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a><em class='sharp'> #define</em>        <a href='../R/3079.html' title='Multiple referred from 2 places.'>RCSTLV_TRILL_FLAGS</a>        21    <em class='comment'>/* TBD Flags */</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a><em class='comment'>/**     RFC6326  2.3.2  TBD Nickname</em>
+<a id='L206' name='L206'></a><em class='comment'></em>
+<a id='L207' name='L207'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L208' name='L208'></a><em class='comment'>   |Type = NICKNAME|                         (1 byte)</em>
+<a id='L209' name='L209'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L210' name='L210'></a><em class='comment'>   |   Length      |                         (1 byte)</em>
+<a id='L211' name='L211'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L212' name='L212'></a><em class='comment'>   |                NICKNAME RECORDS (1)                           |</em>
+<a id='L213' name='L213'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L214' name='L214'></a><em class='comment'>   |                   .................                           |</em>
+<a id='L215' name='L215'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L216' name='L216'></a><em class='comment'>   |                NICKNAME RECORDS (N)                           |</em>
+<a id='L217' name='L217'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L218' name='L218'></a><em class='comment'></em>
+<a id='L219' name='L219'></a><em class='comment'>   where each nickname record is of the form:</em>
+<a id='L220' name='L220'></a><em class='comment'></em>
+<a id='L221' name='L221'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L222' name='L222'></a><em class='comment'>   | Nickname.Pri  |                  (1 byte)</em>
+<a id='L223' name='L223'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L224' name='L224'></a><em class='comment'>   |     Tree Root Priority        |  (2 byte)</em>
+<a id='L225' name='L225'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L226' name='L226'></a><em class='comment'>   |           Nickname            |  (2 bytes)</em>
+<a id='L227' name='L227'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L228' name='L228'></a><em class='comment'>*/</em>
+<a id='L229' name='L229'></a><em class='sharp'>#define</em> <a href='../R/3080.html' title='Multiple referred from 2 places.'>RCSTLV_TRILL_NICKNAME</a>     6
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a><em class='comment'>/**     RFC6326  2.3.3  TBD Distribution Tree to compute/able to compute / to use</em>
+<a id='L232' name='L232'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L233' name='L233'></a><em class='comment'>   |Type =  TREES  |                  (1 byte)</em>
+<a id='L234' name='L234'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L235' name='L235'></a><em class='comment'>   |  Length       |                  (1 byte)</em>
+<a id='L236' name='L236'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L237' name='L237'></a><em class='comment'>   | Number of trees to compute    |  (2 byte)</em>
+<a id='L238' name='L238'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L239' name='L239'></a><em class='comment'>   | Maximum trees able to compute |  (2 byte)</em>
+<a id='L240' name='L240'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L241' name='L241'></a><em class='comment'>   | Number of trees to use        |  (2 byte)</em>
+<a id='L242' name='L242'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L243' name='L243'></a><em class='comment'>*/</em>
+<a id='L244' name='L244'></a><em class='sharp'>#define</em> RCSTLV_TRILL_TREE         7
+<a id='L245' name='L245'></a><em class='comment'>/**     RFC6326  2.3.4  TBD Distribution Tree Roots ID</em>
+<a id='L246' name='L246'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L247' name='L247'></a><em class='comment'>   |Type=TREE-RT-IDs|               (1 byte)</em>
+<a id='L248' name='L248'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L249' name='L249'></a><em class='comment'>   |   Length      |                (1 byte)</em>
+<a id='L250' name='L250'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L251' name='L251'></a><em class='comment'>   |Starting Tree Number         |  (2 bytes)</em>
+<a id='L252' name='L252'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L253' name='L253'></a><em class='comment'>   |   Nickname (K-th root)      |  (2 bytes)</em>
+<a id='L254' name='L254'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L255' name='L255'></a><em class='comment'>   |   Nickname (K+1 - th root)  |  (2 bytes)</em>
+<a id='L256' name='L256'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L257' name='L257'></a><em class='comment'>   |   Nickname (...)            |</em>
+<a id='L258' name='L258'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L259' name='L259'></a><em class='comment'></em>
+<a id='L260' name='L260'></a><em class='comment'>*/</em>
+<a id='L261' name='L261'></a><em class='sharp'>#define</em> RCSTLV_TRILL_TREE_ROOTS   8
+<a id='L262' name='L262'></a><em class='comment'>/**     RFC6326  2.3.5</em>
+<a id='L263' name='L263'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L264' name='L264'></a><em class='comment'>   |Type=TREE-RT-IDs|               (1 byte)</em>
+<a id='L265' name='L265'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L266' name='L266'></a><em class='comment'>   |   Length      |                (1 byte)</em>
+<a id='L267' name='L267'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L268' name='L268'></a><em class='comment'>   |Starting Tree Number         |  (2 bytes)</em>
+<a id='L269' name='L269'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L270' name='L270'></a><em class='comment'>   |   Nickname (K-th root)      |  (2 bytes)</em>
+<a id='L271' name='L271'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L272' name='L272'></a><em class='comment'>   |   Nickname (K+1 - th root)  |  (2 bytes)</em>
+<a id='L273' name='L273'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L274' name='L274'></a><em class='comment'>   |   Nickname (...)            |</em>
+<a id='L275' name='L275'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L276' name='L276'></a><em class='comment'>*/</em>
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a><em class='sharp'>#define</em> RCSTLV_TRILL_TREE_ROOTS_ID      9
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a><em class='comment'>/**     RFC6326  2.3.6</em>
+<a id='L281' name='L281'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L282' name='L282'></a><em class='comment'>   |Type = INT-VLAN|                  (1 byte)</em>
+<a id='L283' name='L283'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L284' name='L284'></a><em class='comment'>   |   Length      |                  (1 byte)</em>
+<a id='L285' name='L285'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L286' name='L286'></a><em class='comment'>   |   Nickname                    |  (2 bytes)</em>
+<a id='L287' name='L287'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+...+-+-+-+-+</em>
+<a id='L288' name='L288'></a><em class='comment'>   |   Interested VLANS                                  |  (4 bytes)</em>
+<a id='L289' name='L289'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+...+-+-+-+-+</em>
+<a id='L290' name='L290'></a><em class='comment'>   |   Appointed Forwarder Status Lost Counter           |  (4 bytes)</em>
+<a id='L291' name='L291'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+...+-+-+</em>
+<a id='L292' name='L292'></a><em class='comment'>   |         Root Bridges                                |  (6*n bytes)</em>
+<a id='L293' name='L293'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+...+-+-+</em>
+<a id='L294' name='L294'></a><em class='comment'></em>
+<a id='L295' name='L295'></a><em class='comment'>   Interested VLANS:</em>
+<a id='L296' name='L296'></a><em class='comment'>        0    1    2    3     4 - 15      16 - 19     20 - 31</em>
+<a id='L297' name='L297'></a><em class='comment'>      +----+----+----+----+------------+----------+------------+</em>
+<a id='L298' name='L298'></a><em class='comment'>      | M4 | M6 |  R |  R | VLAN.start |   RESV   |  VLAN.end  |</em>
+<a id='L299' name='L299'></a><em class='comment'>      +----+----+----+----+------------+----------+------------+</em>
+<a id='L300' name='L300'></a><em class='comment'></em>
+<a id='L301' name='L301'></a><em class='comment'>*/</em>
+<a id='L302' name='L302'></a><em class='sharp'>#define</em> RCSTLV_TRILL_INT_VLAN   10
+<a id='L303' name='L303'></a><em class='comment'>/**     RFC6326  2.3.1</em>
+<a id='L304' name='L304'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L305' name='L305'></a><em class='comment'>   | Type          |                  (1 byte)</em>
+<a id='L306' name='L306'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L307' name='L307'></a><em class='comment'>   | Length        |                  (1 byte)</em>
+<a id='L308' name='L308'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L309' name='L309'></a><em class='comment'>   | Max-version   |                  (1 byte)</em>
+<a id='L310' name='L310'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L311' name='L311'></a><em class='comment'>*/</em>
+<a id='L312' name='L312'></a><em class='sharp'>#define</em> RCSTLV_TRILL_VERSION    13
+<a id='L313' name='L313'></a><em class='comment'>/**     RFC6326  2.3.7</em>
+<a id='L314' name='L314'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L315' name='L315'></a><em class='comment'>   |Type=VLAN-GROUP|                  (1 byte)</em>
+<a id='L316' name='L316'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L317' name='L317'></a><em class='comment'>   |   Length      |                  (1 byte)</em>
+<a id='L318' name='L318'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L319' name='L319'></a><em class='comment'>   | RESV  |  Primary VLAN ID      |  (2 bytes)</em>
+<a id='L320' name='L320'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L321' name='L321'></a><em class='comment'>   | RESV  |  Secondary VLAN ID    |  (2 bytes)</em>
+<a id='L322' name='L322'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L323' name='L323'></a><em class='comment'>   |  more Secondary VLAN IDs ...     (2 bytes each)</em>
+<a id='L324' name='L324'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L325' name='L325'></a><em class='comment'></em>
+<a id='L326' name='L326'></a><em class='comment'>   if working with vlan_tag (double vlan) structure will change to this one</em>
+<a id='L327' name='L327'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L328' name='L328'></a><em class='comment'>   |Type=VLAN-GROUP|                  (1 byte)</em>
+<a id='L329' name='L329'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L330' name='L330'></a><em class='comment'>   |   Length      |                  (1 byte)</em>
+<a id='L331' name='L331'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L332' name='L332'></a><em class='comment'>   | RESV  |  Primary VLAN ID      |  (4 bytes)</em>
+<a id='L333' name='L333'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L334' name='L334'></a><em class='comment'>   | RESV  |  Secondary VLAN ID    |  (4 bytes)</em>
+<a id='L335' name='L335'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L336' name='L336'></a><em class='comment'>   |  more Secondary VLAN IDs ...     (4 bytes each)</em>
+<a id='L337' name='L337'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L338' name='L338'></a><em class='comment'></em>
+<a id='L339' name='L339'></a><em class='comment'>*/</em>
+<a id='L340' name='L340'></a><em class='sharp'>#define</em> <a href='../R/3081.html' title='Multiple referred from 4 places.'>RCSTLV_TRILL_VLAN_GROUP</a> 14
+<a id='L341' name='L341'></a><em class='comment'>/* Reachability sub-TLVs for TRILL */</em>
+<a id='L342' name='L342'></a><em class='comment'>/** RFC6326  2.3.7   2.4</em>
+<a id='L343' name='L343'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L344' name='L344'></a><em class='comment'>   | Type = MTU    |                  (1 byte)</em>
+<a id='L345' name='L345'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L346' name='L346'></a><em class='comment'>   |   Length      |                  (1 byte)</em>
+<a id='L347' name='L347'></a><em class='comment'>   +-+-+-+-+-+-+-+-+</em>
+<a id='L348' name='L348'></a><em class='comment'>   |F|  Reserved   |                  (1 byte)</em>
+<a id='L349' name='L349'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L350' name='L350'></a><em class='comment'>   |               MTU             |  (2 bytes)</em>
+<a id='L351' name='L351'></a><em class='comment'>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</em>
+<a id='L352' name='L352'></a><em class='comment'>*/</em>
+<a id='L353' name='L353'></a><em class='sharp'>#define</em> RSTLV_TRILL_MTU         28
+<a id='L354' name='L354'></a><em class='sharp'>#endif</em>
+<a id='L355' name='L355'></a><em class='sharp'>#define</em> <a href='../S/527.html#L2646' title='Referred from 2646 in isisd/isis_pdu.c.'>AUTH_INFO_HDRLEN</a>          3
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a><em class='sharp'>#define</em> <a href='../R/1120.html' title='Multiple referred from 9 places.'>IS_NEIGHBOURS_LEN</a> (<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 5)
+<a id='L358' name='L358'></a><em class='sharp'>#define</em> LAN_NEIGHBOURS_LEN 6
+<a id='L359' name='L359'></a><em class='sharp'>#define</em> <a href='../R/1541.html' title='Multiple referred from 4 places.'>LSP_ENTRIES_LEN</a> (10 + <a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>)  <em class='comment'>/* FIXME: should be entry */</em>
+<a id='L360' name='L360'></a><em class='sharp'>#define</em> <a href='../R/989.html' title='Multiple referred from 2 places.'>IPV4_REACH_LEN</a> 12
+<a id='L361' name='L361'></a><em class='sharp'>#define</em> <a href='../S/511.html#L1564' title='Referred from 1564 in isisd/isis_lsp.c.'>IPV6_REACH_LEN</a> 22
+<a id='L362' name='L362'></a><em class='sharp'>#define</em> <a href='../S/511.html#L1550' title='Referred from 1550 in isisd/isis_lsp.c.'>TE_IPV4_REACH_LEN</a> 9
+<a id='L363' name='L363'></a>
+<a id='L364' name='L364'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L365' name='L365'></a><em class='sharp'>#define</em> <a href='../R/3657.html' title='Multiple referred from 4 places.'>TLFLDS_LEN</a> 2                             <em class='comment'>/* Length of Type &amp; Len 8-bit fields */</em>
+<a id='L366' name='L366'></a><em class='sharp'>#define</em> <a href='../R/3361.html' title='Multiple referred from 2 places.'>ROUTER_CAPABILITY_MIN_LEN</a>  5             <em class='comment'>/* Min len of router capability TLV */</em>
+<a id='L367' name='L367'></a><em class='sharp'>#define</em> ROUTER_CAPABILITY_MAX_LEN  250           <em class='comment'>/* Max len of router capability TLV */</em>
+<a id='L368' name='L368'></a>
+<a id='L369' name='L369'></a><em class='comment'>/* TRILL Flags sub-TLV */</em>
+<a id='L370' name='L370'></a><em class='sharp'>#define</em> <a href='../S/516.html#L590' title='Referred from 590 in isisd/trilld.c.'>TRILL_FLAGS_SUBTLV_MIN_LEN</a> 1             <em class='comment'>/* Len of sub-TLV val */</em>
+<a id='L371' name='L371'></a><em class='sharp'>#define</em> <a href='../R/3715.html' title='Multiple referred from 2 places.'>TRILL_FLAGS_V0</a>  0x80
+<a id='L372' name='L372'></a><em class='sharp'>#define</em> TRILL_FLAGS_V1  0x40
+<a id='L373' name='L373'></a><em class='sharp'>#define</em> TRILL_FLAGS_V2  0x20
+<a id='L374' name='L374'></a><em class='sharp'>#define</em> TRILL_FLAGS_V3  0x10
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a><em class='sharp'>#define</em> <a href='../S/516.html#L606' title='Referred from 606 in isisd/trilld.c.'>TRILL_NICKNAME_SUBTLV_MIN_LEN</a> 7          <em class='comment'>/* Len of TRILL nickname sub-TLV value field */</em>
+<a id='L377' name='L377'></a><em class='sharp'>#define</em> TRILL_VLANSNBRIROOTS_SUBTLV_MIN_LEN 4    <em class='comment'>/* Len of variable len TRILL VLANs and Bridge Roots sub-TLV value field */</em>
+<a id='L378' name='L378'></a><em class='sharp'>#define</em> PCSTLV_VLANS_LEN         4               <em class='comment'>/* Exact len of port capability VLANs sub-TLV */</em>
+<a id='L379' name='L379'></a><em class='sharp'>#define</em> PCSTLV_VLANFWDERS_MIN_LEN 6              <em class='comment'>/* Min. len of each appointed forwarders sub-TLV */</em>
+<a id='L380' name='L380'></a><em class='sharp'>#define</em> PCSTLV_ENABLEDVLANS_MIN_LEN 3            <em class='comment'>/* Min. len of enabled VLANS sub-TLV */</em>
+<a id='L381' name='L381'></a><em class='sharp'>#endif</em>
+<a id='L382' name='L382'></a>
+<a id='L383' name='L383'></a><em class='comment'>/* struct for neighbor */</em>
+<a id='L384' name='L384'></a><strong class='reserved'>struct</strong> <a href='../R/6112.html' title='Multiple referred from 73 places.'>is_neigh</a>
+<a id='L385' name='L385'></a><em class='brace'>{</em>
+<a id='L386' name='L386'></a>  <strong class='reserved'>struct</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> metrics;
+<a id='L387' name='L387'></a>  u_char neigh_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1];
+<a id='L388' name='L388'></a><em class='brace'>}</em>;
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a><em class='comment'>/* struct for te is neighbor */</em>
+<a id='L391' name='L391'></a><strong class='reserved'>struct</strong> <a href='../R/10088.html' title='Multiple referred from 53 places.'>te_is_neigh</a>
+<a id='L392' name='L392'></a><em class='brace'>{</em>
+<a id='L393' name='L393'></a>  u_char neigh_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1];
+<a id='L394' name='L394'></a>  u_char te_metric[3];
+<a id='L395' name='L395'></a>  u_char sub_tlvs_length;
+<a id='L396' name='L396'></a><em class='brace'>}</em>;
+<a id='L397' name='L397'></a>
+<a id='L398' name='L398'></a><em class='comment'>/* Decode and encode three-octet metric into host byte order integer */</em>
+<a id='L399' name='L399'></a><em class='sharp'>#define</em> <a href='../R/794.html' title='Multiple referred from 3 places.'>GET_TE_METRIC</a>(t) \
+<a id='L400' name='L400'></a>  (((<strong class='reserved'>unsigned</strong>)(t)-&gt;te_metric[0]&lt;&lt;16) | ((t)-&gt;te_metric[1]&lt;&lt;8) | \
+<a id='L401' name='L401'></a>   (t)-&gt;te_metric[2])
+<a id='L402' name='L402'></a><em class='sharp'>#define</em> <a href='../R/3450.html' title='Multiple referred from 3 places.'>SET_TE_METRIC</a>(t, m) \
+<a id='L403' name='L403'></a>  (((t)-&gt;te_metric[0] = (m) &gt;&gt; 16), \
+<a id='L404' name='L404'></a>   ((t)-&gt;te_metric[1] = (m) &gt;&gt; 8), \
+<a id='L405' name='L405'></a>   ((t)-&gt;te_metric[2] = (m)))
+<a id='L406' name='L406'></a>
+<a id='L407' name='L407'></a><em class='comment'>/* struct for es neighbors */</em>
+<a id='L408' name='L408'></a><strong class='reserved'>struct</strong> <a href='../R/5694.html' title='Multiple referred from 6 places.'>es_neigh</a>
+<a id='L409' name='L409'></a><em class='brace'>{</em>
+<a id='L410' name='L410'></a>  <strong class='reserved'>struct</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> metrics;
+<a id='L411' name='L411'></a>  <em class='comment'>/* approximate position of first, we use the</em>
+<a id='L412' name='L412'></a><em class='comment'>   * length ((uchar*)metric-1) to know all     */</em>
+<a id='L413' name='L413'></a>  u_char first_es_neigh[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>];
+<a id='L414' name='L414'></a>
+<a id='L415' name='L415'></a><em class='brace'>}</em>;
+<a id='L416' name='L416'></a>
+<a id='L417' name='L417'></a><strong class='reserved'>struct</strong> partition_desig_level2_is
+<a id='L418' name='L418'></a><em class='brace'>{</em>
+<a id='L419' name='L419'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *isis_system_ids;
+<a id='L420' name='L420'></a><em class='brace'>}</em>;
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a><em class='comment'>/* struct for lan neighbors */</em>
+<a id='L423' name='L423'></a><strong class='reserved'>struct</strong> <a href='../R/6344.html' title='Multiple referred from 2 places.'>lan_neigh</a>
+<a id='L424' name='L424'></a><em class='brace'>{</em>
+<a id='L425' name='L425'></a>  u_char LAN_addr[6];
+<a id='L426' name='L426'></a><em class='brace'>}</em>;
+<a id='L427' name='L427'></a>
+<a id='L428' name='L428'></a><em class='sharp'>#ifdef</em> __SUNPRO_C
+<a id='L429' name='L429'></a><em class='sharp'>#pragma</em> pack(1)
+<a id='L430' name='L430'></a><em class='sharp'>#endif</em>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a><em class='comment'>/* struct for LSP entry */</em>
+<a id='L433' name='L433'></a><strong class='reserved'>struct</strong> <a href='../R/6861.html' title='Multiple referred from 4 places.'>lsp_entry</a>
+<a id='L434' name='L434'></a><em class='brace'>{</em>
+<a id='L435' name='L435'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> rem_lifetime;
+<a id='L436' name='L436'></a>  u_char lsp_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 2];
+<a id='L437' name='L437'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seq_num;
+<a id='L438' name='L438'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>;
+<a id='L439' name='L439'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L440' name='L440'></a>
+<a id='L441' name='L441'></a><em class='sharp'>#ifdef</em> __SUNPRO_C
+<a id='L442' name='L442'></a><em class='sharp'>#pragma</em> pack()
+<a id='L443' name='L443'></a><em class='sharp'>#endif</em>
+<a id='L444' name='L444'></a>
+<a id='L445' name='L445'></a><em class='comment'>/* struct for checksum */</em>
+<a id='L446' name='L446'></a><strong class='reserved'>struct</strong> <a href='../R/5249.html' title='Multiple referred from 107 places.'>checksum</a>
+<a id='L447' name='L447'></a><em class='brace'>{</em>
+<a id='L448' name='L448'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>;
+<a id='L449' name='L449'></a><em class='brace'>}</em>;
+<a id='L450' name='L450'></a>
+<a id='L451' name='L451'></a><em class='comment'>/* ipv4 reachability */</em>
+<a id='L452' name='L452'></a><strong class='reserved'>struct</strong> <a href='../R/6086.html' title='Multiple referred from 8 places.'>ipv4_reachability</a>
+<a id='L453' name='L453'></a><em class='brace'>{</em>
+<a id='L454' name='L454'></a>  <strong class='reserved'>struct</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> metrics;
+<a id='L455' name='L455'></a>  <strong class='reserved'>struct</strong> in_addr <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L456' name='L456'></a>  <strong class='reserved'>struct</strong> in_addr mask;
+<a id='L457' name='L457'></a><em class='brace'>}</em>;
+<a id='L458' name='L458'></a>
+<a id='L459' name='L459'></a><em class='comment'>/* te router id */</em>
+<a id='L460' name='L460'></a><strong class='reserved'>struct</strong> <a href='../R/10098.html' title='Multiple referred from 2 places.'>te_router_id</a>
+<a id='L461' name='L461'></a><em class='brace'>{</em>
+<a id='L462' name='L462'></a>  <strong class='reserved'>struct</strong> in_addr id;
+<a id='L463' name='L463'></a><em class='brace'>}</em>;
+<a id='L464' name='L464'></a>
+<a id='L465' name='L465'></a><em class='comment'>/* te ipv4 reachability */</em>
+<a id='L466' name='L466'></a><strong class='reserved'>struct</strong> <a href='../R/10087.html' title='Multiple referred from 7 places.'>te_ipv4_reachability</a>
+<a id='L467' name='L467'></a><em class='brace'>{</em>
+<a id='L468' name='L468'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> te_metric;
+<a id='L469' name='L469'></a>  u_char control;
+<a id='L470' name='L470'></a>  u_char prefix_start;          <em class='comment'>/* since this is variable length by nature it only */</em>
+<a id='L471' name='L471'></a><em class='brace'>}</em>;                              <em class='comment'>/* points to an approximate location */</em>
+<a id='L472' name='L472'></a>
+<a id='L473' name='L473'></a>
+<a id='L474' name='L474'></a>
+<a id='L475' name='L475'></a><strong class='reserved'>struct</strong> idrp_info
+<a id='L476' name='L476'></a><em class='brace'>{</em>
+<a id='L477' name='L477'></a>  u_char len;
+<a id='L478' name='L478'></a>  u_char *value;
+<a id='L479' name='L479'></a><em class='brace'>}</em>;
+<a id='L480' name='L480'></a>
+<a id='L481' name='L481'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L482' name='L482'></a><strong class='reserved'>struct</strong> <a href='../R/6089.html' title='Multiple referred from 7 places.'>ipv6_reachability</a>
+<a id='L483' name='L483'></a><em class='brace'>{</em>
+<a id='L484' name='L484'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L485' name='L485'></a>  u_char control_info;
+<a id='L486' name='L486'></a>  u_char prefix_len;
+<a id='L487' name='L487'></a>  u_char <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[16];
+<a id='L488' name='L488'></a><em class='brace'>}</em>;
+<a id='L489' name='L489'></a>
+<a id='L490' name='L490'></a><em class='comment'>/* bits in control_info */</em>
+<a id='L491' name='L491'></a><em class='sharp'>#define</em> CTRL_INFO_DIRECTION    0x80
+<a id='L492' name='L492'></a><em class='sharp'>#define</em> DIRECTION_UP           0
+<a id='L493' name='L493'></a><em class='sharp'>#define</em> DIRECTION_DOWN         1
+<a id='L494' name='L494'></a><em class='sharp'>#define</em> <a href='../R/553.html' title='Multiple referred from 2 places.'>CTRL_INFO_DISTRIBUTION</a> 0x40
+<a id='L495' name='L495'></a><em class='sharp'>#define</em> <a href='../S/511.html#L996' title='Referred from 996 in isisd/isis_lsp.c.'>DISTRIBUTION_INTERNAL</a>  0
+<a id='L496' name='L496'></a><em class='sharp'>#define</em> DISTRIBUTION_EXTERNAL  1
+<a id='L497' name='L497'></a><em class='sharp'>#define</em> CTRL_INFO_SUBTLVS      0x20
+<a id='L498' name='L498'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L499' name='L499'></a>
+<a id='L500' name='L500'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L501' name='L501'></a><em class='comment'>/* Router Capability TLV: used in LSPs */</em>
+<a id='L502' name='L502'></a><strong class='reserved'>struct</strong> <a href='../R/9617.html' title='Multiple referred from 6 places.'>router_capability_tlv</a>
+<a id='L503' name='L503'></a><em class='brace'>{</em>
+<a id='L504' name='L504'></a>  u_char router_id[4];             <em class='comment'>/* 4 octet Router ID */</em>
+<a id='L505' name='L505'></a>  <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;                  <em class='comment'>/* 1 octet flags */</em>
+<a id='L506' name='L506'></a><em class='brace'>}</em>;
+<a id='L507' name='L507'></a>
+<a id='L508' name='L508'></a><em class='comment'>/* internal router capability struct, includes tlv length */</em>
+<a id='L509' name='L509'></a><strong class='reserved'>struct</strong> <a href='../R/9616.html' title='Multiple referred from 2 places.'>router_capability</a>
+<a id='L510' name='L510'></a><em class='brace'>{</em>
+<a id='L511' name='L511'></a>  <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> len;                 <em class='comment'>/* total length of the TLV */</em>
+<a id='L512' name='L512'></a>  <strong class='reserved'>struct</strong> <a href='../S/483.html#L502' title='Defined at 502 in isisd/isis_tlv.h.'>router_capability_tlv</a> rt_cap_tlv;
+<a id='L513' name='L513'></a><em class='brace'>}</em>;
+<a id='L514' name='L514'></a>
+<a id='L515' name='L515'></a><em class='comment'>/* Port Capability TLV: used in Hellos */</em>
+<a id='L516' name='L516'></a><strong class='reserved'>struct</strong> port_capability_tlv
+<a id='L517' name='L517'></a><em class='brace'>{</em>
+<a id='L518' name='L518'></a>  <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> len;
+<a id='L519' name='L519'></a>  <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> value[1];
+<a id='L520' name='L520'></a><em class='brace'>}</em>;
+<a id='L521' name='L521'></a>
+<a id='L522' name='L522'></a><em class='sharp'>#ifdef</em> __SUNPRO_C
+<a id='L523' name='L523'></a><em class='sharp'>#pragma</em> pack(1)
+<a id='L524' name='L524'></a><em class='sharp'>#endif</em>
+<a id='L525' name='L525'></a>
+<a id='L526' name='L526'></a><em class='comment'>/* LSP: ROUTER_CAPABILITY RCSTLV_TRILL_NICKNAME */</em>
+<a id='L527' name='L527'></a><strong class='reserved'>struct</strong> <a href='../R/10243.html' title='Multiple referred from 4 places.'>trill_nickname_subtlv</a>
+<a id='L528' name='L528'></a><em class='brace'>{</em>
+<a id='L529' name='L529'></a>    <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> tn_priority;
+<a id='L530' name='L530'></a>    <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> tn_nickname;
+<a id='L531' name='L531'></a>    <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> tn_trootpri;
+<a id='L532' name='L532'></a>    <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> tn_treecount;
+<a id='L533' name='L533'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L534' name='L534'></a>
+<a id='L535' name='L535'></a><em class='sharp'>#ifdef</em> __SUNPRO_C
+<a id='L536' name='L536'></a><em class='sharp'>#pragma</em> pack()
+<a id='L537' name='L537'></a><em class='sharp'>#endif</em>
+<a id='L538' name='L538'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_TRILL */</em>
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a><em class='sharp'>#define</em> <a href='../R/1588.html' title='Multiple referred from 7 places.'>MAX_VNI_PER_SUBTLV</a>  60
+<a id='L541' name='L541'></a><em class='comment'>/* LSP: ROUTER_CAPABILITY RCSTLV_TRILL_VLAN_GROUP */</em>
+<a id='L542' name='L542'></a><strong class='reserved'>struct</strong> <a href='../R/10255.html' title='Multiple referred from 5 places.'>trill_vni_subtlv</a>
+<a id='L543' name='L543'></a><em class='brace'>{</em>
+<a id='L544' name='L544'></a>  <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> length;
+<a id='L545' name='L545'></a>  <em class='comment'>/*dynamic allocation of vni list*/</em>
+<a id='L546' name='L546'></a><em class='brace'>}</em>;
+<a id='L547' name='L547'></a><em class='comment'>/*</em>
+<a id='L548' name='L548'></a><em class='comment'> * Pointer to each tlv type, filled by parse_tlvs()</em>
+<a id='L549' name='L549'></a><em class='comment'> */</em>
+<a id='L550' name='L550'></a><strong class='reserved'>struct</strong> <a href='../R/10190.html' title='Multiple referred from 151 places.'>tlvs</a>
+<a id='L551' name='L551'></a><em class='brace'>{</em>
+<a id='L552' name='L552'></a>  <strong class='reserved'>struct</strong> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a> *<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>;
+<a id='L553' name='L553'></a>  <strong class='reserved'>struct</strong> <a href='../S/488.html#L56' title='Defined at 56 in isisd/isis_common.h.'>hostname</a> *<a href='../S/488.html#L56' title='Defined at 56 in isisd/isis_common.h.'>hostname</a>;
+<a id='L554' name='L554'></a>  <strong class='reserved'>struct</strong> <a href='../S/488.html#L65' title='Defined at 65 in isisd/isis_common.h.'>nlpids</a> *<a href='../S/488.html#L65' title='Defined at 65 in isisd/isis_common.h.'>nlpids</a>;
+<a id='L555' name='L555'></a>  <strong class='reserved'>struct</strong> <a href='../S/483.html#L460' title='Defined at 460 in isisd/isis_tlv.h.'>te_router_id</a> *router_id;
+<a id='L556' name='L556'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *area_addrs;
+<a id='L557' name='L557'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *is_neighs;
+<a id='L558' name='L558'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *te_is_neighs;
+<a id='L559' name='L559'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *es_neighs;
+<a id='L560' name='L560'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *lsp_entries;
+<a id='L561' name='L561'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *prefix_neighs;
+<a id='L562' name='L562'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *lan_neighs;
+<a id='L563' name='L563'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv4_addrs;
+<a id='L564' name='L564'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv4_int_reachs;
+<a id='L565' name='L565'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv4_ext_reachs;
+<a id='L566' name='L566'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *te_ipv4_reachs;
+<a id='L567' name='L567'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L568' name='L568'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv6_addrs;
+<a id='L569' name='L569'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv6_reachs;
+<a id='L570' name='L570'></a><em class='sharp'>#endif</em>
+<a id='L571' name='L571'></a>  <strong class='reserved'>struct</strong> <a href='../S/488.html#L36' title='Defined at 36 in isisd/isis_common.h.'>isis_passwd</a> auth_info;
+<a id='L572' name='L572'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L573' name='L573'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *router_capabilities;
+<a id='L574' name='L574'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *port_capabilities;
+<a id='L575' name='L575'></a><em class='sharp'>#endif</em>
+<a id='L576' name='L576'></a><em class='brace'>}</em>;
+<a id='L577' name='L577'></a>
+<a id='L578' name='L578'></a><em class='comment'>/*</em>
+<a id='L579' name='L579'></a><em class='comment'> * Own definitions - used to bitmask found and expected</em>
+<a id='L580' name='L580'></a><em class='comment'> */</em>
+<a id='L581' name='L581'></a>
+<a id='L582' name='L582'></a><em class='sharp'>#define</em> <a href='../R/3659.html' title='Multiple referred from 7 places.'>TLVFLAG_AREA_ADDRS</a>                (1&lt;&lt;0)
+<a id='L583' name='L583'></a><em class='sharp'>#define</em> <a href='../R/3670.html' title='Multiple referred from 3 places.'>TLVFLAG_IS_NEIGHS</a>                 (1&lt;&lt;1)
+<a id='L584' name='L584'></a><em class='sharp'>#define</em> <a href='../R/3663.html' title='Multiple referred from 2 places.'>TLVFLAG_ES_NEIGHS</a>                 (1&lt;&lt;2)
+<a id='L585' name='L585'></a><em class='sharp'>#define</em> TLVFLAG_PARTITION_DESIG_LEVEL2_IS (1&lt;&lt;3)
+<a id='L586' name='L586'></a><em class='sharp'>#define</em> TLVFLAG_PREFIX_NEIGHS             (1&lt;&lt;4)
+<a id='L587' name='L587'></a><em class='sharp'>#define</em> <a href='../R/3671.html' title='Multiple referred from 4 places.'>TLVFLAG_LAN_NEIGHS</a>                (1&lt;&lt;5)
+<a id='L588' name='L588'></a><em class='sharp'>#define</em> <a href='../R/3672.html' title='Multiple referred from 3 places.'>TLVFLAG_LSP_ENTRIES</a>               (1&lt;&lt;6)
+<a id='L589' name='L589'></a><em class='sharp'>#define</em> TLVFLAG_PADDING                   (1&lt;&lt;7)
+<a id='L590' name='L590'></a><em class='sharp'>#define</em> <a href='../R/3660.html' title='Multiple referred from 11 places.'>TLVFLAG_AUTH_INFO</a>                 (1&lt;&lt;8)
+<a id='L591' name='L591'></a><em class='sharp'>#define</em> <a href='../R/3667.html' title='Multiple referred from 3 places.'>TLVFLAG_IPV4_INT_REACHABILITY</a>     (1&lt;&lt;9)
+<a id='L592' name='L592'></a><em class='sharp'>#define</em> <a href='../R/3673.html' title='Multiple referred from 7 places.'>TLVFLAG_NLPID</a>                     (1&lt;&lt;10)
+<a id='L593' name='L593'></a><em class='sharp'>#define</em> <a href='../R/3666.html' title='Multiple referred from 3 places.'>TLVFLAG_IPV4_EXT_REACHABILITY</a>     (1&lt;&lt;11)
+<a id='L594' name='L594'></a><em class='sharp'>#define</em> <a href='../R/3665.html' title='Multiple referred from 9 places.'>TLVFLAG_IPV4_ADDR</a>                 (1&lt;&lt;12)
+<a id='L595' name='L595'></a><em class='sharp'>#define</em> <a href='../R/3662.html' title='Multiple referred from 4 places.'>TLVFLAG_DYN_HOSTNAME</a>              (1&lt;&lt;13)
+<a id='L596' name='L596'></a><em class='sharp'>#define</em> <a href='../R/3668.html' title='Multiple referred from 7 places.'>TLVFLAG_IPV6_ADDR</a>                 (1&lt;&lt;14)
+<a id='L597' name='L597'></a><em class='sharp'>#define</em> <a href='../R/3669.html' title='Multiple referred from 3 places.'>TLVFLAG_IPV6_REACHABILITY</a>         (1&lt;&lt;15)
+<a id='L598' name='L598'></a><em class='sharp'>#define</em> <a href='../R/3676.html' title='Multiple referred from 3 places.'>TLVFLAG_TE_IS_NEIGHS</a>              (1&lt;&lt;16)
+<a id='L599' name='L599'></a><em class='sharp'>#define</em> <a href='../R/3675.html' title='Multiple referred from 3 places.'>TLVFLAG_TE_IPV4_REACHABILITY</a>      (1&lt;&lt;17)
+<a id='L600' name='L600'></a><em class='sharp'>#define</em> <a href='../R/3658.html' title='Multiple referred from 2 places.'>TLVFLAG_3WAY_HELLO</a>                (1&lt;&lt;18)
+<a id='L601' name='L601'></a><em class='sharp'>#define</em> <a href='../R/3677.html' title='Multiple referred from 3 places.'>TLVFLAG_TE_ROUTER_ID</a>              (1&lt;&lt;19)
+<a id='L602' name='L602'></a><em class='sharp'>#define</em> <a href='../R/3661.html' title='Multiple referred from 2 places.'>TLVFLAG_CHECKSUM</a>                  (1&lt;&lt;20)
+<a id='L603' name='L603'></a><em class='sharp'>#define</em> <a href='../R/3664.html' title='Multiple referred from 2 places.'>TLVFLAG_GRACEFUL_RESTART</a>          (1&lt;&lt;21)
+<a id='L604' name='L604'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L605' name='L605'></a><em class='sharp'>#define</em> <a href='../R/3674.html' title='Multiple referred from 2 places.'>TLVFLAG_ROUTER_CAPABILITY</a>         (1&lt;&lt;22)
+<a id='L606' name='L606'></a><em class='sharp'>#define</em> TLVFLAG_PORT_CAPABILITY           (1&lt;&lt;23)
+<a id='L607' name='L607'></a><em class='sharp'>#endif</em>
+<a id='L608' name='L608'></a>
+<a id='L609' name='L609'></a><strong class='reserved'>void</strong> init_tlvs (<strong class='reserved'>struct</strong> <a href='../S/483.html#L550' title='Defined at 550 in isisd/isis_tlv.h.'>tlvs</a> *<a href='../S/483.html#L550' title='Defined at 550 in isisd/isis_tlv.h.'>tlvs</a>, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> expected);
+<a id='L610' name='L610'></a><strong class='reserved'>void</strong> <a href='../S/479.html#L59' title='Defined at 59 in isisd/isis_tlv.c.'>free_tlvs</a> (<strong class='reserved'>struct</strong> <a href='../S/483.html#L550' title='Defined at 550 in isisd/isis_tlv.h.'>tlvs</a> *<a href='../S/483.html#L550' title='Defined at 550 in isisd/isis_tlv.h.'>tlvs</a>);
+<a id='L611' name='L611'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L106' title='Defined at 106 in isisd/isis_tlv.c.'>parse_tlvs</a> (<strong class='reserved'>char</strong> *areatag, u_char * <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>, <strong class='reserved'>int</strong> size,
+<a id='L612' name='L612'></a>                <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> * expected, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> * found, <strong class='reserved'>struct</strong> <a href='../S/483.html#L550' title='Defined at 550 in isisd/isis_tlv.h.'>tlvs</a> *<a href='../S/483.html#L550' title='Defined at 550 in isisd/isis_tlv.h.'>tlvs</a>,
+<a id='L613' name='L613'></a>                <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> * auth_tlv_offset);
+<a id='L614' name='L614'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L776' title='Defined at 776 in isisd/isis_tlv.c.'>add_tlv</a> (u_char, u_char, u_char *, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *);
+<a id='L615' name='L615'></a><strong class='reserved'>void</strong> <a href='../S/479.html#L47' title='Defined at 47 in isisd/isis_tlv.c.'>free_tlv</a> (<strong class='reserved'>void</strong> *val);
+<a id='L616' name='L616'></a>
+<a id='L617' name='L617'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L800' title='Defined at 800 in isisd/isis_tlv.c.'>tlv_add_area_addrs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *area_addrs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L618' name='L618'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L826' title='Defined at 826 in isisd/isis_tlv.c.'>tlv_add_is_neighs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *is_neighs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L619' name='L619'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L862' title='Defined at 862 in isisd/isis_tlv.c.'>tlv_add_te_is_neighs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *te_is_neighs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L620' name='L620'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L894' title='Defined at 894 in isisd/isis_tlv.c.'>tlv_add_lan_neighs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *lan_neighs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L621' name='L621'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L919' title='Defined at 919 in isisd/isis_tlv.c.'>tlv_add_nlpid</a> (<strong class='reserved'>struct</strong> <a href='../S/488.html#L65' title='Defined at 65 in isisd/isis_common.h.'>nlpids</a> *<a href='../S/488.html#L65' title='Defined at 65 in isisd/isis_common.h.'>nlpids</a>, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L622' name='L622'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L937' title='Defined at 937 in isisd/isis_tlv.c.'>tlv_add_checksum</a> (<strong class='reserved'>struct</strong> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a> *<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L623' name='L623'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L925' title='Defined at 925 in isisd/isis_tlv.c.'>tlv_add_authinfo</a> (u_char auth_type, u_char authlen, u_char *auth_value,
+<a id='L624' name='L624'></a>                      <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L625' name='L625'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L945' title='Defined at 945 in isisd/isis_tlv.c.'>tlv_add_ip_addrs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ip_addrs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L626' name='L626'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L971' title='Defined at 971 in isisd/isis_tlv.c.'>tlv_add_in_addr</a> (<strong class='reserved'>struct</strong> in_addr *, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>, u_char tag);
+<a id='L627' name='L627'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L983' title='Defined at 983 in isisd/isis_tlv.c.'>tlv_add_dynamic_hostname</a> (<strong class='reserved'>struct</strong> <a href='../S/488.html#L56' title='Defined at 56 in isisd/isis_common.h.'>hostname</a> *<a href='../S/488.html#L56' title='Defined at 56 in isisd/isis_common.h.'>hostname</a>,
+<a id='L628' name='L628'></a>                              <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L629' name='L629'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L990' title='Defined at 990 in isisd/isis_tlv.c.'>tlv_add_lsp_entries</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *lsps, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L630' name='L630'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L1021' title='Defined at 1021 in isisd/isis_tlv.c.'>tlv_add_ipv4_reachs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv4_reachs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L631' name='L631'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L1057' title='Defined at 1057 in isisd/isis_tlv.c.'>tlv_add_te_ipv4_reachs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *te_ipv4_reachs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L632' name='L632'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L633' name='L633'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L1091' title='Defined at 1091 in isisd/isis_tlv.c.'>tlv_add_ipv6_addrs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv6_addrs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L634' name='L634'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L1116' title='Defined at 1116 in isisd/isis_tlv.c.'>tlv_add_ipv6_reachs</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *ipv6_reachs, <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L635' name='L635'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L636' name='L636'></a>
+<a id='L637' name='L637'></a><strong class='reserved'>int</strong> <a href='../S/479.html#L1149' title='Defined at 1149 in isisd/isis_tlv.c.'>tlv_add_padding</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>);
+<a id='L638' name='L638'></a>
+<a id='L639' name='L639'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_ISIS_TLV_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

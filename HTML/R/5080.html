@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgp_static</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/644.html#L1119'>bgp_static</a>       1119 bgpd/bgp_nexthop.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/644.html#L1139'>bgp_static</a>       1139 bgpd/bgp_nexthop.c 	    if ((bgp_static = rn-&gt;info) != NULL)</span>
+<span class='curline'><a href='../S/644.html#L1141'>bgp_static</a>       1141 bgpd/bgp_nexthop.c 		if (bgp_static-&gt;backdoor)</span>
+<span class='curline'><a href='../S/644.html#L1144'>bgp_static</a>       1144 bgpd/bgp_nexthop.c 		valid = bgp_static-&gt;valid;</span>
+<span class='curline'><a href='../S/644.html#L1145'>bgp_static</a>       1145 bgpd/bgp_nexthop.c 		metric = bgp_static-&gt;igpmetric;</span>
+<span class='curline'><a href='../S/644.html#L1146'>bgp_static</a>       1146 bgpd/bgp_nexthop.c 		nexthop = bgp_static-&gt;igpnexthop;</span>
+<span class='curline'><a href='../S/644.html#L1150'>bgp_static</a>       1150 bgpd/bgp_nexthop.c 		  bgp_static-&gt;valid = bgp_import_check (&amp;rn-&gt;p, &amp;bgp_static-&gt;igpmetric,</span>
+<span class='curline'><a href='../S/644.html#L1151'>bgp_static</a>       1151 bgpd/bgp_nexthop.c 						        &amp;bgp_static-&gt;igpnexthop);</span>
+<span class='curline'><a href='../S/644.html#L1154'>bgp_static</a>       1154 bgpd/bgp_nexthop.c 		    bgp_static-&gt;valid = 1;</span>
+<span class='curline'><a href='../S/644.html#L1155'>bgp_static</a>       1155 bgpd/bgp_nexthop.c 		    bgp_static-&gt;igpmetric = 0;</span>
+<span class='curline'><a href='../S/644.html#L1156'>bgp_static</a>       1156 bgpd/bgp_nexthop.c 		    bgp_static-&gt;igpnexthop.s_addr = 0;</span>
+<span class='curline'><a href='../S/644.html#L1159'>bgp_static</a>       1159 bgpd/bgp_nexthop.c 		if (bgp_static-&gt;valid != valid)</span>
+<span class='curline'><a href='../S/644.html#L1161'>bgp_static</a>       1161 bgpd/bgp_nexthop.c 		    if (bgp_static-&gt;valid)</span>
+<span class='curline'><a href='../S/644.html#L1162'>bgp_static</a>       1162 bgpd/bgp_nexthop.c 		      bgp_static_update (bgp, &amp;rn-&gt;p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/644.html#L1166'>bgp_static</a>       1166 bgpd/bgp_nexthop.c 		else if (bgp_static-&gt;valid)</span>
+<span class='curline'><a href='../S/644.html#L1168'>bgp_static</a>       1168 bgpd/bgp_nexthop.c 		    if (bgp_static-&gt;igpmetric != metric</span>
+<span class='curline'><a href='../S/644.html#L1169'>bgp_static</a>       1169 bgpd/bgp_nexthop.c 			|| bgp_static-&gt;igpnexthop.s_addr != nexthop.s_addr</span>
+<span class='curline'><a href='../S/644.html#L1170'>bgp_static</a>       1170 bgpd/bgp_nexthop.c 			|| bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/644.html#L1171'>bgp_static</a>       1171 bgpd/bgp_nexthop.c 		      bgp_static_update (bgp, &amp;rn-&gt;p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3232'>bgp_static</a>       3232 bgpd/bgp_route.c static struct bgp_static *</span>
+<span class='curline'><a href='../S/620.html#L3235'>bgp_static</a>       3235 bgpd/bgp_route.c   return XCALLOC (MTYPE_BGP_STATIC, sizeof (struct bgp_static));</span>
+<span class='curline'><a href='../S/620.html#L3239'>bgp_static</a>       3239 bgpd/bgp_route.c bgp_static_free (struct bgp_static *bgp_static)</span>
+<span class='curline'><a href='../S/620.html#L3241'>bgp_static</a>       3241 bgpd/bgp_route.c   if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3242'>bgp_static</a>       3242 bgpd/bgp_route.c     free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3243'>bgp_static</a>       3243 bgpd/bgp_route.c   XFREE (MTYPE_BGP_STATIC, bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L3275'>bgp_static</a>       3275 bgpd/bgp_route.c                             struct bgp_static *bgp_static,</span>
+<span class='curline'><a href='../S/620.html#L3292'>bgp_static</a>       3292 bgpd/bgp_route.c   assert (bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L3293'>bgp_static</a>       3293 bgpd/bgp_route.c   if (!bgp_static)</span>
+<span class='curline'><a href='../S/620.html#L3300'>bgp_static</a>       3300 bgpd/bgp_route.c   attr.nexthop = bgp_static-&gt;igpnexthop;</span>
+<span class='curline'><a href='../S/620.html#L3301'>bgp_static</a>       3301 bgpd/bgp_route.c   attr.med = bgp_static-&gt;igpmetric;</span>
+<span class='curline'><a href='../S/620.html#L3304'>bgp_static</a>       3304 bgpd/bgp_route.c   if (bgp_static-&gt;atomic)</span>
+<span class='curline'><a href='../S/620.html#L3308'>bgp_static</a>       3308 bgpd/bgp_route.c   if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3317'>bgp_static</a>       3317 bgpd/bgp_route.c       ret = route_map_apply (bgp_static-&gt;rmap.map, p, RMAP_BGP, &amp;info);</span>
+<span class='curline'><a href='../S/620.html#L3431'>bgp_static</a>       3431 bgpd/bgp_route.c 		   struct bgp_static *bgp_static, afi_t afi, safi_t safi)</span>
+<span class='curline'><a href='../S/620.html#L3441'>bgp_static</a>       3441 bgpd/bgp_route.c   assert (bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L3442'>bgp_static</a>       3442 bgpd/bgp_route.c   if (!bgp_static)</span>
+<span class='curline'><a href='../S/620.html#L3449'>bgp_static</a>       3449 bgpd/bgp_route.c   attr.nexthop = bgp_static-&gt;igpnexthop;</span>
+<span class='curline'><a href='../S/620.html#L3450'>bgp_static</a>       3450 bgpd/bgp_route.c   attr.med = bgp_static-&gt;igpmetric;</span>
+<span class='curline'><a href='../S/620.html#L3453'>bgp_static</a>       3453 bgpd/bgp_route.c   if (bgp_static-&gt;atomic)</span>
+<span class='curline'><a href='../S/620.html#L3457'>bgp_static</a>       3457 bgpd/bgp_route.c   if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3465'>bgp_static</a>       3465 bgpd/bgp_route.c       ret = route_map_apply (bgp_static-&gt;rmap.map, p, RMAP_BGP, &amp;info);</span>
+<span class='curline'><a href='../S/620.html#L3553'>bgp_static</a>       3553 bgpd/bgp_route.c                   struct bgp_static *bgp_static, afi_t afi, safi_t safi)</span>
+<span class='curline'><a href='../S/620.html#L3558'>bgp_static</a>       3558 bgpd/bgp_route.c   bgp_static_update_main (bgp, p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3563'>bgp_static</a>       3563 bgpd/bgp_route.c         bgp_static_update_rsclient (rsclient, p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3631'>bgp_static</a>       3631 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3639'>bgp_static</a>       3639 bgpd/bgp_route.c     if ((bgp_static = rn-&gt;info) != NULL)</span>
+<span class='curline'><a href='../S/620.html#L3643'>bgp_static</a>       3643 bgpd/bgp_route.c         bgp_static_update_rsclient (rsclient, p, bgp_static,</span>
+<span class='curline'><a href='../S/620.html#L3684'>bgp_static</a>       3684 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3712'>bgp_static</a>       3712 bgpd/bgp_route.c       bgp_static = rn-&gt;info;</span>
+<span class='curline'><a href='../S/620.html#L3715'>bgp_static</a>       3715 bgpd/bgp_route.c       if (bgp_static-&gt;valid &amp;&amp; bgp_static-&gt;backdoor != backdoor)</span>
+<span class='curline'><a href='../S/620.html#L3718'>bgp_static</a>       3718 bgpd/bgp_route.c       bgp_static-&gt;backdoor = backdoor;</span>
+<span class='curline'><a href='../S/620.html#L3722'>bgp_static</a>       3722 bgpd/bgp_route.c 	  if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3723'>bgp_static</a>       3723 bgpd/bgp_route.c 	    free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3724'>bgp_static</a>       3724 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.name = strdup (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3725'>bgp_static</a>       3725 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.map = route_map_lookup_by_name (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3729'>bgp_static</a>       3729 bgpd/bgp_route.c 	  if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3730'>bgp_static</a>       3730 bgpd/bgp_route.c 	    free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3731'>bgp_static</a>       3731 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.name = NULL;</span>
+<span class='curline'><a href='../S/620.html#L3732'>bgp_static</a>       3732 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.map = NULL;</span>
+<span class='curline'><a href='../S/620.html#L3733'>bgp_static</a>       3733 bgpd/bgp_route.c 	  bgp_static-&gt;valid = 0;</span>
+<span class='curline'><a href='../S/620.html#L3740'>bgp_static</a>       3740 bgpd/bgp_route.c       bgp_static = bgp_static_new ();</span>
+<span class='curline'><a href='../S/620.html#L3741'>bgp_static</a>       3741 bgpd/bgp_route.c       bgp_static-&gt;backdoor = backdoor;</span>
+<span class='curline'><a href='../S/620.html#L3742'>bgp_static</a>       3742 bgpd/bgp_route.c       bgp_static-&gt;valid = 0;</span>
+<span class='curline'><a href='../S/620.html#L3743'>bgp_static</a>       3743 bgpd/bgp_route.c       bgp_static-&gt;igpmetric = 0;</span>
+<span class='curline'><a href='../S/620.html#L3744'>bgp_static</a>       3744 bgpd/bgp_route.c       bgp_static-&gt;igpnexthop.s_addr = 0;</span>
+<span class='curline'><a href='../S/620.html#L3748'>bgp_static</a>       3748 bgpd/bgp_route.c 	  if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3749'>bgp_static</a>       3749 bgpd/bgp_route.c 	    free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3750'>bgp_static</a>       3750 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.name = strdup (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3751'>bgp_static</a>       3751 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.map = route_map_lookup_by_name (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3753'>bgp_static</a>       3753 bgpd/bgp_route.c       rn-&gt;info = bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3759'>bgp_static</a>       3759 bgpd/bgp_route.c       bgp_static-&gt;valid = 1;</span>
+<span class='curline'><a href='../S/620.html#L3764'>bgp_static</a>       3764 bgpd/bgp_route.c       if (! bgp_static-&gt;backdoor)</span>
+<span class='curline'><a href='../S/620.html#L3765'>bgp_static</a>       3765 bgpd/bgp_route.c 	bgp_static_update (bgp, &amp;p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3778'>bgp_static</a>       3778 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3807'>bgp_static</a>       3807 bgpd/bgp_route.c   bgp_static = rn-&gt;info;</span>
+<span class='curline'><a href='../S/620.html#L3810'>bgp_static</a>       3810 bgpd/bgp_route.c   if (! bgp_static-&gt;backdoor)</span>
+<span class='curline'><a href='../S/620.html#L3814'>bgp_static</a>       3814 bgpd/bgp_route.c   bgp_static_free (bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L3832'>bgp_static</a>       3832 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3845'>bgp_static</a>       3845 bgpd/bgp_route.c 		    bgp_static = rn-&gt;info;</span>
+<span class='curline'><a href='../S/620.html#L3849'>bgp_static</a>       3849 bgpd/bgp_route.c 					       bgp_static-&gt;tag);</span>
+<span class='curline'><a href='../S/620.html#L3850'>bgp_static</a>       3850 bgpd/bgp_route.c 		    bgp_static_free (bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L3857'>bgp_static</a>       3857 bgpd/bgp_route.c 		bgp_static = rn-&gt;info;</span>
+<span class='curline'><a href='../S/620.html#L3859'>bgp_static</a>       3859 bgpd/bgp_route.c 		bgp_static_free (bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L3877'>bgp_static</a>       3877 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3922'>bgp_static</a>       3922 bgpd/bgp_route.c       bgp_static = bgp_static_new ();</span>
+<span class='curline'><a href='../S/620.html#L3923'>bgp_static</a>       3923 bgpd/bgp_route.c       bgp_static-&gt;valid = 1;</span>
+<span class='curline'><a href='../S/620.html#L3924'>bgp_static</a>       3924 bgpd/bgp_route.c       memcpy (bgp_static-&gt;tag, tag, 3);</span>
+<span class='curline'><a href='../S/620.html#L3925'>bgp_static</a>       3925 bgpd/bgp_route.c       rn-&gt;info = bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3945'>bgp_static</a>       3945 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L3987'>bgp_static</a>       3987 bgpd/bgp_route.c       bgp_static = rn-&gt;info;</span>
+<span class='curline'><a href='../S/620.html#L3988'>bgp_static</a>       3988 bgpd/bgp_route.c       bgp_static_free (bgp_static);</span>
+<span class='curline'><a href='../S/620.html#L11775'>bgp_static</a>       11775 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L11814'>bgp_static</a>       11814 bgpd/bgp_route.c       bgp_static = rn-&gt;info;</span>
+<span class='curline'><a href='../S/620.html#L11817'>bgp_static</a>       11817 bgpd/bgp_route.c       if (bgp_static-&gt;backdoor)</span>
+<span class='curline'><a href='../S/620.html#L12202'>bgp_static</a>       12202 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L12211'>bgp_static</a>       12211 bgpd/bgp_route.c 	if ((bgp_static = rn-&gt;info) != NULL)</span>
+<span class='curline'><a href='../S/620.html#L12221'>bgp_static</a>       12221 bgpd/bgp_route.c 	    label = decode_label (bgp_static-&gt;tag);</span>
+<span class='curline'><a href='../S/620.html#L12240'>bgp_static</a>       12240 bgpd/bgp_route.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/620.html#L12249'>bgp_static</a>       12249 bgpd/bgp_route.c     if ((bgp_static = rn-&gt;info) != NULL)</span>
+<span class='curline'><a href='../S/620.html#L12284'>bgp_static</a>       12284 bgpd/bgp_route.c 	if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L12285'>bgp_static</a>       12285 bgpd/bgp_route.c 	  vty_out (vty, " route-map %s", bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L12288'>bgp_static</a>       12288 bgpd/bgp_route.c 	    if (bgp_static-&gt;backdoor)</span>
+<span class='curline'><a href='../S/609.html#L208'>bgp_static</a>        208 bgpd/bgp_route.h extern void bgp_static_update (struct bgp *, struct prefix *, struct bgp_static *,</span>
+<span class='curline'><a href='../S/621.html#L2310'>bgp_static</a>       2310 bgpd/bgp_routemap.c   struct bgp_static *bgp_static;</span>
+<span class='curline'><a href='../S/621.html#L2385'>bgp_static</a>       2385 bgpd/bgp_routemap.c 	    if ((bgp_static = bn-&gt;info) != NULL)</span>
+<span class='curline'><a href='../S/621.html#L2387'>bgp_static</a>       2387 bgpd/bgp_routemap.c 		if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/621.html#L2388'>bgp_static</a>       2388 bgpd/bgp_routemap.c 		  bgp_static-&gt;rmap.map =</span>
+<span class='curline'><a href='../S/621.html#L2389'>bgp_static</a>       2389 bgpd/bgp_routemap.c 			 route_map_lookup_by_name (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/621.html#L2391'>bgp_static</a>       2391 bgpd/bgp_routemap.c 		  bgp_static-&gt;rmap.map = NULL;</span>
+<span class='curline'><a href='../S/638.html#L6787'>bgp_static</a>       6787 bgpd/bgp_vty.c                          count * sizeof (struct bgp_static)),</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lmd/lmd_vty.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1023.html'>lmd</a>/lmd_vty.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L5'>[^]</a><a href='#L234'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L5' title='Defined at 5.'>DEFUN</a></li>
+<li><a href='#L16' title='Defined at 16.'>DEFUN</a></li>
+<li><a href='#L37' title='Defined at 37.'>DEFUN</a></li>
+<li><a href='#L59' title='Defined at 59.'>DEFUN</a></li>
+<li><a href='#L76' title='Defined at 76.'>DEFUN</a></li>
+<li><a href='#L97' title='Defined at 97.'>DEFUN</a></li>
+<li><a href='#L117' title='Defined at 117.'>DEFUN</a></li>
+<li><a href='#L137' title='Defined at 137.'>DEFUN</a></li>
+<li><a href='#L164' title='Defined at 164.'>DEFUN</a></li>
+<li><a href='#L234' title='Defined at 234.'>lmd_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='191.html'>zebra.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L4' name='L4'></a>
+<a id='L5' name='L5'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(router_lmd,
+<a id='L6' name='L6'></a>        router_lmd_cmd,
+<a id='L7' name='L7'></a>        "router lmd",
+<a id='L8' name='L8'></a>        "Enable a routing process"
+<a id='L9' name='L9'></a>        "LMD protocol")
+<a id='L10' name='L10'></a><em class='brace'>{</em>
+<a id='L11' name='L11'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L12' name='L12'></a><em class='comment'>// vty_out (vty, "Down to lmd node%s", VTY_NEWLINE);</em>
+<a id='L13' name='L13'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L14' name='L14'></a><em class='brace'>}</em>
+<a id='L15' name='L15'></a>
+<a id='L16' name='L16'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  createLabelPool_lmd,
+<a id='L17' name='L17'></a>        createLabelPool_lmd_cmd,
+<a id='L18' name='L18'></a>        "createLabelPool pool_id &lt;1-100&gt; min_label &lt;1-10000&gt; max_label &lt;1-100000&gt;",
+<a id='L19' name='L19'></a>        "create a new Label Pool for use"
+<a id='L20' name='L20'></a>        "LMD protocol")
+<a id='L21' name='L21'></a><em class='brace'>{</em>
+<a id='L22' name='L22'></a> <em class='comment'>//vty-&gt;node = LMD_NODE;</em>
+<a id='L23' name='L23'></a> <em class='comment'>//vty_out(vty,"Test message%s", VTY_NEWLINE);</em>
+<a id='L24' name='L24'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L25' name='L25'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L6' title='Defined at 6 in lmd/lmd_lib.c.'>CreateLabelPool</a>(lm,atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));
+<a id='L26' name='L26'></a> <em class='comment'>//printf("retval :%d\n",retval);</em>
+<a id='L27' name='L27'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L28' name='L28'></a> <em class='comment'>//CreateLabelPool(lm,atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));</em>
+<a id='L29' name='L29'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L30' name='L30'></a> <em class='comment'>/*</em>
+<a id='L31' name='L31'></a><em class='comment'> struct LM_LabelPool *lm=lm_get();</em>
+<a id='L32' name='L32'></a><em class='comment'> if(!lm)</em>
+<a id='L33' name='L33'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L34' name='L34'></a><em class='comment'> int retval=CreateLabelPool(lm,atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));*/</em>
+<a id='L35' name='L35'></a><em class='brace'>}</em>
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  deleteLabelPool_lmd,
+<a id='L38' name='L38'></a>        deleteLabelPool_lmd_cmd,
+<a id='L39' name='L39'></a>        "deleteLabelPool pool_id &lt;1-100&gt;",
+<a id='L40' name='L40'></a>        "delete the label pool by pool_id"
+<a id='L41' name='L41'></a>        "LMD protocol")
+<a id='L42' name='L42'></a><em class='brace'>{</em>
+<a id='L43' name='L43'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L44' name='L44'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L45' name='L45'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L58' title='Defined at 58 in lmd/lmd_lib.c.'>DeleteLabelPool</a>(lm,atoi(argv[0]));
+<a id='L46' name='L46'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L47' name='L47'></a> <em class='comment'>/*</em>
+<a id='L48' name='L48'></a><em class='comment'> if(DeleteLabelPool(lm,atoi(argv[0]))&lt; 0){</em>
+<a id='L49' name='L49'></a><em class='comment'>                vty_out(vty,"DeleteLabelPool fail.%s",VTY_NEWLINE);</em>
+<a id='L50' name='L50'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L51' name='L51'></a><em class='comment'> }</em>
+<a id='L52' name='L52'></a><em class='comment'> vty_out(vty,"deleteLabelPool pool_id %d %s",atoi(argv[0]),VTY_NEWLINE);</em>
+<a id='L53' name='L53'></a><em class='comment'> */</em>
+<a id='L54' name='L54'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L55' name='L55'></a><em class='brace'>}</em>
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><em class='comment'>//checkLabelPool_lmd_cmd not ready for use</em>
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  checkLabelPool_lmd,
+<a id='L60' name='L60'></a>        checkLabelPool_lmd_cmd,
+<a id='L61' name='L61'></a>        "checkLabelPool pool_id &lt;1-100&gt; min_label &lt;1-100&gt; max_label &lt;1-10000&gt;",
+<a id='L62' name='L62'></a>        "check the label pool by pool_id"
+<a id='L63' name='L63'></a>        "LMD protocol")
+<a id='L64' name='L64'></a><em class='brace'>{</em>
+<a id='L65' name='L65'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L66' name='L66'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L67' name='L67'></a> <strong class='reserved'>int</strong> *<a href='../D/7719.html' title='Multiple defined in 4 places.'>min</a>,*max; <em class='comment'>//need to refix min and max value to check this function.</em>
+<a id='L68' name='L68'></a> <strong class='reserved'>if</strong>(<a href='../S/880.html#L74' title='Defined at 74 in lmd/lmd_lib.c.'>CheckLabelPool</a>(lm,atoi(argv[0]),<a href='../D/7719.html' title='Multiple defined in 4 places.'>min</a>,max)&lt; 0)<em class='brace'>{</em>
+<a id='L69' name='L69'></a>                <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"checkLabelPool fail.%s",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L70' name='L70'></a>                <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L71' name='L71'></a> <em class='brace'>}</em>
+<a id='L72' name='L72'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"checkLabelPool pool_id %d %s",atoi(argv[0]),<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L73' name='L73'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L74' name='L74'></a><em class='brace'>}</em>
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  requestLabelFromPool_lmd,
+<a id='L77' name='L77'></a>        requestLabelFromPool_lmd_cmd,
+<a id='L78' name='L78'></a>        "requestLabelFromPool pool_id &lt;1-100&gt;",
+<a id='L79' name='L79'></a>        "request a new Label from Pool_id"
+<a id='L80' name='L80'></a>        " LMD daemon")
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a><em class='comment'>// vty-&gt;node = LMD_NODE;</em>
+<a id='L83' name='L83'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L84' name='L84'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L92' title='Defined at 92 in lmd/lmd_lib.c.'>RequestLabelFromPool</a>(lm,atoi(argv[0]));
+<a id='L85' name='L85'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L86' name='L86'></a> 
+<a id='L87' name='L87'></a> <em class='comment'>/*</em>
+<a id='L88' name='L88'></a><em class='comment'> if(RequestLabelFromPool(lm,atoi(argv[0])) &lt; 0){</em>
+<a id='L89' name='L89'></a><em class='comment'>                vty_out(vty,"RequestLabelFromPool fail.%s",VTY_NEWLINE);</em>
+<a id='L90' name='L90'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L91' name='L91'></a><em class='comment'> }</em>
+<a id='L92' name='L92'></a><em class='comment'> vty_out(vty,"requestLabelFromPool pool_id %d %s",atoi(argv[0]),VTY_NEWLINE);</em>
+<a id='L93' name='L93'></a><em class='comment'> */</em>
+<a id='L94' name='L94'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L95' name='L95'></a><em class='brace'>}</em>
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  requestSpecifiedLabelFromPool_lmd,
+<a id='L98' name='L98'></a>        requestSpecifiedLabelFromPool_lmd_cmd,
+<a id='L99' name='L99'></a>        "requestSpecifiedLabelFromPool pool_id &lt;1-100&gt; label &lt;1-10000&gt;",
+<a id='L100' name='L100'></a>        "request a new Label from Pool_id"
+<a id='L101' name='L101'></a>        "LMD protocol")
+<a id='L102' name='L102'></a><em class='brace'>{</em>
+<a id='L103' name='L103'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L104' name='L104'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L105' name='L105'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L168' title='Defined at 168 in lmd/lmd_lib.c.'>RequestSpecifiedLabelFromPool</a>(lm,atoi(argv[0]),atoi(argv[1]));
+<a id='L106' name='L106'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L107' name='L107'></a> <em class='comment'>/*</em>
+<a id='L108' name='L108'></a><em class='comment'> if(RequestSpecifiedLabelFromPool(lm,atoi(argv[0]),atoi(argv[1])) &lt; 0){</em>
+<a id='L109' name='L109'></a><em class='comment'>                vty_out(vty,"RequestLabelFromPool fail.%s",VTY_NEWLINE);</em>
+<a id='L110' name='L110'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L111' name='L111'></a><em class='comment'> } </em>
+<a id='L112' name='L112'></a><em class='comment'> vty_out(vty,"RequestSpecifiedLabelFromPool pool_id %d label :%d %s",atoi(argv[0]),atoi(argv[1]),VTY_NEWLINE);</em>
+<a id='L113' name='L113'></a><em class='comment'> */</em>
+<a id='L114' name='L114'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L115' name='L115'></a><em class='brace'>}</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  releaseLabelToPool_lmd,
+<a id='L118' name='L118'></a>        releaseLabelToPool_lmd_cmd,
+<a id='L119' name='L119'></a>        "releaseLabelToPool pool_id &lt;1-100&gt; label &lt;1-10000&gt;",
+<a id='L120' name='L120'></a>        "release the Label from Pool_id"
+<a id='L121' name='L121'></a>        "LMD protocol")
+<a id='L122' name='L122'></a><em class='brace'>{</em>
+<a id='L123' name='L123'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L124' name='L124'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L125' name='L125'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L239' title='Defined at 239 in lmd/lmd_lib.c.'>ReleaseLabelToPool</a>(lm,atoi(argv[0]),atoi(argv[1]));
+<a id='L126' name='L126'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L127' name='L127'></a> <em class='comment'>/*</em>
+<a id='L128' name='L128'></a><em class='comment'> if(ReleaseLabelToPool(lm,atoi(argv[0]),atoi(argv[1])) &lt; 0){</em>
+<a id='L129' name='L129'></a><em class='comment'>                vty_out(vty,"RequestLabelFromPool fail.%s",VTY_NEWLINE);</em>
+<a id='L130' name='L130'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L131' name='L131'></a><em class='comment'> } </em>
+<a id='L132' name='L132'></a><em class='comment'> vty_out(vty,"ReleaseLabelToPool pool_id %d label :%d %s",atoi(argv[0]),atoi(argv[1]),VTY_NEWLINE);</em>
+<a id='L133' name='L133'></a><em class='comment'> */</em>
+<a id='L134' name='L134'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L135' name='L135'></a><em class='brace'>}</em>
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  checkLabelInPool_lmd,
+<a id='L138' name='L138'></a>        checkLabelInPool_lmd_cmd,
+<a id='L139' name='L139'></a>        "checkLabelInPool pool_id &lt;1-100&gt; label &lt;1-10000&gt;",
+<a id='L140' name='L140'></a>        "check the Label from Pool_id"
+<a id='L141' name='L141'></a>        "LMD protocol")
+<a id='L142' name='L142'></a><em class='brace'>{</em>
+<a id='L143' name='L143'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L144' name='L144'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L145' name='L145'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L332' title='Defined at 332 in lmd/lmd_lib.c.'>CheckLabelInPool</a>(lm,atoi(argv[0]),atoi(argv[1])); 
+<a id='L146' name='L146'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L147' name='L147'></a> <em class='comment'>/*</em>
+<a id='L148' name='L148'></a><em class='comment'> int retval=CheckLabelInPool(lm,atoi(argv[0]),atoi(argv[1])); </em>
+<a id='L149' name='L149'></a><em class='comment'> //if retval==1 , it mean the lable range isn't the same.</em>
+<a id='L150' name='L150'></a><em class='comment'> if(retval &lt; 0){</em>
+<a id='L151' name='L151'></a><em class='comment'>                vty_out(vty,"CheckLabelInPool fail.%s",VTY_NEWLINE);</em>
+<a id='L152' name='L152'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L153' name='L153'></a><em class='comment'> }else if(retval &gt; 0){</em>
+<a id='L154' name='L154'></a><em class='comment'>                vty_out(vty,"CheckLabelInPool the label range isn't the same.%s",VTY_NEWLINE);</em>
+<a id='L155' name='L155'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L156' name='L156'></a><em class='comment'> }</em>
+<a id='L157' name='L157'></a><em class='comment'> // other; retval==0 ;</em>
+<a id='L158' name='L158'></a><em class='comment'> //CheckLabelInPool(atoi(argv[0]),atoi(argv[1]));</em>
+<a id='L159' name='L159'></a><em class='comment'> vty_out(vty,"CheckLabelInPool pool_id %d label :%d %s",atoi(argv[0]),atoi(argv[1]),VTY_NEWLINE);</em>
+<a id='L160' name='L160'></a><em class='comment'> */</em>
+<a id='L161' name='L161'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L162' name='L162'></a><em class='brace'>}</em>
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  checkLabelRangeInPool_lmd,
+<a id='L165' name='L165'></a>        checkLabelRangeInPool_lmd_cmd,
+<a id='L166' name='L166'></a>        "checkLabelRangeInPool pool_id &lt;1-100&gt; min_label &lt;1-100&gt; max_label &lt;1-10000&gt;",
+<a id='L167' name='L167'></a>        "check the Label range from Pool_id"
+<a id='L168' name='L168'></a>        "LMD protocol")
+<a id='L169' name='L169'></a><em class='brace'>{</em>
+<a id='L170' name='L170'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = LMD_NODE;
+<a id='L171' name='L171'></a> <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm=<a href='../S/874.html#L35' title='Defined at 35 in lmd/lmd.c.'>lm_get</a>();
+<a id='L172' name='L172'></a> <strong class='reserved'>int</strong> retval=<a href='../S/880.html#L353' title='Defined at 353 in lmd/lmd_lib.c.'>CheckLabelRangeInPool</a>(lm,atoi(argv[0]),atoi(argv[1]),atoi(argv[2])); 
+<a id='L173' name='L173'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L174' name='L174'></a> <em class='comment'>/*</em>
+<a id='L175' name='L175'></a><em class='comment'> int retval=CheckLabelRangeInPool(lm,atoi(argv[0]),atoi(argv[1]),atoi(argv[2])); </em>
+<a id='L176' name='L176'></a><em class='comment'> //if retval==1 , it mean the lable range isn't the same.</em>
+<a id='L177' name='L177'></a><em class='comment'> if(retval &lt; 0){</em>
+<a id='L178' name='L178'></a><em class='comment'>                vty_out(vty,"CheckLabelRangeInPool fail.%s",VTY_NEWLINE);</em>
+<a id='L179' name='L179'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L180' name='L180'></a><em class='comment'> }else if(retval &gt; 0){</em>
+<a id='L181' name='L181'></a><em class='comment'>                vty_out(vty,"CheckLabelRangeInPool the label range isn't the same.%s",VTY_NEWLINE);</em>
+<a id='L182' name='L182'></a><em class='comment'>                return CMD_WARNING;</em>
+<a id='L183' name='L183'></a><em class='comment'> }</em>
+<a id='L184' name='L184'></a><em class='comment'> </em>
+<a id='L185' name='L185'></a><em class='comment'> //CheckLabelRangeInPool(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));</em>
+<a id='L186' name='L186'></a><em class='comment'> vty_out(vty,"CheckLabelRangeInPool pool_id %d min :%d  max :%d %s",atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),VTY_NEWLINE);</em>
+<a id='L187' name='L187'></a><em class='comment'> */</em>
+<a id='L188' name='L188'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L189' name='L189'></a><em class='brace'>}</em>
+<a id='L190' name='L190'></a><em class='comment'>//end by here</em>
+<a id='L191' name='L191'></a><em class='comment'>/*</em>
+<a id='L192' name='L192'></a><em class='comment'>//test install_element node location</em>
+<a id='L193' name='L193'></a><em class='comment'>//view node </em>
+<a id='L194' name='L194'></a><em class='comment'>DEFUN(  view_node_lmd,</em>
+<a id='L195' name='L195'></a><em class='comment'>        view_node_lmd_cmd,</em>
+<a id='L196' name='L196'></a><em class='comment'>        "view_node ",</em>
+<a id='L197' name='L197'></a><em class='comment'>        "view_node "</em>
+<a id='L198' name='L198'></a><em class='comment'>        "LMD protocol")</em>
+<a id='L199' name='L199'></a><em class='comment'>{</em>
+<a id='L200' name='L200'></a><em class='comment'> vty-&gt;node = LMD_NODE;</em>
+<a id='L201' name='L201'></a><em class='comment'> //CheckLabelRangeInPool(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));</em>
+<a id='L202' name='L202'></a><em class='comment'> vty_out(vty,"locat at view_node %s",VTY_NEWLINE);</em>
+<a id='L203' name='L203'></a><em class='comment'> return CMD_SUCCESS;</em>
+<a id='L204' name='L204'></a><em class='comment'>}</em>
+<a id='L205' name='L205'></a><em class='comment'>//ENABLE node </em>
+<a id='L206' name='L206'></a><em class='comment'>DEFUN(  enable_node_lmd,</em>
+<a id='L207' name='L207'></a><em class='comment'>        enable_node_lmd_cmd,</em>
+<a id='L208' name='L208'></a><em class='comment'>        "enable_node ",</em>
+<a id='L209' name='L209'></a><em class='comment'>        "enable_node "</em>
+<a id='L210' name='L210'></a><em class='comment'>        "LMD protocol")</em>
+<a id='L211' name='L211'></a><em class='comment'>{</em>
+<a id='L212' name='L212'></a><em class='comment'> vty-&gt;node = LMD_NODE;</em>
+<a id='L213' name='L213'></a><em class='comment'> //CheckLabelRangeInPool(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));</em>
+<a id='L214' name='L214'></a><em class='comment'> vty_out(vty,"locat at enable_node %s",VTY_NEWLINE);</em>
+<a id='L215' name='L215'></a><em class='comment'> return CMD_SUCCESS;</em>
+<a id='L216' name='L216'></a><em class='comment'>}</em>
+<a id='L217' name='L217'></a><em class='comment'>//CONFIG node </em>
+<a id='L218' name='L218'></a><em class='comment'>DEFUN(  config_node_lmd,</em>
+<a id='L219' name='L219'></a><em class='comment'>        config_node_lmd_cmd,</em>
+<a id='L220' name='L220'></a><em class='comment'>        "config_node ",</em>
+<a id='L221' name='L221'></a><em class='comment'>        "config_node "</em>
+<a id='L222' name='L222'></a><em class='comment'>        "LMD protocol")</em>
+<a id='L223' name='L223'></a><em class='comment'>{</em>
+<a id='L224' name='L224'></a><em class='comment'> vty-&gt;node = LMD_NODE;</em>
+<a id='L225' name='L225'></a><em class='comment'> //CheckLabelRangeInPool(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]));</em>
+<a id='L226' name='L226'></a><em class='comment'> vty_out(vty,"locat at config_node %s",VTY_NEWLINE);</em>
+<a id='L227' name='L227'></a><em class='comment'> return CMD_SUCCESS;</em>
+<a id='L228' name='L228'></a><em class='comment'>}</em>
+<a id='L229' name='L229'></a><em class='comment'>//end test</em>
+<a id='L230' name='L230'></a><em class='comment'>*/</em>
+<a id='L231' name='L231'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> lmd_node =
+<a id='L232' name='L232'></a><em class='brace'>{</em> LMD_NODE, "%s(config-lmd)# ", 1 <em class='brace'>}</em>;
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a><strong class='reserved'>void</strong> <a href='../R/6809.html' title='Multiple referred from 2 places.'>lmd_init</a>(<strong class='reserved'>void</strong>)
+<a id='L235' name='L235'></a><em class='brace'>{</em>
+<a id='L236' name='L236'></a><a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a>( &amp;lmd_node, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> );
+<a id='L237' name='L237'></a><a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a>( LMD_NODE );
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a><em class='comment'>//install_element (VIEW_NODE,   &amp;router_mplsadmd_cmd);</em>
+<a id='L240' name='L240'></a><em class='comment'>//install_element (ENABLE_NODE, &amp;router_mplsadmd_cmd);</em>
+<a id='L241' name='L241'></a><em class='comment'>//install_element (CONFIG_NODE, &amp;router_hered_cmd);</em>
+<a id='L242' name='L242'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( CONFIG_NODE, &amp;router_lmd_cmd);
+<a id='L243' name='L243'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;createLabelPool_lmd_cmd);
+<a id='L244' name='L244'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;deleteLabelPool_lmd_cmd);
+<a id='L245' name='L245'></a>  <em class='comment'>//install_element( LMD_NODE,   &amp;checkLabelPool_lmd_cmd);</em>
+<a id='L246' name='L246'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;requestLabelFromPool_lmd_cmd);
+<a id='L247' name='L247'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;requestSpecifiedLabelFromPool_lmd_cmd);
+<a id='L248' name='L248'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;releaseLabelToPool_lmd_cmd);
+<a id='L249' name='L249'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;checkLabelInPool_lmd_cmd);
+<a id='L250' name='L250'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( LMD_NODE,   &amp;checkLabelRangeInPool_lmd_cmd);
+<a id='L251' name='L251'></a>  <em class='comment'>/*</em>
+<a id='L252' name='L252'></a><em class='comment'>  //test install_element node location</em>
+<a id='L253' name='L253'></a><em class='comment'>  install_element (VIEW_NODE,   &amp;view_node_lmd_cmd);</em>
+<a id='L254' name='L254'></a><em class='comment'>  install_element (ENABLE_NODE, &amp;enable_node_lmd_cmd);</em>
+<a id='L255' name='L255'></a><em class='comment'>  install_element (CONFIG_NODE, &amp;config_node_lmd_cmd);</em>
+<a id='L256' name='L256'></a><em class='comment'>  //end test</em>
+<a id='L257' name='L257'></a><em class='comment'>        */</em>
+<a id='L258' name='L258'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L5'>[^]</a><a href='#L234'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

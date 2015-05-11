@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/impl_mm.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/impl_mm.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L10'>[^]</a><a href='#L25'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L10' title='Defined at 10.'>mpls_malloc</a></li>
+<li><a href='#L19' title='Defined at 19.'>mpls_free</a></li>
+<li><a href='#L25' title='Defined at 25.'>mpls_mm_results</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='381.html'>mpls_mm_impl.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L5' name='L5'></a>
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L7' name='L7'></a>
+<a id='L8' name='L8'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> _mm_count = 0;
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><strong class='reserved'>void</strong> *<a href='../R/7138.html' title='Multiple referred from 30 places.'>mpls_malloc</a>(<a href='../S/448.html#L92' title='Defined at 92 in ldpd/mpls_handle_type.h.'>mpls_size_type</a> size)
+<a id='L11' name='L11'></a><em class='brace'>{</em>
+<a id='L12' name='L12'></a>  <strong class='reserved'>void</strong> *mem = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_LDP, size);
+<a id='L13' name='L13'></a>  <strong class='reserved'>if</strong> (mem) <em class='brace'>{</em>
+<a id='L14' name='L14'></a>    _mm_count++;
+<a id='L15' name='L15'></a>  <em class='brace'>}</em>
+<a id='L16' name='L16'></a>  <strong class='reserved'>return</strong> mem;
+<a id='L17' name='L17'></a><em class='brace'>}</em>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><strong class='reserved'>void</strong> <a href='../R/7083.html' title='Multiple referred from 32 places.'>mpls_free</a>(<strong class='reserved'>void</strong> *mem)
+<a id='L20' name='L20'></a><em class='brace'>{</em>
+<a id='L21' name='L21'></a>  _mm_count--;
+<a id='L22' name='L22'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a>(MTYPE_LDP,mem);
+<a id='L23' name='L23'></a><em class='brace'>}</em>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><strong class='reserved'>void</strong> mpls_mm_results()
+<a id='L26' name='L26'></a><em class='brace'>{</em>
+<a id='L27' name='L27'></a>  fprintf(stderr, "LDP MM RESULTS: %d\n", _mm_count);
+<a id='L28' name='L28'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L10'>[^]</a><a href='#L25'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

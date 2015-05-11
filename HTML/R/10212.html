@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>trill</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/498.html#L614'>trill</a>             614 isisd/isis_circuit.c trill_area_nickname(circuit-&gt;area, htons(circuit-&gt;area-&gt;trill-&gt;nick.name));</span>
+<span class='curline'><a href='../S/498.html#L1337'>trill</a>            1337 isisd/isis_circuit.c   circuit-&gt;priority[TRILL_ISIS_LEVEL - 1] = area-&gt;trill-&gt;nick.priority;</span>
+<span class='curline'><a href='../S/511.html#L1281'>trill</a>            1281 isisd/isis_lsp.c   if (CHECK_FLAG (area-&gt;trill-&gt;status, TRILL_NICK_SET))</span>
+<span class='curline'><a href='../S/511.html#L1282'>trill</a>            1282 isisd/isis_lsp.c    if (tlv_add_trill_nickname (&amp;(area-&gt;trill-&gt;nick), lsp-&gt;pdu, area) != ISIS_OK )</span>
+<span class='curline'><a href='../S/464.html#L1403'>trill</a>            1403 isisd/isis_spf.c                        area-&gt;trill-&gt;nick.name);</span>
+<span class='curline'><a href='../S/464.html#L1410'>trill</a>            1410 isisd/isis_spf.c   area-&gt;trill-&gt;tree_root = get_root_nick(area);</span>
+<span class='curline'><a href='../S/464.html#L1417'>trill</a>            1417 isisd/isis_spf.c   if (area-&gt;trill-&gt;tree_root != RBRIDGE_NICKNAME_NONE) {</span>
+<span class='curline'><a href='../S/464.html#L1418'>trill</a>            1418 isisd/isis_spf.c     dnode = dict_lookup (area-&gt;trill-&gt;nickdb, &amp;area-&gt;trill-&gt;tree_root);</span>
+<span class='curline'><a href='../S/510.html#L138'>trill</a>             138 isisd/isisd.h    struct trill *trill;     /* TRILL structure */</span>
+<span class='curline'><a href='../S/465.html#L176'>trill</a>             176 isisd/netlink.c       list_delete(area-&gt;trill-&gt;configured_vni);</span>
+<span class='curline'><a href='../S/465.html#L177'>trill</a>             177 isisd/netlink.c       area-&gt;trill-&gt;configured_vni = list_new();</span>
+<span class='curline'><a href='../S/465.html#L179'>trill</a>             179 isisd/netlink.c 	listnode_add(area-&gt;trill-&gt;configured_vni, (void *)(u_long)vnis[i]);</span>
+<span class='curline'><a href='../S/487.html#L111'>trill</a>             111 isisd/trill_vni.c   struct trill *trill = area-&gt;trill;</span>
+<span class='curline'><a href='../S/487.html#L112'>trill</a>             112 isisd/trill_vni.c   old_count = listcount(trill-&gt;supported_vni);</span>
+<span class='curline'><a href='../S/487.html#L113'>trill</a>             113 isisd/trill_vni.c   old_list = trill-&gt;supported_vni;</span>
+<span class='curline'><a href='../S/487.html#L117'>trill</a>             117 isisd/trill_vni.c   for (ALL_LIST_ELEMENTS_RO (trill-&gt;configured_vni, node, vni)) {</span>
+<span class='curline'><a href='../S/487.html#L118'>trill</a>             118 isisd/trill_vni.c       if (!listnode_lookup (trill-&gt;supported_vni, vni)) {</span>
+<span class='curline'><a href='../S/487.html#L123'>trill</a>             123 isisd/trill_vni.c   trill-&gt;supported_vni = new_list;</span>
+<span class='curline'><a href='../S/487.html#L145'>trill</a>             145 isisd/trill_vni.c     for (ALL_LIST_ELEMENTS_RO (area-&gt;trill-&gt;fwdtbl, tnode, fwdnode)) {</span>
+<span class='curline'><a href='../S/487.html#L152'>trill</a>             152 isisd/trill_vni.c   intersect_list(trill-&gt;supported_vni, tmp_list, circuit_number);</span>
+<span class='curline'><a href='../S/487.html#L159'>trill</a>             159 isisd/trill_vni.c   return ( (listcount(trill-&gt;supported_vni) != old_count) || changed );</span>
+<span class='curline'><a href='../S/516.html#L197'>trill</a>             197 isisd/trilld.c     area-&gt;trill-&gt;nick.name = htons(nick);</span>
+<span class='curline'><a href='../S/516.html#L214'>trill</a>             214 isisd/trilld.c     SET_FLAG (area-&gt;trill-&gt;status, TRILL_NICK_SET);</span>
+<span class='curline'><a href='../S/516.html#L215'>trill</a>             215 isisd/trilld.c     SET_FLAG (area-&gt;trill-&gt;status, TRILL_AUTONICK);</span>
+<span class='curline'><a href='../S/516.html#L220'>trill</a>             220 isisd/trilld.c   savednick = area-&gt;trill-&gt;nick.name;</span>
+<span class='curline'><a href='../S/516.html#L230'>trill</a>             230 isisd/trilld.c     ni.nick = area-&gt;trill-&gt;nick;</span>
+<span class='curline'><a href='../S/516.html#L236'>trill</a>             236 isisd/trilld.c 	trill_dict_delete_nodes (area-&gt;trill-&gt;nickdb,</span>
+<span class='curline'><a href='../S/516.html#L237'>trill</a>             237 isisd/trilld.c 				 area-&gt;trill-&gt;sysidtonickdb,</span>
+<span class='curline'><a href='../S/516.html#L247'>trill</a>             247 isisd/trilld.c 	  SET_FLAG (area-&gt;trill-&gt;status, TRILL_NICK_SET);</span>
+<span class='curline'><a href='../S/516.html#L248'>trill</a>             248 isisd/trilld.c 	  SET_FLAG (area-&gt;trill-&gt;status, TRILL_AUTONICK);</span>
+<span class='curline'><a href='../S/516.html#L249'>trill</a>             249 isisd/trilld.c 	  area-&gt;trill-&gt;nick.priority &amp;= ~CONFIGURED_NICK_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L256'>trill</a>             256 isisd/trilld.c   area-&gt;trill-&gt;nick.name = nickname;</span>
+<span class='curline'><a href='../S/516.html#L257'>trill</a>             257 isisd/trilld.c   area-&gt;trill-&gt;nick.priority |= CONFIGURED_NICK_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L258'>trill</a>             258 isisd/trilld.c   SET_FLAG(area-&gt;trill-&gt;status, TRILL_NICK_SET);</span>
+<span class='curline'><a href='../S/516.html#L259'>trill</a>             259 isisd/trilld.c   UNSET_FLAG(area-&gt;trill-&gt;status, TRILL_AUTONICK);</span>
+<span class='curline'><a href='../S/516.html#L286'>trill</a>             286 isisd/trilld.c     area-&gt;trill-&gt;nick.priority = priority;</span>
+<span class='curline'><a href='../S/516.html#L287'>trill</a>             287 isisd/trilld.c     area-&gt;trill-&gt;root_priority = priority;</span>
+<span class='curline'><a href='../S/516.html#L288'>trill</a>             288 isisd/trilld.c     SET_FLAG(area-&gt;trill-&gt;status, TRILL_PRIORITY_SET);</span>
+<span class='curline'><a href='../S/516.html#L292'>trill</a>             292 isisd/trilld.c     area-&gt;trill-&gt;nick.priority = DFLT_NICK_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L293'>trill</a>             293 isisd/trilld.c     area-&gt;trill-&gt;root_priority = TRILL_DFLT_ROOT_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L294'>trill</a>             294 isisd/trilld.c     UNSET_FLAG(area-&gt;trill-&gt;status, TRILL_PRIORITY_SET);</span>
+<span class='curline'><a href='../S/516.html#L301'>trill</a>             301 isisd/trilld.c   if (!CHECK_FLAG(area-&gt;trill-&gt;status, TRILL_AUTONICK)) {</span>
+<span class='curline'><a href='../S/516.html#L302'>trill</a>             302 isisd/trilld.c     area-&gt;trill-&gt;nick.priority |= CONFIGURED_NICK_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L321'>trill</a>             321 isisd/trilld.c   struct trill* trill;</span>
+<span class='curline'><a href='../S/516.html#L322'>trill</a>             322 isisd/trilld.c   area-&gt;trill = XCALLOC (MTYPE_ISIS_TRILLAREA, sizeof (struct trill));</span>
+<span class='curline'><a href='../S/516.html#L323'>trill</a>             323 isisd/trilld.c   trill = area-&gt;trill;</span>
+<span class='curline'><a href='../S/516.html#L324'>trill</a>             324 isisd/trilld.c   trill-&gt;nick.priority = DEFAULT_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L325'>trill</a>             325 isisd/trilld.c   trill-&gt;nick.name = RBRIDGE_NICKNAME_NONE;</span>
+<span class='curline'><a href='../S/516.html#L327'>trill</a>             327 isisd/trilld.c   trill-&gt;nickdb = dict_create(MAX_RBRIDGE_NODES, nick_cmp);</span>
+<span class='curline'><a href='../S/516.html#L328'>trill</a>             328 isisd/trilld.c   trill-&gt;sysidtonickdb = dict_create(MAX_RBRIDGE_NODES, sysid_cmp);</span>
+<span class='curline'><a href='../S/516.html#L329'>trill</a>             329 isisd/trilld.c   trill-&gt;fwdtbl = list_new();</span>
+<span class='curline'><a href='../S/516.html#L330'>trill</a>             330 isisd/trilld.c   trill-&gt;adjnodes = list_new();</span>
+<span class='curline'><a href='../S/516.html#L331'>trill</a>             331 isisd/trilld.c   trill-&gt;dt_roots = list_new();</span>
+<span class='curline'><a href='../S/516.html#L332'>trill</a>             332 isisd/trilld.c   trill-&gt;root_priority = DEFAULT_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L333'>trill</a>             333 isisd/trilld.c   trill-&gt;tree_root = RBRIDGE_NICKNAME_NONE;</span>
+<span class='curline'><a href='../S/516.html#L334'>trill</a>             334 isisd/trilld.c   trill-&gt;configured_vni = list_new();</span>
+<span class='curline'><a href='../S/516.html#L335'>trill</a>             335 isisd/trilld.c   trill-&gt;supported_vni = list_new();</span>
+<span class='curline'><a href='../S/516.html#L341'>trill</a>             341 isisd/trilld.c   if (!area-&gt;trill-&gt;root_count)</span>
+<span class='curline'><a href='../S/516.html#L342'>trill</a>             342 isisd/trilld.c 	  area-&gt;trill-&gt;root_count = MIN_ROOT_COUNT;</span>
+<span class='curline'><a href='../S/516.html#L347'>trill</a>             347 isisd/trilld.c   if(area-&gt;trill-&gt;nickdb) {</span>
+<span class='curline'><a href='../S/516.html#L348'>trill</a>             348 isisd/trilld.c     dict_free(area-&gt;trill-&gt;nickdb);</span>
+<span class='curline'><a href='../S/516.html#L349'>trill</a>             349 isisd/trilld.c     dict_destroy (area-&gt;trill-&gt;nickdb);</span>
+<span class='curline'><a href='../S/516.html#L351'>trill</a>             351 isisd/trilld.c   if(area-&gt;trill-&gt;sysidtonickdb) {</span>
+<span class='curline'><a href='../S/516.html#L352'>trill</a>             352 isisd/trilld.c     dict_free(area-&gt;trill-&gt;sysidtonickdb);</span>
+<span class='curline'><a href='../S/516.html#L353'>trill</a>             353 isisd/trilld.c     dict_destroy (area-&gt;trill-&gt;sysidtonickdb);</span>
+<span class='curline'><a href='../S/516.html#L355'>trill</a>             355 isisd/trilld.c   if (area-&gt;trill-&gt;fwdtbl)</span>
+<span class='curline'><a href='../S/516.html#L356'>trill</a>             356 isisd/trilld.c     list_delete (area-&gt;trill-&gt;fwdtbl);</span>
+<span class='curline'><a href='../S/516.html#L357'>trill</a>             357 isisd/trilld.c   if (area-&gt;trill-&gt;adjnodes)</span>
+<span class='curline'><a href='../S/516.html#L358'>trill</a>             358 isisd/trilld.c     list_delete (area-&gt;trill-&gt;adjnodes);</span>
+<span class='curline'><a href='../S/516.html#L359'>trill</a>             359 isisd/trilld.c   if (area-&gt;trill-&gt;dt_roots)</span>
+<span class='curline'><a href='../S/516.html#L360'>trill</a>             360 isisd/trilld.c     list_delete (area-&gt;trill-&gt;dt_roots);</span>
+<span class='curline'><a href='../S/516.html#L361'>trill</a>             361 isisd/trilld.c   if (area-&gt;trill-&gt;configured_vni)</span>
+<span class='curline'><a href='../S/516.html#L362'>trill</a>             362 isisd/trilld.c     list_delete (area-&gt;trill-&gt;configured_vni);</span>
+<span class='curline'><a href='../S/516.html#L363'>trill</a>             363 isisd/trilld.c   if (area-&gt;trill-&gt;supported_vni)</span>
+<span class='curline'><a href='../S/516.html#L364'>trill</a>             364 isisd/trilld.c     list_delete (area-&gt;trill-&gt;supported_vni);</span>
+<span class='curline'><a href='../S/516.html#L365'>trill</a>             365 isisd/trilld.c   XFREE (MTYPE_ISIS_TRILLAREA, area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L441'>trill</a>             441 isisd/trilld.c   tn.tn_trootpri = htons(area-&gt;trill-&gt;root_priority);</span>
+<span class='curline'><a href='../S/516.html#L452'>trill</a>             452 isisd/trilld.c   vni_count = listcount(area-&gt;trill-&gt;supported_vni);</span>
+<span class='curline'><a href='../S/516.html#L464'>trill</a>             464 isisd/trilld.c       for (ALL_LIST_ELEMENTS_RO (area-&gt;trill-&gt;supported_vni, node, vni)) {</span>
+<span class='curline'><a href='../S/516.html#L488'>trill</a>             488 isisd/trilld.c       for (ALL_LIST_ELEMENTS_RO (area-&gt;trill-&gt;supported_vni, node, vni)) {</span>
+<span class='curline'><a href='../S/516.html#L678'>trill</a>             678 isisd/trilld.c   dnode = dict_lookup (area-&gt;trill-&gt;sysidtonickdb, sysid);</span>
+<span class='curline'><a href='../S/516.html#L693'>trill</a>             693 isisd/trilld.c   oldfwdlist = area-&gt;trill-&gt;fwdtbl;</span>
+<span class='curline'><a href='../S/516.html#L719'>trill</a>             719 isisd/trilld.c   area-&gt;trill-&gt;fwdtbl = fwdlist;</span>
+<span class='curline'><a href='../S/516.html#L728'>trill</a>             728 isisd/trilld.c   if (area-&gt;trill-&gt;fwdtbl == NULL){</span>
+<span class='curline'><a href='../S/516.html#L733'>trill</a>             733 isisd/trilld.c   for (ALL_LIST_ELEMENTS_RO (area-&gt;trill-&gt;fwdtbl, node, fwdnode)){</span>
+<span class='curline'><a href='../S/516.html#L775'>trill</a>             775 isisd/trilld.c     oldadjlist = area-&gt;trill-&gt;adjnodes;</span>
+<span class='curline'><a href='../S/516.html#L842'>trill</a>             842 isisd/trilld.c       area-&gt;trill-&gt;adjnodes = adjlist;</span>
+<span class='curline'><a href='../S/516.html#L878'>trill</a>             878 isisd/trilld.c     adjnodes = area-&gt;trill-&gt;adjnodes;</span>
+<span class='curline'><a href='../S/516.html#L879'>trill</a>             879 isisd/trilld.c     dtrootnodes = area-&gt;trill-&gt;dt_roots;</span>
+<span class='curline'><a href='../S/516.html#L880'>trill</a>             880 isisd/trilld.c     supported_vni = area-&gt;trill-&gt;configured_vni;</span>
+<span class='curline'><a href='../S/516.html#L950'>trill</a>             950 isisd/trilld.c       if (area-&gt;trill-&gt;nick.name == nick) {</span>
+<span class='curline'><a href='../S/516.html#L985'>trill</a>             985 isisd/trilld.c   lpriority = area-&gt;trill-&gt;nick.priority;</span>
+<span class='curline'><a href='../S/516.html#L987'>trill</a>             987 isisd/trilld.c   root_nick = area-&gt;trill-&gt;nick.name;</span>
+<span class='curline'><a href='../S/516.html#L989'>trill</a>             989 isisd/trilld.c   for (ALL_DICT_NODES_RO(area-&gt;trill-&gt;nickdb, dnode, tnode))</span>
+<span class='curline'><a href='../S/516.html#L1017'>trill</a>            1017 isisd/trilld.c   if (area-&gt;trill-&gt;fwdtbl != NULL){</span>
+<span class='curline'><a href='../S/516.html#L1020'>trill</a>            1020 isisd/trilld.c     for (ALL_LIST_ELEMENTS_RO (area-&gt;trill-&gt;fwdtbl, node, fwdnode))</span>
+<span class='curline'><a href='../S/516.html#L1025'>trill</a>            1025 isisd/trilld.c   trill_publish_nick(area, circuit-&gt;fd, area-&gt;trill-&gt;nick.name,</span>
+<span class='curline'><a href='../S/516.html#L1037'>trill</a>            1037 isisd/trilld.c   nla_put_u16(msg, TRILL_ATTR_U16, ntohs(area-&gt;trill-&gt;tree_root));</span>
+<span class='curline'><a href='../S/516.html#L1054'>trill</a>            1054 isisd/trilld.c   if (area-&gt;trill-&gt;nick.name == RBRIDGE_NICKNAME_NONE)</span>
+<span class='curline'><a href='../S/516.html#L1060'>trill</a>            1060 isisd/trilld.c   if(area-&gt;trill-&gt;tree_root != RBRIDGE_NICKNAME_NONE) {</span>
+<span class='curline'><a href='../S/516.html#L1061'>trill</a>            1061 isisd/trilld.c     dnode = dict_lookup (area-&gt;trill-&gt;nickdb,</span>
+<span class='curline'><a href='../S/516.html#L1062'>trill</a>            1062 isisd/trilld.c 			 &amp;(area-&gt;trill-&gt;tree_root));</span>
+<span class='curline'><a href='../S/516.html#L1087'>trill</a>            1087 isisd/trilld.c   SET_FLAG(area-&gt;trill-&gt;status, TRILL_SPF_COMPUTED);</span>
+<span class='curline'><a href='../S/516.html#L1113'>trill</a>            1113 isisd/trilld.c   dnode = dict_lookup (area-&gt;trill-&gt;nickdb, &amp;(ni-&gt;nick.name));</span>
+<span class='curline'><a href='../S/516.html#L1115'>trill</a>            1115 isisd/trilld.c     dnode = dict_lookup(area-&gt;trill-&gt;sysidtonickdb, ni-&gt;sysid);</span>
+<span class='curline'><a href='../S/516.html#L1209'>trill</a>            1209 isisd/trilld.c   dict_alloc_insert (area-&gt;trill-&gt;nickdb, &amp;(tnode-&gt;info.nick.name), tnode);</span>
+<span class='curline'><a href='../S/516.html#L1211'>trill</a>            1211 isisd/trilld.c   dict_alloc_insert (area-&gt;trill-&gt;sysidtonickdb, tnode-&gt;info.sysid, tnode);</span>
+<span class='curline'><a href='../S/516.html#L1250'>trill</a>            1250 isisd/trilld.c       trill_dict_delete_nodes (area-&gt;trill-&gt;sysidtonickdb,</span>
+<span class='curline'><a href='../S/516.html#L1251'>trill</a>            1251 isisd/trilld.c 			       area-&gt;trill-&gt;nickdb, tnode-&gt;info.sysid, true);</span>
+<span class='curline'><a href='../S/516.html#L1262'>trill</a>            1262 isisd/trilld.c     trill_dict_delete_nodes (area-&gt;trill-&gt;sysidtonickdb,</span>
+<span class='curline'><a href='../S/516.html#L1263'>trill</a>            1263 isisd/trilld.c 			     area-&gt;trill-&gt;nickdb, newnick-&gt;sysid, true);</span>
+<span class='curline'><a href='../S/516.html#L1274'>trill</a>            1274 isisd/trilld.c       trill_dict_delete_nodes (area-&gt;trill-&gt;sysidtonickdb,</span>
+<span class='curline'><a href='../S/516.html#L1275'>trill</a>            1275 isisd/trilld.c 			       area-&gt;trill-&gt;nickdb, tnode-&gt;info.sysid, true);</span>
+<span class='curline'><a href='../S/516.html#L1289'>trill</a>            1289 isisd/trilld.c   ournick.nick = area-&gt;trill-&gt;nick;</span>
+<span class='curline'><a href='../S/516.html#L1307'>trill</a>            1307 isisd/trilld.c   if (other_nick-&gt;nick.name == area-&gt;trill-&gt;nick.name) {</span>
+<span class='curline'><a href='../S/516.html#L1318'>trill</a>            1318 isisd/trilld.c     SET_FLAG(area-&gt;trill-&gt;status, TRILL_AUTONICK);</span>
+<span class='curline'><a href='../S/516.html#L1321'>trill</a>            1321 isisd/trilld.c     area-&gt;trill-&gt;nick.priority &amp;= ~CONFIGURED_NICK_PRIORITY;</span>
+<span class='curline'><a href='../S/516.html#L1326'>trill</a>            1326 isisd/trilld.c 		 ntohs (area-&gt;trill-&gt;nick.name));</span>
+<span class='curline'><a href='../S/516.html#L1331'>trill</a>            1331 isisd/trilld.c   area-&gt;trill-&gt;tree_root = get_root_nick(area);</span>
+<span class='curline'><a href='../S/516.html#L1359'>trill</a>            1359 isisd/trilld.c     trill_dict_delete_nodes (area-&gt;trill-&gt;sysidtonickdb,</span>
+<span class='curline'><a href='../S/516.html#L1360'>trill</a>            1360 isisd/trilld.c 			     area-&gt;trill-&gt;nickdb, lsp_id, true);</span>
+<span class='curline'><a href='../S/516.html#L1382'>trill</a>            1382 isisd/trilld.c       trill_dict_delete_nodes (area-&gt;trill-&gt;sysidtonickdb,</span>
+<span class='curline'><a href='../S/516.html#L1383'>trill</a>            1383 isisd/trilld.c 			       area-&gt;trill-&gt;nickdb, ni.sysid, true);</span>
+<span class='curline'><a href='../S/516.html#L1445'>trill</a>            1445 isisd/trilld.c   lpriority = area-&gt;trill-&gt;nick.priority;</span>
+<span class='curline'><a href='../S/516.html#L1449'>trill</a>            1449 isisd/trilld.c   for (ALL_DICT_NODES_RO(area-&gt;trill-&gt;nickdb, dnode, tnode)) {</span>
+<span class='curline'><a href='../S/516.html#L1463'>trill</a>            1463 isisd/trilld.c   if(area-&gt;trill-&gt;tree_root)</span>
+<span class='curline'><a href='../S/516.html#L1465'>trill</a>            1465 isisd/trilld.c 	     ntohs (area-&gt;trill-&gt;tree_root),VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/516.html#L1487'>trill</a>            1487 isisd/trilld.c   dnode = dict_lookup (area-&gt;trill-&gt;nickdb, &amp;nick);</span>
+<span class='curline'><a href='../S/516.html#L1509'>trill</a>            1509 isisd/trilld.c   if (area-&gt;trill-&gt;fwdtbl == NULL)</span>
+<span class='curline'><a href='../S/516.html#L1513'>trill</a>            1513 isisd/trilld.c   for (ALL_LIST_ELEMENTS_RO (area-&gt;trill-&gt;fwdtbl, node, fwdnode)) {</span>
+<span class='curline'><a href='../S/516.html#L1531'>trill</a>            1531 isisd/trilld.c   for (ALL_DICT_NODES_RO(area-&gt;trill-&gt;nickdb, dnode, tnode)) {</span>
+<span class='curline'><a href='../S/516.html#L1553'>trill</a>            1553 isisd/trilld.c     adjnodes = area-&gt;trill-&gt;adjnodes;</span>
+<span class='curline'><a href='../S/516.html#L1578'>trill</a>            1578 isisd/trilld.c   for (ALL_DICT_NODES_RO(area-&gt;trill-&gt;nickdb, dnode, tnode)) {</span>
+<span class='curline'><a href='../S/516.html#L1579'>trill</a>            1579 isisd/trilld.c     if (tnode-&gt;info.nick.name == area-&gt;trill-&gt;tree_root) {</span>
+<span class='curline'><a href='../S/516.html#L1598'>trill</a>            1598 isisd/trilld.c   assert (area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L1607'>trill</a>            1607 isisd/trilld.c   if (CHECK_FLAG(area-&gt;trill-&gt;status, TRILL_SPF_COMPUTED))</span>
+<span class='curline'><a href='../S/516.html#L1621'>trill</a>            1621 isisd/trilld.c   assert (area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L1624'>trill</a>            1624 isisd/trilld.c   if (CHECK_FLAG(area-&gt;trill-&gt;status, TRILL_SPF_COMPUTED))</span>
+<span class='curline'><a href='../S/516.html#L1641'>trill</a>            1641 isisd/trilld.c   assert (area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L1646'>trill</a>            1646 isisd/trilld.c   if (CHECK_FLAG(area-&gt;trill-&gt;status, TRILL_SPF_COMPUTED))</span>
+<span class='curline'><a href='../S/516.html#L1660'>trill</a>            1660 isisd/trilld.c   assert (area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L1663'>trill</a>            1663 isisd/trilld.c   if (CHECK_FLAG(area-&gt;trill-&gt;status, TRILL_SPF_COMPUTED))</span>
+<span class='curline'><a href='../S/516.html#L1678'>trill</a>            1678 isisd/trilld.c   area-&gt;trill-&gt;name = strdup(argv[0]);</span>
+<span class='curline'><a href='../S/516.html#L1702'>trill</a>            1702 isisd/trilld.c 	     ntohs(area-&gt;trill-&gt;nick.name),</span>
+<span class='curline'><a href='../S/516.html#L1703'>trill</a>            1703 isisd/trilld.c 	     area-&gt;trill-&gt;nick.priority,VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/516.html#L1706'>trill</a>            1706 isisd/trilld.c     for (ALL_LIST_ELEMENTS_RO(area-&gt;trill-&gt;configured_vni, vninode, data)) {</span>
+<span class='curline'><a href='../S/516.html#L1804'>trill</a>            1804 isisd/trilld.c 	assert (area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L1807'>trill</a>            1807 isisd/trilld.c 	area-&gt;trill-&gt;root_count = count;</span>
+<span class='curline'><a href='../S/516.html#L1820'>trill</a>            1820 isisd/trilld.c 	assert (area-&gt;trill);</span>
+<span class='curline'><a href='../S/516.html#L1821'>trill</a>            1821 isisd/trilld.c 	area-&gt;trill-&gt;root_count =  MIN_ROOT_COUNT;</span>
+<span class='curline'><a href='../S/516.html#L1834'>trill</a>            1834 isisd/trilld.c 	assert (area-&gt;trill);</span>
+</pre>
+</body>
+</html>

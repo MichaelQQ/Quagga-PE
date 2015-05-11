@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/vector.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/vector.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/351.html' title='Multiple included from 15 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Generic vector interface header.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1997, 98 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/253.html#L24' title='Defined at 24 in lib/vector.h.'>_ZEBRA_VECTOR_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/253.html#L23' title='Referred from 23 in lib/vector.h.'>_ZEBRA_VECTOR_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='comment'>/* struct for vector */</em>
+<a id='L27' name='L27'></a><strong class='reserved'>struct</strong> <a href='../R/4331.html' title='Multiple referred from 3 places.'>_vector</a> 
+<a id='L28' name='L28'></a><em class='brace'>{</em>
+<a id='L29' name='L29'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> active;          <em class='comment'>/* number of active slots */</em>
+<a id='L30' name='L30'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> alloced;         <em class='comment'>/* number of allocated slot */</em>
+<a id='L31' name='L31'></a>  <strong class='reserved'>void</strong> **index;                 <em class='comment'>/* index to data */</em>
+<a id='L32' name='L32'></a><em class='brace'>}</em>;
+<a id='L33' name='L33'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../S/253.html#L27' title='Defined at 27 in lib/vector.h.'>_vector</a> *<a href='../R/10308.html' title='Multiple referred from 108 places.'>vector</a>;
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='sharp'>#define</em> <a href='../R/3750.html' title='Multiple referred from 9 places.'>VECTOR_MIN_SIZE</a> 1
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='comment'>/* (Sometimes) usefull macros.  This macro convert index expression to</em>
+<a id='L38' name='L38'></a><em class='comment'> array expression. */</em>
+<a id='L39' name='L39'></a><em class='comment'>/* Reference slot at given index, caller must ensure slot is active */</em>
+<a id='L40' name='L40'></a><em class='sharp'>#define</em> <a href='../R/10322.html' title='Multiple referred from 121 places.'>vector_slot</a>(V,<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>)  ((V)-&gt;index[(<a href='../S/288.html#L50' title='Defined at 50 in lib/md5.c.'>I</a>)])
+<a id='L41' name='L41'></a><em class='comment'>/* Number of active slots. </em>
+<a id='L42' name='L42'></a><em class='comment'> * Note that this differs from vector_count() as it the count returned</em>
+<a id='L43' name='L43'></a><em class='comment'> * will include any empty slots</em>
+<a id='L44' name='L44'></a><em class='comment'> */</em>
+<a id='L45' name='L45'></a><em class='sharp'>#define</em> <a href='../R/10309.html' title='Multiple referred from 88 places.'>vector_active</a>(V) ((V)-&gt;active)
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L48' name='L48'></a><strong class='reserved'>extern</strong> <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> <a href='../S/204.html#L29' title='Defined at 29 in lib/vector.c.'>vector_init</a> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> size);
+<a id='L49' name='L49'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/204.html#L80' title='Defined at 80 in lib/vector.c.'>vector_ensure</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> num);
+<a id='L50' name='L50'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/204.html#L98' title='Defined at 98 in lib/vector.c.'>vector_empty_slot</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v);
+<a id='L51' name='L51'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/204.html#L114' title='Defined at 114 in lib/vector.c.'>vector_set</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v, <strong class='reserved'>void</strong> *val);
+<a id='L52' name='L52'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/204.html#L131' title='Defined at 131 in lib/vector.c.'>vector_set_index</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i, <strong class='reserved'>void</strong> *val);
+<a id='L53' name='L53'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/204.html#L162' title='Defined at 162 in lib/vector.c.'>vector_unset</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i);
+<a id='L54' name='L54'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/204.html#L179' title='Defined at 179 in lib/vector.c.'>vector_count</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v);
+<a id='L55' name='L55'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/204.html#L44' title='Defined at 44 in lib/vector.c.'>vector_only_wrapper_free</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v);
+<a id='L56' name='L56'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/204.html#L50' title='Defined at 50 in lib/vector.c.'>vector_only_index_free</a> (<strong class='reserved'>void</strong> *index);
+<a id='L57' name='L57'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/204.html#L56' title='Defined at 56 in lib/vector.c.'>vector_free</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v);
+<a id='L58' name='L58'></a><strong class='reserved'>extern</strong> <a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> <a href='../S/204.html#L63' title='Defined at 63 in lib/vector.c.'>vector_copy</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> v);
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> *<a href='../S/204.html#L145' title='Defined at 145 in lib/vector.c.'>vector_lookup</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>);
+<a id='L61' name='L61'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> *<a href='../S/204.html#L154' title='Defined at 154 in lib/vector.c.'>vector_lookup_ensure</a> (<a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a>, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>);
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_VECTOR_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

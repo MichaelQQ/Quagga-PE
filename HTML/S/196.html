@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/getopt.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/getopt.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/294.html' title='Multiple included from 26 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* Declarations for getopt.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1989,90,91,92,93,94,96,97 Free Software Foundation, Inc.</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>   NOTE: The canonical source of this file is maintained with the GNU C Library.</em>
+<a id='L5' name='L5'></a><em class='comment'>   Bugs can be reported to bug-glibc@gnu.org.</em>
+<a id='L6' name='L6'></a><em class='comment'></em>
+<a id='L7' name='L7'></a><em class='comment'>   This program is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'>   under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'>   Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'>   later version.</em>
+<a id='L11' name='L11'></a><em class='comment'></em>
+<a id='L12' name='L12'></a><em class='comment'>   This program is distributed in the hope that it will be useful,</em>
+<a id='L13' name='L13'></a><em class='comment'>   but WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'>   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</em>
+<a id='L15' name='L15'></a><em class='comment'>   GNU General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'></em>
+<a id='L17' name='L17'></a><em class='comment'>   You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'>   along with this program; if not, write to the Free Software</em>
+<a id='L19' name='L19'></a><em class='comment'>   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,</em>
+<a id='L20' name='L20'></a><em class='comment'>   USA.  */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#ifndef</em> <a href='../S/196.html#L23' title='Defined at 23 in lib/getopt.h.'>_GETOPT_H</a>
+<a id='L23' name='L23'></a><em class='sharp'>#define</em> <a href='../S/196.html#L22' title='Referred from 22 in lib/getopt.h.'>_GETOPT_H</a> 1
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='comment'>/*</em>
+<a id='L26' name='L26'></a><em class='comment'> * The operating system may or may not provide getopt_long(), and if</em>
+<a id='L27' name='L27'></a><em class='comment'> * so it may or may not be a version we are willing to use.  Our</em>
+<a id='L28' name='L28'></a><em class='comment'> * strategy is to declare getopt here, and then provide code unless</em>
+<a id='L29' name='L29'></a><em class='comment'> * the supplied version is adequate.  The difficult case is when a</em>
+<a id='L30' name='L30'></a><em class='comment'> * declaration for getopt is provided, as our declaration must match.</em>
+<a id='L31' name='L31'></a><em class='comment'> *</em>
+<a id='L32' name='L32'></a><em class='comment'> * XXX Arguably this version should be named differently, and the</em>
+<a id='L33' name='L33'></a><em class='comment'> * local names defined to refer to the system version when we choose</em>
+<a id='L34' name='L34'></a><em class='comment'> * to use the system version.</em>
+<a id='L35' name='L35'></a><em class='comment'> */</em>
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='sharp'>#ifdef</em>  __cplusplus
+<a id='L38' name='L38'></a><strong class='reserved'>extern</strong> "C" <em class='brace'>{</em>
+<a id='L39' name='L39'></a><em class='sharp'>#endif</em>
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><em class='comment'>/* For communication from `getopt' to the caller.</em>
+<a id='L42' name='L42'></a><em class='comment'>   When `getopt' finds an option that takes an argument,</em>
+<a id='L43' name='L43'></a><em class='comment'>   the argument value is returned here.</em>
+<a id='L44' name='L44'></a><em class='comment'>   Also, when `ordering' is RETURN_IN_ORDER,</em>
+<a id='L45' name='L45'></a><em class='comment'>   each non-option ARGV-element is returned here.  */</em>
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> *optarg;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><em class='comment'>/* Index in ARGV of the next element to be scanned.</em>
+<a id='L50' name='L50'></a><em class='comment'>   This is used for communication to and from the caller</em>
+<a id='L51' name='L51'></a><em class='comment'>   and for communication between successive calls to `getopt'.</em>
+<a id='L52' name='L52'></a><em class='comment'></em>
+<a id='L53' name='L53'></a><em class='comment'>   On entry to `getopt', zero means this is the first call; initialize.</em>
+<a id='L54' name='L54'></a><em class='comment'></em>
+<a id='L55' name='L55'></a><em class='comment'>   When `getopt' returns -1, this is the index of the first of the</em>
+<a id='L56' name='L56'></a><em class='comment'>   non-option elements that the caller should itself scan.</em>
+<a id='L57' name='L57'></a><em class='comment'></em>
+<a id='L58' name='L58'></a><em class='comment'>   Otherwise, `optind' communicates from one call to the next</em>
+<a id='L59' name='L59'></a><em class='comment'>   how much of ARGV has been scanned so far.  */</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> optind;
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='comment'>/* Callers store zero here to inhibit the error message `getopt' prints</em>
+<a id='L64' name='L64'></a><em class='comment'>   for unrecognized options.  */</em>
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> opterr;
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><em class='comment'>/* Set to an option character which was unrecognized.  */</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> optopt;
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a><em class='comment'>/* Describe the long-named options requested by the application.</em>
+<a id='L73' name='L73'></a><em class='comment'>   The LONG_OPTIONS argument to getopt_long or getopt_long_only is a vector</em>
+<a id='L74' name='L74'></a><em class='comment'>   of `struct option' terminated by an element containing a name which is</em>
+<a id='L75' name='L75'></a><em class='comment'>   zero.</em>
+<a id='L76' name='L76'></a><em class='comment'></em>
+<a id='L77' name='L77'></a><em class='comment'>   The field `has_arg' is:</em>
+<a id='L78' name='L78'></a><em class='comment'>   no_argument          (or 0) if the option does not take an argument,</em>
+<a id='L79' name='L79'></a><em class='comment'>   required_argument    (or 1) if the option requires an argument,</em>
+<a id='L80' name='L80'></a><em class='comment'>   optional_argument    (or 2) if the option takes an optional argument.</em>
+<a id='L81' name='L81'></a><em class='comment'></em>
+<a id='L82' name='L82'></a><em class='comment'>   If the field `flag' is not NULL, it points to a variable that is set</em>
+<a id='L83' name='L83'></a><em class='comment'>   to the value given in the field `val' when the option is found, but</em>
+<a id='L84' name='L84'></a><em class='comment'>   left unchanged if the option is not found.</em>
+<a id='L85' name='L85'></a><em class='comment'></em>
+<a id='L86' name='L86'></a><em class='comment'>   To have a long-named option do something other than set an `int' to</em>
+<a id='L87' name='L87'></a><em class='comment'>   a compiled-in constant, such as set a value from `optarg', set the</em>
+<a id='L88' name='L88'></a><em class='comment'>   option's `flag' field to zero and its `val' field to a nonzero</em>
+<a id='L89' name='L89'></a><em class='comment'>   value (the equivalent single-letter option character, if there is</em>
+<a id='L90' name='L90'></a><em class='comment'>   one).  For long options that have a zero `flag' field, `getopt'</em>
+<a id='L91' name='L91'></a><em class='comment'>   returns the contents of the `val' field.  */</em>
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a><strong class='reserved'>struct</strong> <a href='../R/7454.html' title='Multiple referred from 42 places.'>option</a>
+<a id='L94' name='L94'></a><em class='brace'>{</em>
+<a id='L95' name='L95'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong> (__STDC__) &amp;&amp; __STDC__
+<a id='L96' name='L96'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L97' name='L97'></a><em class='sharp'>#else</em>
+<a id='L98' name='L98'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L99' name='L99'></a><em class='sharp'>#endif</em>
+<a id='L100' name='L100'></a>  <em class='comment'>/* has_arg can't be an enum because some compilers complain about</em>
+<a id='L101' name='L101'></a><em class='comment'>     type mismatches in all the code that assumes it is an int.  */</em>
+<a id='L102' name='L102'></a>  <strong class='reserved'>int</strong> has_arg;
+<a id='L103' name='L103'></a>  <strong class='reserved'>int</strong> *flag;
+<a id='L104' name='L104'></a>  <strong class='reserved'>int</strong> val;
+<a id='L105' name='L105'></a><em class='brace'>}</em>;
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><em class='comment'>/* Names for the values of the `has_arg' field of `struct option'.  */</em>
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><em class='sharp'>#define</em> <a href='../R/7398.html' title='Multiple referred from 95 places.'>no_argument</a>             0
+<a id='L110' name='L110'></a><em class='sharp'>#define</em> <a href='../R/9000.html' title='Multiple referred from 127 places.'>required_argument</a>       1
+<a id='L111' name='L111'></a><em class='sharp'>#define</em> optional_argument       2
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong> (__STDC__) &amp;&amp; __STDC__
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><em class='sharp'>#if</em> REALLY_NEED_PLAIN_GETOPT
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='comment'>/*</em>
+<a id='L118' name='L118'></a><em class='comment'> * getopt is defined in POSIX.2.  Assume that if the system defines</em>
+<a id='L119' name='L119'></a><em class='comment'> * getopt that it complies with POSIX.2.  If not, an autoconf test</em>
+<a id='L120' name='L120'></a><em class='comment'> * should be written to define NONPOSIX_GETOPT_DEFINITION.</em>
+<a id='L121' name='L121'></a><em class='comment'> */</em>
+<a id='L122' name='L122'></a><em class='sharp'>#ifndef</em> NONPOSIX_GETOPT_DEFINITION
+<a id='L123' name='L123'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/238.html#L975' title='Defined at 975 in lib/getopt.c.'>getopt</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> *<strong class='reserved'>const</strong> *argv, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *shortopts);
+<a id='L124' name='L124'></a><em class='sharp'>#else</em> <em class='comment'>/* NONPOSIX_GETOPT_DEFINITION */</em>
+<a id='L125' name='L125'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/238.html#L975' title='Defined at 975 in lib/getopt.c.'>getopt</a> (<strong class='reserved'>void</strong>);
+<a id='L126' name='L126'></a><em class='sharp'>#endif</em> <em class='comment'>/* NONPOSIX_GETOPT_DEFINITION */</em>
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a><em class='sharp'>#endif</em>
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a>
+<a id='L131' name='L131'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/245.html#L70' title='Defined at 70 in lib/getopt1.c.'>getopt_long</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> *<strong class='reserved'>const</strong> *argv, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *shortopts,
+<a id='L132' name='L132'></a>                        <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a> *longopts, <strong class='reserved'>int</strong> *longind);
+<a id='L133' name='L133'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/245.html#L86' title='Defined at 86 in lib/getopt1.c.'>getopt_long_only</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> *<strong class='reserved'>const</strong> *argv,
+<a id='L134' name='L134'></a>                             <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *shortopts,
+<a id='L135' name='L135'></a>                             <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a> *longopts, <strong class='reserved'>int</strong> *longind);
+<a id='L136' name='L136'></a>
+<a id='L137' name='L137'></a><em class='comment'>/* Internal only.  Users should not call this directly.  */</em>
+<a id='L138' name='L138'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/238.html#L517' title='Defined at 517 in lib/getopt.c.'>_getopt_internal</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> *<strong class='reserved'>const</strong> *argv,
+<a id='L139' name='L139'></a>                             <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *shortopts,
+<a id='L140' name='L140'></a>                             <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a> *longopts, <strong class='reserved'>int</strong> *longind,
+<a id='L141' name='L141'></a>                             <strong class='reserved'>int</strong> long_only);
+<a id='L142' name='L142'></a><em class='sharp'>#else</em> <em class='comment'>/* not __STDC__ */</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a><em class='sharp'>#ifdef</em> REALLY_NEED_PLAIN_GETOPT
+<a id='L145' name='L145'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/238.html#L975' title='Defined at 975 in lib/getopt.c.'>getopt</a> ();
+<a id='L146' name='L146'></a><em class='sharp'>#endif</em> <em class='comment'>/* REALLY_NEED_PLAIN_GETOPT */</em>
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/245.html#L70' title='Defined at 70 in lib/getopt1.c.'>getopt_long</a> ();
+<a id='L149' name='L149'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/245.html#L86' title='Defined at 86 in lib/getopt1.c.'>getopt_long_only</a> ();
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/238.html#L517' title='Defined at 517 in lib/getopt.c.'>_getopt_internal</a> ();
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a><em class='sharp'>#endif</em> <em class='comment'>/* __STDC__ */</em>
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a><em class='sharp'>#ifdef</em>  __cplusplus
+<a id='L156' name='L156'></a><em class='brace'>}</em>
+<a id='L157' name='L157'></a><em class='sharp'>#endif</em>
+<a id='L158' name='L158'></a>
+<a id='L159' name='L159'></a><em class='sharp'>#endif</em> <em class='comment'>/* getopt.h */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

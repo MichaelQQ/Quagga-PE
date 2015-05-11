@@ -1,0 +1,363 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>babeld/kernel.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1012.html'>babeld</a>/kernel.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L80'>[^]</a><a href='#L313'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L80' title='Defined at 80.'>kernel_interface_operational</a></li>
+<li><a href='#L86' title='Defined at 86.'>kernel_interface_mtu</a></li>
+<li><a href='#L92' title='Defined at 92.'>kernel_interface_wireless</a></li>
+<li><a href='#L98' title='Defined at 98.'>kernel_route</a></li>
+<li><a href='#L172' title='Defined at 172.'>kernel_route_v4</a></li>
+<li><a href='#L225' title='Defined at 225.'>kernel_route_v6</a></li>
+<li><a href='#L274' title='Defined at 274.'>if_eui64</a></li>
+<li><a href='#L304' title='Defined at 304.'>gettime</a></li>
+<li><a href='#L313' title='Defined at 313.'>read_random_bytes</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*  </em>
+<a id='L2' name='L2'></a><em class='comment'> *  This file is free software: you may copy, redistribute and/or modify it  </em>
+<a id='L3' name='L3'></a><em class='comment'> *  under the terms of the GNU General Public License as published by the  </em>
+<a id='L4' name='L4'></a><em class='comment'> *  Free Software Foundation, either version 2 of the License, or (at your  </em>
+<a id='L5' name='L5'></a><em class='comment'> *  option) any later version.  </em>
+<a id='L6' name='L6'></a><em class='comment'> *  </em>
+<a id='L7' name='L7'></a><em class='comment'> *  This file is distributed in the hope that it will be useful, but  </em>
+<a id='L8' name='L8'></a><em class='comment'> *  WITHOUT ANY WARRANTY; without even the implied warranty of  </em>
+<a id='L9' name='L9'></a><em class='comment'> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  </em>
+<a id='L10' name='L10'></a><em class='comment'> *  General Public License for more details.  </em>
+<a id='L11' name='L11'></a><em class='comment'> *  </em>
+<a id='L12' name='L12'></a><em class='comment'> *  You should have received a copy of the GNU General Public License  </em>
+<a id='L13' name='L13'></a><em class='comment'> *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.  </em>
+<a id='L14' name='L14'></a><em class='comment'> *  </em>
+<a id='L15' name='L15'></a><em class='comment'> * This file incorporates work covered by the following copyright and  </em>
+<a id='L16' name='L16'></a><em class='comment'> * permission notice:  </em>
+<a id='L17' name='L17'></a><em class='comment'> *  </em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'>Copyright 2007, 2008 by Grégoire Henry, Julien Cristau and Juliusz Chroboczek</em>
+<a id='L20' name='L20'></a><em class='comment'>Copyright 2011, 2012 by Matthieu Boutier and Juliusz Chroboczek</em>
+<a id='L21' name='L21'></a><em class='comment'></em>
+<a id='L22' name='L22'></a><em class='comment'>Permission is hereby granted, free of charge, to any person obtaining a copy</em>
+<a id='L23' name='L23'></a><em class='comment'>of this software and associated documentation files (the "Software"), to deal</em>
+<a id='L24' name='L24'></a><em class='comment'>in the Software without restriction, including without limitation the rights</em>
+<a id='L25' name='L25'></a><em class='comment'>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</em>
+<a id='L26' name='L26'></a><em class='comment'>copies of the Software, and to permit persons to whom the Software is</em>
+<a id='L27' name='L27'></a><em class='comment'>furnished to do so, subject to the following conditions:</em>
+<a id='L28' name='L28'></a><em class='comment'></em>
+<a id='L29' name='L29'></a><em class='comment'>The above copyright notice and this permission notice shall be included in</em>
+<a id='L30' name='L30'></a><em class='comment'>all copies or substantial portions of the Software.</em>
+<a id='L31' name='L31'></a><em class='comment'></em>
+<a id='L32' name='L32'></a><em class='comment'>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</em>
+<a id='L33' name='L33'></a><em class='comment'>IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</em>
+<a id='L34' name='L34'></a><em class='comment'>FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE</em>
+<a id='L35' name='L35'></a><em class='comment'>AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</em>
+<a id='L36' name='L36'></a><em class='comment'>LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</em>
+<a id='L37' name='L37'></a><em class='comment'>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</em>
+<a id='L38' name='L38'></a><em class='comment'>THE SOFTWARE.</em>
+<a id='L39' name='L39'></a><em class='comment'>*/</em>
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> &lt;sys/time.h&gt;
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> &lt;sys/param.h&gt;
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> &lt;time.h&gt;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='165.html'>babeld.h</a>"
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L50' name='L50'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L51' name='L51'></a><em class='sharp'>#include</em> &lt;netdb.h&gt;
+<a id='L52' name='L52'></a><em class='sharp'>#include</em> &lt;arpa/inet.h&gt;
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L55' name='L55'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L56' name='L56'></a><em class='sharp'>#include</em> "<a href='210.html'>zclient.h</a>"
+<a id='L57' name='L57'></a><em class='sharp'>#include</em> "<a href='169.html'>kernel.h</a>"
+<a id='L58' name='L58'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L59' name='L59'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L60' name='L60'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L61' name='L61'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L62' name='L62'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='sharp'>#include</em> "<a href='168.html'>util.h</a>"
+<a id='L65' name='L65'></a><em class='sharp'>#include</em> "<a href='159.html'>babel_interface.h</a>"
+<a id='L66' name='L66'></a><em class='sharp'>#include</em> "<a href='145.html'>babel_zebra.h</a>"
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L70' name='L70'></a><a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(<strong class='reserved'>int</strong> add, <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *pref, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L71' name='L71'></a>                <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *gate, <strong class='reserved'>int</strong> ifindex,
+<a id='L72' name='L72'></a>                <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L73' name='L73'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L74' name='L74'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L75' name='L75'></a><a href='../S/174.html#L225' title='Defined at 225 in babeld/kernel.c.'>kernel_route_v6</a>(<strong class='reserved'>int</strong> add, <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *pref, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L76' name='L76'></a>                <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *gate, <strong class='reserved'>int</strong> ifindex,
+<a id='L77' name='L77'></a>                <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L78' name='L78'></a><em class='sharp'>#endif</em>
+<a id='L79' name='L79'></a><strong class='reserved'>int</strong>
+<a id='L80' name='L80'></a><a href='../S/169.html#L60' title='Referred from 60 in babeld/kernel.h.'>kernel_interface_operational</a>(<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>)
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a>    <strong class='reserved'>return</strong> <a href='../S/240.html#L344' title='Defined at 344 in lib/if.c.'>if_is_operative</a>(<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>);
+<a id='L83' name='L83'></a><em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a><strong class='reserved'>int</strong>
+<a id='L86' name='L86'></a><a href='../S/169.html#L61' title='Referred from 61 in babeld/kernel.h.'>kernel_interface_mtu</a>(<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>)
+<a id='L87' name='L87'></a><em class='brace'>{</em>
+<a id='L88' name='L88'></a>    <strong class='reserved'>return</strong> <a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>(<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;mtu, <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>-&gt;mtu6);
+<a id='L89' name='L89'></a><em class='brace'>}</em>
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><strong class='reserved'>int</strong>
+<a id='L92' name='L92'></a><a href='../S/169.html#L62' title='Referred from 62 in babeld/kernel.h.'>kernel_interface_wireless</a>(<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *<a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>)
+<a id='L93' name='L93'></a><em class='brace'>{</em>
+<a id='L94' name='L94'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L95' name='L95'></a><em class='brace'>}</em>
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a><strong class='reserved'>int</strong>
+<a id='L98' name='L98'></a><a href='../R/6300.html' title='Multiple referred from 5 places.'>kernel_route</a>(<strong class='reserved'>int</strong> operation, <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *pref, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L99' name='L99'></a>             <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *gate, <strong class='reserved'>int</strong> ifindex, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>,
+<a id='L100' name='L100'></a>             <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *newgate, <strong class='reserved'>int</strong> newifindex,
+<a id='L101' name='L101'></a>             <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> newmetric)
+<a id='L102' name='L102'></a><em class='brace'>{</em>
+<a id='L103' name='L103'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L104' name='L104'></a>    <strong class='reserved'>int</strong> ipv4;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>    <em class='comment'>/* Check that the protocol family is consistent. */</em>
+<a id='L107' name='L107'></a>    <strong class='reserved'>if</strong>(plen &gt;= 96 &amp;&amp; <a href='../S/151.html#L386' title='Defined at 386 in babeld/util.c.'>v4mapped</a>(pref)) <em class='brace'>{</em>
+<a id='L108' name='L108'></a>        <strong class='reserved'>if</strong>(!<a href='../S/151.html#L386' title='Defined at 386 in babeld/util.c.'>v4mapped</a>(gate)) <em class='brace'>{</em>
+<a id='L109' name='L109'></a>            errno = EINVAL;
+<a id='L110' name='L110'></a>            <strong class='reserved'>return</strong> -1;
+<a id='L111' name='L111'></a>        <em class='brace'>}</em>
+<a id='L112' name='L112'></a>        ipv4 = 1;
+<a id='L113' name='L113'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L114' name='L114'></a>        <strong class='reserved'>if</strong>(<a href='../S/151.html#L386' title='Defined at 386 in babeld/util.c.'>v4mapped</a>(gate)) <em class='brace'>{</em>
+<a id='L115' name='L115'></a>            errno = EINVAL;
+<a id='L116' name='L116'></a>            <strong class='reserved'>return</strong> -1;
+<a id='L117' name='L117'></a>        <em class='brace'>}</em>
+<a id='L118' name='L118'></a>        ipv4 = 0;
+<a id='L119' name='L119'></a>    <em class='brace'>}</em>
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>    <strong class='reserved'>switch</strong> (operation) <em class='brace'>{</em>
+<a id='L122' name='L122'></a>        <strong class='reserved'>case</strong> <a href='../S/169.html#L55' title='Defined at 55 in babeld/kernel.h.'>ROUTE_ADD</a>:
+<a id='L123' name='L123'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L124' name='L124'></a>            <strong class='reserved'>return</strong> ipv4 ?
+<a id='L125' name='L125'></a>                   <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(1, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>):
+<a id='L126' name='L126'></a>                   <a href='../S/174.html#L225' title='Defined at 225 in babeld/kernel.c.'>kernel_route_v6</a>(1, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L127' name='L127'></a><em class='sharp'>#else</em>
+<a id='L128' name='L128'></a>            <strong class='reserved'>return</strong> <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(1, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L129' name='L129'></a><em class='sharp'>#endif</em>
+<a id='L130' name='L130'></a>            <strong class='reserved'>break</strong>;
+<a id='L131' name='L131'></a>        <strong class='reserved'>case</strong> <a href='../S/169.html#L54' title='Defined at 54 in babeld/kernel.h.'>ROUTE_FLUSH</a>:
+<a id='L132' name='L132'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L133' name='L133'></a>            <strong class='reserved'>return</strong> ipv4 ?
+<a id='L134' name='L134'></a>                   <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(0, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>):
+<a id='L135' name='L135'></a>                   <a href='../S/174.html#L225' title='Defined at 225 in babeld/kernel.c.'>kernel_route_v6</a>(0, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L136' name='L136'></a><em class='sharp'>#else</em>
+<a id='L137' name='L137'></a>            <strong class='reserved'>return</strong> <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(0, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L138' name='L138'></a><em class='sharp'>#endif</em>
+<a id='L139' name='L139'></a>            <strong class='reserved'>break</strong>;
+<a id='L140' name='L140'></a>        <strong class='reserved'>case</strong> <a href='../S/169.html#L56' title='Defined at 56 in babeld/kernel.h.'>ROUTE_MODIFY</a>:
+<a id='L141' name='L141'></a>            <strong class='reserved'>if</strong>(newmetric == <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &amp;&amp; <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(newgate, gate, 16) == 0 &amp;&amp;
+<a id='L142' name='L142'></a>               newifindex == ifindex)
+<a id='L143' name='L143'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L144' name='L144'></a>            <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L147' title='Defined at 147 in babeld/util.h.'>BABEL_DEBUG_ROUTE</a>, "Modify route: delete old; add new.");
+<a id='L145' name='L145'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L146' name='L146'></a>            rc = ipv4 ?
+<a id='L147' name='L147'></a>                <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(0, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>):
+<a id='L148' name='L148'></a>                <a href='../S/174.html#L225' title='Defined at 225 in babeld/kernel.c.'>kernel_route_v6</a>(0, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L149' name='L149'></a><em class='sharp'>#else</em>
+<a id='L150' name='L150'></a>            rc = <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(0, pref, plen, gate, ifindex, <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L151' name='L151'></a><em class='sharp'>#endif</em>
+<a id='L152' name='L152'></a>            <strong class='reserved'>if</strong> (rc &lt; 0)
+<a id='L153' name='L153'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L154' name='L154'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L155' name='L155'></a>            rc = ipv4 ?
+<a id='L156' name='L156'></a>                <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(1, pref, plen, newgate, newifindex, newmetric):
+<a id='L157' name='L157'></a>                <a href='../S/174.html#L225' title='Defined at 225 in babeld/kernel.c.'>kernel_route_v6</a>(1, pref, plen, newgate, newifindex, newmetric);
+<a id='L158' name='L158'></a><em class='sharp'>#else</em>
+<a id='L159' name='L159'></a>            rc = <a href='../S/174.html#L172' title='Defined at 172 in babeld/kernel.c.'>kernel_route_v4</a>(1, pref, plen, newgate, newifindex, newmetric);
+<a id='L160' name='L160'></a><em class='sharp'>#endif</em>
+<a id='L161' name='L161'></a>            <strong class='reserved'>return</strong> rc;
+<a id='L162' name='L162'></a>            <strong class='reserved'>break</strong>;
+<a id='L163' name='L163'></a>        <strong class='reserved'>default</strong>:
+<a id='L164' name='L164'></a>            zlog_err("this should never appens (false value - kernel_route)");
+<a id='L165' name='L165'></a>            <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(0);
+<a id='L166' name='L166'></a>            exit(1);
+<a id='L167' name='L167'></a>            <strong class='reserved'>break</strong>;
+<a id='L168' name='L168'></a>    <em class='brace'>}</em>
+<a id='L169' name='L169'></a><em class='brace'>}</em>
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L172' name='L172'></a><a href='../R/6301.html' title='Multiple referred from 9 places.'>kernel_route_v4</a>(<strong class='reserved'>int</strong> add,
+<a id='L173' name='L173'></a>                <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *pref, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L174' name='L174'></a>                <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *gate, <strong class='reserved'>int</strong> ifindex, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L175' name='L175'></a><em class='brace'>{</em>
+<a id='L176' name='L176'></a>    <strong class='reserved'>struct</strong> <a href='../S/210.html#L106' title='Defined at 106 in lib/zclient.h.'>zapi_ipv4</a> api;               <em class='comment'>/* quagga's communication system */</em>
+<a id='L177' name='L177'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> quagga_prefix;   <em class='comment'>/* quagga's prefix */</em>
+<a id='L178' name='L178'></a>    <strong class='reserved'>struct</strong> in_addr babel_prefix_addr;   <em class='comment'>/* babeld's prefix addr */</em>
+<a id='L179' name='L179'></a>    <strong class='reserved'>struct</strong> in_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;             <em class='comment'>/* next router to go */</em>
+<a id='L180' name='L180'></a>    <strong class='reserved'>struct</strong> in_addr *nexthop_pointer = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>; <em class='comment'>/* it's an array! */</em>
+<a id='L181' name='L181'></a>
+<a id='L182' name='L182'></a>    <em class='comment'>/* convert to be understandable by quagga */</em>
+<a id='L183' name='L183'></a>    <em class='comment'>/* convert given addresses */</em>
+<a id='L184' name='L184'></a>    <a href='../S/151.html#L407' title='Defined at 407 in babeld/util.c.'>uchar_to_inaddr</a>(&amp;babel_prefix_addr, pref);
+<a id='L185' name='L185'></a>    <a href='../S/151.html#L407' title='Defined at 407 in babeld/util.c.'>uchar_to_inaddr</a>(&amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, gate);
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a>    <em class='comment'>/* make prefix structure */</em>
+<a id='L188' name='L188'></a>    memset (&amp;quagga_prefix, 0, <strong class='reserved'>sizeof</strong>(quagga_prefix));
+<a id='L189' name='L189'></a>    quagga_prefix.family = AF_INET;
+<a id='L190' name='L190'></a>    <a href='../S/249.html#L110' title='Defined at 110 in lib/prefix.h.'>IPV4_ADDR_COPY</a> (&amp;quagga_prefix.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, &amp;babel_prefix_addr);
+<a id='L191' name='L191'></a>    quagga_prefix.prefixlen = plen - 96; <em class='comment'>/* our plen is for v4mapped's addr */</em>
+<a id='L192' name='L192'></a>    <a href='../S/250.html#L484' title='Defined at 484 in lib/prefix.c.'>apply_mask_ipv4</a>(&amp;quagga_prefix);
+<a id='L193' name='L193'></a>
+<a id='L194' name='L194'></a>    api.type  = <a href='../S/280.html#L20' title='Defined at 20 in lib/route_types.h.'>ZEBRA_ROUTE_BABEL</a>;
+<a id='L195' name='L195'></a>    api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = 0;
+<a id='L196' name='L196'></a>    api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L197' name='L197'></a>    api.safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>;
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>    <em class='comment'>/* Unlike the native Linux and BSD interfaces, Quagga doesn't like</em>
+<a id='L200' name='L200'></a><em class='comment'>       there to be both and IPv4 nexthop and an ifindex.  Omit the</em>
+<a id='L201' name='L201'></a><em class='comment'>       ifindex, and assume that the connected prefixes be set up</em>
+<a id='L202' name='L202'></a><em class='comment'>       correctly. */</em>
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a>    <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a>(api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>);
+<a id='L205' name='L205'></a>    api.ifindex_num = 0;
+<a id='L206' name='L206'></a>    <strong class='reserved'>if</strong>(<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &gt;= <a href='../S/169.html#L43' title='Defined at 43 in babeld/kernel.h.'>KERNEL_INFINITY</a>) <em class='brace'>{</em>
+<a id='L207' name='L207'></a>        api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/191.html#L474' title='Defined at 474 in lib/zebra.h.'>ZEBRA_FLAG_BLACKHOLE</a>;
+<a id='L208' name='L208'></a>        api.nexthop_num = 0;
+<a id='L209' name='L209'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L210' name='L210'></a>        api.nexthop_num = 1;
+<a id='L211' name='L211'></a>        api.<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = &amp;nexthop_pointer;
+<a id='L212' name='L212'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a>(api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>);
+<a id='L213' name='L213'></a>        api.<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L214' name='L214'></a>    <em class='brace'>}</em>
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L147' title='Defined at 147 in babeld/util.h.'>BABEL_DEBUG_ROUTE</a>, "%s route (ipv4) to zebra",
+<a id='L217' name='L217'></a>           add ? "adding" : "removing" );
+<a id='L218' name='L218'></a>    <strong class='reserved'>return</strong> <a href='../S/255.html#L462' title='Defined at 462 in lib/zclient.c.'>zapi_ipv4_route</a> (add ? <a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a> :
+<a id='L219' name='L219'></a>                                  <a href='../S/191.html#L412' title='Defined at 412 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_DELETE</a>,
+<a id='L220' name='L220'></a>                            <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, &amp;quagga_prefix, &amp;api);
+<a id='L221' name='L221'></a><em class='brace'>}</em>
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L224' name='L224'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L225' name='L225'></a><a href='../R/6302.html' title='Multiple referred from 5 places.'>kernel_route_v6</a>(<strong class='reserved'>int</strong> add, <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *pref, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> plen,
+<a id='L226' name='L226'></a>                <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *gate, <strong class='reserved'>int</strong> ifindex, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L227' name='L227'></a><em class='brace'>{</em>
+<a id='L228' name='L228'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> tmp_ifindex = ifindex; <em class='comment'>/* (for typing) */</em>
+<a id='L229' name='L229'></a>    <strong class='reserved'>struct</strong> <a href='../S/210.html#L165' title='Defined at 165 in lib/zclient.h.'>zapi_ipv6</a> api;               <em class='comment'>/* quagga's communication system */</em>
+<a id='L230' name='L230'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> quagga_prefix;   <em class='comment'>/* quagga's prefix */</em>
+<a id='L231' name='L231'></a>    <strong class='reserved'>struct</strong> in6_addr babel_prefix_addr;  <em class='comment'>/* babeld's prefix addr */</em>
+<a id='L232' name='L232'></a>    <strong class='reserved'>struct</strong> in6_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;            <em class='comment'>/* next router to go */</em>
+<a id='L233' name='L233'></a>    <strong class='reserved'>struct</strong> in6_addr *nexthop_pointer = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a>    <em class='comment'>/* convert to be understandable by quagga */</em>
+<a id='L236' name='L236'></a>    <em class='comment'>/* convert given addresses */</em>
+<a id='L237' name='L237'></a>    <a href='../S/151.html#L420' title='Defined at 420 in babeld/util.c.'>uchar_to_in6addr</a>(&amp;babel_prefix_addr, pref);
+<a id='L238' name='L238'></a>    <a href='../S/151.html#L420' title='Defined at 420 in babeld/util.c.'>uchar_to_in6addr</a>(&amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, gate);
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a>    <em class='comment'>/* make prefix structure */</em>
+<a id='L241' name='L241'></a>    memset (&amp;quagga_prefix, 0, <strong class='reserved'>sizeof</strong>(quagga_prefix));
+<a id='L242' name='L242'></a>    quagga_prefix.family = AF_INET6;
+<a id='L243' name='L243'></a>    <a href='../S/249.html#L123' title='Defined at 123 in lib/prefix.h.'>IPV6_ADDR_COPY</a> (&amp;quagga_prefix.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, &amp;babel_prefix_addr);
+<a id='L244' name='L244'></a>    quagga_prefix.prefixlen = plen;
+<a id='L245' name='L245'></a>    <a href='../S/250.html#L596' title='Defined at 596 in lib/prefix.c.'>apply_mask_ipv6</a>(&amp;quagga_prefix);
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a>    api.type  = <a href='../S/280.html#L20' title='Defined at 20 in lib/route_types.h.'>ZEBRA_ROUTE_BABEL</a>;
+<a id='L248' name='L248'></a>    api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = 0;
+<a id='L249' name='L249'></a>    api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L250' name='L250'></a>    api.safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>;
+<a id='L251' name='L251'></a>    <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a>(api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>);
+<a id='L252' name='L252'></a>    <strong class='reserved'>if</strong>(<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> &gt;= <a href='../S/169.html#L43' title='Defined at 43 in babeld/kernel.h.'>KERNEL_INFINITY</a>) <em class='brace'>{</em>
+<a id='L253' name='L253'></a>        api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/191.html#L474' title='Defined at 474 in lib/zebra.h.'>ZEBRA_FLAG_BLACKHOLE</a>;
+<a id='L254' name='L254'></a>        api.nexthop_num = 0;
+<a id='L255' name='L255'></a>        api.ifindex_num = 0;
+<a id='L256' name='L256'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L257' name='L257'></a>        api.nexthop_num = 1;
+<a id='L258' name='L258'></a>        api.<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = &amp;nexthop_pointer;
+<a id='L259' name='L259'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a>(api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L89' title='Defined at 89 in lib/zclient.h.'>ZAPI_MESSAGE_IFINDEX</a>);
+<a id='L260' name='L260'></a>        api.ifindex_num = 1;
+<a id='L261' name='L261'></a>        api.ifindex = &amp;tmp_ifindex;
+<a id='L262' name='L262'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a>(api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>);
+<a id='L263' name='L263'></a>        api.<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = <a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L264' name='L264'></a>    <em class='brace'>}</em>
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L147' title='Defined at 147 in babeld/util.h.'>BABEL_DEBUG_ROUTE</a>, "%s route (ipv6) to zebra",
+<a id='L267' name='L267'></a>           add ? "adding" : "removing" );
+<a id='L268' name='L268'></a>    <strong class='reserved'>return</strong> <a href='../S/255.html#L524' title='Defined at 524 in lib/zclient.c.'>zapi_ipv6_route</a> (add ? <a href='../S/191.html#L413' title='Defined at 413 in lib/zebra.h.'>ZEBRA_IPV6_ROUTE_ADD</a> :
+<a id='L269' name='L269'></a>                                  <a href='../S/191.html#L414' title='Defined at 414 in lib/zebra.h.'>ZEBRA_IPV6_ROUTE_DELETE</a>,
+<a id='L270' name='L270'></a>                            <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, &amp;quagga_prefix, &amp;api);
+<a id='L271' name='L271'></a><em class='brace'>}</em>
+<a id='L272' name='L272'></a><em class='sharp'>#endif</em>
+<a id='L273' name='L273'></a><strong class='reserved'>int</strong>
+<a id='L274' name='L274'></a><a href='../R/5907.html' title='Multiple referred from 3 places.'>if_eui64</a>(<strong class='reserved'>char</strong> *ifname, <strong class='reserved'>int</strong> ifindex, <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *eui)
+<a id='L275' name='L275'></a><em class='brace'>{</em>
+<a id='L276' name='L276'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp = <a href='../S/240.html#L183' title='Defined at 183 in lib/if.c.'>if_lookup_by_index</a>(ifindex);
+<a id='L277' name='L277'></a>    <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L278' name='L278'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L279' name='L279'></a>    <em class='brace'>}</em>
+<a id='L280' name='L280'></a><em class='sharp'>#ifdef</em> HAVE_STRUCT_SOCKADDR_DL
+<a id='L281' name='L281'></a>    u_char len = ifp-&gt;sdl.sdl_alen;
+<a id='L282' name='L282'></a>    <strong class='reserved'>char</strong> *tmp = ifp-&gt;sdl.sdl_data + ifp-&gt;sdl.sdl_nlen;
+<a id='L283' name='L283'></a><em class='sharp'>#else</em>
+<a id='L284' name='L284'></a>    u_char len = (u_char) ifp-&gt;hw_addr_len;
+<a id='L285' name='L285'></a>    <strong class='reserved'>char</strong> *tmp = (<strong class='reserved'>void</strong>*) ifp-&gt;hw_addr;
+<a id='L286' name='L286'></a><em class='sharp'>#endif</em>
+<a id='L287' name='L287'></a>    <strong class='reserved'>if</strong> (len == 8) <em class='brace'>{</em>
+<a id='L288' name='L288'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(eui, tmp, 8);
+<a id='L289' name='L289'></a>        eui[0] ^= 2;
+<a id='L290' name='L290'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (len == 6) <em class='brace'>{</em>
+<a id='L291' name='L291'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(eui,   tmp,   3);
+<a id='L292' name='L292'></a>        eui[3] = 0xFF;
+<a id='L293' name='L293'></a>        eui[4] = 0xFE;
+<a id='L294' name='L294'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(eui+5, tmp+3, 3);
+<a id='L295' name='L295'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L296' name='L296'></a>        <strong class='reserved'>return</strong> -1;
+<a id='L297' name='L297'></a>    <em class='brace'>}</em>
+<a id='L298' name='L298'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L299' name='L299'></a><em class='brace'>}</em>
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a><em class='comment'>/* Like gettimeofday, but returns monotonic time.  If POSIX clocks are not</em>
+<a id='L302' name='L302'></a><em class='comment'>   available, falls back to gettimeofday but enforces monotonicity. */</em>
+<a id='L303' name='L303'></a><strong class='reserved'>int</strong>
+<a id='L304' name='L304'></a><a href='../R/5853.html' title='Multiple referred from 10 places.'>gettime</a>(<strong class='reserved'>struct</strong> timeval *tv)
+<a id='L305' name='L305'></a><em class='brace'>{</em>
+<a id='L306' name='L306'></a>    <strong class='reserved'>return</strong> <a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a>(<a href='../S/279.html#L106' title='Defined at 106 in lib/thread.h.'>QUAGGA_CLK_MONOTONIC</a>, tv);
+<a id='L307' name='L307'></a><em class='brace'>}</em>
+<a id='L308' name='L308'></a>
+<a id='L309' name='L309'></a><em class='comment'>/* If /dev/urandom doesn't exist, this will fail with ENOENT, which the</em>
+<a id='L310' name='L310'></a><em class='comment'>   caller will deal with gracefully. */</em>
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a><strong class='reserved'>int</strong>
+<a id='L313' name='L313'></a><a href='../R/8954.html' title='Multiple referred from 3 places.'>read_random_bytes</a>(<strong class='reserved'>void</strong> *buf, size_t len)
+<a id='L314' name='L314'></a><em class='brace'>{</em>
+<a id='L315' name='L315'></a>    <strong class='reserved'>int</strong> fd;
+<a id='L316' name='L316'></a>    <strong class='reserved'>int</strong> rc;
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a>    fd = open("/dev/urandom", O_RDONLY);
+<a id='L319' name='L319'></a>    <strong class='reserved'>if</strong>(fd &lt; 0) <em class='brace'>{</em>
+<a id='L320' name='L320'></a>        rc = -1;
+<a id='L321' name='L321'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L322' name='L322'></a>        rc = read(fd, buf, len);
+<a id='L323' name='L323'></a>        <strong class='reserved'>if</strong>(rc &lt; 0 || (<strong class='reserved'>unsigned</strong>) rc &lt; len)
+<a id='L324' name='L324'></a>            rc = -1;
+<a id='L325' name='L325'></a>        close(fd);
+<a id='L326' name='L326'></a>    <em class='brace'>}</em>
+<a id='L327' name='L327'></a>    <strong class='reserved'>return</strong> rc;
+<a id='L328' name='L328'></a><em class='brace'>}</em>
+<a id='L329' name='L329'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L80'>[^]</a><a href='#L313'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

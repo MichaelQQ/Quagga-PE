@@ -1,0 +1,1287 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgp</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/643.html#L590'>bgp</a>               590 bgpd/bgp_attr.c bgp_attr_aggregate_intern (struct bgp *bgp, u_char origin,</span>
+<span class='curline'><a href='../S/643.html#L629'>bgp</a>               629 bgpd/bgp_attr.c   if (CHECK_FLAG (bgp-&gt;config, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/643.html#L630'>bgp</a>               630 bgpd/bgp_attr.c     attre.aggregator_as = bgp-&gt;confed_id;</span>
+<span class='curline'><a href='../S/643.html#L632'>bgp</a>               632 bgpd/bgp_attr.c     attre.aggregator_as = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/643.html#L633'>bgp</a>               633 bgpd/bgp_attr.c   attre.aggregator_addr = bgp-&gt;router_id;</span>
+<span class='curline'><a href='../S/643.html#L1011'>bgp</a>              1011 bgpd/bgp_attr.c   struct bgp *bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/643.html#L1025'>bgp</a>              1025 bgpd/bgp_attr.c   if (bgp != NULL &amp;&amp; bgp_flag_check (bgp, BGP_FLAG_ENFORCE_FIRST_AS))</span>
+<span class='curline'><a href='../S/643.html#L2061'>bgp</a>              2061 bgpd/bgp_attr.c bgp_packet_attribute (struct bgp *bgp, struct peer *peer,</span>
+<span class='curline'><a href='../S/643.html#L2073'>bgp</a>              2073 bgpd/bgp_attr.c   if (! bgp)</span>
+<span class='curline'><a href='../S/643.html#L2074'>bgp</a>              2074 bgpd/bgp_attr.c     bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/643.html#L2095'>bgp</a>              2095 bgpd/bgp_attr.c       if (CHECK_FLAG(bgp-&gt;config, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/643.html#L2100'>bgp</a>              2100 bgpd/bgp_attr.c 	  aspath = aspath_add_seq (aspath, bgp-&gt;confed_id);</span>
+<span class='curline'><a href='../S/643.html#L2269'>bgp</a>              2269 bgpd/bgp_attr.c 	  if (bgp-&gt;config &amp; BGP_CONFIG_CLUSTER_ID)</span>
+<span class='curline'><a href='../S/643.html#L2270'>bgp</a>              2270 bgpd/bgp_attr.c 	    stream_put_in_addr (s, &amp;bgp-&gt;cluster_id);</span>
+<span class='curline'><a href='../S/643.html#L2272'>bgp</a>              2272 bgpd/bgp_attr.c 	    stream_put_in_addr (s, &amp;bgp-&gt;router_id);</span>
+<span class='curline'><a href='../S/643.html#L2280'>bgp</a>              2280 bgpd/bgp_attr.c 	  if (bgp-&gt;config &amp; BGP_CONFIG_CLUSTER_ID)</span>
+<span class='curline'><a href='../S/643.html#L2281'>bgp</a>              2281 bgpd/bgp_attr.c 	    stream_put_in_addr (s, &amp;bgp-&gt;cluster_id);</span>
+<span class='curline'><a href='../S/643.html#L2283'>bgp</a>              2283 bgpd/bgp_attr.c 	    stream_put_in_addr (s, &amp;bgp-&gt;router_id);</span>
+<span class='curline'><a href='../S/642.html#L157'>bgp</a>               157 bgpd/bgp_attr.h extern struct attr *bgp_attr_aggregate_intern (struct bgp *, u_char,</span>
+<span class='curline'><a href='../S/642.html#L160'>bgp</a>               160 bgpd/bgp_attr.h extern bgp_size_t bgp_packet_attribute (struct bgp *bgp, struct peer *, </span>
+<span class='curline'><a href='../S/607.html#L134'>bgp</a>               134 bgpd/bgp_damp.c       struct bgp *bgp = bdi-&gt;binfo-&gt;peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/607.html#L157'>bgp</a>               157 bgpd/bgp_damp.c 	      bgp_aggregate_increment (bgp, &amp;bdi-&gt;rn-&gt;p, bdi-&gt;binfo,</span>
+<span class='curline'><a href='../S/607.html#L159'>bgp</a>               159 bgpd/bgp_damp.c 	      bgp_process (bgp, bdi-&gt;rn, bdi-&gt;afi, bdi-&gt;safi);</span>
+<span class='curline'><a href='../S/607.html#L431'>bgp</a>               431 bgpd/bgp_damp.c bgp_damp_enable (struct bgp *bgp, afi_t afi, safi_t safi, time_t half,</span>
+<span class='curline'><a href='../S/607.html#L434'>bgp</a>               434 bgpd/bgp_damp.c   if (CHECK_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING))</span>
+<span class='curline'><a href='../S/607.html#L441'>bgp</a>               441 bgpd/bgp_damp.c       bgp_damp_disable (bgp, afi, safi);</span>
+<span class='curline'><a href='../S/607.html#L444'>bgp</a>               444 bgpd/bgp_damp.c   SET_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING);</span>
+<span class='curline'><a href='../S/607.html#L499'>bgp</a>               499 bgpd/bgp_damp.c bgp_damp_disable (struct bgp *bgp, afi_t afi, safi_t safi)</span>
+<span class='curline'><a href='../S/607.html#L502'>bgp</a>               502 bgpd/bgp_damp.c   if (! CHECK_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING))</span>
+<span class='curline'><a href='../S/607.html#L516'>bgp</a>               516 bgpd/bgp_damp.c   UNSET_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING);</span>
+<span class='curline'><a href='../S/651.html#L132'>bgp</a>               132 bgpd/bgp_damp.h extern int bgp_damp_enable (struct bgp *, afi_t, safi_t, time_t, unsigned int, </span>
+<span class='curline'><a href='../S/651.html#L134'>bgp</a>               134 bgpd/bgp_damp.h extern int bgp_damp_disable (struct bgp *, afi_t, safi_t);</span>
+<span class='curline'><a href='../S/613.html#L280'>bgp</a>               280 bgpd/bgp_debug.c   if (bgp_flag_check (peer-&gt;bgp, BGP_FLAG_LOG_NEIGHBOR_CHANGES))</span>
+<span class='curline'><a href='../S/626.html#L196'>bgp</a>               196 bgpd/bgp_dump.c bgp_dump_routes_index_table(struct bgp *bgp)</span>
+<span class='curline'><a href='../S/626.html#L210'>bgp</a>               210 bgpd/bgp_dump.c   stream_put_in_addr (obuf, &amp;bgp-&gt;router_id);</span>
+<span class='curline'><a href='../S/626.html#L213'>bgp</a>               213 bgpd/bgp_dump.c   if(bgp-&gt;name)</span>
+<span class='curline'><a href='../S/626.html#L215'>bgp</a>               215 bgpd/bgp_dump.c       stream_putw (obuf, strlen(bgp-&gt;name));</span>
+<span class='curline'><a href='../S/626.html#L216'>bgp</a>               216 bgpd/bgp_dump.c       stream_put(obuf, bgp-&gt;name, strlen(bgp-&gt;name));</span>
+<span class='curline'><a href='../S/626.html#L224'>bgp</a>               224 bgpd/bgp_dump.c   stream_putw (obuf, listcount(bgp-&gt;peer));</span>
+<span class='curline'><a href='../S/626.html#L227'>bgp</a>               227 bgpd/bgp_dump.c   for(ALL_LIST_ELEMENTS_RO (bgp-&gt;peer, node, peer))</span>
+<span class='curline'><a href='../S/626.html#L281'>bgp</a>               281 bgpd/bgp_dump.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/626.html#L284'>bgp</a>               284 bgpd/bgp_dump.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/626.html#L285'>bgp</a>               285 bgpd/bgp_dump.c   if (!bgp)</span>
+<span class='curline'><a href='../S/626.html#L295'>bgp</a>               295 bgpd/bgp_dump.c     bgp_dump_routes_index_table(bgp);</span>
+<span class='curline'><a href='../S/626.html#L301'>bgp</a>               301 bgpd/bgp_dump.c   table = bgp-&gt;rib[afi][SAFI_UNICAST];</span>
+<span class='curline'><a href='../S/655.html#L454'>bgp</a>               454 bgpd/bgp_fsm.c       if (bgp_flag_check (peer-&gt;bgp, BGP_FLAG_LOG_NEIGHBOR_CHANGES))</span>
+<span class='curline'><a href='../S/655.html#L472'>bgp</a>               472 bgpd/bgp_fsm.c 			  peer-&gt;host, peer-&gt;bgp-&gt;stalepath_time);</span>
+<span class='curline'><a href='../S/655.html#L477'>bgp</a>               477 bgpd/bgp_fsm.c 			peer-&gt;bgp-&gt;stalepath_time);</span>
+<span class='curline'><a href='../S/655.html#L559'>bgp</a>               559 bgpd/bgp_fsm.c       peer-&gt;v_keepalive = peer-&gt;bgp-&gt;default_keepalive;</span>
+<span class='curline'><a href='../S/655.html#L560'>bgp</a>               560 bgpd/bgp_fsm.c       peer-&gt;v_holdtime = peer-&gt;bgp-&gt;default_holdtime;</span>
+<span class='curline'><a href='../S/655.html#L796'>bgp</a>               796 bgpd/bgp_fsm.c   if (bgp_flag_check (peer-&gt;bgp, BGP_FLAG_LOG_NEIGHBOR_CHANGES))</span>
+<span class='curline'><a href='../S/618.html#L225'>bgp</a>               225 bgpd/bgp_main.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/618.html#L236'>bgp</a>               236 bgpd/bgp_main.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/618.html#L237'>bgp</a>               237 bgpd/bgp_main.c     bgp_delete (bgp);</span>
+<span class='curline'><a href='../S/618.html#L238'>bgp</a>               238 bgpd/bgp_main.c   list_free (bm-&gt;bgp);</span>
+<span class='curline'><a href='../S/650.html#L48'>bgp</a>                48 bgpd/bgp_mpath.c bgp_maximum_paths_set (struct bgp *bgp, afi_t afi, safi_t safi,</span>
+<span class='curline'><a href='../S/650.html#L51'>bgp</a>                51 bgpd/bgp_mpath.c   if (!bgp || (afi &gt;= AFI_MAX) || (safi &gt;= SAFI_MAX))</span>
+<span class='curline'><a href='../S/650.html#L57'>bgp</a>                57 bgpd/bgp_mpath.c       bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp = maxpaths;</span>
+<span class='curline'><a href='../S/650.html#L60'>bgp</a>                60 bgpd/bgp_mpath.c       bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp = maxpaths;</span>
+<span class='curline'><a href='../S/650.html#L75'>bgp</a>                75 bgpd/bgp_mpath.c bgp_maximum_paths_unset (struct bgp *bgp, afi_t afi, safi_t safi,</span>
+<span class='curline'><a href='../S/650.html#L78'>bgp</a>                78 bgpd/bgp_mpath.c   if (!bgp || (afi &gt;= AFI_MAX) || (safi &gt;= SAFI_MAX))</span>
+<span class='curline'><a href='../S/650.html#L84'>bgp</a>                84 bgpd/bgp_mpath.c       bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp = BGP_DEFAULT_MAXPATHS;</span>
+<span class='curline'><a href='../S/650.html#L87'>bgp</a>                87 bgpd/bgp_mpath.c       bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp = BGP_DEFAULT_MAXPATHS;</span>
+<span class='curline'><a href='../S/631.html#L52'>bgp</a>                52 bgpd/bgp_mpath.h extern int bgp_maximum_paths_set (struct bgp *, afi_t, safi_t, int, u_int16_t);</span>
+<span class='curline'><a href='../S/631.html#L53'>bgp</a>                53 bgpd/bgp_mpath.h extern int bgp_maximum_paths_unset (struct bgp *, afi_t, safi_t, int);</span>
+<span class='curline'><a href='../S/641.html#L317'>bgp</a>               317 bgpd/bgp_mplsvpn.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/641.html#L326'>bgp</a>               326 bgpd/bgp_mplsvpn.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/641.html#L327'>bgp</a>               327 bgpd/bgp_mplsvpn.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/641.html#L333'>bgp</a>               333 bgpd/bgp_mplsvpn.c   for (rn = bgp_table_top (bgp-&gt;rib[AFI_IP][SAFI_MPLS_VPN]); rn;</span>
+<span class='curline'><a href='../S/641.html#L349'>bgp</a>               349 bgpd/bgp_mplsvpn.c                              inet_ntoa (bgp-&gt;router_id), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/641.html#L412'>bgp</a>               412 bgpd/bgp_mplsvpn.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/641.html#L422'>bgp</a>               422 bgpd/bgp_mplsvpn.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/641.html#L423'>bgp</a>               423 bgpd/bgp_mplsvpn.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/641.html#L429'>bgp</a>               429 bgpd/bgp_mplsvpn.c   for (rn = bgp_table_top (bgp-&gt;rib[AFI_IP][SAFI_MPLS_VPN]); rn; rn = bgp_route_next (rn))</span>
+<span class='curline'><a href='../S/641.html#L455'>bgp</a>               455 bgpd/bgp_mplsvpn.c 				 inet_ntoa (bgp-&gt;router_id), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/652.html#L190'>bgp</a>               190 bgpd/bgp_network.c     peer = peer_create_accept (peer1-&gt;bgp);</span>
+<span class='curline'><a href='../S/644.html#L414'>bgp</a>               414 bgpd/bgp_nexthop.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/644.html#L431'>bgp</a>               431 bgpd/bgp_nexthop.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/644.html#L432'>bgp</a>               432 bgpd/bgp_nexthop.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/644.html#L436'>bgp</a>               436 bgpd/bgp_nexthop.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/644.html#L449'>bgp</a>               449 bgpd/bgp_nexthop.c   for (rn = bgp_table_top (bgp-&gt;rib[afi][SAFI_UNICAST]); rn;</span>
+<span class='curline'><a href='../S/644.html#L478'>bgp</a>               478 bgpd/bgp_nexthop.c 		      bgp_aggregate_decrement (bgp, &amp;rn-&gt;p, bi,</span>
+<span class='curline'><a href='../S/644.html#L485'>bgp</a>               485 bgpd/bgp_nexthop.c 		      bgp_aggregate_increment (bgp, &amp;rn-&gt;p, bi,</span>
+<span class='curline'><a href='../S/644.html#L490'>bgp</a>               490 bgpd/bgp_nexthop.c               if (CHECK_FLAG (bgp-&gt;af_flags[afi][SAFI_UNICAST],</span>
+<span class='curline'><a href='../S/644.html#L494'>bgp</a>               494 bgpd/bgp_nexthop.c 		  bgp_aggregate_increment (bgp, &amp;rn-&gt;p, bi,</span>
+<span class='curline'><a href='../S/644.html#L498'>bgp</a>               498 bgpd/bgp_nexthop.c       bgp_process (bgp, rn, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/644.html#L517'>bgp</a>               517 bgpd/bgp_nexthop.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/644.html#L1117'>bgp</a>              1117 bgpd/bgp_nexthop.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/644.html#L1133'>bgp</a>              1133 bgpd/bgp_nexthop.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/644.html#L1137'>bgp</a>              1137 bgpd/bgp_nexthop.c 	  for (rn = bgp_table_top (bgp-&gt;route[afi][safi]); rn;</span>
+<span class='curline'><a href='../S/644.html#L1148'>bgp</a>              1148 bgpd/bgp_nexthop.c 		if (bgp_flag_check (bgp, BGP_FLAG_IMPORT_CHECK)</span>
+<span class='curline'><a href='../S/644.html#L1162'>bgp</a>              1162 bgpd/bgp_nexthop.c 		      bgp_static_update (bgp, &amp;rn-&gt;p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/644.html#L1164'>bgp</a>              1164 bgpd/bgp_nexthop.c 		      bgp_static_withdraw (bgp, &amp;rn-&gt;p, afi, safi);</span>
+<span class='curline'><a href='../S/644.html#L1171'>bgp</a>              1171 bgpd/bgp_nexthop.c 		      bgp_static_update (bgp, &amp;rn-&gt;p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/625.html#L1024'>bgp</a>              1024 bgpd/bgp_open.c   if (bgp_flag_check (peer-&gt;bgp, BGP_FLAG_GRACEFUL_RESTART))</span>
+<span class='curline'><a href='../S/625.html#L1031'>bgp</a>              1031 bgpd/bgp_open.c       stream_putw (s, peer-&gt;bgp-&gt;restart_time);</span>
+<span class='curline'><a href='../S/622.html#L804'>bgp</a>               804 bgpd/bgp_packet.c     send_holdtime = peer-&gt;bgp-&gt;default_holdtime;</span>
+<span class='curline'><a href='../S/622.html#L1105'>bgp</a>              1105 bgpd/bgp_packet.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/622.html#L1107'>bgp</a>              1107 bgpd/bgp_packet.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/622.html#L1108'>bgp</a>              1108 bgpd/bgp_packet.c   if (! bgp)</span>
+<span class='curline'><a href='../S/622.html#L1120'>bgp</a>              1120 bgpd/bgp_packet.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/622.html#L1472'>bgp</a>              1472 bgpd/bgp_packet.c     send_holdtime = peer-&gt;bgp-&gt;default_holdtime;</span>
+<span class='curline'><a href='../S/622.html#L2175'>bgp</a>              2175 bgpd/bgp_packet.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/622.html#L2179'>bgp</a>              2179 bgpd/bgp_packet.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L246'>bgp</a>               246 bgpd/bgp_route.c   assert (ri &amp;&amp; ri-&gt;peer &amp;&amp; ri-&gt;peer-&gt;bgp);</span>
+<span class='curline'><a href='../S/620.html#L252'>bgp</a>               252 bgpd/bgp_route.c       || ri-&gt;peer == ri-&gt;peer-&gt;bgp-&gt;peer_self)</span>
+<span class='curline'><a href='../S/620.html#L311'>bgp</a>               311 bgpd/bgp_route.c bgp_med_value (struct attr *attr, struct bgp *bgp)</span>
+<span class='curline'><a href='../S/620.html#L317'>bgp</a>               317 bgpd/bgp_route.c       if (bgp_flag_check (bgp, BGP_FLAG_MED_MISSING_AS_WORST))</span>
+<span class='curline'><a href='../S/620.html#L326'>bgp</a>               326 bgpd/bgp_route.c bgp_info_cmp (struct bgp *bgp, struct bgp_info *new, struct bgp_info *exist,</span>
+<span class='curline'><a href='../S/620.html#L375'>bgp</a>               375 bgpd/bgp_route.c   new_pref = exist_pref = bgp-&gt;default_local_pref;</span>
+<span class='curline'><a href='../S/620.html#L398'>bgp</a>               398 bgpd/bgp_route.c   if (! bgp_flag_check (bgp, BGP_FLAG_ASPATH_IGNORE))</span>
+<span class='curline'><a href='../S/620.html#L403'>bgp</a>               403 bgpd/bgp_route.c       if (bgp_flag_check (bgp, BGP_FLAG_ASPATH_CONFED))</span>
+<span class='curline'><a href='../S/620.html#L440'>bgp</a>               440 bgpd/bgp_route.c   if (bgp_flag_check (bgp, BGP_FLAG_ALWAYS_COMPARE_MED)</span>
+<span class='curline'><a href='../S/620.html#L441'>bgp</a>               441 bgpd/bgp_route.c       || (bgp_flag_check (bgp, BGP_FLAG_MED_CONFED)</span>
+<span class='curline'><a href='../S/620.html#L447'>bgp</a>               447 bgpd/bgp_route.c       new_med = bgp_med_value (new-&gt;attr, bgp);</span>
+<span class='curline'><a href='../S/620.html#L448'>bgp</a>               448 bgpd/bgp_route.c       exist_med = bgp_med_value (exist-&gt;attr, bgp);</span>
+<span class='curline'><a href='../S/620.html#L504'>bgp</a>               504 bgpd/bgp_route.c   if (! bgp_flag_check (bgp, BGP_FLAG_COMPARE_ROUTER_ID)</span>
+<span class='curline'><a href='../S/620.html#L663'>bgp</a>               663 bgpd/bgp_route.c       if (peer-&gt;bgp-&gt;config &amp; BGP_CONFIG_CLUSTER_ID)</span>
+<span class='curline'><a href='../S/620.html#L664'>bgp</a>               664 bgpd/bgp_route.c 	cluster_id = peer-&gt;bgp-&gt;cluster_id;</span>
+<span class='curline'><a href='../S/620.html#L666'>bgp</a>               666 bgpd/bgp_route.c 	cluster_id = peer-&gt;bgp-&gt;router_id;</span>
+<span class='curline'><a href='../S/620.html#L792'>bgp</a>               792 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L799'>bgp</a>               799 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L901'>bgp</a>               901 bgpd/bgp_route.c   if (CHECK_FLAG(bgp-&gt;config, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/620.html#L903'>bgp</a>               903 bgpd/bgp_route.c       if (aspath_loop_check(riattr-&gt;aspath, bgp-&gt;confed_id))</span>
+<span class='curline'><a href='../S/620.html#L909'>bgp</a>               909 bgpd/bgp_route.c 		  bgp-&gt;confed_id);</span>
+<span class='curline'><a href='../S/620.html#L930'>bgp</a>               930 bgpd/bgp_route.c 	  if (bgp_flag_check (bgp, BGP_FLAG_NO_CLIENT_TO_CLIENT))</span>
+<span class='curline'><a href='../S/620.html#L952'>bgp</a>               952 bgpd/bgp_route.c       attr-&gt;local_pref = bgp-&gt;default_local_pref;</span>
+<span class='curline'><a href='../S/620.html#L959'>bgp</a>               959 bgpd/bgp_route.c       if (ri-&gt;peer != bgp-&gt;peer_self &amp;&amp; ! transparent</span>
+<span class='curline'><a href='../S/620.html#L1298'>bgp</a>              1298 bgpd/bgp_route.c bgp_best_selection (struct bgp *bgp, struct bgp_node *rn,</span>
+<span class='curline'><a href='../S/620.html#L1317'>bgp</a>              1317 bgpd/bgp_route.c   if (bgp_flag_check (bgp, BGP_FLAG_DETERMINISTIC_MED))</span>
+<span class='curline'><a href='../S/620.html#L1343'>bgp</a>              1343 bgpd/bgp_route.c 		  if (bgp_info_cmp (bgp, ri2, new_select, &amp;paths_eq))</span>
+<span class='curline'><a href='../S/620.html#L1387'>bgp</a>              1387 bgpd/bgp_route.c       if (bgp_flag_check (bgp, BGP_FLAG_DETERMINISTIC_MED)</span>
+<span class='curline'><a href='../S/620.html#L1396'>bgp</a>              1396 bgpd/bgp_route.c       if (bgp_info_cmp (bgp, ri, new_select, &amp;paths_eq))</span>
+<span class='curline'><a href='../S/620.html#L1398'>bgp</a>              1398 bgpd/bgp_route.c 	  if (do_mpath &amp;&amp; bgp_flag_check (bgp, BGP_FLAG_DETERMINISTIC_MED))</span>
+<span class='curline'><a href='../S/620.html#L1409'>bgp</a>              1409 bgpd/bgp_route.c       else if (do_mpath &amp;&amp; bgp_flag_check (bgp, BGP_FLAG_DETERMINISTIC_MED))</span>
+<span class='curline'><a href='../S/620.html#L1417'>bgp</a>              1417 bgpd/bgp_route.c   if (!bgp_flag_check (bgp, BGP_FLAG_DETERMINISTIC_MED))</span>
+<span class='curline'><a href='../S/620.html#L1481'>bgp</a>              1481 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L1491'>bgp</a>              1491 bgpd/bgp_route.c   struct bgp *bgp = pq-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L1502'>bgp</a>              1502 bgpd/bgp_route.c   bgp_best_selection (bgp, rn, &amp;bgp-&gt;maxpaths[afi][safi], &amp;old_and_new);</span>
+<span class='curline'><a href='../S/620.html#L1553'>bgp</a>              1553 bgpd/bgp_route.c   struct bgp *bgp = pq-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L1565'>bgp</a>              1565 bgpd/bgp_route.c   bgp_best_selection (bgp, rn, &amp;bgp-&gt;maxpaths[afi][safi], &amp;old_and_new);</span>
+<span class='curline'><a href='../S/620.html#L1576'>bgp</a>              1576 bgpd/bgp_route.c             bgp_zebra_announce (p, old_select, bgp, safi);</span>
+<span class='curline'><a href='../S/620.html#L1595'>bgp</a>              1595 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/620.html#L1601'>bgp</a>              1601 bgpd/bgp_route.c   if ((safi == SAFI_UNICAST || safi == SAFI_MULTICAST) &amp;&amp; (! bgp-&gt;name &amp;&amp;</span>
+<span class='curline'><a href='../S/620.html#L1607'>bgp</a>              1607 bgpd/bgp_route.c 	bgp_zebra_announce (p, new_select, bgp, safi);</span>
+<span class='curline'><a href='../S/620.html#L1632'>bgp</a>              1632 bgpd/bgp_route.c   bgp_unlock (pq-&gt;bgp);</span>
+<span class='curline'><a href='../S/620.html#L1663'>bgp</a>              1663 bgpd/bgp_route.c bgp_process (struct bgp *bgp, struct bgp_node *rn, afi_t afi, safi_t safi)</span>
+<span class='curline'><a href='../S/620.html#L1683'>bgp</a>              1683 bgpd/bgp_route.c   pqnode-&gt;bgp = bgp;</span>
+<span class='curline'><a href='../S/620.html#L1684'>bgp</a>              1684 bgpd/bgp_route.c   bgp_lock (bgp);</span>
+<span class='curline'><a href='../S/620.html#L1802'>bgp</a>              1802 bgpd/bgp_route.c   bgp_aggregate_decrement (peer-&gt;bgp, &amp;rn-&gt;p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L1807'>bgp</a>              1807 bgpd/bgp_route.c   bgp_process (peer-&gt;bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L1819'>bgp</a>              1819 bgpd/bgp_route.c   if (CHECK_FLAG (peer-&gt;bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING)</span>
+<span class='curline'><a href='../S/620.html#L1824'>bgp</a>              1824 bgpd/bgp_route.c         bgp_aggregate_decrement (peer-&gt;bgp, &amp;rn-&gt;p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L1837'>bgp</a>              1837 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L1851'>bgp</a>              1851 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L1963'>bgp</a>              1963 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L1999'>bgp</a>              1999 bgpd/bgp_route.c   bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2061'>bgp</a>              2061 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L2070'>bgp</a>              2070 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L2071'>bgp</a>              2071 bgpd/bgp_route.c   rn = bgp_afi_node_get (bgp-&gt;rib[afi][safi], afi, safi, p, prd);</span>
+<span class='curline'><a href='../S/620.html#L2076'>bgp</a>              2076 bgpd/bgp_route.c       &amp;&amp; peer != bgp-&gt;peer_self)</span>
+<span class='curline'><a href='../S/620.html#L2098'>bgp</a>              2098 bgpd/bgp_route.c   if (aspath_loop_check (attr-&gt;aspath, bgp-&gt;as) &gt; peer-&gt;allowas_in[afi][safi]</span>
+<span class='curline'><a href='../S/620.html#L2099'>bgp</a>              2099 bgpd/bgp_route.c       || (CHECK_FLAG(bgp-&gt;config, BGP_CONFIG_CONFEDERATION)</span>
+<span class='curline'><a href='../S/620.html#L2100'>bgp</a>              2100 bgpd/bgp_route.c 	  &amp;&amp; aspath_loop_check(attr-&gt;aspath, bgp-&gt;confed_id)</span>
+<span class='curline'><a href='../S/620.html#L2109'>bgp</a>              2109 bgpd/bgp_route.c       &amp;&amp; IPV4_ADDR_SAME (&amp;bgp-&gt;router_id, &amp;attr-&gt;extra-&gt;originator_id))</span>
+<span class='curline'><a href='../S/620.html#L2176'>bgp</a>              2176 bgpd/bgp_route.c 	  if (CHECK_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING)</span>
+<span class='curline'><a href='../S/620.html#L2188'>bgp</a>              2188 bgpd/bgp_route.c                   bgp_aggregate_increment (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2189'>bgp</a>              2189 bgpd/bgp_route.c                   bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2205'>bgp</a>              2205 bgpd/bgp_route.c 		  bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2243'>bgp</a>              2243 bgpd/bgp_route.c       bgp_aggregate_decrement (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2246'>bgp</a>              2246 bgpd/bgp_route.c       if (CHECK_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING)</span>
+<span class='curline'><a href='../S/620.html#L2264'>bgp</a>              2264 bgpd/bgp_route.c       if (CHECK_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING)</span>
+<span class='curline'><a href='../S/620.html#L2293'>bgp</a>              2293 bgpd/bgp_route.c       bgp_aggregate_increment (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2295'>bgp</a>              2295 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2339'>bgp</a>              2339 bgpd/bgp_route.c   bgp_aggregate_increment (bgp, p, new, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2353'>bgp</a>              2353 bgpd/bgp_route.c   bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L2382'>bgp</a>              2382 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L2388'>bgp</a>              2388 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L2391'>bgp</a>              2391 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bgp-&gt;rsclient, node, nnode, rsclient))</span>
+<span class='curline'><a href='../S/620.html#L2406'>bgp</a>              2406 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L2413'>bgp</a>              2413 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L2416'>bgp</a>              2416 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bgp-&gt;rsclient, node, nnode, rsclient))</span>
+<span class='curline'><a href='../S/620.html#L2430'>bgp</a>              2430 bgpd/bgp_route.c   rn = bgp_afi_node_get (bgp-&gt;rib[afi][safi], afi, safi, p, prd);</span>
+<span class='curline'><a href='../S/620.html#L2435'>bgp</a>              2435 bgpd/bgp_route.c       &amp;&amp; peer != bgp-&gt;peer_self)</span>
+<span class='curline'><a href='../S/620.html#L2461'>bgp</a>              2461 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L2473'>bgp</a>              2473 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L2474'>bgp</a>              2474 bgpd/bgp_route.c   from = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L2478'>bgp</a>              2478 bgpd/bgp_route.c   attr.local_pref = bgp-&gt;default_local_pref;</span>
+<span class='curline'><a href='../S/620.html#L2509'>bgp</a>              2509 bgpd/bgp_route.c       SET_FLAG (bgp-&gt;peer_self-&gt;rmap_type, PEER_RMAP_TYPE_DEFAULT);</span>
+<span class='curline'><a href='../S/620.html#L2510'>bgp</a>              2510 bgpd/bgp_route.c       for (rn = bgp_table_top(bgp-&gt;rib[afi][safi]); rn; rn = bgp_route_next(rn))</span>
+<span class='curline'><a href='../S/620.html#L2536'>bgp</a>              2536 bgpd/bgp_route.c       bgp-&gt;peer_self-&gt;rmap_type = 0;</span>
+<span class='curline'><a href='../S/620.html#L2571'>bgp</a>              2571 bgpd/bgp_route.c     table = (rsclient) ? peer-&gt;rib[afi][safi] : peer-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L2612'>bgp</a>              2612 bgpd/bgp_route.c     for (rn = bgp_table_top (peer-&gt;bgp-&gt;rib[afi][safi]); rn;</span>
+<span class='curline'><a href='../S/620.html#L2640'>bgp</a>              2640 bgpd/bgp_route.c     table = rsclient-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L2663'>bgp</a>              2663 bgpd/bgp_route.c     for (rn = bgp_table_top (rsclient-&gt;bgp-&gt;rib[afi][safi]); rn;</span>
+<span class='curline'><a href='../S/620.html#L2685'>bgp</a>              2685 bgpd/bgp_route.c     table = peer-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L2721'>bgp</a>              2721 bgpd/bgp_route.c     for (rn = bgp_table_top (peer-&gt;bgp-&gt;rib[afi][safi]); rn;</span>
+<span class='curline'><a href='../S/620.html#L2824'>bgp</a>              2824 bgpd/bgp_route.c     table = (rsclient) ? rsclient-&gt;rib[afi][safi] : peer-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L2934'>bgp</a>              2934 bgpd/bgp_route.c         for (rn = bgp_table_top (peer-&gt;bgp-&gt;rib[afi][safi]); rn;</span>
+<span class='curline'><a href='../S/620.html#L2939'>bgp</a>              2939 bgpd/bgp_route.c       for (ALL_LIST_ELEMENTS (peer-&gt;bgp-&gt;rsclient, node, nnode, rsclient))</span>
+<span class='curline'><a href='../S/620.html#L2995'>bgp</a>              2995 bgpd/bgp_route.c   table = peer-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L3014'>bgp</a>              3014 bgpd/bgp_route.c   table = peer-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L3032'>bgp</a>              3032 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L3038'>bgp</a>              3038 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/620.html#L3040'>bgp</a>              3040 bgpd/bgp_route.c       table = bgp-&gt;rib[AFI_IP][SAFI_UNICAST];</span>
+<span class='curline'><a href='../S/620.html#L3049'>bgp</a>              3049 bgpd/bgp_route.c       table = bgp-&gt;rib[AFI_IP6][SAFI_UNICAST];</span>
+<span class='curline'><a href='../S/620.html#L3247'>bgp</a>              3247 bgpd/bgp_route.c bgp_static_withdraw_rsclient (struct bgp *bgp, struct peer *rsclient,</span>
+<span class='curline'><a href='../S/620.html#L3257'>bgp</a>              3257 bgpd/bgp_route.c     if (ri-&gt;peer == bgp-&gt;peer_self</span>
+<span class='curline'><a href='../S/620.html#L3266'>bgp</a>              3266 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3286'>bgp</a>              3286 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L3290'>bgp</a>              3290 bgpd/bgp_route.c   bgp = rsclient-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L3328'>bgp</a>              3328 bgpd/bgp_route.c           bgp_static_withdraw_rsclient (bgp, rsclient, p, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3341'>bgp</a>              3341 bgpd/bgp_route.c   SET_FLAG (bgp-&gt;peer_self-&gt;rmap_type, PEER_RMAP_TYPE_NETWORK);</span>
+<span class='curline'><a href='../S/620.html#L3343'>bgp</a>              3343 bgpd/bgp_route.c   if (bgp_import_modifier (rsclient, bgp-&gt;peer_self, p, &amp;new_attr, afi, safi) </span>
+<span class='curline'><a href='../S/620.html#L3353'>bgp</a>              3353 bgpd/bgp_route.c       bgp-&gt;peer_self-&gt;rmap_type = 0;</span>
+<span class='curline'><a href='../S/620.html#L3359'>bgp</a>              3359 bgpd/bgp_route.c       bgp_static_withdraw_rsclient (bgp, rsclient, p, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3364'>bgp</a>              3364 bgpd/bgp_route.c   bgp-&gt;peer_self-&gt;rmap_type = 0;</span>
+<span class='curline'><a href='../S/620.html#L3370'>bgp</a>              3370 bgpd/bgp_route.c     if (ri-&gt;peer == bgp-&gt;peer_self &amp;&amp; ri-&gt;type == ZEBRA_ROUTE_BGP</span>
+<span class='curline'><a href='../S/620.html#L3398'>bgp</a>              3398 bgpd/bgp_route.c           bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3410'>bgp</a>              3410 bgpd/bgp_route.c   new-&gt;peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L3422'>bgp</a>              3422 bgpd/bgp_route.c   bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3430'>bgp</a>              3430 bgpd/bgp_route.c bgp_static_update_main (struct bgp *bgp, struct prefix *p,</span>
+<span class='curline'><a href='../S/620.html#L3445'>bgp</a>              3445 bgpd/bgp_route.c   rn = bgp_afi_node_get (bgp-&gt;rib[afi][safi], afi, safi, p, NULL);</span>
+<span class='curline'><a href='../S/620.html#L3460'>bgp</a>              3460 bgpd/bgp_route.c       info.peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L3463'>bgp</a>              3463 bgpd/bgp_route.c       SET_FLAG (bgp-&gt;peer_self-&gt;rmap_type, PEER_RMAP_TYPE_NETWORK);</span>
+<span class='curline'><a href='../S/620.html#L3467'>bgp</a>              3467 bgpd/bgp_route.c       bgp-&gt;peer_self-&gt;rmap_type = 0;</span>
+<span class='curline'><a href='../S/620.html#L3477'>bgp</a>              3477 bgpd/bgp_route.c 	  bgp_static_withdraw (bgp, p, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3486'>bgp</a>              3486 bgpd/bgp_route.c     if (ri-&gt;peer == bgp-&gt;peer_self &amp;&amp; ri-&gt;type == ZEBRA_ROUTE_BGP</span>
+<span class='curline'><a href='../S/620.html#L3510'>bgp</a>              3510 bgpd/bgp_route.c 	    bgp_aggregate_decrement (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3516'>bgp</a>              3516 bgpd/bgp_route.c 	  bgp_aggregate_increment (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3517'>bgp</a>              3517 bgpd/bgp_route.c 	  bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3529'>bgp</a>              3529 bgpd/bgp_route.c   new-&gt;peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L3535'>bgp</a>              3535 bgpd/bgp_route.c   bgp_aggregate_increment (bgp, p, new, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3544'>bgp</a>              3544 bgpd/bgp_route.c   bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3552'>bgp</a>              3552 bgpd/bgp_route.c bgp_static_update (struct bgp *bgp, struct prefix *p,</span>
+<span class='curline'><a href='../S/620.html#L3558'>bgp</a>              3558 bgpd/bgp_route.c   bgp_static_update_main (bgp, p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3560'>bgp</a>              3560 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bgp-&gt;rsclient, node, nnode, rsclient))</span>
+<span class='curline'><a href='../S/620.html#L3568'>bgp</a>              3568 bgpd/bgp_route.c bgp_static_update_vpnv4 (struct bgp *bgp, struct prefix *p, afi_t afi,</span>
+<span class='curline'><a href='../S/620.html#L3574'>bgp</a>              3574 bgpd/bgp_route.c   rn = bgp_afi_node_get (bgp-&gt;rib[afi][safi], afi, safi, p, prd);</span>
+<span class='curline'><a href='../S/620.html#L3580'>bgp</a>              3580 bgpd/bgp_route.c   new-&gt;peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L3588'>bgp</a>              3588 bgpd/bgp_route.c   bgp_aggregate_increment (bgp, p, new, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3597'>bgp</a>              3597 bgpd/bgp_route.c   bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3601'>bgp</a>              3601 bgpd/bgp_route.c bgp_static_withdraw (struct bgp *bgp, struct prefix *p, afi_t afi,</span>
+<span class='curline'><a href='../S/620.html#L3607'>bgp</a>              3607 bgpd/bgp_route.c   rn = bgp_afi_node_get (bgp-&gt;rib[afi][safi], afi, safi, p, NULL);</span>
+<span class='curline'><a href='../S/620.html#L3611'>bgp</a>              3611 bgpd/bgp_route.c     if (ri-&gt;peer == bgp-&gt;peer_self </span>
+<span class='curline'><a href='../S/620.html#L3619'>bgp</a>              3619 bgpd/bgp_route.c       bgp_aggregate_decrement (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3621'>bgp</a>              3621 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3632'>bgp</a>              3632 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L3636'>bgp</a>              3636 bgpd/bgp_route.c   bgp = rsclient-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L3638'>bgp</a>              3638 bgpd/bgp_route.c   for (rn = bgp_table_top (bgp-&gt;route[afi][safi]); rn; rn = bgp_route_next (rn))</span>
+<span class='curline'><a href='../S/620.html#L3649'>bgp</a>              3649 bgpd/bgp_route.c bgp_static_withdraw_vpnv4 (struct bgp *bgp, struct prefix *p, afi_t afi,</span>
+<span class='curline'><a href='../S/620.html#L3655'>bgp</a>              3655 bgpd/bgp_route.c   rn = bgp_afi_node_get (bgp-&gt;rib[afi][safi], afi, safi, p, prd);</span>
+<span class='curline'><a href='../S/620.html#L3659'>bgp</a>              3659 bgpd/bgp_route.c     if (ri-&gt;peer == bgp-&gt;peer_self </span>
+<span class='curline'><a href='../S/620.html#L3667'>bgp</a>              3667 bgpd/bgp_route.c       bgp_aggregate_decrement (bgp, p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3669'>bgp</a>              3669 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3679'>bgp</a>              3679 bgpd/bgp_route.c bgp_static_set (struct vty *vty, struct bgp *bgp, const char *ip_str, </span>
+<span class='curline'><a href='../S/620.html#L3707'>bgp</a>              3707 bgpd/bgp_route.c   rn = bgp_node_get (bgp-&gt;route[afi][safi], &amp;p);</span>
+<span class='curline'><a href='../S/620.html#L3757'>bgp</a>              3757 bgpd/bgp_route.c   if (! bgp_flag_check (bgp, BGP_FLAG_IMPORT_CHECK))</span>
+<span class='curline'><a href='../S/620.html#L3762'>bgp</a>              3762 bgpd/bgp_route.c 	bgp_static_withdraw (bgp, &amp;p, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3765'>bgp</a>              3765 bgpd/bgp_route.c 	bgp_static_update (bgp, &amp;p, bgp_static, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3773'>bgp</a>              3773 bgpd/bgp_route.c bgp_static_unset (struct vty *vty, struct bgp *bgp, const char *ip_str,</span>
+<span class='curline'><a href='../S/620.html#L3799'>bgp</a>              3799 bgpd/bgp_route.c   rn = bgp_node_lookup (bgp-&gt;route[afi][safi], &amp;p);</span>
+<span class='curline'><a href='../S/620.html#L3811'>bgp</a>              3811 bgpd/bgp_route.c     bgp_static_withdraw (bgp, &amp;p, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3825'>bgp</a>              3825 bgpd/bgp_route.c bgp_static_delete (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/620.html#L3836'>bgp</a>              3836 bgpd/bgp_route.c       for (rn = bgp_table_top (bgp-&gt;route[afi][safi]); rn; rn = bgp_route_next (rn))</span>
+<span class='curline'><a href='../S/620.html#L3846'>bgp</a>              3846 bgpd/bgp_route.c 		    bgp_static_withdraw_vpnv4 (bgp, &amp;rm-&gt;p,</span>
+<span class='curline'><a href='../S/620.html#L3858'>bgp</a>              3858 bgpd/bgp_route.c 		bgp_static_withdraw (bgp, &amp;rn-&gt;p, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L3873'>bgp</a>              3873 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L3880'>bgp</a>              3880 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L3904'>bgp</a>              3904 bgpd/bgp_route.c   prn = bgp_node_get (bgp-&gt;route[AFI_IP][SAFI_MPLS_VPN],</span>
+<span class='curline'><a href='../S/620.html#L3927'>bgp</a>              3927 bgpd/bgp_route.c       bgp_static_update_vpnv4 (bgp, &amp;p, AFI_IP, SAFI_MPLS_VPN, &amp;prd, tag);</span>
+<span class='curline'><a href='../S/620.html#L3939'>bgp</a>              3939 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L3948'>bgp</a>              3948 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L3973'>bgp</a>              3973 bgpd/bgp_route.c   prn = bgp_node_get (bgp-&gt;route[AFI_IP][SAFI_MPLS_VPN],</span>
+<span class='curline'><a href='../S/620.html#L3985'>bgp</a>              3985 bgpd/bgp_route.c       bgp_static_withdraw_vpnv4 (bgp, &amp;p, AFI_IP, SAFI_MPLS_VPN, &amp;prd, tag);</span>
+<span class='curline'><a href='../S/620.html#L4498'>bgp</a>              4498 bgpd/bgp_route.c bgp_aggregate_route (struct bgp *bgp, struct prefix *p, struct bgp_info *rinew,</span>
+<span class='curline'><a href='../S/620.html#L4534'>bgp</a>              4534 bgpd/bgp_route.c   table = bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L4612'>bgp</a>              4612 bgpd/bgp_route.c 	  bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L4658'>bgp</a>              4658 bgpd/bgp_route.c       new-&gt;peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L4660'>bgp</a>              4660 bgpd/bgp_route.c       new-&gt;attr = bgp_attr_aggregate_intern (bgp, origin, aspath, community, aggregate-&gt;as_set);</span>
+<span class='curline'><a href='../S/620.html#L4665'>bgp</a>              4665 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L4676'>bgp</a>              4676 bgpd/bgp_route.c void bgp_aggregate_delete (struct bgp *, struct prefix *, afi_t, safi_t,</span>
+<span class='curline'><a href='../S/620.html#L4680'>bgp</a>              4680 bgpd/bgp_route.c bgp_aggregate_increment (struct bgp *bgp, struct prefix *p,</span>
+<span class='curline'><a href='../S/620.html#L4692'>bgp</a>              4692 bgpd/bgp_route.c   table = bgp-&gt;aggregate[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L4710'>bgp</a>              4710 bgpd/bgp_route.c 	bgp_aggregate_delete (bgp, &amp;rn-&gt;p, afi, safi, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L4711'>bgp</a>              4711 bgpd/bgp_route.c 	bgp_aggregate_route (bgp, &amp;rn-&gt;p, ri, afi, safi, NULL, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L4717'>bgp</a>              4717 bgpd/bgp_route.c bgp_aggregate_decrement (struct bgp *bgp, struct prefix *p, </span>
+<span class='curline'><a href='../S/620.html#L4729'>bgp</a>              4729 bgpd/bgp_route.c   table = bgp-&gt;aggregate[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L4744'>bgp</a>              4744 bgpd/bgp_route.c 	bgp_aggregate_delete (bgp, &amp;rn-&gt;p, afi, safi, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L4745'>bgp</a>              4745 bgpd/bgp_route.c 	bgp_aggregate_route (bgp, &amp;rn-&gt;p, NULL, afi, safi, del, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L4751'>bgp</a>              4751 bgpd/bgp_route.c bgp_aggregate_add (struct bgp *bgp, struct prefix *p, afi_t afi, safi_t safi,</span>
+<span class='curline'><a href='../S/620.html#L4766'>bgp</a>              4766 bgpd/bgp_route.c   table = bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L4831'>bgp</a>              4831 bgpd/bgp_route.c 	  bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L4843'>bgp</a>              4843 bgpd/bgp_route.c       new-&gt;peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L4845'>bgp</a>              4845 bgpd/bgp_route.c       new-&gt;attr = bgp_attr_aggregate_intern (bgp, origin, aspath, community, aggregate-&gt;as_set);</span>
+<span class='curline'><a href='../S/620.html#L4852'>bgp</a>              4852 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L4857'>bgp</a>              4857 bgpd/bgp_route.c bgp_aggregate_delete (struct bgp *bgp, struct prefix *p, afi_t afi, </span>
+<span class='curline'><a href='../S/620.html#L4866'>bgp</a>              4866 bgpd/bgp_route.c   table = bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L4903'>bgp</a>              4903 bgpd/bgp_route.c 	  bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L4911'>bgp</a>              4911 bgpd/bgp_route.c     if (ri-&gt;peer == bgp-&gt;peer_self </span>
+<span class='curline'><a href='../S/620.html#L4920'>bgp</a>              4920 bgpd/bgp_route.c       bgp_process (bgp, rn, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L4938'>bgp</a>              4938 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L4951'>bgp</a>              4951 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L4954'>bgp</a>              4954 bgpd/bgp_route.c   rn = bgp_node_lookup (bgp-&gt;aggregate[afi][safi], &amp;p);</span>
+<span class='curline'><a href='../S/620.html#L4964'>bgp</a>              4964 bgpd/bgp_route.c     bgp_aggregate_delete (bgp, &amp;p, afi, SAFI_UNICAST, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L4966'>bgp</a>              4966 bgpd/bgp_route.c     bgp_aggregate_delete (bgp, &amp;p, afi, SAFI_MULTICAST, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L4985'>bgp</a>              4985 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L4998'>bgp</a>              4998 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L5001'>bgp</a>              5001 bgpd/bgp_route.c   rn = bgp_node_get (bgp-&gt;aggregate[afi][safi], &amp;p);</span>
+<span class='curline'><a href='../S/620.html#L5025'>bgp</a>              5025 bgpd/bgp_route.c     bgp_aggregate_add (bgp, &amp;p, afi, SAFI_UNICAST, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L5027'>bgp</a>              5027 bgpd/bgp_route.c     bgp_aggregate_add (bgp, &amp;p, afi, SAFI_MULTICAST, aggregate);</span>
+<span class='curline'><a href='../S/620.html#L5374'>bgp</a>              5374 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L5402'>bgp</a>              5402 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/620.html#L5406'>bgp</a>              5406 bgpd/bgp_route.c       if (bgp-&gt;redist[afi][type])</span>
+<span class='curline'><a href='../S/620.html#L5415'>bgp</a>              5415 bgpd/bgp_route.c 	  if (bgp-&gt;redist_metric_flag[afi][type])</span>
+<span class='curline'><a href='../S/620.html#L5416'>bgp</a>              5416 bgpd/bgp_route.c 	    attr_new.med = bgp-&gt;redist_metric[afi][type];</span>
+<span class='curline'><a href='../S/620.html#L5419'>bgp</a>              5419 bgpd/bgp_route.c 	  if (bgp-&gt;rmap[afi][type].map)</span>
+<span class='curline'><a href='../S/620.html#L5421'>bgp</a>              5421 bgpd/bgp_route.c 	      info.peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L5424'>bgp</a>              5424 bgpd/bgp_route.c               SET_FLAG (bgp-&gt;peer_self-&gt;rmap_type, PEER_RMAP_TYPE_REDISTRIBUTE);</span>
+<span class='curline'><a href='../S/620.html#L5426'>bgp</a>              5426 bgpd/bgp_route.c 	      ret = route_map_apply (bgp-&gt;rmap[afi][type].map, p, RMAP_BGP,</span>
+<span class='curline'><a href='../S/620.html#L5429'>bgp</a>              5429 bgpd/bgp_route.c               bgp-&gt;peer_self-&gt;rmap_type = 0;</span>
+<span class='curline'><a href='../S/620.html#L5444'>bgp</a>              5444 bgpd/bgp_route.c           bn = bgp_afi_node_get (bgp-&gt;rib[afi][SAFI_UNICAST], </span>
+<span class='curline'><a href='../S/620.html#L5450'>bgp</a>              5450 bgpd/bgp_route.c  	    if (bi-&gt;peer == bgp-&gt;peer_self</span>
+<span class='curline'><a href='../S/620.html#L5474'>bgp</a>              5474 bgpd/bgp_route.c 		    bgp_aggregate_decrement (bgp, p, bi, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5480'>bgp</a>              5480 bgpd/bgp_route.c  		  bgp_aggregate_increment (bgp, p, bi, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5481'>bgp</a>              5481 bgpd/bgp_route.c  		  bgp_process (bgp, bn, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5492'>bgp</a>              5492 bgpd/bgp_route.c 	  new-&gt;peer = bgp-&gt;peer_self;</span>
+<span class='curline'><a href='../S/620.html#L5497'>bgp</a>              5497 bgpd/bgp_route.c 	  bgp_aggregate_increment (bgp, p, new, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5500'>bgp</a>              5500 bgpd/bgp_route.c 	  bgp_process (bgp, bn, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5512'>bgp</a>              5512 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L5518'>bgp</a>              5518 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/620.html#L5522'>bgp</a>              5522 bgpd/bgp_route.c       if (bgp-&gt;redist[afi][type])</span>
+<span class='curline'><a href='../S/620.html#L5524'>bgp</a>              5524 bgpd/bgp_route.c          rn = bgp_afi_node_get (bgp-&gt;rib[afi][SAFI_UNICAST], afi, SAFI_UNICAST, p, NULL);</span>
+<span class='curline'><a href='../S/620.html#L5527'>bgp</a>              5527 bgpd/bgp_route.c 	    if (ri-&gt;peer == bgp-&gt;peer_self</span>
+<span class='curline'><a href='../S/620.html#L5533'>bgp</a>              5533 bgpd/bgp_route.c 	      bgp_aggregate_decrement (bgp, p, ri, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5535'>bgp</a>              5535 bgpd/bgp_route.c 	      bgp_process (bgp, rn, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5544'>bgp</a>              5544 bgpd/bgp_route.c bgp_redistribute_withdraw (struct bgp *bgp, afi_t afi, int type)</span>
+<span class='curline'><a href='../S/620.html#L5550'>bgp</a>              5550 bgpd/bgp_route.c   table = bgp-&gt;rib[afi][SAFI_UNICAST];</span>
+<span class='curline'><a href='../S/620.html#L5555'>bgp</a>              5555 bgpd/bgp_route.c 	if (ri-&gt;peer == bgp-&gt;peer_self</span>
+<span class='curline'><a href='../S/620.html#L5561'>bgp</a>              5561 bgpd/bgp_route.c 	  bgp_aggregate_decrement (bgp, &amp;rn-&gt;p, ri, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5563'>bgp</a>              5563 bgpd/bgp_route.c 	  bgp_process (bgp, rn, afi, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/620.html#L5935'>bgp</a>              5935 bgpd/bgp_route.c route_vty_out_detail (struct vty *vty, struct bgp *bgp, struct prefix *p, </span>
+<span class='curline'><a href='../S/620.html#L5995'>bgp</a>              5995 bgpd/bgp_route.c       if (binfo-&gt;peer == bgp-&gt;peer_self)</span>
+<span class='curline'><a href='../S/620.html#L5999'>bgp</a>              5999 bgpd/bgp_route.c 	  vty_out (vty, "(%s)", inet_ntoa(bgp-&gt;router_id));</span>
+<span class='curline'><a href='../S/620.html#L6035'>bgp</a>              6035 bgpd/bgp_route.c 	vty_out (vty, ", localpref %u", bgp-&gt;default_local_pref);</span>
+<span class='curline'><a href='../S/620.html#L6043'>bgp</a>              6043 bgpd/bgp_route.c       if (binfo-&gt;peer != bgp-&gt;peer_self)</span>
+<span class='curline'><a href='../S/620.html#L6049'>bgp</a>              6049 bgpd/bgp_route.c 		     (bgp_confederation_peers_check(bgp, binfo-&gt;peer-&gt;as) ? "confed-external" : "external"));</span>
+<span class='curline'><a href='../S/620.html#L6375'>bgp</a>              6375 bgpd/bgp_route.c bgp_show (struct vty *vty, struct bgp *bgp, afi_t afi, safi_t safi,</span>
+<span class='curline'><a href='../S/620.html#L6380'>bgp</a>              6380 bgpd/bgp_route.c   if (bgp == NULL) {</span>
+<span class='curline'><a href='../S/620.html#L6381'>bgp</a>              6381 bgpd/bgp_route.c     bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L6384'>bgp</a>              6384 bgpd/bgp_route.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L6391'>bgp</a>              6391 bgpd/bgp_route.c   table = bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L6393'>bgp</a>              6393 bgpd/bgp_route.c   return bgp_show_table (vty, table, &amp;bgp-&gt;router_id, type, output_arg);</span>
+<span class='curline'><a href='../S/620.html#L6398'>bgp</a>              6398 bgpd/bgp_route.c route_vty_out_detail_header (struct vty *vty, struct bgp *bgp,</span>
+<span class='curline'><a href='../S/620.html#L6464'>bgp</a>              6464 bgpd/bgp_route.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/620.html#L6481'>bgp</a>              6481 bgpd/bgp_route.c bgp_show_route_in_table (struct vty *vty, struct bgp *bgp, </span>
+<span class='curline'><a href='../S/620.html#L6528'>bgp</a>              6528 bgpd/bgp_route.c                           route_vty_out_detail_header (vty, bgp, rm, (struct prefix_rd *)&amp;rn-&gt;p,</span>
+<span class='curline'><a href='../S/620.html#L6534'>bgp</a>              6534 bgpd/bgp_route.c                       route_vty_out_detail (vty, bgp, &amp;rm-&gt;p, ri, AFI_IP, SAFI_MPLS_VPN);</span>
+<span class='curline'><a href='../S/620.html#L6554'>bgp</a>              6554 bgpd/bgp_route.c                       route_vty_out_detail_header (vty, bgp, rn, NULL, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L6558'>bgp</a>              6558 bgpd/bgp_route.c                   route_vty_out_detail (vty, bgp, &amp;rn-&gt;p, ri, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L6581'>bgp</a>              6581 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L6586'>bgp</a>              6586 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (view_name);</span>
+<span class='curline'><a href='../S/620.html#L6587'>bgp</a>              6587 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L6595'>bgp</a>              6595 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L6596'>bgp</a>              6596 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L6603'>bgp</a>              6603 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, bgp-&gt;rib[afi][safi], ip_str, </span>
+<span class='curline'><a href='../S/620.html#L6801'>bgp</a>              6801 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L6804'>bgp</a>              6804 bgpd/bgp_route.c   bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L6805'>bgp</a>              6805 bgpd/bgp_route.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L6811'>bgp</a>              6811 bgpd/bgp_route.c   return bgp_show (vty, bgp, AFI_IP, SAFI_UNICAST, bgp_show_type_normal, NULL);</span>
+<span class='curline'><a href='../S/620.html#L6986'>bgp</a>              6986 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L6989'>bgp</a>              6989 bgpd/bgp_route.c   bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L6990'>bgp</a>              6990 bgpd/bgp_route.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L6996'>bgp</a>              6996 bgpd/bgp_route.c   return bgp_show (vty, bgp, AFI_IP6, SAFI_UNICAST, bgp_show_type_normal, NULL);</span>
+<span class='curline'><a href='../S/620.html#L7675'>bgp</a>              7675 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L7683'>bgp</a>              7683 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (view_name);</span>
+<span class='curline'><a href='../S/620.html#L7684'>bgp</a>              7684 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L7692'>bgp</a>              7692 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L7693'>bgp</a>              7693 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L7727'>bgp</a>              7727 bgpd/bgp_route.c   return bgp_show (vty, bgp, afi, safi,</span>
+<span class='curline'><a href='../S/620.html#L7918'>bgp</a>              7918 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L7921'>bgp</a>              7921 bgpd/bgp_route.c   bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L7922'>bgp</a>              7922 bgpd/bgp_route.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L7935'>bgp</a>              7935 bgpd/bgp_route.c   return bgp_show (vty, bgp, afi, safi, bgp_show_type_community_all, NULL);</span>
+<span class='curline'><a href='../S/620.html#L9197'>bgp</a>              9197 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L9204'>bgp</a>              9204 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (view_name);</span>
+<span class='curline'><a href='../S/620.html#L9205'>bgp</a>              9205 bgpd/bgp_route.c       if (! bgp)</span>
+<span class='curline'><a href='../S/620.html#L9213'>bgp</a>              9213 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L9214'>bgp</a>              9214 bgpd/bgp_route.c       if (! bgp)</span>
+<span class='curline'><a href='../S/620.html#L9230'>bgp</a>              9230 bgpd/bgp_route.c   peer = peer_lookup (bgp, &amp;su);</span>
+<span class='curline'><a href='../S/620.html#L9404'>bgp</a>              9404 bgpd/bgp_route.c bgp_table_stats (struct vty *vty, struct bgp *bgp, afi_t afi, safi_t safi)</span>
+<span class='curline'><a href='../S/620.html#L9409'>bgp</a>              9409 bgpd/bgp_route.c   if (!bgp-&gt;rib[afi][safi])</span>
+<span class='curline'><a href='../S/620.html#L9416'>bgp</a>              9416 bgpd/bgp_route.c   ts.table = bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L9491'>bgp</a>              9491 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L9496'>bgp</a>              9496 bgpd/bgp_route.c     bgp = bgp_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/620.html#L9498'>bgp</a>              9498 bgpd/bgp_route.c     bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L9500'>bgp</a>              9500 bgpd/bgp_route.c   if (!bgp)</span>
+<span class='curline'><a href='../S/620.html#L9537'>bgp</a>              9537 bgpd/bgp_route.c   return bgp_table_stats (vty, bgp, afi, safi);</span>
+<span class='curline'><a href='../S/620.html#L9695'>bgp</a>              9695 bgpd/bgp_route.c   if (!peer || !peer-&gt;bgp || !peer-&gt;afc[afi][safi]</span>
+<span class='curline'><a href='../S/620.html#L9696'>bgp</a>              9696 bgpd/bgp_route.c       || !peer-&gt;bgp-&gt;rib[afi][safi])</span>
+<span class='curline'><a href='../S/620.html#L9704'>bgp</a>              9704 bgpd/bgp_route.c   pcounts.table = peer-&gt;bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L9833'>bgp</a>              9833 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L9836'>bgp</a>              9836 bgpd/bgp_route.c   bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/620.html#L9838'>bgp</a>              9838 bgpd/bgp_route.c   if (! bgp)</span>
+<span class='curline'><a href='../S/620.html#L9841'>bgp</a>              9841 bgpd/bgp_route.c   table = bgp-&gt;rib[afi][safi];</span>
+<span class='curline'><a href='../S/620.html#L9848'>bgp</a>              9848 bgpd/bgp_route.c       vty_out (vty, "BGP table version is 0, local router ID is %s%s", inet_ntoa (bgp-&gt;router_id), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/620.html#L9865'>bgp</a>              9865 bgpd/bgp_route.c 		  vty_out (vty, "BGP table version is 0, local router ID is %s%s", inet_ntoa (bgp-&gt;router_id), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/620.html#L9889'>bgp</a>              9889 bgpd/bgp_route.c 		  vty_out (vty, "BGP table version is 0, local router ID is %s%s", inet_ntoa (bgp-&gt;router_id), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/620.html#L10457'>bgp</a>              10457 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L10461'>bgp</a>              10461 bgpd/bgp_route.c   bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L10462'>bgp</a>              10462 bgpd/bgp_route.c   if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10475'>bgp</a>              10475 bgpd/bgp_route.c   peer = peer_lookup (bgp, &amp;su);</span>
+<span class='curline'><a href='../S/620.html#L10515'>bgp</a>              10515 bgpd/bgp_route.c   return bgp_show (vty, peer-&gt;bgp, afi, safi, type, &amp;peer-&gt;su);</span>
+<span class='curline'><a href='../S/620.html#L10731'>bgp</a>              10731 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L10737'>bgp</a>              10737 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L10738'>bgp</a>              10738 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10746'>bgp</a>              10746 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L10747'>bgp</a>              10747 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10777'>bgp</a>              10777 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP][SAFI_UNICAST], </span>
+<span class='curline'><a href='../S/620.html#L10806'>bgp</a>              10806 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L10813'>bgp</a>              10813 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L10814'>bgp</a>              10814 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10822'>bgp</a>              10822 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L10823'>bgp</a>              10823 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10856'>bgp</a>              10856 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP][safi],</span>
+<span class='curline'><a href='../S/620.html#L10885'>bgp</a>              10885 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L10891'>bgp</a>              10891 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L10892'>bgp</a>              10892 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10900'>bgp</a>              10900 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L10901'>bgp</a>              10901 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10931'>bgp</a>              10931 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP][SAFI_UNICAST], </span>
+<span class='curline'><a href='../S/620.html#L10960'>bgp</a>              10960 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L10967'>bgp</a>              10967 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L10968'>bgp</a>              10968 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L10976'>bgp</a>              10976 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L10977'>bgp</a>              10977 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11010'>bgp</a>              11010 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP][safi],</span>
+<span class='curline'><a href='../S/620.html#L11362'>bgp</a>              11362 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11368'>bgp</a>              11368 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L11369'>bgp</a>              11369 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11377'>bgp</a>              11377 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L11378'>bgp</a>              11378 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11408'>bgp</a>              11408 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP6][SAFI_UNICAST],</span>
+<span class='curline'><a href='../S/620.html#L11436'>bgp</a>              11436 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11443'>bgp</a>              11443 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L11444'>bgp</a>              11444 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11452'>bgp</a>              11452 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L11453'>bgp</a>              11453 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11486'>bgp</a>              11486 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP6][safi],</span>
+<span class='curline'><a href='../S/620.html#L11514'>bgp</a>              11514 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11520'>bgp</a>              11520 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L11521'>bgp</a>              11521 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11529'>bgp</a>              11529 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L11530'>bgp</a>              11530 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11560'>bgp</a>              11560 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP6][SAFI_UNICAST],</span>
+<span class='curline'><a href='../S/620.html#L11588'>bgp</a>              11588 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11595'>bgp</a>              11595 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L11596'>bgp</a>              11596 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11604'>bgp</a>              11604 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L11605'>bgp</a>              11605 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L11638'>bgp</a>              11638 bgpd/bgp_route.c   return bgp_show_route_in_table (vty, bgp, peer-&gt;rib[AFI_IP6][safi],</span>
+<span class='curline'><a href='../S/620.html#L11768'>bgp</a>              11768 bgpd/bgp_route.c bgp_distance_apply (struct prefix *p, struct bgp_info *rinfo, struct bgp *bgp)</span>
+<span class='curline'><a href='../S/620.html#L11777'>bgp</a>              11777 bgpd/bgp_route.c   if (! bgp)</span>
+<span class='curline'><a href='../S/620.html#L11811'>bgp</a>              11811 bgpd/bgp_route.c   rn = bgp_node_lookup (bgp-&gt;route[AFI_IP][SAFI_UNICAST], p);</span>
+<span class='curline'><a href='../S/620.html#L11819'>bgp</a>              11819 bgpd/bgp_route.c 	  if (bgp-&gt;distance_local)</span>
+<span class='curline'><a href='../S/620.html#L11820'>bgp</a>              11820 bgpd/bgp_route.c 	    return bgp-&gt;distance_local;</span>
+<span class='curline'><a href='../S/620.html#L11828'>bgp</a>              11828 bgpd/bgp_route.c       if (bgp-&gt;distance_ebgp)</span>
+<span class='curline'><a href='../S/620.html#L11829'>bgp</a>              11829 bgpd/bgp_route.c 	return bgp-&gt;distance_ebgp;</span>
+<span class='curline'><a href='../S/620.html#L11834'>bgp</a>              11834 bgpd/bgp_route.c       if (bgp-&gt;distance_ibgp)</span>
+<span class='curline'><a href='../S/620.html#L11835'>bgp</a>              11835 bgpd/bgp_route.c 	return bgp-&gt;distance_ibgp;</span>
+<span class='curline'><a href='../S/620.html#L11849'>bgp</a>              11849 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11851'>bgp</a>              11851 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L11853'>bgp</a>              11853 bgpd/bgp_route.c   bgp-&gt;distance_ebgp = atoi (argv[0]);</span>
+<span class='curline'><a href='../S/620.html#L11854'>bgp</a>              11854 bgpd/bgp_route.c   bgp-&gt;distance_ibgp = atoi (argv[1]);</span>
+<span class='curline'><a href='../S/620.html#L11855'>bgp</a>              11855 bgpd/bgp_route.c   bgp-&gt;distance_local = atoi (argv[2]);</span>
+<span class='curline'><a href='../S/620.html#L11869'>bgp</a>              11869 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11871'>bgp</a>              11871 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L11873'>bgp</a>              11873 bgpd/bgp_route.c   bgp-&gt;distance_ebgp= 0;</span>
+<span class='curline'><a href='../S/620.html#L11874'>bgp</a>              11874 bgpd/bgp_route.c   bgp-&gt;distance_ibgp = 0;</span>
+<span class='curline'><a href='../S/620.html#L11875'>bgp</a>              11875 bgpd/bgp_route.c   bgp-&gt;distance_local = 0;</span>
+<span class='curline'><a href='../S/620.html#L11944'>bgp</a>              11944 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11963'>bgp</a>              11963 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L11964'>bgp</a>              11964 bgpd/bgp_route.c   return bgp_damp_enable (bgp, bgp_node_afi (vty), bgp_node_safi (vty),</span>
+<span class='curline'><a href='../S/620.html#L11988'>bgp</a>              11988 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L11990'>bgp</a>              11990 bgpd/bgp_route.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/620.html#L11991'>bgp</a>              11991 bgpd/bgp_route.c   return bgp_damp_disable (bgp, bgp_node_afi (vty), bgp_node_safi (vty));</span>
+<span class='curline'><a href='../S/620.html#L12041'>bgp</a>              12041 bgpd/bgp_route.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/620.html#L12047'>bgp</a>              12047 bgpd/bgp_route.c       bgp = bgp_lookup_by_name (view_name);</span>
+<span class='curline'><a href='../S/620.html#L12048'>bgp</a>              12048 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L12056'>bgp</a>              12056 bgpd/bgp_route.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/620.html#L12057'>bgp</a>              12057 bgpd/bgp_route.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/620.html#L12076'>bgp</a>              12076 bgpd/bgp_route.c       for (rn = bgp_table_top (bgp-&gt;rib[AFI_IP][SAFI_MPLS_VPN]); rn; rn = bgp_route_next (rn))</span>
+<span class='curline'><a href='../S/620.html#L12106'>bgp</a>              12106 bgpd/bgp_route.c       if ((rn = bgp_node_match (bgp-&gt;rib[afi][safi], &amp;match)) != NULL)</span>
+<span class='curline'><a href='../S/620.html#L12194'>bgp</a>              12194 bgpd/bgp_route.c bgp_config_write_network_vpnv4 (struct vty *vty, struct bgp *bgp,</span>
+<span class='curline'><a href='../S/620.html#L12208'>bgp</a>              12208 bgpd/bgp_route.c   for (prn = bgp_table_top (bgp-&gt;route[afi][safi]); prn; prn = bgp_route_next (prn))</span>
+<span class='curline'><a href='../S/620.html#L12235'>bgp</a>              12235 bgpd/bgp_route.c bgp_config_write_network (struct vty *vty, struct bgp *bgp,</span>
+<span class='curline'><a href='../S/620.html#L12245'>bgp</a>              12245 bgpd/bgp_route.c     return bgp_config_write_network_vpnv4 (vty, bgp, afi, safi, write);</span>
+<span class='curline'><a href='../S/620.html#L12248'>bgp</a>              12248 bgpd/bgp_route.c   for (rn = bgp_table_top (bgp-&gt;route[afi][safi]); rn; rn = bgp_route_next (rn)) </span>
+<span class='curline'><a href='../S/620.html#L12296'>bgp</a>              12296 bgpd/bgp_route.c   for (rn = bgp_table_top (bgp-&gt;aggregate[afi][safi]); rn; rn = bgp_route_next (rn))</span>
+<span class='curline'><a href='../S/620.html#L12333'>bgp</a>              12333 bgpd/bgp_route.c bgp_config_write_distance (struct vty *vty, struct bgp *bgp)</span>
+<span class='curline'><a href='../S/620.html#L12339'>bgp</a>              12339 bgpd/bgp_route.c   if (bgp-&gt;distance_ebgp</span>
+<span class='curline'><a href='../S/620.html#L12340'>bgp</a>              12340 bgpd/bgp_route.c       &amp;&amp; bgp-&gt;distance_ibgp</span>
+<span class='curline'><a href='../S/620.html#L12341'>bgp</a>              12341 bgpd/bgp_route.c       &amp;&amp; bgp-&gt;distance_local</span>
+<span class='curline'><a href='../S/620.html#L12342'>bgp</a>              12342 bgpd/bgp_route.c       &amp;&amp; (bgp-&gt;distance_ebgp != ZEBRA_EBGP_DISTANCE_DEFAULT</span>
+<span class='curline'><a href='../S/620.html#L12343'>bgp</a>              12343 bgpd/bgp_route.c 	  || bgp-&gt;distance_ibgp != ZEBRA_IBGP_DISTANCE_DEFAULT</span>
+<span class='curline'><a href='../S/620.html#L12344'>bgp</a>              12344 bgpd/bgp_route.c 	  || bgp-&gt;distance_local != ZEBRA_IBGP_DISTANCE_DEFAULT))</span>
+<span class='curline'><a href='../S/620.html#L12346'>bgp</a>              12346 bgpd/bgp_route.c 	     bgp-&gt;distance_ebgp, bgp-&gt;distance_ibgp, bgp-&gt;distance_local,</span>
+<span class='curline'><a href='../S/609.html#L205'>bgp</a>               205 bgpd/bgp_route.h extern void bgp_redistribute_withdraw (struct bgp *, afi_t, int);</span>
+<span class='curline'><a href='../S/609.html#L207'>bgp</a>               207 bgpd/bgp_route.h extern void bgp_static_delete (struct bgp *);</span>
+<span class='curline'><a href='../S/609.html#L208'>bgp</a>               208 bgpd/bgp_route.h extern void bgp_static_update (struct bgp *, struct prefix *, struct bgp_static *,</span>
+<span class='curline'><a href='../S/609.html#L210'>bgp</a>               210 bgpd/bgp_route.h extern void bgp_static_withdraw (struct bgp *, struct prefix *, afi_t, safi_t);</span>
+<span class='curline'><a href='../S/609.html#L226'>bgp</a>               226 bgpd/bgp_route.h extern void bgp_process (struct bgp *, struct bgp_node *, afi_t, safi_t);</span>
+<span class='curline'><a href='../S/609.html#L227'>bgp</a>               227 bgpd/bgp_route.h extern int bgp_config_write_network (struct vty *, struct bgp *, afi_t, safi_t, int *);</span>
+<span class='curline'><a href='../S/609.html#L228'>bgp</a>               228 bgpd/bgp_route.h extern int bgp_config_write_distance (struct vty *, struct bgp *);</span>
+<span class='curline'><a href='../S/609.html#L230'>bgp</a>               230 bgpd/bgp_route.h extern void bgp_aggregate_increment (struct bgp *, struct prefix *, struct bgp_info *,</span>
+<span class='curline'><a href='../S/609.html#L232'>bgp</a>               232 bgpd/bgp_route.h extern void bgp_aggregate_decrement (struct bgp *, struct prefix *, struct bgp_info *,</span>
+<span class='curline'><a href='../S/609.html#L235'>bgp</a>               235 bgpd/bgp_route.h extern u_char bgp_distance_apply (struct prefix *, struct bgp_info *, struct bgp *);</span>
+<span class='curline'><a href='../S/621.html#L2305'>bgp</a>              2305 bgpd/bgp_routemap.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/621.html#L2313'>bgp</a>              2313 bgpd/bgp_routemap.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/621.html#L2315'>bgp</a>              2315 bgpd/bgp_routemap.c       for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/621.html#L2337'>bgp</a>              2337 bgpd/bgp_routemap.c       for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/621.html#L2362'>bgp</a>              2362 bgpd/bgp_routemap.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/621.html#L2364'>bgp</a>              2364 bgpd/bgp_routemap.c       for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/621.html#L2379'>bgp</a>              2379 bgpd/bgp_routemap.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/621.html#L2383'>bgp</a>              2383 bgpd/bgp_routemap.c 	  for (bn = bgp_table_top (bgp-&gt;route[afi][safi]); bn;</span>
+<span class='curline'><a href='../S/621.html#L2396'>bgp</a>              2396 bgpd/bgp_routemap.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/621.html#L2400'>bgp</a>              2400 bgpd/bgp_routemap.c 	  if (bgp-&gt;rmap[ZEBRA_FAMILY_IPV4][i].name)</span>
+<span class='curline'><a href='../S/621.html#L2401'>bgp</a>              2401 bgpd/bgp_routemap.c 	    bgp-&gt;rmap[ZEBRA_FAMILY_IPV4][i].map = </span>
+<span class='curline'><a href='../S/621.html#L2402'>bgp</a>              2402 bgpd/bgp_routemap.c 	      route_map_lookup_by_name (bgp-&gt;rmap[ZEBRA_FAMILY_IPV4][i].name);</span>
+<span class='curline'><a href='../S/621.html#L2404'>bgp</a>              2404 bgpd/bgp_routemap.c 	  if (bgp-&gt;rmap[ZEBRA_FAMILY_IPV6][i].name)</span>
+<span class='curline'><a href='../S/621.html#L2405'>bgp</a>              2405 bgpd/bgp_routemap.c 	    bgp-&gt;rmap[ZEBRA_FAMILY_IPV6][i].map =</span>
+<span class='curline'><a href='../S/621.html#L2406'>bgp</a>              2406 bgpd/bgp_routemap.c 	      route_map_lookup_by_name (bgp-&gt;rmap[ZEBRA_FAMILY_IPV6][i].name);</span>
+<span class='curline'><a href='../S/619.html#L268'>bgp</a>               268 bgpd/bgp_snmp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/619.html#L275'>bgp</a>               275 bgpd/bgp_snmp.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/619.html#L276'>bgp</a>               276 bgpd/bgp_snmp.c   if (! bgp)</span>
+<span class='curline'><a href='../S/619.html#L279'>bgp</a>               279 bgpd/bgp_snmp.c   return SNMP_INTEGER (bgp-&gt;as);</span>
+<span class='curline'><a href='../S/619.html#L285'>bgp</a>               285 bgpd/bgp_snmp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/619.html#L291'>bgp</a>               291 bgpd/bgp_snmp.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/619.html#L292'>bgp</a>               292 bgpd/bgp_snmp.c   if (! bgp)</span>
+<span class='curline'><a href='../S/619.html#L295'>bgp</a>               295 bgpd/bgp_snmp.c   for (ALL_LIST_ELEMENTS_RO (bgp-&gt;peer, node, peer))</span>
+<span class='curline'><a href='../S/619.html#L310'>bgp</a>               310 bgpd/bgp_snmp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/619.html#L319'>bgp</a>               319 bgpd/bgp_snmp.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/619.html#L320'>bgp</a>               320 bgpd/bgp_snmp.c   if (! bgp)</span>
+<span class='curline'><a href='../S/619.html#L323'>bgp</a>               323 bgpd/bgp_snmp.c   for (ALL_LIST_ELEMENTS_RO (bgp-&gt;peer, node, peer))</span>
+<span class='curline'><a href='../S/619.html#L597'>bgp</a>               597 bgpd/bgp_snmp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/619.html#L603'>bgp</a>               603 bgpd/bgp_snmp.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/619.html#L604'>bgp</a>               604 bgpd/bgp_snmp.c   if (!bgp)</span>
+<span class='curline'><a href='../S/619.html#L607'>bgp</a>               607 bgpd/bgp_snmp.c   return SNMP_IPADDRESS (bgp-&gt;router_id);</span>
+<span class='curline'><a href='../S/619.html#L623'>bgp</a>               623 bgpd/bgp_snmp.c 		    struct bgp *bgp, struct prefix_ipv4 *addr, int exact)</span>
+<span class='curline'><a href='../S/619.html#L656'>bgp</a>               656 bgpd/bgp_snmp.c       rn = bgp_node_lookup (bgp-&gt;rib[AFI_IP][SAFI_UNICAST], </span>
+<span class='curline'><a href='../S/619.html#L674'>bgp</a>               674 bgpd/bgp_snmp.c 	rn = bgp_table_top (bgp-&gt;rib[AFI_IP][SAFI_UNICAST]);</span>
+<span class='curline'><a href='../S/619.html#L690'>bgp</a>               690 bgpd/bgp_snmp.c 	  rn = bgp_node_get (bgp-&gt;rib[AFI_IP][SAFI_UNICAST],</span>
+<span class='curline'><a href='../S/619.html#L762'>bgp</a>               762 bgpd/bgp_snmp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/619.html#L766'>bgp</a>               766 bgpd/bgp_snmp.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/619.html#L767'>bgp</a>               767 bgpd/bgp_snmp.c   if (! bgp)</span>
+<span class='curline'><a href='../S/619.html#L775'>bgp</a>               775 bgpd/bgp_snmp.c   binfo = bgp4PathAttrLookup (v, name, length, bgp, &amp;addr, exact);</span>
+<span class='curline'><a href='../S/638.html#L99'>bgp</a>                99 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L103'>bgp</a>               103 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L112'>bgp</a>               112 bgpd/bgp_vty.c   peer = peer_lookup (bgp, &amp;su);</span>
+<span class='curline'><a href='../S/638.html#L126'>bgp</a>               126 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L131'>bgp</a>               131 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L136'>bgp</a>               136 bgpd/bgp_vty.c       peer = peer_lookup (bgp, &amp;su);</span>
+<span class='curline'><a href='../S/638.html#L142'>bgp</a>               142 bgpd/bgp_vty.c       group = peer_group_lookup (bgp, peer_str);</span>
+<span class='curline'><a href='../S/638.html#L328'>bgp</a>               328 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L336'>bgp</a>               336 bgpd/bgp_vty.c   ret = bgp_get (&amp;bgp, &amp;as, name);</span>
+<span class='curline'><a href='../S/638.html#L354'>bgp</a>               354 bgpd/bgp_vty.c   vty-&gt;index = bgp;</span>
+<span class='curline'><a href='../S/638.html#L378'>bgp</a>               378 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L387'>bgp</a>               387 bgpd/bgp_vty.c   bgp = bgp_lookup (as, name);</span>
+<span class='curline'><a href='../S/638.html#L388'>bgp</a>               388 bgpd/bgp_vty.c   if (! bgp)</span>
+<span class='curline'><a href='../S/638.html#L394'>bgp</a>               394 bgpd/bgp_vty.c   bgp_delete (bgp);</span>
+<span class='curline'><a href='../S/638.html#L420'>bgp</a>               420 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L422'>bgp</a>               422 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L431'>bgp</a>               431 bgpd/bgp_vty.c   bgp-&gt;router_id_static = id;</span>
+<span class='curline'><a href='../S/638.html#L432'>bgp</a>               432 bgpd/bgp_vty.c   bgp_router_id_set (bgp, &amp;id);</span>
+<span class='curline'><a href='../S/638.html#L446'>bgp</a>               446 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L448'>bgp</a>               448 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L459'>bgp</a>               459 bgpd/bgp_vty.c       if (! IPV4_ADDR_SAME (&amp;bgp-&gt;router_id_static, &amp;id))</span>
+<span class='curline'><a href='../S/638.html#L466'>bgp</a>               466 bgpd/bgp_vty.c   bgp-&gt;router_id_static.s_addr = 0;</span>
+<span class='curline'><a href='../S/638.html#L467'>bgp</a>               467 bgpd/bgp_vty.c   bgp_router_id_set (bgp, &amp;router_id_zebra);</span>
+<span class='curline'><a href='../S/638.html#L490'>bgp</a>               490 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L493'>bgp</a>               493 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L502'>bgp</a>               502 bgpd/bgp_vty.c   bgp_cluster_id_set (bgp, &amp;cluster);</span>
+<span class='curline'><a href='../S/638.html#L522'>bgp</a>               522 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L525'>bgp</a>               525 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L537'>bgp</a>               537 bgpd/bgp_vty.c   bgp_cluster_id_unset (bgp);</span>
+<span class='curline'><a href='../S/638.html#L558'>bgp</a>               558 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L561'>bgp</a>               561 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L565'>bgp</a>               565 bgpd/bgp_vty.c   bgp_confederation_id_set (bgp, as);</span>
+<span class='curline'><a href='../S/638.html#L578'>bgp</a>               578 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L581'>bgp</a>               581 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L586'>bgp</a>               586 bgpd/bgp_vty.c   bgp_confederation_id_unset (bgp);</span>
+<span class='curline'><a href='../S/638.html#L608'>bgp</a>               608 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L612'>bgp</a>               612 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L618'>bgp</a>               618 bgpd/bgp_vty.c       if (bgp-&gt;as == as)</span>
+<span class='curline'><a href='../S/638.html#L625'>bgp</a>               625 bgpd/bgp_vty.c       bgp_confederation_peers_add (bgp, as);</span>
+<span class='curline'><a href='../S/638.html#L639'>bgp</a>               639 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L643'>bgp</a>               643 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L649'>bgp</a>               649 bgpd/bgp_vty.c       bgp_confederation_peers_remove (bgp, as);</span>
+<span class='curline'><a href='../S/638.html#L661'>bgp</a>               661 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L665'>bgp</a>               665 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L669'>bgp</a>               669 bgpd/bgp_vty.c   ret = bgp_maximum_paths_set (bgp, bgp_node_afi (vty), bgp_node_safi(vty),</span>
+<span class='curline'><a href='../S/638.html#L689'>bgp</a>               689 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L693'>bgp</a>               693 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L697'>bgp</a>               697 bgpd/bgp_vty.c   ret = bgp_maximum_paths_set (bgp, bgp_node_afi (vty), bgp_node_safi(vty),</span>
+<span class='curline'><a href='../S/638.html#L717'>bgp</a>               717 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L720'>bgp</a>               720 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L722'>bgp</a>               722 bgpd/bgp_vty.c   ret = bgp_maximum_paths_unset (bgp, bgp_node_afi (vty), bgp_node_safi(vty),</span>
+<span class='curline'><a href='../S/638.html#L750'>bgp</a>               750 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L753'>bgp</a>               753 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L755'>bgp</a>               755 bgpd/bgp_vty.c   ret = bgp_maximum_paths_unset (bgp, bgp_node_afi (vty), bgp_node_safi(vty),</span>
+<span class='curline'><a href='../S/638.html#L777'>bgp</a>               777 bgpd/bgp_vty.c bgp_config_write_maxpaths (struct vty *vty, struct bgp *bgp, afi_t afi,</span>
+<span class='curline'><a href='../S/638.html#L780'>bgp</a>               780 bgpd/bgp_vty.c   if (bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp != BGP_DEFAULT_MAXPATHS)</span>
+<span class='curline'><a href='../S/638.html#L784'>bgp</a>               784 bgpd/bgp_vty.c 	       bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/638.html#L787'>bgp</a>               787 bgpd/bgp_vty.c   if (bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp != BGP_DEFAULT_MAXPATHS)</span>
+<span class='curline'><a href='../S/638.html#L791'>bgp</a>               791 bgpd/bgp_vty.c 	       bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/638.html#L807'>bgp</a>               807 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L811'>bgp</a>               811 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L824'>bgp</a>               824 bgpd/bgp_vty.c   bgp_timers_set (bgp, keepalive, holdtime);</span>
+<span class='curline'><a href='../S/638.html#L836'>bgp</a>               836 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L838'>bgp</a>               838 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L839'>bgp</a>               839 bgpd/bgp_vty.c   bgp_timers_unset (bgp);</span>
+<span class='curline'><a href='../S/638.html#L860'>bgp</a>               860 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L862'>bgp</a>               862 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L863'>bgp</a>               863 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_NO_CLIENT_TO_CLIENT);</span>
+<span class='curline'><a href='../S/638.html#L875'>bgp</a>               875 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L877'>bgp</a>               877 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L878'>bgp</a>               878 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_NO_CLIENT_TO_CLIENT);</span>
+<span class='curline'><a href='../S/638.html#L889'>bgp</a>               889 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L891'>bgp</a>               891 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L892'>bgp</a>               892 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_ALWAYS_COMPARE_MED);</span>
+<span class='curline'><a href='../S/638.html#L903'>bgp</a>               903 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L905'>bgp</a>               905 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L906'>bgp</a>               906 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_ALWAYS_COMPARE_MED);</span>
+<span class='curline'><a href='../S/638.html#L917'>bgp</a>               917 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L919'>bgp</a>               919 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L920'>bgp</a>               920 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_DETERMINISTIC_MED);</span>
+<span class='curline'><a href='../S/638.html#L931'>bgp</a>               931 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L933'>bgp</a>               933 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L934'>bgp</a>               934 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_DETERMINISTIC_MED);</span>
+<span class='curline'><a href='../S/638.html#L945'>bgp</a>               945 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L947'>bgp</a>               947 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L948'>bgp</a>               948 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_GRACEFUL_RESTART);</span>
+<span class='curline'><a href='../S/638.html#L959'>bgp</a>               959 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L961'>bgp</a>               961 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L962'>bgp</a>               962 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_GRACEFUL_RESTART);</span>
+<span class='curline'><a href='../S/638.html#L974'>bgp</a>               974 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L977'>bgp</a>               977 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L978'>bgp</a>               978 bgpd/bgp_vty.c   if (! bgp)</span>
+<span class='curline'><a href='../S/638.html#L982'>bgp</a>               982 bgpd/bgp_vty.c   bgp-&gt;stalepath_time = stalepath;</span>
+<span class='curline'><a href='../S/638.html#L994'>bgp</a>               994 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L996'>bgp</a>               996 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L997'>bgp</a>               997 bgpd/bgp_vty.c   if (! bgp)</span>
+<span class='curline'><a href='../S/638.html#L1000'>bgp</a>              1000 bgpd/bgp_vty.c   bgp-&gt;stalepath_time = BGP_DEFAULT_STALEPATH_TIME;</span>
+<span class='curline'><a href='../S/638.html#L1020'>bgp</a>              1020 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1022'>bgp</a>              1022 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1023'>bgp</a>              1023 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_NO_FAST_EXT_FAILOVER);</span>
+<span class='curline'><a href='../S/638.html#L1034'>bgp</a>              1034 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1036'>bgp</a>              1036 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1037'>bgp</a>              1037 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_NO_FAST_EXT_FAILOVER);</span>
+<span class='curline'><a href='../S/638.html#L1048'>bgp</a>              1048 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1050'>bgp</a>              1050 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1051'>bgp</a>              1051 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_ENFORCE_FIRST_AS);</span>
+<span class='curline'><a href='../S/638.html#L1062'>bgp</a>              1062 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1064'>bgp</a>              1064 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1065'>bgp</a>              1065 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_ENFORCE_FIRST_AS);</span>
+<span class='curline'><a href='../S/638.html#L1077'>bgp</a>              1077 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1079'>bgp</a>              1079 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1080'>bgp</a>              1080 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_COMPARE_ROUTER_ID);</span>
+<span class='curline'><a href='../S/638.html#L1092'>bgp</a>              1092 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1094'>bgp</a>              1094 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1095'>bgp</a>              1095 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_COMPARE_ROUTER_ID);</span>
+<span class='curline'><a href='../S/638.html#L1108'>bgp</a>              1108 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1110'>bgp</a>              1110 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1111'>bgp</a>              1111 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_ASPATH_IGNORE);</span>
+<span class='curline'><a href='../S/638.html#L1124'>bgp</a>              1124 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1126'>bgp</a>              1126 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1127'>bgp</a>              1127 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_ASPATH_IGNORE);</span>
+<span class='curline'><a href='../S/638.html#L1140'>bgp</a>              1140 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1142'>bgp</a>              1142 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1143'>bgp</a>              1143 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_ASPATH_CONFED);</span>
+<span class='curline'><a href='../S/638.html#L1156'>bgp</a>              1156 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1158'>bgp</a>              1158 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1159'>bgp</a>              1159 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_ASPATH_CONFED);</span>
+<span class='curline'><a href='../S/638.html#L1170'>bgp</a>              1170 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1172'>bgp</a>              1172 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1173'>bgp</a>              1173 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_LOG_NEIGHBOR_CHANGES);</span>
+<span class='curline'><a href='../S/638.html#L1184'>bgp</a>              1184 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1186'>bgp</a>              1186 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1187'>bgp</a>              1187 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_LOG_NEIGHBOR_CHANGES);</span>
+<span class='curline'><a href='../S/638.html#L1201'>bgp</a>              1201 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1203'>bgp</a>              1203 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1206'>bgp</a>              1206 bgpd/bgp_vty.c     bgp_flag_set (bgp, BGP_FLAG_MED_CONFED);</span>
+<span class='curline'><a href='../S/638.html#L1208'>bgp</a>              1208 bgpd/bgp_vty.c     bgp_flag_set (bgp, BGP_FLAG_MED_MISSING_AS_WORST);</span>
+<span class='curline'><a href='../S/638.html#L1222'>bgp</a>              1222 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1224'>bgp</a>              1224 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1225'>bgp</a>              1225 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_MED_CONFED);</span>
+<span class='curline'><a href='../S/638.html#L1226'>bgp</a>              1226 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_MED_MISSING_AS_WORST);</span>
+<span class='curline'><a href='../S/638.html#L1249'>bgp</a>              1249 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1251'>bgp</a>              1251 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1254'>bgp</a>              1254 bgpd/bgp_vty.c     bgp_flag_unset (bgp, BGP_FLAG_MED_CONFED);</span>
+<span class='curline'><a href='../S/638.html#L1256'>bgp</a>              1256 bgpd/bgp_vty.c     bgp_flag_unset (bgp, BGP_FLAG_MED_MISSING_AS_WORST);</span>
+<span class='curline'><a href='../S/638.html#L1271'>bgp</a>              1271 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1273'>bgp</a>              1273 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1274'>bgp</a>              1274 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_MED_CONFED);</span>
+<span class='curline'><a href='../S/638.html#L1275'>bgp</a>              1275 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_MED_MISSING_AS_WORST);</span>
+<span class='curline'><a href='../S/638.html#L1298'>bgp</a>              1298 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1300'>bgp</a>              1300 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1301'>bgp</a>              1301 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_NO_DEFAULT_IPV4);</span>
+<span class='curline'><a href='../S/638.html#L1312'>bgp</a>              1312 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1314'>bgp</a>              1314 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1315'>bgp</a>              1315 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_NO_DEFAULT_IPV4);</span>
+<span class='curline'><a href='../S/638.html#L1327'>bgp</a>              1327 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1329'>bgp</a>              1329 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1330'>bgp</a>              1330 bgpd/bgp_vty.c   bgp_flag_set (bgp, BGP_FLAG_IMPORT_CHECK);</span>
+<span class='curline'><a href='../S/638.html#L1342'>bgp</a>              1342 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1344'>bgp</a>              1344 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1345'>bgp</a>              1345 bgpd/bgp_vty.c   bgp_flag_unset (bgp, BGP_FLAG_IMPORT_CHECK);</span>
+<span class='curline'><a href='../S/638.html#L1357'>bgp</a>              1357 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1360'>bgp</a>              1360 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1364'>bgp</a>              1364 bgpd/bgp_vty.c   bgp_default_local_preference_set (bgp, local_pref);</span>
+<span class='curline'><a href='../S/638.html#L1377'>bgp</a>              1377 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1379'>bgp</a>              1379 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1380'>bgp</a>              1380 bgpd/bgp_vty.c   bgp_default_local_preference_unset (bgp);</span>
+<span class='curline'><a href='../S/638.html#L1398'>bgp</a>              1398 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1402'>bgp</a>              1402 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1411'>bgp</a>              1411 bgpd/bgp_vty.c       ret = peer_group_remote_as (bgp, peer_str, &amp;as);</span>
+<span class='curline'><a href='../S/638.html#L1427'>bgp</a>              1427 bgpd/bgp_vty.c   ret = peer_remote_as (bgp, &amp;su, &amp;as, afi, safi);</span>
+<span class='curline'><a href='../S/638.html#L1460'>bgp</a>              1460 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1463'>bgp</a>              1463 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1465'>bgp</a>              1465 bgpd/bgp_vty.c   group = peer_group_get (bgp, argv[0]);</span>
+<span class='curline'><a href='../S/638.html#L1756'>bgp</a>              1756 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1759'>bgp</a>              1759 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1768'>bgp</a>              1768 bgpd/bgp_vty.c   group = peer_group_lookup (bgp, argv[1]);</span>
+<span class='curline'><a href='../S/638.html#L1782'>bgp</a>              1782 bgpd/bgp_vty.c   ret = peer_group_bind (bgp, &amp;su, group, bgp_node_afi (vty), </span>
+<span class='curline'><a href='../S/638.html#L1804'>bgp</a>              1804 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L1808'>bgp</a>              1808 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L1814'>bgp</a>              1814 bgpd/bgp_vty.c   group = peer_group_lookup (bgp, argv[1]);</span>
+<span class='curline'><a href='../S/638.html#L1821'>bgp</a>              1821 bgpd/bgp_vty.c   ret = peer_group_unbind (bgp, peer, group, bgp_node_afi (vty),</span>
+<span class='curline'><a href='../S/638.html#L2254'>bgp</a>              2254 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L2262'>bgp</a>              2262 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L2275'>bgp</a>              2275 bgpd/bgp_vty.c       listnode_add_sort (bgp-&gt;rsclient, peer);</span>
+<span class='curline'><a href='../S/638.html#L2284'>bgp</a>              2284 bgpd/bgp_vty.c           listnode_delete (bgp-&gt;rsclient, peer);</span>
+<span class='curline'><a href='../S/638.html#L2350'>bgp</a>              2350 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L2355'>bgp</a>              2355 bgpd/bgp_vty.c   bgp = vty-&gt;index;</span>
+<span class='curline'><a href='../S/638.html#L2388'>bgp</a>              2388 bgpd/bgp_vty.c       listnode_delete (bgp-&gt;rsclient, peer);</span>
+<span class='curline'><a href='../S/638.html#L4287'>bgp</a>              4287 bgpd/bgp_vty.c bgp_clear (struct vty *vty, struct bgp *bgp,  afi_t afi, safi_t safi,</span>
+<span class='curline'><a href='../S/638.html#L4297'>bgp</a>              4297 bgpd/bgp_vty.c       for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/638.html#L4323'>bgp</a>              4323 bgpd/bgp_vty.c       peer = peer_lookup (bgp, &amp;su);</span>
+<span class='curline'><a href='../S/638.html#L4346'>bgp</a>              4346 bgpd/bgp_vty.c       group = peer_group_lookup (bgp, arg);</span>
+<span class='curline'><a href='../S/638.html#L4374'>bgp</a>              4374 bgpd/bgp_vty.c       for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/638.html#L4397'>bgp</a>              4397 bgpd/bgp_vty.c       for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/638.html#L4425'>bgp</a>              4425 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L4430'>bgp</a>              4430 bgpd/bgp_vty.c       bgp = bgp_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/638.html#L4431'>bgp</a>              4431 bgpd/bgp_vty.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/638.html#L4439'>bgp</a>              4439 bgpd/bgp_vty.c       bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/638.html#L4440'>bgp</a>              4440 bgpd/bgp_vty.c       if (bgp == NULL)</span>
+<span class='curline'><a href='../S/638.html#L4447'>bgp</a>              4447 bgpd/bgp_vty.c   return bgp_clear (vty, bgp, afi, safi, sort, stype, arg);</span>
+<span class='curline'><a href='../S/638.html#L6737'>bgp</a>              6737 bgpd/bgp_vty.c   struct list *inst = bm-&gt;bgp;</span>
+<span class='curline'><a href='../S/638.html#L6739'>bgp</a>              6739 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L6748'>bgp</a>              6748 bgpd/bgp_vty.c   for (ALL_LIST_ELEMENTS_RO(inst, node, bgp))</span>
+<span class='curline'><a href='../S/638.html#L6750'>bgp</a>              6750 bgpd/bgp_vty.c              bgp-&gt;name ? bgp-&gt;name : "(null)",</span>
+<span class='curline'><a href='../S/638.html#L6751'>bgp</a>              6751 bgpd/bgp_vty.c              bgp-&gt;as, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/638.html#L6894'>bgp</a>              6894 bgpd/bgp_vty.c bgp_show_summary (struct vty *vty, struct bgp *bgp, int afi, int safi)</span>
+<span class='curline'><a href='../S/638.html#L6905'>bgp</a>              6905 bgpd/bgp_vty.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/638.html#L6917'>bgp</a>              6917 bgpd/bgp_vty.c                        inet_ntoa (bgp-&gt;router_id), bgp-&gt;as, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/638.html#L6919'>bgp</a>              6919 bgpd/bgp_vty.c               ents = bgp_table_count (bgp-&gt;rib[afi][safi]);</span>
+<span class='curline'><a href='../S/638.html#L6926'>bgp</a>              6926 bgpd/bgp_vty.c               ents = listcount (bgp-&gt;peer);</span>
+<span class='curline'><a href='../S/638.html#L6933'>bgp</a>              6933 bgpd/bgp_vty.c               if ((ents = listcount (bgp-&gt;rsclient)))</span>
+<span class='curline'><a href='../S/638.html#L6940'>bgp</a>              6940 bgpd/bgp_vty.c               if ((ents = listcount (bgp-&gt;group)))</span>
+<span class='curline'><a href='../S/638.html#L6946'>bgp</a>              6946 bgpd/bgp_vty.c               if (CHECK_FLAG (bgp-&gt;af_flags[afi][safi], BGP_CONFIG_DAMPENING))</span>
+<span class='curline'><a href='../S/638.html#L7006'>bgp</a>              7006 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L7010'>bgp</a>              7010 bgpd/bgp_vty.c       bgp = bgp_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/638.html#L7012'>bgp</a>              7012 bgpd/bgp_vty.c       if (! bgp)</span>
+<span class='curline'><a href='../S/638.html#L7018'>bgp</a>              7018 bgpd/bgp_vty.c       bgp_show_summary (vty, bgp, afi, safi);</span>
+<span class='curline'><a href='../S/638.html#L7022'>bgp</a>              7022 bgpd/bgp_vty.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/638.html#L7024'>bgp</a>              7024 bgpd/bgp_vty.c   if (bgp)</span>
+<span class='curline'><a href='../S/638.html#L7025'>bgp</a>              7025 bgpd/bgp_vty.c     bgp_show_summary (vty, bgp, afi, safi);    </span>
+<span class='curline'><a href='../S/638.html#L7519'>bgp</a>              7519 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L7525'>bgp</a>              7525 bgpd/bgp_vty.c   bgp = p-&gt;bgp;</span>
+<span class='curline'><a href='../S/638.html#L7560'>bgp</a>              7560 bgpd/bgp_vty.c   if (CHECK_FLAG (bgp-&gt;config, BGP_CONFIG_CONFEDERATION)</span>
+<span class='curline'><a href='../S/638.html#L7561'>bgp</a>              7561 bgpd/bgp_vty.c       &amp;&amp; bgp_confederation_peers_check (bgp, p-&gt;as))</span>
+<span class='curline'><a href='../S/638.html#L7887'>bgp</a>              7887 bgpd/bgp_vty.c bgp_show_neighbor (struct vty *vty, struct bgp *bgp,</span>
+<span class='curline'><a href='../S/638.html#L7894'>bgp</a>              7894 bgpd/bgp_vty.c   for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/638.html#L7922'>bgp</a>              7922 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L7937'>bgp</a>              7937 bgpd/bgp_vty.c       bgp = bgp_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/638.html#L7939'>bgp</a>              7939 bgpd/bgp_vty.c       if (! bgp)</span>
+<span class='curline'><a href='../S/638.html#L7945'>bgp</a>              7945 bgpd/bgp_vty.c       bgp_show_neighbor (vty, bgp, type, &amp;su);</span>
+<span class='curline'><a href='../S/638.html#L7950'>bgp</a>              7950 bgpd/bgp_vty.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/638.html#L7952'>bgp</a>              7952 bgpd/bgp_vty.c   if (bgp)</span>
+<span class='curline'><a href='../S/638.html#L7953'>bgp</a>              7953 bgpd/bgp_vty.c     bgp_show_neighbor (vty, bgp, type, &amp;su);</span>
+<span class='curline'><a href='../S/638.html#L8299'>bgp</a>              8299 bgpd/bgp_vty.c bgp_show_rsclient_summary (struct vty *vty, struct bgp *bgp, </span>
+<span class='curline'><a href='../S/638.html#L8309'>bgp</a>              8309 bgpd/bgp_vty.c   for (ALL_LIST_ELEMENTS (bgp-&gt;rsclient, node, nnode, peer))</span>
+<span class='curline'><a href='../S/638.html#L8318'>bgp</a>              8318 bgpd/bgp_vty.c                       inet_ntoa (bgp-&gt;router_id), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/638.html#L8320'>bgp</a>              8320 bgpd/bgp_vty.c               "Route Server's local AS number %u%s", bgp-&gt;as,</span>
+<span class='curline'><a href='../S/638.html#L8345'>bgp</a>              8345 bgpd/bgp_vty.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/638.html#L8349'>bgp</a>              8349 bgpd/bgp_vty.c       bgp = bgp_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/638.html#L8351'>bgp</a>              8351 bgpd/bgp_vty.c       if (! bgp)</span>
+<span class='curline'><a href='../S/638.html#L8357'>bgp</a>              8357 bgpd/bgp_vty.c       bgp_show_rsclient_summary (vty, bgp, afi, safi);</span>
+<span class='curline'><a href='../S/638.html#L8361'>bgp</a>              8361 bgpd/bgp_vty.c   bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/638.html#L8363'>bgp</a>              8363 bgpd/bgp_vty.c   if (bgp)</span>
+<span class='curline'><a href='../S/638.html#L8364'>bgp</a>              8364 bgpd/bgp_vty.c     bgp_show_rsclient_summary (vty, bgp, afi, safi);</span>
+<span class='curline'><a href='../S/638.html#L8981'>bgp</a>              8981 bgpd/bgp_vty.c bgp_config_write_redistribute (struct vty *vty, struct bgp *bgp, afi_t afi,</span>
+<span class='curline'><a href='../S/638.html#L8993'>bgp</a>              8993 bgpd/bgp_vty.c       if (bgp-&gt;redist[afi][i] &amp;&amp; i != ZEBRA_ROUTE_BGP)</span>
+<span class='curline'><a href='../S/638.html#L9001'>bgp</a>              9001 bgpd/bgp_vty.c 	  if (bgp-&gt;redist_metric_flag[afi][i])</span>
+<span class='curline'><a href='../S/638.html#L9002'>bgp</a>              9002 bgpd/bgp_vty.c 	    vty_out (vty, " metric %u", bgp-&gt;redist_metric[afi][i]);</span>
+<span class='curline'><a href='../S/638.html#L9004'>bgp</a>              9004 bgpd/bgp_vty.c 	  if (bgp-&gt;rmap[afi][i].name)</span>
+<span class='curline'><a href='../S/638.html#L9005'>bgp</a>              9005 bgpd/bgp_vty.c 	    vty_out (vty, " route-map %s", bgp-&gt;rmap[afi][i].name);</span>
+<span class='curline'><a href='../S/654.html#L55'>bgp</a>                55 bgpd/bgp_zebra.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/654.html#L68'>bgp</a>                68 bgpd/bgp_zebra.c   for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/654.html#L70'>bgp</a>                70 bgpd/bgp_zebra.c       if (!bgp-&gt;router_id_static.s_addr)</span>
+<span class='curline'><a href='../S/654.html#L71'>bgp</a>                71 bgpd/bgp_zebra.c         bgp_router_id_set (bgp, &amp;router_id.u.prefix4);</span>
+<span class='curline'><a href='../S/654.html#L153'>bgp</a>               153 bgpd/bgp_zebra.c     struct bgp *bgp;</span>
+<span class='curline'><a href='../S/654.html#L157'>bgp</a>               157 bgpd/bgp_zebra.c     for (ALL_LIST_ELEMENTS_RO (bm-&gt;bgp, mnode, bgp))</span>
+<span class='curline'><a href='../S/654.html#L159'>bgp</a>               159 bgpd/bgp_zebra.c 	if (CHECK_FLAG (bgp-&gt;flags, BGP_FLAG_NO_FAST_EXT_FAILOVER))</span>
+<span class='curline'><a href='../S/654.html#L162'>bgp</a>               162 bgpd/bgp_zebra.c 	for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/654.html#L650'>bgp</a>               650 bgpd/bgp_zebra.c bgp_zebra_announce (struct prefix *p, struct bgp_info *info, struct bgp *bgp, safi_t safi)</span>
+<span class='curline'><a href='../S/654.html#L717'>bgp</a>               717 bgpd/bgp_zebra.c       distance = bgp_distance_apply (p, info, bgp);</span>
+<span class='curline'><a href='../S/654.html#L935'>bgp</a>               935 bgpd/bgp_zebra.c bgp_redistribute_set (struct bgp *bgp, afi_t afi, int type)</span>
+<span class='curline'><a href='../S/654.html#L938'>bgp</a>               938 bgpd/bgp_zebra.c   bgp-&gt;redist[afi][type] = 1;</span>
+<span class='curline'><a href='../S/654.html#L961'>bgp</a>               961 bgpd/bgp_zebra.c bgp_redistribute_rmap_set (struct bgp *bgp, afi_t afi, int type, </span>
+<span class='curline'><a href='../S/654.html#L964'>bgp</a>               964 bgpd/bgp_zebra.c   if (bgp-&gt;rmap[afi][type].name</span>
+<span class='curline'><a href='../S/654.html#L965'>bgp</a>               965 bgpd/bgp_zebra.c       &amp;&amp; (strcmp (bgp-&gt;rmap[afi][type].name, name) == 0))</span>
+<span class='curline'><a href='../S/654.html#L968'>bgp</a>               968 bgpd/bgp_zebra.c   if (bgp-&gt;rmap[afi][type].name)</span>
+<span class='curline'><a href='../S/654.html#L969'>bgp</a>               969 bgpd/bgp_zebra.c     free (bgp-&gt;rmap[afi][type].name);</span>
+<span class='curline'><a href='../S/654.html#L970'>bgp</a>               970 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].name = strdup (name);</span>
+<span class='curline'><a href='../S/654.html#L971'>bgp</a>               971 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].map = route_map_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/654.html#L978'>bgp</a>               978 bgpd/bgp_zebra.c bgp_redistribute_metric_set (struct bgp *bgp, afi_t afi, int type,</span>
+<span class='curline'><a href='../S/654.html#L981'>bgp</a>               981 bgpd/bgp_zebra.c   if (bgp-&gt;redist_metric_flag[afi][type]</span>
+<span class='curline'><a href='../S/654.html#L982'>bgp</a>               982 bgpd/bgp_zebra.c       &amp;&amp; bgp-&gt;redist_metric[afi][type] == metric)</span>
+<span class='curline'><a href='../S/654.html#L985'>bgp</a>               985 bgpd/bgp_zebra.c   bgp-&gt;redist_metric_flag[afi][type] = 1;</span>
+<span class='curline'><a href='../S/654.html#L986'>bgp</a>               986 bgpd/bgp_zebra.c   bgp-&gt;redist_metric[afi][type] = metric;</span>
+<span class='curline'><a href='../S/654.html#L993'>bgp</a>               993 bgpd/bgp_zebra.c bgp_redistribute_unset (struct bgp *bgp, afi_t afi, int type)</span>
+<span class='curline'><a href='../S/654.html#L996'>bgp</a>               996 bgpd/bgp_zebra.c   bgp-&gt;redist[afi][type] = 0;</span>
+<span class='curline'><a href='../S/654.html#L999'>bgp</a>               999 bgpd/bgp_zebra.c   if (bgp-&gt;rmap[afi][type].name)</span>
+<span class='curline'><a href='../S/654.html#L1000'>bgp</a>              1000 bgpd/bgp_zebra.c     free (bgp-&gt;rmap[afi][type].name);</span>
+<span class='curline'><a href='../S/654.html#L1001'>bgp</a>              1001 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].name = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1002'>bgp</a>              1002 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].map = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1005'>bgp</a>              1005 bgpd/bgp_zebra.c   bgp-&gt;redist_metric_flag[afi][type] = 0;</span>
+<span class='curline'><a href='../S/654.html#L1006'>bgp</a>              1006 bgpd/bgp_zebra.c   bgp-&gt;redist_metric[afi][type] = 0;</span>
+<span class='curline'><a href='../S/654.html#L1013'>bgp</a>              1013 bgpd/bgp_zebra.c   if (bgp-&gt;redist[AFI_IP][type] == 0 </span>
+<span class='curline'><a href='../S/654.html#L1014'>bgp</a>              1014 bgpd/bgp_zebra.c       &amp;&amp; bgp-&gt;redist[AFI_IP6][type] == 0 </span>
+<span class='curline'><a href='../S/654.html#L1025'>bgp</a>              1025 bgpd/bgp_zebra.c   bgp_redistribute_withdraw (bgp, afi, type);</span>
+<span class='curline'><a href='../S/654.html#L1032'>bgp</a>              1032 bgpd/bgp_zebra.c bgp_redistribute_routemap_unset (struct bgp *bgp, afi_t afi, int type)</span>
+<span class='curline'><a href='../S/654.html#L1034'>bgp</a>              1034 bgpd/bgp_zebra.c   if (! bgp-&gt;rmap[afi][type].name)</span>
+<span class='curline'><a href='../S/654.html#L1038'>bgp</a>              1038 bgpd/bgp_zebra.c   free (bgp-&gt;rmap[afi][type].name);</span>
+<span class='curline'><a href='../S/654.html#L1039'>bgp</a>              1039 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].name = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1040'>bgp</a>              1040 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].map = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1047'>bgp</a>              1047 bgpd/bgp_zebra.c bgp_redistribute_metric_unset (struct bgp *bgp, afi_t afi, int type)</span>
+<span class='curline'><a href='../S/654.html#L1049'>bgp</a>              1049 bgpd/bgp_zebra.c   if (! bgp-&gt;redist_metric_flag[afi][type])</span>
+<span class='curline'><a href='../S/654.html#L1053'>bgp</a>              1053 bgpd/bgp_zebra.c   bgp-&gt;redist_metric_flag[afi][type] = 0;</span>
+<span class='curline'><a href='../S/654.html#L1054'>bgp</a>              1054 bgpd/bgp_zebra.c   bgp-&gt;redist_metric[afi][type] = 0;</span>
+<span class='curline'><a href='../S/660.html#L30'>bgp</a>                30 bgpd/bgp_zebra.h extern int bgp_config_write_maxpaths (struct vty *, struct bgp *, afi_t,</span>
+<span class='curline'><a href='../S/660.html#L32'>bgp</a>                32 bgpd/bgp_zebra.h extern int bgp_config_write_redistribute (struct vty *, struct bgp *, afi_t, safi_t,</span>
+<span class='curline'><a href='../S/660.html#L34'>bgp</a>                34 bgpd/bgp_zebra.h extern void bgp_zebra_announce (struct prefix *, struct bgp_info *, struct bgp *, safi_t);</span>
+<span class='curline'><a href='../S/660.html#L37'>bgp</a>                37 bgpd/bgp_zebra.h extern int bgp_redistribute_set (struct bgp *, afi_t, int);</span>
+<span class='curline'><a href='../S/660.html#L38'>bgp</a>                38 bgpd/bgp_zebra.h extern int bgp_redistribute_rmap_set (struct bgp *, afi_t, int, const char *);</span>
+<span class='curline'><a href='../S/660.html#L39'>bgp</a>                39 bgpd/bgp_zebra.h extern int bgp_redistribute_metric_set (struct bgp *, afi_t, int, u_int32_t);</span>
+<span class='curline'><a href='../S/660.html#L40'>bgp</a>                40 bgpd/bgp_zebra.h extern int bgp_redistribute_unset (struct bgp *, afi_t, int);</span>
+<span class='curline'><a href='../S/660.html#L41'>bgp</a>                41 bgpd/bgp_zebra.h extern int bgp_redistribute_routemap_unset (struct bgp *, afi_t, int);</span>
+<span class='curline'><a href='../S/660.html#L42'>bgp</a>                42 bgpd/bgp_zebra.h extern int bgp_redistribute_metric_unset (struct bgp *, afi_t, int);</span>
+<span class='curline'><a href='../S/610.html#L100'>bgp</a>               100 bgpd/bgpd.c          if (listcount (bm-&gt;bgp) &gt; 1)</span>
+<span class='curline'><a href='../S/610.html#L121'>bgp</a>               121 bgpd/bgpd.c    bgp_flag_set (struct bgp *bgp, int flag)</span>
+<span class='curline'><a href='../S/610.html#L123'>bgp</a>               123 bgpd/bgpd.c      SET_FLAG (bgp-&gt;flags, flag);</span>
+<span class='curline'><a href='../S/610.html#L128'>bgp</a>               128 bgpd/bgpd.c    bgp_flag_unset (struct bgp *bgp, int flag)</span>
+<span class='curline'><a href='../S/610.html#L130'>bgp</a>               130 bgpd/bgpd.c      UNSET_FLAG (bgp-&gt;flags, flag);</span>
+<span class='curline'><a href='../S/610.html#L135'>bgp</a>               135 bgpd/bgpd.c    bgp_flag_check (struct bgp *bgp, int flag)</span>
+<span class='curline'><a href='../S/610.html#L137'>bgp</a>               137 bgpd/bgpd.c      return CHECK_FLAG (bgp-&gt;flags, flag);</span>
+<span class='curline'><a href='../S/610.html#L142'>bgp</a>               142 bgpd/bgpd.c    bgp_config_set (struct bgp *bgp, int config)</span>
+<span class='curline'><a href='../S/610.html#L144'>bgp</a>               144 bgpd/bgpd.c      SET_FLAG (bgp-&gt;config, config);</span>
+<span class='curline'><a href='../S/610.html#L148'>bgp</a>               148 bgpd/bgpd.c    bgp_config_unset (struct bgp *bgp, int config)</span>
+<span class='curline'><a href='../S/610.html#L150'>bgp</a>               150 bgpd/bgpd.c      UNSET_FLAG (bgp-&gt;config, config);</span>
+<span class='curline'><a href='../S/610.html#L154'>bgp</a>               154 bgpd/bgpd.c    bgp_config_check (struct bgp *bgp, int config)</span>
+<span class='curline'><a href='../S/610.html#L156'>bgp</a>               156 bgpd/bgpd.c      return CHECK_FLAG (bgp-&gt;config, config);</span>
+<span class='curline'><a href='../S/610.html#L161'>bgp</a>               161 bgpd/bgpd.c    bgp_router_id_set (struct bgp *bgp, struct in_addr *id)</span>
+<span class='curline'><a href='../S/610.html#L166'>bgp</a>               166 bgpd/bgpd.c      if (bgp_config_check (bgp, BGP_CONFIG_ROUTER_ID)</span>
+<span class='curline'><a href='../S/610.html#L167'>bgp</a>               167 bgpd/bgpd.c          &amp;&amp; IPV4_ADDR_SAME (&amp;bgp-&gt;router_id, id))</span>
+<span class='curline'><a href='../S/610.html#L170'>bgp</a>               170 bgpd/bgpd.c      IPV4_ADDR_COPY (&amp;bgp-&gt;router_id, id);</span>
+<span class='curline'><a href='../S/610.html#L171'>bgp</a>               171 bgpd/bgpd.c      bgp_config_set (bgp, BGP_CONFIG_ROUTER_ID);</span>
+<span class='curline'><a href='../S/610.html#L174'>bgp</a>               174 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L190'>bgp</a>               190 bgpd/bgpd.c    bgp_cluster_id_set (struct bgp *bgp, struct in_addr *cluster_id)</span>
+<span class='curline'><a href='../S/610.html#L195'>bgp</a>               195 bgpd/bgpd.c      if (bgp_config_check (bgp, BGP_CONFIG_CLUSTER_ID)</span>
+<span class='curline'><a href='../S/610.html#L196'>bgp</a>               196 bgpd/bgpd.c          &amp;&amp; IPV4_ADDR_SAME (&amp;bgp-&gt;cluster_id, cluster_id))</span>
+<span class='curline'><a href='../S/610.html#L199'>bgp</a>               199 bgpd/bgpd.c      IPV4_ADDR_COPY (&amp;bgp-&gt;cluster_id, cluster_id);</span>
+<span class='curline'><a href='../S/610.html#L200'>bgp</a>               200 bgpd/bgpd.c      bgp_config_set (bgp, BGP_CONFIG_CLUSTER_ID);</span>
+<span class='curline'><a href='../S/610.html#L203'>bgp</a>               203 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L219'>bgp</a>               219 bgpd/bgpd.c    bgp_cluster_id_unset (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L224'>bgp</a>               224 bgpd/bgpd.c      if (! bgp_config_check (bgp, BGP_CONFIG_CLUSTER_ID))</span>
+<span class='curline'><a href='../S/610.html#L227'>bgp</a>               227 bgpd/bgpd.c      bgp-&gt;cluster_id.s_addr = 0;</span>
+<span class='curline'><a href='../S/610.html#L228'>bgp</a>               228 bgpd/bgpd.c      bgp_config_unset (bgp, BGP_CONFIG_CLUSTER_ID);</span>
+<span class='curline'><a href='../S/610.html#L231'>bgp</a>               231 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L259'>bgp</a>               259 bgpd/bgpd.c    bgp_timers_set (struct bgp *bgp, u_int32_t keepalive, u_int32_t holdtime)</span>
+<span class='curline'><a href='../S/610.html#L261'>bgp</a>               261 bgpd/bgpd.c      bgp-&gt;default_keepalive = (keepalive &lt; holdtime / 3 </span>
+<span class='curline'><a href='../S/610.html#L263'>bgp</a>               263 bgpd/bgpd.c      bgp-&gt;default_holdtime = holdtime;</span>
+<span class='curline'><a href='../S/610.html#L269'>bgp</a>               269 bgpd/bgpd.c    bgp_timers_unset (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L271'>bgp</a>               271 bgpd/bgpd.c      bgp-&gt;default_keepalive = BGP_DEFAULT_KEEPALIVE;</span>
+<span class='curline'><a href='../S/610.html#L272'>bgp</a>               272 bgpd/bgpd.c      bgp-&gt;default_holdtime = BGP_DEFAULT_HOLDTIME;</span>
+<span class='curline'><a href='../S/610.html#L279'>bgp</a>               279 bgpd/bgpd.c    bgp_confederation_id_set (struct bgp *bgp, as_t as)</span>
+<span class='curline'><a href='../S/610.html#L289'>bgp</a>               289 bgpd/bgpd.c      already_confed = bgp_config_check (bgp, BGP_CONFIG_CONFEDERATION);</span>
+<span class='curline'><a href='../S/610.html#L290'>bgp</a>               290 bgpd/bgpd.c      bgp-&gt;confed_id = as;</span>
+<span class='curline'><a href='../S/610.html#L291'>bgp</a>               291 bgpd/bgpd.c      bgp_config_set (bgp, BGP_CONFIG_CONFEDERATION);</span>
+<span class='curline'><a href='../S/610.html#L296'>bgp</a>               296 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L340'>bgp</a>               340 bgpd/bgpd.c    bgp_confederation_id_unset (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L345'>bgp</a>               345 bgpd/bgpd.c      bgp-&gt;confed_id = 0;</span>
+<span class='curline'><a href='../S/610.html#L346'>bgp</a>               346 bgpd/bgpd.c      bgp_config_unset (bgp, BGP_CONFIG_CONFEDERATION);</span>
+<span class='curline'><a href='../S/610.html#L348'>bgp</a>               348 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L353'>bgp</a>               353 bgpd/bgpd.c    	  peer-&gt;local_as = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/610.html#L370'>bgp</a>               370 bgpd/bgpd.c    bgp_confederation_peers_check (struct bgp *bgp, as_t as)</span>
+<span class='curline'><a href='../S/610.html#L374'>bgp</a>               374 bgpd/bgpd.c      if (! bgp)</span>
+<span class='curline'><a href='../S/610.html#L377'>bgp</a>               377 bgpd/bgpd.c      for (i = 0; i &lt; bgp-&gt;confed_peers_cnt; i++)</span>
+<span class='curline'><a href='../S/610.html#L378'>bgp</a>               378 bgpd/bgpd.c        if (bgp-&gt;confed_peers[i] == as)</span>
+<span class='curline'><a href='../S/610.html#L386'>bgp</a>               386 bgpd/bgpd.c    bgp_confederation_peers_add (struct bgp *bgp, as_t as)</span>
+<span class='curline'><a href='../S/610.html#L391'>bgp</a>               391 bgpd/bgpd.c      if (! bgp)</span>
+<span class='curline'><a href='../S/610.html#L394'>bgp</a>               394 bgpd/bgpd.c      if (bgp-&gt;as == as)</span>
+<span class='curline'><a href='../S/610.html#L397'>bgp</a>               397 bgpd/bgpd.c      if (bgp_confederation_peers_check (bgp, as))</span>
+<span class='curline'><a href='../S/610.html#L400'>bgp</a>               400 bgpd/bgpd.c      if (bgp-&gt;confed_peers)</span>
+<span class='curline'><a href='../S/610.html#L401'>bgp</a>               401 bgpd/bgpd.c        bgp-&gt;confed_peers = XREALLOC (MTYPE_BGP_CONFED_LIST, </span>
+<span class='curline'><a href='../S/610.html#L402'>bgp</a>               402 bgpd/bgpd.c    				  bgp-&gt;confed_peers,</span>
+<span class='curline'><a href='../S/610.html#L403'>bgp</a>               403 bgpd/bgpd.c    				  (bgp-&gt;confed_peers_cnt + 1) * sizeof (as_t));</span>
+<span class='curline'><a href='../S/610.html#L405'>bgp</a>               405 bgpd/bgpd.c        bgp-&gt;confed_peers = XMALLOC (MTYPE_BGP_CONFED_LIST, </span>
+<span class='curline'><a href='../S/610.html#L406'>bgp</a>               406 bgpd/bgpd.c    				 (bgp-&gt;confed_peers_cnt + 1) * sizeof (as_t));</span>
+<span class='curline'><a href='../S/610.html#L408'>bgp</a>               408 bgpd/bgpd.c      bgp-&gt;confed_peers[bgp-&gt;confed_peers_cnt] = as;</span>
+<span class='curline'><a href='../S/610.html#L409'>bgp</a>               409 bgpd/bgpd.c      bgp-&gt;confed_peers_cnt++;</span>
+<span class='curline'><a href='../S/610.html#L411'>bgp</a>               411 bgpd/bgpd.c      if (bgp_config_check (bgp, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/610.html#L413'>bgp</a>               413 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L417'>bgp</a>               417 bgpd/bgpd.c    	      peer-&gt;local_as = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/610.html#L434'>bgp</a>               434 bgpd/bgpd.c    bgp_confederation_peers_remove (struct bgp *bgp, as_t as)</span>
+<span class='curline'><a href='../S/610.html#L441'>bgp</a>               441 bgpd/bgpd.c      if (! bgp)</span>
+<span class='curline'><a href='../S/610.html#L444'>bgp</a>               444 bgpd/bgpd.c      if (! bgp_confederation_peers_check (bgp, as))</span>
+<span class='curline'><a href='../S/610.html#L447'>bgp</a>               447 bgpd/bgpd.c      for (i = 0; i &lt; bgp-&gt;confed_peers_cnt; i++)</span>
+<span class='curline'><a href='../S/610.html#L448'>bgp</a>               448 bgpd/bgpd.c        if (bgp-&gt;confed_peers[i] == as)</span>
+<span class='curline'><a href='../S/610.html#L449'>bgp</a>               449 bgpd/bgpd.c          for(j = i + 1; j &lt; bgp-&gt;confed_peers_cnt; j++)</span>
+<span class='curline'><a href='../S/610.html#L450'>bgp</a>               450 bgpd/bgpd.c    	bgp-&gt;confed_peers[j - 1] = bgp-&gt;confed_peers[j];</span>
+<span class='curline'><a href='../S/610.html#L452'>bgp</a>               452 bgpd/bgpd.c      bgp-&gt;confed_peers_cnt--;</span>
+<span class='curline'><a href='../S/610.html#L454'>bgp</a>               454 bgpd/bgpd.c      if (bgp-&gt;confed_peers_cnt == 0)</span>
+<span class='curline'><a href='../S/610.html#L456'>bgp</a>               456 bgpd/bgpd.c          if (bgp-&gt;confed_peers)</span>
+<span class='curline'><a href='../S/610.html#L457'>bgp</a>               457 bgpd/bgpd.c    	XFREE (MTYPE_BGP_CONFED_LIST, bgp-&gt;confed_peers);</span>
+<span class='curline'><a href='../S/610.html#L458'>bgp</a>               458 bgpd/bgpd.c          bgp-&gt;confed_peers = NULL;</span>
+<span class='curline'><a href='../S/610.html#L461'>bgp</a>               461 bgpd/bgpd.c        bgp-&gt;confed_peers = XREALLOC (MTYPE_BGP_CONFED_LIST,</span>
+<span class='curline'><a href='../S/610.html#L462'>bgp</a>               462 bgpd/bgpd.c    				  bgp-&gt;confed_peers,</span>
+<span class='curline'><a href='../S/610.html#L463'>bgp</a>               463 bgpd/bgpd.c    				  bgp-&gt;confed_peers_cnt * sizeof (as_t));</span>
+<span class='curline'><a href='../S/610.html#L467'>bgp</a>               467 bgpd/bgpd.c      if (bgp_config_check (bgp, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/610.html#L469'>bgp</a>               469 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L473'>bgp</a>               473 bgpd/bgpd.c    	      peer-&gt;local_as = bgp-&gt;confed_id;</span>
+<span class='curline'><a href='../S/610.html#L491'>bgp</a>               491 bgpd/bgpd.c    bgp_default_local_preference_set (struct bgp *bgp, u_int32_t local_pref)</span>
+<span class='curline'><a href='../S/610.html#L493'>bgp</a>               493 bgpd/bgpd.c      if (! bgp)</span>
+<span class='curline'><a href='../S/610.html#L496'>bgp</a>               496 bgpd/bgpd.c      bgp-&gt;default_local_pref = local_pref;</span>
+<span class='curline'><a href='../S/610.html#L502'>bgp</a>               502 bgpd/bgpd.c    bgp_default_local_preference_unset (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L504'>bgp</a>               504 bgpd/bgpd.c      if (! bgp)</span>
+<span class='curline'><a href='../S/610.html#L507'>bgp</a>               507 bgpd/bgpd.c      bgp-&gt;default_local_pref = BGP_DEFAULT_LOCAL_PREF;</span>
+<span class='curline'><a href='../S/610.html#L653'>bgp</a>               653 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L655'>bgp</a>               655 bgpd/bgpd.c      bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/610.html#L661'>bgp</a>               661 bgpd/bgpd.c    	return (bgp-&gt;as == peer-&gt;as ? BGP_PEER_IBGP : BGP_PEER_EBGP);</span>
+<span class='curline'><a href='../S/610.html#L674'>bgp</a>               674 bgpd/bgpd.c      if (bgp &amp;&amp; CHECK_FLAG (bgp-&gt;config, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/610.html#L681'>bgp</a>               681 bgpd/bgpd.c    	  if (peer-&gt;local_as == bgp-&gt;confed_id)</span>
+<span class='curline'><a href='../S/610.html#L687'>bgp</a>               687 bgpd/bgpd.c          if (bgp_confederation_peers_check (bgp, peer-&gt;as))</span>
+<span class='curline'><a href='../S/610.html#L713'>bgp</a>               713 bgpd/bgpd.c      bgp_unlock(peer-&gt;bgp);</span>
+<span class='curline'><a href='../S/610.html#L790'>bgp</a>               790 bgpd/bgpd.c    peer_new (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L798'>bgp</a>               798 bgpd/bgpd.c      assert (bgp);</span>
+<span class='curline'><a href='../S/610.html#L799'>bgp</a>               799 bgpd/bgpd.c      if (!bgp)</span>
+<span class='curline'><a href='../S/610.html#L814'>bgp</a>               814 bgpd/bgpd.c      peer-&gt;bgp = bgp;</span>
+<span class='curline'><a href='../S/610.html#L816'>bgp</a>               816 bgpd/bgpd.c      bgp_lock (bgp);</span>
+<span class='curline'><a href='../S/610.html#L847'>bgp</a>               847 bgpd/bgpd.c    peer_create (union sockunion *su, struct bgp *bgp, as_t local_as,</span>
+<span class='curline'><a href='../S/610.html#L854'>bgp</a>               854 bgpd/bgpd.c      peer = peer_new (bgp);</span>
+<span class='curline'><a href='../S/610.html#L858'>bgp</a>               858 bgpd/bgpd.c      peer-&gt;local_id = bgp-&gt;router_id;</span>
+<span class='curline'><a href='../S/610.html#L859'>bgp</a>               859 bgpd/bgpd.c      peer-&gt;v_holdtime = bgp-&gt;default_holdtime;</span>
+<span class='curline'><a href='../S/610.html#L860'>bgp</a>               860 bgpd/bgpd.c      peer-&gt;v_keepalive = bgp-&gt;default_keepalive;</span>
+<span class='curline'><a href='../S/610.html#L867'>bgp</a>               867 bgpd/bgpd.c      listnode_add_sort (bgp-&gt;peer, peer);</span>
+<span class='curline'><a href='../S/610.html#L893'>bgp</a>               893 bgpd/bgpd.c    peer_create_accept (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L897'>bgp</a>               897 bgpd/bgpd.c      peer = peer_new (bgp);</span>
+<span class='curline'><a href='../S/610.html#L900'>bgp</a>               900 bgpd/bgpd.c      listnode_add_sort (bgp-&gt;peer, peer);</span>
+<span class='curline'><a href='../S/610.html#L926'>bgp</a>               926 bgpd/bgpd.c      if (bgp_config_check (peer-&gt;bgp, BGP_CONFIG_CONFEDERATION)</span>
+<span class='curline'><a href='../S/610.html#L927'>bgp</a>               927 bgpd/bgpd.c          &amp;&amp; ! bgp_confederation_peers_check (peer-&gt;bgp, as)</span>
+<span class='curline'><a href='../S/610.html#L928'>bgp</a>               928 bgpd/bgpd.c          &amp;&amp; peer-&gt;bgp-&gt;as != as)</span>
+<span class='curline'><a href='../S/610.html#L929'>bgp</a>               929 bgpd/bgpd.c        peer-&gt;local_as = peer-&gt;bgp-&gt;confed_id;</span>
+<span class='curline'><a href='../S/610.html#L931'>bgp</a>               931 bgpd/bgpd.c        peer-&gt;local_as = peer-&gt;bgp-&gt;as;</span>
+<span class='curline'><a href='../S/610.html#L972'>bgp</a>               972 bgpd/bgpd.c    peer_remote_as (struct bgp *bgp, union sockunion *su, as_t *as,</span>
+<span class='curline'><a href='../S/610.html#L978'>bgp</a>               978 bgpd/bgpd.c      peer = peer_lookup (bgp, su);</span>
+<span class='curline'><a href='../S/610.html#L993'>bgp</a>               993 bgpd/bgpd.c    	      if (bgp-&gt;as != *as)</span>
+<span class='curline'><a href='../S/610.html#L1001'>bgp</a>              1001 bgpd/bgpd.c    	      if (bgp-&gt;as == *as)</span>
+<span class='curline'><a href='../S/610.html#L1018'>bgp</a>              1018 bgpd/bgpd.c          if (bgp_config_check (bgp, BGP_CONFIG_CONFEDERATION)</span>
+<span class='curline'><a href='../S/610.html#L1019'>bgp</a>              1019 bgpd/bgpd.c    	  &amp;&amp; ! bgp_confederation_peers_check (bgp, *as) </span>
+<span class='curline'><a href='../S/610.html#L1020'>bgp</a>              1020 bgpd/bgpd.c    	  &amp;&amp; bgp-&gt;as != *as)</span>
+<span class='curline'><a href='../S/610.html#L1021'>bgp</a>              1021 bgpd/bgpd.c    	local_as = bgp-&gt;confed_id;</span>
+<span class='curline'><a href='../S/610.html#L1023'>bgp</a>              1023 bgpd/bgpd.c    	local_as = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/610.html#L1028'>bgp</a>              1028 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_NO_DEFAULT_IPV4)</span>
+<span class='curline'><a href='../S/610.html#L1030'>bgp</a>              1030 bgpd/bgpd.c    	peer = peer_create (su, bgp, local_as, *as, 0, 0); </span>
+<span class='curline'><a href='../S/610.html#L1032'>bgp</a>              1032 bgpd/bgpd.c    	peer = peer_create (su, bgp, local_as, *as, afi, safi); </span>
+<span class='curline'><a href='../S/610.html#L1196'>bgp</a>              1196 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L1202'>bgp</a>              1202 bgpd/bgpd.c      bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/610.html#L1241'>bgp</a>              1241 bgpd/bgpd.c          &amp;&amp; (pn = listnode_lookup (bgp-&gt;peer, peer)))</span>
+<span class='curline'><a href='../S/610.html#L1244'>bgp</a>              1244 bgpd/bgpd.c          list_delete_node (bgp-&gt;peer, pn);</span>
+<span class='curline'><a href='../S/610.html#L1248'>bgp</a>              1248 bgpd/bgpd.c          &amp;&amp; (pn = listnode_lookup (bgp-&gt;rsclient, peer)))</span>
+<span class='curline'><a href='../S/610.html#L1251'>bgp</a>              1251 bgpd/bgpd.c          list_delete_node (bgp-&gt;rsclient, pn);</span>
+<span class='curline'><a href='../S/610.html#L1360'>bgp</a>              1360 bgpd/bgpd.c    peer_group_lookup (struct bgp *bgp, const char *name)</span>
+<span class='curline'><a href='../S/610.html#L1365'>bgp</a>              1365 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/610.html#L1374'>bgp</a>              1374 bgpd/bgpd.c    peer_group_get (struct bgp *bgp, const char *name)</span>
+<span class='curline'><a href='../S/610.html#L1378'>bgp</a>              1378 bgpd/bgpd.c      group = peer_group_lookup (bgp, name);</span>
+<span class='curline'><a href='../S/610.html#L1383'>bgp</a>              1383 bgpd/bgpd.c      group-&gt;bgp = bgp;</span>
+<span class='curline'><a href='../S/610.html#L1386'>bgp</a>              1386 bgpd/bgpd.c      group-&gt;conf = peer_new (bgp);</span>
+<span class='curline'><a href='../S/610.html#L1387'>bgp</a>              1387 bgpd/bgpd.c      if (! bgp_flag_check (bgp, BGP_FLAG_NO_DEFAULT_IPV4))</span>
+<span class='curline'><a href='../S/610.html#L1401'>bgp</a>              1401 bgpd/bgpd.c      listnode_add_sort (bgp-&gt;group, group);</span>
+<span class='curline'><a href='../S/610.html#L1663'>bgp</a>              1663 bgpd/bgpd.c    peer_group_remote_as (struct bgp *bgp, const char *group_name, as_t *as)</span>
+<span class='curline'><a href='../S/610.html#L1669'>bgp</a>              1669 bgpd/bgpd.c      group = peer_group_lookup (bgp, group_name);</span>
+<span class='curline'><a href='../S/610.html#L1692'>bgp</a>              1692 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L1696'>bgp</a>              1696 bgpd/bgpd.c      bgp = group-&gt;bgp;</span>
+<span class='curline'><a href='../S/610.html#L1712'>bgp</a>              1712 bgpd/bgpd.c      listnode_delete (bgp-&gt;group, group);</span>
+<span class='curline'><a href='../S/610.html#L1742'>bgp</a>              1742 bgpd/bgpd.c    peer_group_bind (struct bgp *bgp, union sockunion *su,</span>
+<span class='curline'><a href='../S/610.html#L1753'>bgp</a>              1753 bgpd/bgpd.c      peer = peer_lookup (bgp, su);</span>
+<span class='curline'><a href='../S/610.html#L1761'>bgp</a>              1761 bgpd/bgpd.c          peer = peer_create (su, bgp, bgp-&gt;as, group-&gt;conf-&gt;as, afi, safi);</span>
+<span class='curline'><a href='../S/610.html#L1841'>bgp</a>              1841 bgpd/bgpd.c              &amp;&amp; (pn = listnode_lookup (bgp-&gt;rsclient, peer)))</span>
+<span class='curline'><a href='../S/610.html#L1844'>bgp</a>              1844 bgpd/bgpd.c              list_delete_node (bgp-&gt;rsclient, pn);</span>
+<span class='curline'><a href='../S/610.html#L1885'>bgp</a>              1885 bgpd/bgpd.c    peer_group_unbind (struct bgp *bgp, struct peer *peer,</span>
+<span class='curline'><a href='../S/610.html#L1928'>bgp</a>              1928 bgpd/bgpd.c    static struct bgp *</span>
+<span class='curline'><a href='../S/610.html#L1931'>bgp</a>              1931 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L1935'>bgp</a>              1935 bgpd/bgpd.c      if ( (bgp = XCALLOC (MTYPE_BGP, sizeof (struct bgp))) == NULL)</span>
+<span class='curline'><a href='../S/610.html#L1938'>bgp</a>              1938 bgpd/bgpd.c      bgp_lock (bgp);</span>
+<span class='curline'><a href='../S/610.html#L1939'>bgp</a>              1939 bgpd/bgpd.c      bgp-&gt;peer_self = peer_new (bgp);</span>
+<span class='curline'><a href='../S/610.html#L1940'>bgp</a>              1940 bgpd/bgpd.c      bgp-&gt;peer_self-&gt;host = XSTRDUP (MTYPE_BGP_PEER_HOST, "Static announcement");</span>
+<span class='curline'><a href='../S/610.html#L1942'>bgp</a>              1942 bgpd/bgpd.c      bgp-&gt;peer = list_new ();</span>
+<span class='curline'><a href='../S/610.html#L1943'>bgp</a>              1943 bgpd/bgpd.c      bgp-&gt;peer-&gt;cmp = (int (*)(void *, void *)) peer_cmp;</span>
+<span class='curline'><a href='../S/610.html#L1945'>bgp</a>              1945 bgpd/bgpd.c      bgp-&gt;group = list_new ();</span>
+<span class='curline'><a href='../S/610.html#L1946'>bgp</a>              1946 bgpd/bgpd.c      bgp-&gt;group-&gt;cmp = (int (*)(void *, void *)) peer_group_cmp;</span>
+<span class='curline'><a href='../S/610.html#L1948'>bgp</a>              1948 bgpd/bgpd.c      bgp-&gt;rsclient = list_new ();</span>
+<span class='curline'><a href='../S/610.html#L1949'>bgp</a>              1949 bgpd/bgpd.c      bgp-&gt;rsclient-&gt;cmp = (int (*)(void*, void*)) peer_cmp;</span>
+<span class='curline'><a href='../S/610.html#L1954'>bgp</a>              1954 bgpd/bgpd.c    	bgp-&gt;route[afi][safi] = bgp_table_init (afi, safi);</span>
+<span class='curline'><a href='../S/610.html#L1955'>bgp</a>              1955 bgpd/bgpd.c    	bgp-&gt;aggregate[afi][safi] = bgp_table_init (afi, safi);</span>
+<span class='curline'><a href='../S/610.html#L1956'>bgp</a>              1956 bgpd/bgpd.c    	bgp-&gt;rib[afi][safi] = bgp_table_init (afi, safi);</span>
+<span class='curline'><a href='../S/610.html#L1957'>bgp</a>              1957 bgpd/bgpd.c    	bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp = BGP_DEFAULT_MAXPATHS;</span>
+<span class='curline'><a href='../S/610.html#L1958'>bgp</a>              1958 bgpd/bgpd.c    	bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp = BGP_DEFAULT_MAXPATHS;</span>
+<span class='curline'><a href='../S/610.html#L1961'>bgp</a>              1961 bgpd/bgpd.c      bgp-&gt;default_local_pref = BGP_DEFAULT_LOCAL_PREF;</span>
+<span class='curline'><a href='../S/610.html#L1962'>bgp</a>              1962 bgpd/bgpd.c      bgp-&gt;default_holdtime = BGP_DEFAULT_HOLDTIME;</span>
+<span class='curline'><a href='../S/610.html#L1963'>bgp</a>              1963 bgpd/bgpd.c      bgp-&gt;default_keepalive = BGP_DEFAULT_KEEPALIVE;</span>
+<span class='curline'><a href='../S/610.html#L1964'>bgp</a>              1964 bgpd/bgpd.c      bgp-&gt;restart_time = BGP_DEFAULT_RESTART_TIME;</span>
+<span class='curline'><a href='../S/610.html#L1965'>bgp</a>              1965 bgpd/bgpd.c      bgp-&gt;stalepath_time = BGP_DEFAULT_STALEPATH_TIME;</span>
+<span class='curline'><a href='../S/610.html#L1967'>bgp</a>              1967 bgpd/bgpd.c      bgp-&gt;as = *as;</span>
+<span class='curline'><a href='../S/610.html#L1970'>bgp</a>              1970 bgpd/bgpd.c        bgp-&gt;name = strdup (name);</span>
+<span class='curline'><a href='../S/610.html#L1972'>bgp</a>              1972 bgpd/bgpd.c      return bgp;</span>
+<span class='curline'><a href='../S/610.html#L1976'>bgp</a>              1976 bgpd/bgpd.c    struct bgp *</span>
+<span class='curline'><a href='../S/610.html#L1979'>bgp</a>              1979 bgpd/bgpd.c      if (bm-&gt;bgp-&gt;head)</span>
+<span class='curline'><a href='../S/610.html#L1980'>bgp</a>              1980 bgpd/bgpd.c        return (listgetdata (listhead (bm-&gt;bgp)));</span>
+<span class='curline'><a href='../S/610.html#L1985'>bgp</a>              1985 bgpd/bgpd.c    struct bgp *</span>
+<span class='curline'><a href='../S/610.html#L1988'>bgp</a>              1988 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L1991'>bgp</a>              1991 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L1992'>bgp</a>              1992 bgpd/bgpd.c        if (bgp-&gt;as == as</span>
+<span class='curline'><a href='../S/610.html#L1993'>bgp</a>              1993 bgpd/bgpd.c    	&amp;&amp; ((bgp-&gt;name == NULL &amp;&amp; name == NULL) </span>
+<span class='curline'><a href='../S/610.html#L1994'>bgp</a>              1994 bgpd/bgpd.c    	    || (bgp-&gt;name &amp;&amp; name &amp;&amp; strcmp (bgp-&gt;name, name) == 0)))</span>
+<span class='curline'><a href='../S/610.html#L1995'>bgp</a>              1995 bgpd/bgpd.c          return bgp;</span>
+<span class='curline'><a href='../S/610.html#L2000'>bgp</a>              2000 bgpd/bgpd.c    struct bgp *</span>
+<span class='curline'><a href='../S/610.html#L2003'>bgp</a>              2003 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L2006'>bgp</a>              2006 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, node, nnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L2007'>bgp</a>              2007 bgpd/bgpd.c        if ((bgp-&gt;name == NULL &amp;&amp; name == NULL)</span>
+<span class='curline'><a href='../S/610.html#L2008'>bgp</a>              2008 bgpd/bgpd.c    	|| (bgp-&gt;name &amp;&amp; name &amp;&amp; strcmp (bgp-&gt;name, name) == 0))</span>
+<span class='curline'><a href='../S/610.html#L2009'>bgp</a>              2009 bgpd/bgpd.c          return bgp;</span>
+<span class='curline'><a href='../S/610.html#L2015'>bgp</a>              2015 bgpd/bgpd.c    bgp_get (struct bgp **bgp_val, as_t *as, const char *name)</span>
+<span class='curline'><a href='../S/610.html#L2017'>bgp</a>              2017 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L2023'>bgp</a>              2023 bgpd/bgpd.c    	bgp = bgp_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/610.html#L2025'>bgp</a>              2025 bgpd/bgpd.c    	bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/610.html#L2028'>bgp</a>              2028 bgpd/bgpd.c          if (bgp)</span>
+<span class='curline'><a href='../S/610.html#L2030'>bgp</a>              2030 bgpd/bgpd.c              if (bgp-&gt;as != *as)</span>
+<span class='curline'><a href='../S/610.html#L2032'>bgp</a>              2032 bgpd/bgpd.c    	      *as = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/610.html#L2035'>bgp</a>              2035 bgpd/bgpd.c    	  *bgp_val = bgp;</span>
+<span class='curline'><a href='../S/610.html#L2046'>bgp</a>              2046 bgpd/bgpd.c          bgp = bgp_get_default ();</span>
+<span class='curline'><a href='../S/610.html#L2048'>bgp</a>              2048 bgpd/bgpd.c          if (bgp)</span>
+<span class='curline'><a href='../S/610.html#L2050'>bgp</a>              2050 bgpd/bgpd.c    	  if (bgp-&gt;as != *as)</span>
+<span class='curline'><a href='../S/610.html#L2052'>bgp</a>              2052 bgpd/bgpd.c    	      *as = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/610.html#L2055'>bgp</a>              2055 bgpd/bgpd.c    	  *bgp_val = bgp;</span>
+<span class='curline'><a href='../S/610.html#L2060'>bgp</a>              2060 bgpd/bgpd.c      bgp = bgp_create (as, name);</span>
+<span class='curline'><a href='../S/610.html#L2061'>bgp</a>              2061 bgpd/bgpd.c      bgp_router_id_set(bgp, &amp;router_id_zebra);</span>
+<span class='curline'><a href='../S/610.html#L2062'>bgp</a>              2062 bgpd/bgpd.c      *bgp_val = bgp;</span>
+<span class='curline'><a href='../S/610.html#L2065'>bgp</a>              2065 bgpd/bgpd.c      if (list_isempty(bm-&gt;bgp)</span>
+<span class='curline'><a href='../S/610.html#L2072'>bgp</a>              2072 bgpd/bgpd.c      listnode_add (bm-&gt;bgp, bgp);</span>
+<span class='curline'><a href='../S/610.html#L2079'>bgp</a>              2079 bgpd/bgpd.c    bgp_delete (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L2089'>bgp</a>              2089 bgpd/bgpd.c      bgp_static_delete (bgp);</span>
+<span class='curline'><a href='../S/610.html#L2095'>bgp</a>              2095 bgpd/bgpd.c    	bgp_redistribute_unset (bgp, afi, i);</span>
+<span class='curline'><a href='../S/610.html#L2097'>bgp</a>              2097 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, next, peer))</span>
+<span class='curline'><a href='../S/610.html#L2100'>bgp</a>              2100 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, next, group))</span>
+<span class='curline'><a href='../S/610.html#L2103'>bgp</a>              2103 bgpd/bgpd.c      assert (listcount (bgp-&gt;rsclient) == 0);</span>
+<span class='curline'><a href='../S/610.html#L2105'>bgp</a>              2105 bgpd/bgpd.c      if (bgp-&gt;peer_self) {</span>
+<span class='curline'><a href='../S/610.html#L2106'>bgp</a>              2106 bgpd/bgpd.c        peer_delete(bgp-&gt;peer_self);</span>
+<span class='curline'><a href='../S/610.html#L2107'>bgp</a>              2107 bgpd/bgpd.c        bgp-&gt;peer_self = NULL;</span>
+<span class='curline'><a href='../S/610.html#L2113'>bgp</a>              2113 bgpd/bgpd.c      listnode_delete (bm-&gt;bgp, bgp);</span>
+<span class='curline'><a href='../S/610.html#L2114'>bgp</a>              2114 bgpd/bgpd.c      if (list_isempty(bm-&gt;bgp))</span>
+<span class='curline'><a href='../S/610.html#L2117'>bgp</a>              2117 bgpd/bgpd.c      bgp_unlock(bgp);  /* initial reference */</span>
+<span class='curline'><a href='../S/610.html#L2122'>bgp</a>              2122 bgpd/bgpd.c    static void bgp_free (struct bgp *);</span>
+<span class='curline'><a href='../S/610.html#L2125'>bgp</a>              2125 bgpd/bgpd.c    bgp_lock (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L2127'>bgp</a>              2127 bgpd/bgpd.c      ++bgp-&gt;lock;</span>
+<span class='curline'><a href='../S/610.html#L2131'>bgp</a>              2131 bgpd/bgpd.c    bgp_unlock(struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L2133'>bgp</a>              2133 bgpd/bgpd.c      assert(bgp-&gt;lock &gt; 0);</span>
+<span class='curline'><a href='../S/610.html#L2134'>bgp</a>              2134 bgpd/bgpd.c      if (--bgp-&gt;lock == 0)</span>
+<span class='curline'><a href='../S/610.html#L2135'>bgp</a>              2135 bgpd/bgpd.c        bgp_free (bgp);</span>
+<span class='curline'><a href='../S/610.html#L2139'>bgp</a>              2139 bgpd/bgpd.c    bgp_free (struct bgp *bgp)</span>
+<span class='curline'><a href='../S/610.html#L2144'>bgp</a>              2144 bgpd/bgpd.c      list_delete (bgp-&gt;group);</span>
+<span class='curline'><a href='../S/610.html#L2145'>bgp</a>              2145 bgpd/bgpd.c      list_delete (bgp-&gt;peer);</span>
+<span class='curline'><a href='../S/610.html#L2146'>bgp</a>              2146 bgpd/bgpd.c      list_delete (bgp-&gt;rsclient);</span>
+<span class='curline'><a href='../S/610.html#L2148'>bgp</a>              2148 bgpd/bgpd.c      if (bgp-&gt;name)</span>
+<span class='curline'><a href='../S/610.html#L2149'>bgp</a>              2149 bgpd/bgpd.c        free (bgp-&gt;name);</span>
+<span class='curline'><a href='../S/610.html#L2154'>bgp</a>              2154 bgpd/bgpd.c    	if (bgp-&gt;route[afi][safi])</span>
+<span class='curline'><a href='../S/610.html#L2155'>bgp</a>              2155 bgpd/bgpd.c              bgp_table_finish (&amp;bgp-&gt;route[afi][safi]);</span>
+<span class='curline'><a href='../S/610.html#L2156'>bgp</a>              2156 bgpd/bgpd.c    	if (bgp-&gt;aggregate[afi][safi])</span>
+<span class='curline'><a href='../S/610.html#L2157'>bgp</a>              2157 bgpd/bgpd.c              bgp_table_finish (&amp;bgp-&gt;aggregate[afi][safi]) ;</span>
+<span class='curline'><a href='../S/610.html#L2158'>bgp</a>              2158 bgpd/bgpd.c    	if (bgp-&gt;rib[afi][safi])</span>
+<span class='curline'><a href='../S/610.html#L2159'>bgp</a>              2159 bgpd/bgpd.c              bgp_table_finish (&amp;bgp-&gt;rib[afi][safi]);</span>
+<span class='curline'><a href='../S/610.html#L2161'>bgp</a>              2161 bgpd/bgpd.c      XFREE (MTYPE_BGP, bgp);</span>
+<span class='curline'><a href='../S/610.html#L2165'>bgp</a>              2165 bgpd/bgpd.c    peer_lookup (struct bgp *bgp, union sockunion *su)</span>
+<span class='curline'><a href='../S/610.html#L2170'>bgp</a>              2170 bgpd/bgpd.c      if (bgp != NULL)</span>
+<span class='curline'><a href='../S/610.html#L2172'>bgp</a>              2172 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L2177'>bgp</a>              2177 bgpd/bgpd.c      else if (bm-&gt;bgp != NULL)</span>
+<span class='curline'><a href='../S/610.html#L2181'>bgp</a>              2181 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bm-&gt;bgp, bgpnode, nbgpnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L2182'>bgp</a>              2182 bgpd/bgpd.c            for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L2197'>bgp</a>              2197 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L2199'>bgp</a>              2199 bgpd/bgpd.c      if (! bm-&gt;bgp)</span>
+<span class='curline'><a href='../S/610.html#L2202'>bgp</a>              2202 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS_RO (bm-&gt;bgp, bgpnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L2204'>bgp</a>              2204 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS_RO (bgp-&gt;peer, node, peer))</span>
+<span class='curline'><a href='../S/610.html#L2217'>bgp</a>              2217 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS_RO (bgp-&gt;peer, node, peer))</span>
+<span class='curline'><a href='../S/610.html#L3407'>bgp</a>              3407 bgpd/bgpd.c      struct bgp *bgp = peer-&gt;bgp;</span>
+<span class='curline'><a href='../S/610.html#L3415'>bgp</a>              3415 bgpd/bgpd.c      if (bgp-&gt;as == as)</span>
+<span class='curline'><a href='../S/610.html#L3753'>bgp</a>              3753 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L3758'>bgp</a>              3758 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L3760'>bgp</a>              3760 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L3777'>bgp</a>              3777 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/610.html#L3909'>bgp</a>              3909 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L3917'>bgp</a>              3917 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L3919'>bgp</a>              3919 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L3936'>bgp</a>              3936 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/610.html#L4066'>bgp</a>              4066 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L4071'>bgp</a>              4071 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L4073'>bgp</a>              4073 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L4090'>bgp</a>              4090 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/610.html#L4748'>bgp</a>              4748 bgpd/bgpd.c    bgp_config_write_peer (struct vty *vty, struct bgp *bgp,</span>
+<span class='curline'><a href='../S/610.html#L4915'>bgp</a>              4915 bgpd/bgpd.c    	  if (bgp_flag_check (bgp, BGP_FLAG_NO_DEFAULT_IPV4))</span>
+<span class='curline'><a href='../S/610.html#L5122'>bgp</a>              5122 bgpd/bgpd.c    bgp_config_write_family (struct vty *vty, struct bgp *bgp, afi_t afi,</span>
+<span class='curline'><a href='../S/610.html#L5130'>bgp</a>              5130 bgpd/bgpd.c      bgp_config_write_network (vty, bgp, afi, safi, &amp;write);</span>
+<span class='curline'><a href='../S/610.html#L5132'>bgp</a>              5132 bgpd/bgpd.c      bgp_config_write_redistribute (vty, bgp, afi, safi, &amp;write);</span>
+<span class='curline'><a href='../S/610.html#L5134'>bgp</a>              5134 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/610.html#L5139'>bgp</a>              5139 bgpd/bgpd.c    	  bgp_config_write_peer (vty, bgp, group-&gt;conf, afi, safi);</span>
+<span class='curline'><a href='../S/610.html#L5142'>bgp</a>              5142 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L5149'>bgp</a>              5149 bgpd/bgpd.c    	      bgp_config_write_peer (vty, bgp, peer, afi, safi);</span>
+<span class='curline'><a href='../S/610.html#L5154'>bgp</a>              5154 bgpd/bgpd.c      bgp_config_write_maxpaths (vty, bgp, afi, safi, &amp;write);</span>
+<span class='curline'><a href='../S/610.html#L5166'>bgp</a>              5166 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L5187'>bgp</a>              5187 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L5193'>bgp</a>              5193 bgpd/bgpd.c          vty_out (vty, "router bgp %u", bgp-&gt;as);</span>
+<span class='curline'><a href='../S/610.html#L5197'>bgp</a>              5197 bgpd/bgpd.c    	  if (bgp-&gt;name)</span>
+<span class='curline'><a href='../S/610.html#L5198'>bgp</a>              5198 bgpd/bgpd.c    	    vty_out (vty, " view %s", bgp-&gt;name);</span>
+<span class='curline'><a href='../S/610.html#L5207'>bgp</a>              5207 bgpd/bgpd.c          if (CHECK_FLAG (bgp-&gt;flags, BGP_FLAG_NO_FAST_EXT_FAILOVER))</span>
+<span class='curline'><a href='../S/610.html#L5211'>bgp</a>              5211 bgpd/bgpd.c          if (CHECK_FLAG (bgp-&gt;config, BGP_CONFIG_ROUTER_ID))</span>
+<span class='curline'><a href='../S/610.html#L5212'>bgp</a>              5212 bgpd/bgpd.c    	vty_out (vty, " bgp router-id %s%s", inet_ntoa (bgp-&gt;router_id), </span>
+<span class='curline'><a href='../S/610.html#L5216'>bgp</a>              5216 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_LOG_NEIGHBOR_CHANGES))</span>
+<span class='curline'><a href='../S/610.html#L5220'>bgp</a>              5220 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_ALWAYS_COMPARE_MED))</span>
+<span class='curline'><a href='../S/610.html#L5224'>bgp</a>              5224 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_NO_DEFAULT_IPV4))</span>
+<span class='curline'><a href='../S/610.html#L5228'>bgp</a>              5228 bgpd/bgpd.c          if (bgp-&gt;default_local_pref != BGP_DEFAULT_LOCAL_PREF)</span>
+<span class='curline'><a href='../S/610.html#L5230'>bgp</a>              5230 bgpd/bgpd.c    		 bgp-&gt;default_local_pref, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/610.html#L5233'>bgp</a>              5233 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_NO_CLIENT_TO_CLIENT))</span>
+<span class='curline'><a href='../S/610.html#L5237'>bgp</a>              5237 bgpd/bgpd.c          if (CHECK_FLAG (bgp-&gt;config, BGP_CONFIG_CLUSTER_ID))</span>
+<span class='curline'><a href='../S/610.html#L5238'>bgp</a>              5238 bgpd/bgpd.c    	vty_out (vty, " bgp cluster-id %s%s", inet_ntoa (bgp-&gt;cluster_id),</span>
+<span class='curline'><a href='../S/610.html#L5242'>bgp</a>              5242 bgpd/bgpd.c          if (CHECK_FLAG (bgp-&gt;config, BGP_CONFIG_CONFEDERATION))</span>
+<span class='curline'><a href='../S/610.html#L5243'>bgp</a>              5243 bgpd/bgpd.c           vty_out (vty, " bgp confederation identifier %i%s", bgp-&gt;confed_id,</span>
+<span class='curline'><a href='../S/610.html#L5247'>bgp</a>              5247 bgpd/bgpd.c          if (bgp-&gt;confed_peers_cnt &gt; 0)</span>
+<span class='curline'><a href='../S/610.html#L5253'>bgp</a>              5253 bgpd/bgpd.c             for (i = 0; i &lt; bgp-&gt;confed_peers_cnt; i++)</span>
+<span class='curline'><a href='../S/610.html#L5254'>bgp</a>              5254 bgpd/bgpd.c               vty_out(vty, " %u", bgp-&gt;confed_peers[i]);</span>
+<span class='curline'><a href='../S/610.html#L5260'>bgp</a>              5260 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_ENFORCE_FIRST_AS))</span>
+<span class='curline'><a href='../S/610.html#L5264'>bgp</a>              5264 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_DETERMINISTIC_MED))</span>
+<span class='curline'><a href='../S/610.html#L5268'>bgp</a>              5268 bgpd/bgpd.c          if (bgp-&gt;stalepath_time != BGP_DEFAULT_STALEPATH_TIME)</span>
+<span class='curline'><a href='../S/610.html#L5270'>bgp</a>              5270 bgpd/bgpd.c    		 bgp-&gt;stalepath_time, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/610.html#L5271'>bgp</a>              5271 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_GRACEFUL_RESTART))</span>
+<span class='curline'><a href='../S/610.html#L5275'>bgp</a>              5275 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_ASPATH_IGNORE))</span>
+<span class='curline'><a href='../S/610.html#L5277'>bgp</a>              5277 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_ASPATH_CONFED))</span>
+<span class='curline'><a href='../S/610.html#L5279'>bgp</a>              5279 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_COMPARE_ROUTER_ID))</span>
+<span class='curline'><a href='../S/610.html#L5281'>bgp</a>              5281 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_MED_CONFED)</span>
+<span class='curline'><a href='../S/610.html#L5282'>bgp</a>              5282 bgpd/bgpd.c    	  || bgp_flag_check (bgp, BGP_FLAG_MED_MISSING_AS_WORST))</span>
+<span class='curline'><a href='../S/610.html#L5285'>bgp</a>              5285 bgpd/bgpd.c    	  if (bgp_flag_check (bgp, BGP_FLAG_MED_CONFED))</span>
+<span class='curline'><a href='../S/610.html#L5287'>bgp</a>              5287 bgpd/bgpd.c    	  if (bgp_flag_check (bgp, BGP_FLAG_MED_MISSING_AS_WORST))</span>
+<span class='curline'><a href='../S/610.html#L5293'>bgp</a>              5293 bgpd/bgpd.c          if (bgp_flag_check (bgp, BGP_FLAG_IMPORT_CHECK))</span>
+<span class='curline'><a href='../S/610.html#L5300'>bgp</a>              5300 bgpd/bgpd.c          if (CHECK_FLAG (bgp-&gt;af_flags[AFI_IP][SAFI_UNICAST],</span>
+<span class='curline'><a href='../S/610.html#L5305'>bgp</a>              5305 bgpd/bgpd.c          bgp_config_write_network (vty, bgp, AFI_IP, SAFI_UNICAST, &amp;write);</span>
+<span class='curline'><a href='../S/610.html#L5308'>bgp</a>              5308 bgpd/bgpd.c          bgp_config_write_redistribute (vty, bgp, AFI_IP, SAFI_UNICAST, &amp;write);</span>
+<span class='curline'><a href='../S/610.html#L5311'>bgp</a>              5311 bgpd/bgpd.c          if (bgp-&gt;default_keepalive != BGP_DEFAULT_KEEPALIVE</span>
+<span class='curline'><a href='../S/610.html#L5312'>bgp</a>              5312 bgpd/bgpd.c    	  &amp;&amp; bgp-&gt;default_holdtime != BGP_DEFAULT_HOLDTIME)</span>
+<span class='curline'><a href='../S/610.html#L5313'>bgp</a>              5313 bgpd/bgpd.c    	vty_out (vty, " timers bgp %d %d%s", bgp-&gt;default_keepalive, </span>
+<span class='curline'><a href='../S/610.html#L5314'>bgp</a>              5314 bgpd/bgpd.c    		 bgp-&gt;default_holdtime, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/610.html#L5317'>bgp</a>              5317 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;group, node, nnode, group))</span>
+<span class='curline'><a href='../S/610.html#L5319'>bgp</a>              5319 bgpd/bgpd.c    	  bgp_config_write_peer (vty, bgp, group-&gt;conf, AFI_IP, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/610.html#L5323'>bgp</a>              5323 bgpd/bgpd.c          for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/610.html#L5326'>bgp</a>              5326 bgpd/bgpd.c    	    bgp_config_write_peer (vty, bgp, peer, AFI_IP, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/610.html#L5330'>bgp</a>              5330 bgpd/bgpd.c          bgp_config_write_maxpaths (vty, bgp, AFI_IP, SAFI_UNICAST, &amp;write);</span>
+<span class='curline'><a href='../S/610.html#L5333'>bgp</a>              5333 bgpd/bgpd.c          bgp_config_write_distance (vty, bgp);</span>
+<span class='curline'><a href='../S/610.html#L5340'>bgp</a>              5340 bgpd/bgpd.c          write += bgp_config_write_family (vty, bgp, AFI_IP, SAFI_MULTICAST);</span>
+<span class='curline'><a href='../S/610.html#L5343'>bgp</a>              5343 bgpd/bgpd.c          write += bgp_config_write_family (vty, bgp, AFI_IP, SAFI_MPLS_VPN);</span>
+<span class='curline'><a href='../S/610.html#L5346'>bgp</a>              5346 bgpd/bgpd.c          write += bgp_config_write_family (vty, bgp, AFI_IP6, SAFI_UNICAST);</span>
+<span class='curline'><a href='../S/610.html#L5349'>bgp</a>              5349 bgpd/bgpd.c          write += bgp_config_write_family (vty, bgp, AFI_IP6, SAFI_MULTICAST);</span>
+<span class='curline'><a href='../S/610.html#L5362'>bgp</a>              5362 bgpd/bgpd.c      bm-&gt;bgp = list_new ();</span>
+<span class='curline'><a href='../S/610.html#L5415'>bgp</a>              5415 bgpd/bgpd.c      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/610.html#L5420'>bgp</a>              5420 bgpd/bgpd.c      for (ALL_LIST_ELEMENTS (bm-&gt;bgp, mnode, mnnode, bgp))</span>
+<span class='curline'><a href='../S/610.html#L5421'>bgp</a>              5421 bgpd/bgpd.c        for (ALL_LIST_ELEMENTS (bgp-&gt;peer, node, nnode, peer))</span>
+<span class='curline'><a href='../S/608.html#L36'>bgp</a>                36 bgpd/bgpd.h      struct list *bgp;</span>
+<span class='curline'><a href='../S/608.html#L181'>bgp</a>               181 bgpd/bgpd.h      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/608.html#L277'>bgp</a>               277 bgpd/bgpd.h      struct bgp *bgp;</span>
+<span class='curline'><a href='../S/608.html#L831'>bgp</a>               831 bgpd/bgpd.h    extern struct bgp *bgp_get_default (void);</span>
+<span class='curline'><a href='../S/608.html#L832'>bgp</a>               832 bgpd/bgpd.h    extern struct bgp *bgp_lookup (as_t, const char *);</span>
+<span class='curline'><a href='../S/608.html#L833'>bgp</a>               833 bgpd/bgpd.h    extern struct bgp *bgp_lookup_by_name (const char *);</span>
+<span class='curline'><a href='../S/608.html#L834'>bgp</a>               834 bgpd/bgpd.h    extern struct peer *peer_lookup (struct bgp *, union sockunion *);</span>
+<span class='curline'><a href='../S/608.html#L835'>bgp</a>               835 bgpd/bgpd.h    extern struct peer_group *peer_group_lookup (struct bgp *, const char *);</span>
+<span class='curline'><a href='../S/608.html#L836'>bgp</a>               836 bgpd/bgpd.h    extern struct peer_group *peer_group_get (struct bgp *, const char *);</span>
+<span class='curline'><a href='../S/608.html#L844'>bgp</a>               844 bgpd/bgpd.h    extern struct peer *peer_create_accept (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L858'>bgp</a>               858 bgpd/bgpd.h    extern int bgp_get (struct bgp **, as_t *, const char *);</span>
+<span class='curline'><a href='../S/608.html#L859'>bgp</a>               859 bgpd/bgpd.h    extern int bgp_delete (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L861'>bgp</a>               861 bgpd/bgpd.h    extern int bgp_flag_set (struct bgp *, int);</span>
+<span class='curline'><a href='../S/608.html#L862'>bgp</a>               862 bgpd/bgpd.h    extern int bgp_flag_unset (struct bgp *, int);</span>
+<span class='curline'><a href='../S/608.html#L863'>bgp</a>               863 bgpd/bgpd.h    extern int bgp_flag_check (struct bgp *, int);</span>
+<span class='curline'><a href='../S/608.html#L865'>bgp</a>               865 bgpd/bgpd.h    extern void bgp_lock (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L866'>bgp</a>               866 bgpd/bgpd.h    extern void bgp_unlock (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L868'>bgp</a>               868 bgpd/bgpd.h    extern int bgp_router_id_set (struct bgp *, struct in_addr *);</span>
+<span class='curline'><a href='../S/608.html#L870'>bgp</a>               870 bgpd/bgpd.h    extern int bgp_cluster_id_set (struct bgp *, struct in_addr *);</span>
+<span class='curline'><a href='../S/608.html#L871'>bgp</a>               871 bgpd/bgpd.h    extern int bgp_cluster_id_unset (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L873'>bgp</a>               873 bgpd/bgpd.h    extern int bgp_confederation_id_set (struct bgp *, as_t);</span>
+<span class='curline'><a href='../S/608.html#L874'>bgp</a>               874 bgpd/bgpd.h    extern int bgp_confederation_id_unset (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L875'>bgp</a>               875 bgpd/bgpd.h    extern int bgp_confederation_peers_check (struct bgp *, as_t);</span>
+<span class='curline'><a href='../S/608.html#L877'>bgp</a>               877 bgpd/bgpd.h    extern int bgp_confederation_peers_add (struct bgp *, as_t);</span>
+<span class='curline'><a href='../S/608.html#L878'>bgp</a>               878 bgpd/bgpd.h    extern int bgp_confederation_peers_remove (struct bgp *, as_t);</span>
+<span class='curline'><a href='../S/608.html#L880'>bgp</a>               880 bgpd/bgpd.h    extern int bgp_timers_set (struct bgp *, u_int32_t, u_int32_t);</span>
+<span class='curline'><a href='../S/608.html#L881'>bgp</a>               881 bgpd/bgpd.h    extern int bgp_timers_unset (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L883'>bgp</a>               883 bgpd/bgpd.h    extern int bgp_default_local_preference_set (struct bgp *, u_int32_t);</span>
+<span class='curline'><a href='../S/608.html#L884'>bgp</a>               884 bgpd/bgpd.h    extern int bgp_default_local_preference_unset (struct bgp *);</span>
+<span class='curline'><a href='../S/608.html#L888'>bgp</a>               888 bgpd/bgpd.h    extern int peer_remote_as (struct bgp *, union sockunion *, as_t *, afi_t, safi_t);</span>
+<span class='curline'><a href='../S/608.html#L889'>bgp</a>               889 bgpd/bgpd.h    extern int peer_group_remote_as (struct bgp *, const char *, as_t *);</span>
+<span class='curline'><a href='../S/608.html#L897'>bgp</a>               897 bgpd/bgpd.h    extern int peer_group_bind (struct bgp *, union sockunion *, struct peer_group *,</span>
+<span class='curline'><a href='../S/608.html#L899'>bgp</a>               899 bgpd/bgpd.h    extern int peer_group_unbind (struct bgp *, struct peer *, struct peer_group *,</span>
+<span class='curline'><a href='../S/827.html#L44'>bgp</a>                44 guile/guile-bgp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/827.html#L47'>bgp</a>                47 guile/guile-bgp.c   bgp = (struct bgp *) SCM_CDR (vect);</span>
+<span class='curline'><a href='../S/827.html#L48'>bgp</a>                48 guile/guile-bgp.c   num = bgp-&gt;as;</span>
+<span class='curline'><a href='../S/827.html#L75'>bgp</a>                75 guile/guile-bgp.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/827.html#L76'>bgp</a>                76 guile/guile-bgp.c   struct bgp *bgp_create ();</span>
+<span class='curline'><a href='../S/827.html#L85'>bgp</a>                85 guile/guile-bgp.c   bgp = bgp_create ();</span>
+<span class='curline'><a href='../S/827.html#L86'>bgp</a>                86 guile/guile-bgp.c   bgp-&gt;as = num;</span>
+<span class='curline'><a href='../S/827.html#L90'>bgp</a>                90 guile/guile-bgp.c   SCM_SETCDR (cell, bgp);</span>
+<span class='curline'><a href='../S/90.html#L1211'>bgp</a>              1211 tests/aspath_test.c   struct bgp bgp = { 0 }; </span>
+<span class='curline'><a href='../S/90.html#L1223'>bgp</a>              1223 tests/aspath_test.c   peer.bgp = &amp;bgp;</span>
+<span class='curline'><a href='../S/78.html#L599'>bgp</a>               599 tests/bgp_capability_test.c static struct bgp *bgp;</span>
+<span class='curline'><a href='../S/78.html#L626'>bgp</a>               626 tests/bgp_capability_test.c   if (bgp_get (&amp;bgp, &amp;asn, NULL))</span>
+<span class='curline'><a href='../S/78.html#L629'>bgp</a>               629 tests/bgp_capability_test.c   peer = peer_create_accept (bgp);</span>
+<span class='curline'><a href='../S/79.html#L496'>bgp</a>               496 tests/bgp_mp_attr_test.c static struct bgp *bgp;</span>
+<span class='curline'><a href='../S/79.html#L523'>bgp</a>               523 tests/bgp_mp_attr_test.c   if (bgp_get (&amp;bgp, &amp;asn, NULL))</span>
+<span class='curline'><a href='../S/79.html#L526'>bgp</a>               526 tests/bgp_mp_attr_test.c   peer = peer_create_accept (bgp);</span>
+<span class='curline'><a href='../S/73.html#L86'>bgp</a>                86 tests/bgp_mpath_test.c static struct bgp *</span>
+<span class='curline'><a href='../S/73.html#L89'>bgp</a>                89 tests/bgp_mpath_test.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/73.html#L93'>bgp</a>                93 tests/bgp_mpath_test.c   if ( (bgp = XCALLOC (MTYPE_BGP, sizeof (struct bgp))) == NULL)</span>
+<span class='curline'><a href='../S/73.html#L96'>bgp</a>                96 tests/bgp_mpath_test.c   bgp_lock (bgp);</span>
+<span class='curline'><a href='../S/73.html#L100'>bgp</a>               100 tests/bgp_mpath_test.c   bgp-&gt;peer = list_new ();</span>
+<span class='curline'><a href='../S/73.html#L103'>bgp</a>               103 tests/bgp_mpath_test.c   bgp-&gt;group = list_new ();</span>
+<span class='curline'><a href='../S/73.html#L106'>bgp</a>               106 tests/bgp_mpath_test.c   bgp-&gt;rsclient = list_new ();</span>
+<span class='curline'><a href='../S/73.html#L112'>bgp</a>               112 tests/bgp_mpath_test.c         bgp-&gt;route[afi][safi] = bgp_table_init (afi, safi);</span>
+<span class='curline'><a href='../S/73.html#L113'>bgp</a>               113 tests/bgp_mpath_test.c         bgp-&gt;aggregate[afi][safi] = bgp_table_init (afi, safi);</span>
+<span class='curline'><a href='../S/73.html#L114'>bgp</a>               114 tests/bgp_mpath_test.c         bgp-&gt;rib[afi][safi] = bgp_table_init (afi, safi);</span>
+<span class='curline'><a href='../S/73.html#L115'>bgp</a>               115 tests/bgp_mpath_test.c         bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp = BGP_DEFAULT_MAXPATHS;</span>
+<span class='curline'><a href='../S/73.html#L116'>bgp</a>               116 tests/bgp_mpath_test.c         bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp = BGP_DEFAULT_MAXPATHS;</span>
+<span class='curline'><a href='../S/73.html#L119'>bgp</a>               119 tests/bgp_mpath_test.c   bgp-&gt;default_local_pref = BGP_DEFAULT_LOCAL_PREF;</span>
+<span class='curline'><a href='../S/73.html#L120'>bgp</a>               120 tests/bgp_mpath_test.c   bgp-&gt;default_holdtime = BGP_DEFAULT_HOLDTIME;</span>
+<span class='curline'><a href='../S/73.html#L121'>bgp</a>               121 tests/bgp_mpath_test.c   bgp-&gt;default_keepalive = BGP_DEFAULT_KEEPALIVE;</span>
+<span class='curline'><a href='../S/73.html#L122'>bgp</a>               122 tests/bgp_mpath_test.c   bgp-&gt;restart_time = BGP_DEFAULT_RESTART_TIME;</span>
+<span class='curline'><a href='../S/73.html#L123'>bgp</a>               123 tests/bgp_mpath_test.c   bgp-&gt;stalepath_time = BGP_DEFAULT_STALEPATH_TIME;</span>
+<span class='curline'><a href='../S/73.html#L125'>bgp</a>               125 tests/bgp_mpath_test.c   bgp-&gt;as = *as;</span>
+<span class='curline'><a href='../S/73.html#L128'>bgp</a>               128 tests/bgp_mpath_test.c     bgp-&gt;name = strdup (name);</span>
+<span class='curline'><a href='../S/73.html#L130'>bgp</a>               130 tests/bgp_mpath_test.c   return bgp;</span>
+<span class='curline'><a href='../S/73.html#L151'>bgp</a>               151 tests/bgp_mpath_test.c   struct bgp *bgp;</span>
+<span class='curline'><a href='../S/73.html#L155'>bgp</a>               155 tests/bgp_mpath_test.c   bgp = t-&gt;tmp_data;</span>
+<span class='curline'><a href='../S/73.html#L160'>bgp</a>               160 tests/bgp_mpath_test.c         api_result = bgp_maximum_paths_set (bgp, afi, safi, BGP_PEER_EBGP, 10);</span>
+<span class='curline'><a href='../S/73.html#L162'>bgp</a>               162 tests/bgp_mpath_test.c         api_result = bgp_maximum_paths_set (bgp, afi, safi, BGP_PEER_IBGP, 10);</span>
+<span class='curline'><a href='../S/73.html#L164'>bgp</a>               164 tests/bgp_mpath_test.c         EXPECT_TRUE (bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp == 10, test_result);</span>
+<span class='curline'><a href='../S/73.html#L165'>bgp</a>               165 tests/bgp_mpath_test.c         EXPECT_TRUE (bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp == 10, test_result);</span>
+<span class='curline'><a href='../S/73.html#L168'>bgp</a>               168 tests/bgp_mpath_test.c         api_result = bgp_maximum_paths_unset (bgp, afi, safi, BGP_PEER_EBGP);</span>
+<span class='curline'><a href='../S/73.html#L170'>bgp</a>               170 tests/bgp_mpath_test.c         api_result = bgp_maximum_paths_unset (bgp, afi, safi, BGP_PEER_IBGP);</span>
+<span class='curline'><a href='../S/73.html#L172'>bgp</a>               172 tests/bgp_mpath_test.c         EXPECT_TRUE ((bgp-&gt;maxpaths[afi][safi].maxpaths_ebgp ==</span>
+<span class='curline'><a href='../S/73.html#L174'>bgp</a>               174 tests/bgp_mpath_test.c         EXPECT_TRUE ((bgp-&gt;maxpaths[afi][safi].maxpaths_ibgp ==</span>
+<span class='curline'><a href='../S/73.html#L184'>bgp</a>               184 tests/bgp_mpath_test.c   return bgp_delete ((struct bgp *)t-&gt;tmp_data);</span>
+</pre>
+</body>
+</html>

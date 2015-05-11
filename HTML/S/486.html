@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_spf.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_spf.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/147.html' title='Multiple included from 11 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_spf.h</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             IS-IS Shortest Path First algorithm  </em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#ifndef</em> <a href='../S/486.html#L25' title='Defined at 25 in isisd/isis_spf.h.'>_ZEBRA_ISIS_SPF_H</a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../S/486.html#L24' title='Referred from 24 in isisd/isis_spf.h.'>_ZEBRA_ISIS_SPF_H</a>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>enum</strong> <a href='../R/10341.html' title='Multiple referred from 9 places.'>vertextype</a>
+<a id='L28' name='L28'></a><em class='brace'>{</em>
+<a id='L29' name='L29'></a>  VTYPE_PSEUDO_IS = 1,
+<a id='L30' name='L30'></a>  VTYPE_PSEUDO_TE_IS,
+<a id='L31' name='L31'></a>  VTYPE_NONPSEUDO_IS,
+<a id='L32' name='L32'></a>  VTYPE_NONPSEUDO_TE_IS,
+<a id='L33' name='L33'></a>  VTYPE_ES,
+<a id='L34' name='L34'></a>  VTYPE_IPREACH_INTERNAL,
+<a id='L35' name='L35'></a>  VTYPE_IPREACH_EXTERNAL,
+<a id='L36' name='L36'></a>  VTYPE_IPREACH_TE
+<a id='L37' name='L37'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L38' name='L38'></a>    ,
+<a id='L39' name='L39'></a>  VTYPE_IP6REACH_INTERNAL,
+<a id='L40' name='L40'></a>  VTYPE_IP6REACH_EXTERNAL
+<a id='L41' name='L41'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L42' name='L42'></a><em class='brace'>}</em>;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a><em class='comment'>/*</em>
+<a id='L45' name='L45'></a><em class='comment'> * Triple &lt;N, d(N), {Adj(N)}&gt; </em>
+<a id='L46' name='L46'></a><em class='comment'> */</em>
+<a id='L47' name='L47'></a><strong class='reserved'>struct</strong> <a href='../R/6242.html' title='Multiple referred from 37 places.'>isis_vertex</a>
+<a id='L48' name='L48'></a><em class='brace'>{</em>
+<a id='L49' name='L49'></a>  <strong class='reserved'>enum</strong> <a href='../S/486.html#L27' title='Defined at 27 in isisd/isis_spf.h.'>vertextype</a> type;
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a>  <strong class='reserved'>union</strong>
+<a id='L52' name='L52'></a>  <em class='brace'>{</em>
+<a id='L53' name='L53'></a>    u_char id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1];
+<a id='L54' name='L54'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L55' name='L55'></a>  <em class='brace'>}</em> N;
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> d_N;                <em class='comment'>/* d(N) Distance from this IS      */</em>
+<a id='L58' name='L58'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> depth;              <em class='comment'>/* The depth in the imaginary tree */</em>
+<a id='L59' name='L59'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *Adj_N;           <em class='comment'>/* {Adj(N)} next hop or neighbor list */</em>
+<a id='L60' name='L60'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *parents;         <em class='comment'>/* list of parents for ECMP */</em>
+<a id='L61' name='L61'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *children;        <em class='comment'>/* list of children used for tree dump */</em>
+<a id='L62' name='L62'></a><em class='brace'>}</em>;
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><strong class='reserved'>struct</strong> <a href='../R/6237.html' title='Multiple referred from 28 places.'>isis_spftree</a>
+<a id='L65' name='L65'></a><em class='brace'>{</em>
+<a id='L66' name='L66'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_spf;         <em class='comment'>/* spf threads */</em>
+<a id='L67' name='L67'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *paths;           <em class='comment'>/* the SPT */</em>
+<a id='L68' name='L68'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *tents;           <em class='comment'>/* TENT */</em>
+<a id='L69' name='L69'></a>  <strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area;       <em class='comment'>/* back pointer to area */</em>
+<a id='L70' name='L70'></a>  <strong class='reserved'>int</strong> pending;                  <em class='comment'>/* already scheduled */</em>
+<a id='L71' name='L71'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> runcount;        <em class='comment'>/* number of runs since uptime */</em>
+<a id='L72' name='L72'></a>  time_t last_run_timestamp;    <em class='comment'>/* last run timestamp for scheduling */</em>
+<a id='L73' name='L73'></a>  time_t last_run_duration;     <em class='comment'>/* last run duration in msec */</em>
+<a id='L74' name='L74'></a><em class='brace'>}</em>;
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>struct</strong> <a href='../S/486.html#L64' title='Defined at 64 in isisd/isis_spf.h.'>isis_spftree</a> * <a href='../S/464.html#L277' title='Defined at 277 in isisd/isis_spf.c.'>isis_spftree_new</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area);
+<a id='L77' name='L77'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L299' title='Defined at 299 in isisd/isis_spf.c.'>isis_spftree_del</a> (<strong class='reserved'>struct</strong> <a href='../S/486.html#L64' title='Defined at 64 in isisd/isis_spf.h.'>isis_spftree</a> *spftree);
+<a id='L78' name='L78'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L317' title='Defined at 317 in isisd/isis_spf.c.'>isis_spftree_adj_del</a> (<strong class='reserved'>struct</strong> <a href='../S/486.html#L64' title='Defined at 64 in isisd/isis_spf.h.'>isis_spftree</a> *spftree,
+<a id='L79' name='L79'></a>                           <strong class='reserved'>struct</strong> <a href='../S/481.html#L74' title='Defined at 74 in isisd/isis_adjacency.h.'>isis_adjacency</a> *adj);
+<a id='L80' name='L80'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L330' title='Defined at 330 in isisd/isis_spf.c.'>spftree_area_init</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area);
+<a id='L81' name='L81'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L356' title='Defined at 356 in isisd/isis_spf.c.'>spftree_area_del</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area);
+<a id='L82' name='L82'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L394' title='Defined at 394 in isisd/isis_spf.c.'>spftree_area_adj_del</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area,
+<a id='L83' name='L83'></a>                           <strong class='reserved'>struct</strong> <a href='../S/481.html#L74' title='Defined at 74 in isisd/isis_adjacency.h.'>isis_adjacency</a> *adj);
+<a id='L84' name='L84'></a><strong class='reserved'>int</strong> <a href='../S/464.html#L1511' title='Defined at 1511 in isisd/isis_spf.c.'>isis_spf_schedule</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area, <strong class='reserved'>int</strong> level);
+<a id='L85' name='L85'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L1893' title='Defined at 1893 in isisd/isis_spf.c.'>isis_spf_cmds_init</a> (<strong class='reserved'>void</strong>);
+<a id='L86' name='L86'></a><strong class='reserved'>void</strong> <a href='../S/464.html#L1687' title='Defined at 1687 in isisd/isis_spf.c.'>isis_print_paths</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *, u_char *);
+<a id='L87' name='L87'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L88' name='L88'></a><strong class='reserved'>int</strong> <a href='../S/464.html#L1642' title='Defined at 1642 in isisd/isis_spf.c.'>isis_spf_schedule6</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area, <strong class='reserved'>int</strong> level);
+<a id='L89' name='L89'></a><em class='sharp'>#endif</em>
+<a id='L90' name='L90'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_ISIS_SPF_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

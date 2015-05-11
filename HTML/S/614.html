@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_clist.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_clist.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/37.html' title='Multiple included from 6 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP Community list.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1999 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/614.html#L22' title='Defined at 22 in bgpd/bgp_clist.h.'>_QUAGGA_BGP_CLIST_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/614.html#L21' title='Referred from 21 in bgpd/bgp_clist.h.'>_QUAGGA_BGP_CLIST_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='comment'>/* Master Community-list. */</em>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../R/516.html' title='Multiple referred from 9 places.'>COMMUNITY_LIST_MASTER</a>          0
+<a id='L26' name='L26'></a><em class='sharp'>#define</em> <a href='../R/722.html' title='Multiple referred from 7 places.'>EXTCOMMUNITY_LIST_MASTER</a>       1
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='comment'>/* Community-list deny and permit.  */</em>
+<a id='L29' name='L29'></a><em class='sharp'>#define</em> <a href='../R/509.html' title='Multiple referred from 5 places.'>COMMUNITY_DENY</a>                 0
+<a id='L30' name='L30'></a><em class='sharp'>#define</em> <a href='../R/525.html' title='Multiple referred from 19 places.'>COMMUNITY_PERMIT</a>               1
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='comment'>/* Number and string based community-list name.  */</em>
+<a id='L33' name='L33'></a><em class='sharp'>#define</em> <a href='../S/624.html#L147' title='Referred from 147 in bgpd/bgp_clist.c.'>COMMUNITY_LIST_STRING</a>          0
+<a id='L34' name='L34'></a><em class='sharp'>#define</em> <a href='../S/624.html#L136' title='Referred from 136 in bgpd/bgp_clist.c.'>COMMUNITY_LIST_NUMBER</a>          1
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><em class='comment'>/* Community-list entry types.  */</em>
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/518.html' title='Multiple referred from 20 places.'>COMMUNITY_LIST_STANDARD</a>        0 <em class='comment'>/* Standard community-list.  */</em>
+<a id='L38' name='L38'></a><em class='sharp'>#define</em> <a href='../R/515.html' title='Multiple referred from 12 places.'>COMMUNITY_LIST_EXPANDED</a>        1 <em class='comment'>/* Expanded community-list.  */</em>
+<a id='L39' name='L39'></a><em class='sharp'>#define</em> <a href='../R/723.html' title='Multiple referred from 17 places.'>EXTCOMMUNITY_LIST_STANDARD</a>     2 <em class='comment'>/* Standard extcommunity-list.  */</em>
+<a id='L40' name='L40'></a><em class='sharp'>#define</em> <a href='../R/721.html' title='Multiple referred from 10 places.'>EXTCOMMUNITY_LIST_EXPANDED</a>     3 <em class='comment'>/* Expanded extcommunity-list.  */</em>
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><em class='comment'>/* Community-list.  */</em>
+<a id='L43' name='L43'></a><strong class='reserved'>struct</strong> <a href='../R/5349.html' title='Multiple referred from 50 places.'>community_list</a>
+<a id='L44' name='L44'></a><em class='brace'>{</em>
+<a id='L45' name='L45'></a>  <em class='comment'>/* Name of the community-list.  */</em>
+<a id='L46' name='L46'></a>  <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a>  <em class='comment'>/* String or number.  */</em>
+<a id='L49' name='L49'></a>  <strong class='reserved'>int</strong> sort;
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a>  <em class='comment'>/* Link to upper list.  */</em>
+<a id='L52' name='L52'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L93' title='Defined at 93 in bgpd/bgp_clist.h.'>community_list_list</a> *<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a>  <em class='comment'>/* Linked list for other community-list.  */</em>
+<a id='L55' name='L55'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *next;
+<a id='L56' name='L56'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *prev;
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>  <em class='comment'>/* Community-list entry in this community-list.  */</em>
+<a id='L59' name='L59'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L64' title='Defined at 64 in bgpd/bgp_clist.h.'>community_entry</a> *head;
+<a id='L60' name='L60'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L64' title='Defined at 64 in bgpd/bgp_clist.h.'>community_entry</a> *tail;
+<a id='L61' name='L61'></a><em class='brace'>}</em>;
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='comment'>/* Each entry in community-list.  */</em>
+<a id='L64' name='L64'></a><strong class='reserved'>struct</strong> <a href='../R/5338.html' title='Multiple referred from 28 places.'>community_entry</a>
+<a id='L65' name='L65'></a><em class='brace'>{</em>
+<a id='L66' name='L66'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L64' title='Defined at 64 in bgpd/bgp_clist.h.'>community_entry</a> *next;
+<a id='L67' name='L67'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L64' title='Defined at 64 in bgpd/bgp_clist.h.'>community_entry</a> *prev;
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a>  <em class='comment'>/* Permit or deny.  */</em>
+<a id='L70' name='L70'></a>  u_char direct;
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>  <em class='comment'>/* Standard or expanded.  */</em>
+<a id='L73' name='L73'></a>  u_char style;
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a>  <em class='comment'>/* Any match.  */</em>
+<a id='L76' name='L76'></a>  u_char any;
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a>  <em class='comment'>/* Community structure.  */</em>
+<a id='L79' name='L79'></a>  <strong class='reserved'>union</strong>
+<a id='L80' name='L80'></a>  <em class='brace'>{</em>
+<a id='L81' name='L81'></a>    <strong class='reserved'>struct</strong> <a href='../S/630.html#L25' title='Defined at 25 in bgpd/bgp_community.h.'>community</a> *com;
+<a id='L82' name='L82'></a>    <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom;
+<a id='L83' name='L83'></a>  <em class='brace'>}</em> u;
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a>  <em class='comment'>/* Configuration string.  */</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>char</strong> *<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>;
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a>  <em class='comment'>/* Expanded community-list regular expression.  */</em>
+<a id='L89' name='L89'></a>  <a href='../S/281.html#L391' title='Defined at 391 in lib/regex-gnu.h.'>regex_t</a> *reg;
+<a id='L90' name='L90'></a><em class='brace'>}</em>;
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><em class='comment'>/* Linked list of community-list.  */</em>
+<a id='L93' name='L93'></a><strong class='reserved'>struct</strong> <a href='../R/5364.html' title='Multiple referred from 5 places.'>community_list_list</a>
+<a id='L94' name='L94'></a><em class='brace'>{</em>
+<a id='L95' name='L95'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *head;
+<a id='L96' name='L96'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *tail;
+<a id='L97' name='L97'></a><em class='brace'>}</em>;
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><em class='comment'>/* Master structure of community-list and extcommunity-list.  */</em>
+<a id='L100' name='L100'></a><strong class='reserved'>struct</strong> <a href='../R/5366.html' title='Multiple referred from 10 places.'>community_list_master</a>
+<a id='L101' name='L101'></a><em class='brace'>{</em>
+<a id='L102' name='L102'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L93' title='Defined at 93 in bgpd/bgp_clist.h.'>community_list_list</a> num;
+<a id='L103' name='L103'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L93' title='Defined at 93 in bgpd/bgp_clist.h.'>community_list_list</a> str;
+<a id='L104' name='L104'></a><em class='brace'>}</em>;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><em class='comment'>/* Community-list handler.  community_list_init() returns this</em>
+<a id='L107' name='L107'></a><em class='comment'>   structure as handler.  */</em>
+<a id='L108' name='L108'></a><strong class='reserved'>struct</strong> <a href='../R/5361.html' title='Multiple referred from 22 places.'>community_list_handler</a>
+<a id='L109' name='L109'></a><em class='brace'>{</em>
+<a id='L110' name='L110'></a>  <em class='comment'>/* Community-list.  */</em>
+<a id='L111' name='L111'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L100' title='Defined at 100 in bgpd/bgp_clist.h.'>community_list_master</a> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a>;
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>  <em class='comment'>/* Exteded community-list.  */</em>
+<a id='L114' name='L114'></a>  <strong class='reserved'>struct</strong> <a href='../S/614.html#L100' title='Defined at 100 in bgpd/bgp_clist.h.'>community_list_master</a> extcommunity_list;
+<a id='L115' name='L115'></a><em class='brace'>}</em>;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><em class='comment'>/* Error code of community-list.  */</em>
+<a id='L118' name='L118'></a><em class='sharp'>#define</em> <a href='../R/511.html' title='Multiple referred from 5 places.'>COMMUNITY_LIST_ERR_CANT_FIND_LIST</a>        -1
+<a id='L119' name='L119'></a><em class='sharp'>#define</em> <a href='../R/513.html' title='Multiple referred from 5 places.'>COMMUNITY_LIST_ERR_MALFORMED_VAL</a>         -2
+<a id='L120' name='L120'></a><em class='sharp'>#define</em> <a href='../R/514.html' title='Multiple referred from 3 places.'>COMMUNITY_LIST_ERR_STANDARD_CONFLICT</a>     -3
+<a id='L121' name='L121'></a><em class='sharp'>#define</em> <a href='../R/512.html' title='Multiple referred from 3 places.'>COMMUNITY_LIST_ERR_EXPANDED_CONFLICT</a>     -4
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a><em class='comment'>/* Handler.  */</em>
+<a id='L124' name='L124'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *bgp_clist;
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a><em class='comment'>/* Prototypes.  */</em>
+<a id='L127' name='L127'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *<a href='../S/624.html#L823' title='Defined at 823 in bgpd/bgp_clist.c.'>community_list_init</a> (<strong class='reserved'>void</strong>);
+<a id='L128' name='L128'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/624.html#L833' title='Defined at 833 in bgpd/bgp_clist.c.'>community_list_terminate</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *);
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L596' title='Defined at 596 in bgpd/bgp_clist.c.'>community_list_set</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *ch,
+<a id='L131' name='L131'></a>                               <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, <strong class='reserved'>int</strong> direct,
+<a id='L132' name='L132'></a>                               <strong class='reserved'>int</strong> style);
+<a id='L133' name='L133'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L655' title='Defined at 655 in bgpd/bgp_clist.c.'>community_list_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *ch,
+<a id='L134' name='L134'></a>                                 <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str,
+<a id='L135' name='L135'></a>                                 <strong class='reserved'>int</strong> direct, <strong class='reserved'>int</strong> style);
+<a id='L136' name='L136'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L704' title='Defined at 704 in bgpd/bgp_clist.c.'>extcommunity_list_set</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *ch,
+<a id='L137' name='L137'></a>                                  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str,
+<a id='L138' name='L138'></a>                                  <strong class='reserved'>int</strong> direct, <strong class='reserved'>int</strong> style);
+<a id='L139' name='L139'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L774' title='Defined at 774 in bgpd/bgp_clist.c.'>extcommunity_list_unset</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *ch,
+<a id='L140' name='L140'></a>                                    <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str,
+<a id='L141' name='L141'></a>                                    <strong class='reserved'>int</strong> direct, <strong class='reserved'>int</strong> style);
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/614.html#L100' title='Defined at 100 in bgpd/bgp_clist.h.'>community_list_master</a> *
+<a id='L144' name='L144'></a><a href='../S/624.html#L37' title='Defined at 37 in bgpd/bgp_clist.c.'>community_list_master_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *, <strong class='reserved'>int</strong>);
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *
+<a id='L147' name='L147'></a><a href='../S/624.html#L198' title='Defined at 198 in bgpd/bgp_clist.c.'>community_list_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/614.html#L108' title='Defined at 108 in bgpd/bgp_clist.h.'>community_list_handler</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>int</strong>);
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L426' title='Defined at 426 in bgpd/bgp_clist.c.'>community_list_match</a> (<strong class='reserved'>struct</strong> <a href='../S/630.html#L25' title='Defined at 25 in bgpd/bgp_community.h.'>community</a> *, <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *);
+<a id='L150' name='L150'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L453' title='Defined at 453 in bgpd/bgp_clist.c.'>ecommunity_list_match</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *, <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *);
+<a id='L151' name='L151'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/624.html#L479' title='Defined at 479 in bgpd/bgp_clist.c.'>community_list_exact_match</a> (<strong class='reserved'>struct</strong> <a href='../S/630.html#L25' title='Defined at 25 in bgpd/bgp_community.h.'>community</a> *,
+<a id='L152' name='L152'></a>                                       <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *);
+<a id='L153' name='L153'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/630.html#L25' title='Defined at 25 in bgpd/bgp_community.h.'>community</a> *
+<a id='L154' name='L154'></a><a href='../S/624.html#L508' title='Defined at 508 in bgpd/bgp_clist.c.'>community_list_match_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/630.html#L25' title='Defined at 25 in bgpd/bgp_community.h.'>community</a> *, <strong class='reserved'>struct</strong> <a href='../S/614.html#L43' title='Defined at 43 in bgpd/bgp_clist.h.'>community_list</a> *);
+<a id='L155' name='L155'></a>
+<a id='L156' name='L156'></a><em class='sharp'>#endif</em> <em class='comment'>/* _QUAGGA_BGP_CLIST_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

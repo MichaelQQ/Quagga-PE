@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>rsvpd/rsvpd_vty.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1032.html'>rsvpd</a>/rsvpd_vty.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L15'>[^]</a><a href='#L292'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L15' title='Defined at 15.'>DEFUN</a></li>
+<li><a href='#L45' title='Defined at 45.'>DEFUN</a></li>
+<li><a href='#L75' title='Defined at 75.'>DEFUN</a></li>
+<li><a href='#L105' title='Defined at 105.'>DEFUN</a></li>
+<li><a href='#L135' title='Defined at 135.'>DEFUN</a></li>
+<li><a href='#L166' title='Defined at 166.'>DEFUN</a></li>
+<li><a href='#L278' title='Defined at 278.'>DEFUN</a></li>
+<li><a href='#L292' title='Defined at 292.'>rsvpd_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='191.html'>zebra.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L7' name='L7'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L8' name='L8'></a><em class='sharp'>#include</em> &lt;arpa/inet.h&gt;
+<a id='L9' name='L9'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> &lt;sys/un.h&gt;
+<a id='L11' name='L11'></a><em class='comment'>//#include "libmpls.h"</em>
+<a id='L12' name='L12'></a><em class='sharp'>#include</em> "<a href='718.html'>rsvpd_vty.h</a>"
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> &lt;<a href='1008.html'>sys/ioctl.h</a>&gt;<em class='comment'>//+++</em>
+<a id='L14' name='L14'></a>
+<a id='L15' name='L15'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  rsvpd_vty_session,
+<a id='L16' name='L16'></a>        rsvpd_vty_session_cmd,
+<a id='L17' name='L17'></a>        "session WORD",
+<a id='L18' name='L18'></a>        "change session"
+<a id='L19' name='L19'></a>        "RSVPD protocol")
+<a id='L20' name='L20'></a><em class='brace'>{</em>
+<a id='L21' name='L21'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L22' name='L22'></a><em class='comment'>//+++</em>
+<a id='L23' name='L23'></a> <strong class='reserved'>char</strong> *cp;
+<a id='L24' name='L24'></a> <strong class='reserved'>char</strong> buf[255];
+<a id='L25' name='L25'></a>  sprintf(buf,"T%s ",argv[0]);
+<a id='L26' name='L26'></a>    <strong class='reserved'>int</strong> sockfd;
+<a id='L27' name='L27'></a>    <strong class='reserved'>int</strong> len;
+<a id='L28' name='L28'></a>    <strong class='reserved'>struct</strong> sockaddr_in address;
+<a id='L29' name='L29'></a>    <strong class='reserved'>int</strong> result;
+<a id='L30' name='L30'></a><em class='comment'>/*  Create a socket for the client.  */</em>
+<a id='L31' name='L31'></a>    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L32' name='L32'></a><em class='comment'>/*  Name the socket, as agreed with the server.  */</em>
+<a id='L33' name='L33'></a>    address.sin_family = AF_INET;
+<a id='L34' name='L34'></a>    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+<a id='L35' name='L35'></a>    address.sin_port = htons(2205);
+<a id='L36' name='L36'></a>    len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L37' name='L37'></a><em class='comment'>/*  Now connect our socket to the server's socket.  */</em>
+<a id='L38' name='L38'></a>    result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L39' name='L39'></a>    write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L40' name='L40'></a>    close(sockfd);
+<a id='L41' name='L41'></a><em class='comment'>//+++</em>
+<a id='L42' name='L42'></a><em class='comment'>// vty_out (vty, "create session%s", VTY_NEWLINE);</em>
+<a id='L43' name='L43'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L44' name='L44'></a><em class='brace'>}</em>
+<a id='L45' name='L45'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  rsvpd_vty_dest,
+<a id='L46' name='L46'></a>        rsvpd_vty_dest_cmd,
+<a id='L47' name='L47'></a>        "dest lsp tcp WORD",
+<a id='L48' name='L48'></a>        "dest lsp tcp ip_addr"
+<a id='L49' name='L49'></a>        "RSVPD protocol")
+<a id='L50' name='L50'></a><em class='brace'>{</em>
+<a id='L51' name='L51'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L52' name='L52'></a><em class='comment'>//+++</em>
+<a id='L53' name='L53'></a> <strong class='reserved'>char</strong> *cp;
+<a id='L54' name='L54'></a> <strong class='reserved'>char</strong> buf[255];
+<a id='L55' name='L55'></a> sprintf(buf,"dest lsp tcp %s",argv[0]);
+<a id='L56' name='L56'></a>    <strong class='reserved'>int</strong> sockfd;
+<a id='L57' name='L57'></a>    <strong class='reserved'>int</strong> len;
+<a id='L58' name='L58'></a>    <strong class='reserved'>struct</strong> sockaddr_in address;
+<a id='L59' name='L59'></a>    <strong class='reserved'>int</strong> result;
+<a id='L60' name='L60'></a><em class='comment'>/*  Create a socket for the client.  */</em>
+<a id='L61' name='L61'></a>    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L62' name='L62'></a><em class='comment'>/*  Name the socket, as agreed with the server.  */</em>
+<a id='L63' name='L63'></a>    address.sin_family = AF_INET;
+<a id='L64' name='L64'></a>    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+<a id='L65' name='L65'></a>    address.sin_port = htons(2205);
+<a id='L66' name='L66'></a>    len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L67' name='L67'></a><em class='comment'>/*  Now connect our socket to the server's socket.  */</em>
+<a id='L68' name='L68'></a>    result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L69' name='L69'></a>    write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L70' name='L70'></a>    close(sockfd);
+<a id='L71' name='L71'></a><em class='comment'>//+++</em>
+<a id='L72' name='L72'></a><em class='comment'>// vty_out (vty, "create session%s", VTY_NEWLINE);</em>
+<a id='L73' name='L73'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L74' name='L74'></a><em class='brace'>}</em>
+<a id='L75' name='L75'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  rsvpd_vty_sender,
+<a id='L76' name='L76'></a>        rsvpd_vty_sender_cmd,
+<a id='L77' name='L77'></a>        "sender WORD",
+<a id='L78' name='L78'></a>        "sender ip_addr"
+<a id='L79' name='L79'></a>        "RSVPD protocol")
+<a id='L80' name='L80'></a><em class='brace'>{</em>
+<a id='L81' name='L81'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L82' name='L82'></a><em class='comment'>//+++</em>
+<a id='L83' name='L83'></a> <strong class='reserved'>char</strong> *cp;
+<a id='L84' name='L84'></a> <strong class='reserved'>char</strong> buf[255];
+<a id='L85' name='L85'></a> sprintf(buf,"sender %s",argv[0]);
+<a id='L86' name='L86'></a>    <strong class='reserved'>int</strong> sockfd;
+<a id='L87' name='L87'></a>    <strong class='reserved'>int</strong> len;
+<a id='L88' name='L88'></a>    <strong class='reserved'>struct</strong> sockaddr_in address;
+<a id='L89' name='L89'></a>    <strong class='reserved'>int</strong> result;
+<a id='L90' name='L90'></a><em class='comment'>/*  Create a socket for the client.  */</em>
+<a id='L91' name='L91'></a>    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L92' name='L92'></a><em class='comment'>/*  Name the socket, as agreed with the server.  */</em>
+<a id='L93' name='L93'></a>    address.sin_family = AF_INET;
+<a id='L94' name='L94'></a>    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+<a id='L95' name='L95'></a>    address.sin_port = htons(2205);
+<a id='L96' name='L96'></a>    len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L97' name='L97'></a><em class='comment'>/*  Now connect our socket to the server's socket.  */</em>
+<a id='L98' name='L98'></a>    result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L99' name='L99'></a>    write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L100' name='L100'></a>    close(sockfd);
+<a id='L101' name='L101'></a><em class='comment'>//+++</em>
+<a id='L102' name='L102'></a><em class='comment'>// vty_out (vty, "create session%s", VTY_NEWLINE);</em>
+<a id='L103' name='L103'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L104' name='L104'></a><em class='brace'>}</em>
+<a id='L105' name='L105'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  rsvpd_vty_reserve,
+<a id='L106' name='L106'></a>        rsvpd_vty_reserve_cmd,
+<a id='L107' name='L107'></a>        "reserve WORD ff WORD",
+<a id='L108' name='L108'></a>        "reserve ip_addr ff ip_addr"
+<a id='L109' name='L109'></a>        "RSVPD protocol")
+<a id='L110' name='L110'></a><em class='brace'>{</em>
+<a id='L111' name='L111'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L112' name='L112'></a><em class='comment'>//+++</em>
+<a id='L113' name='L113'></a> <strong class='reserved'>char</strong> *cp;
+<a id='L114' name='L114'></a> <strong class='reserved'>char</strong> buf[255];
+<a id='L115' name='L115'></a> sprintf(buf,"reserve %s ff %s",argv[0],argv[1]);
+<a id='L116' name='L116'></a>    <strong class='reserved'>int</strong> sockfd;
+<a id='L117' name='L117'></a>    <strong class='reserved'>int</strong> len;
+<a id='L118' name='L118'></a>    <strong class='reserved'>struct</strong> sockaddr_in address;
+<a id='L119' name='L119'></a>    <strong class='reserved'>int</strong> result;
+<a id='L120' name='L120'></a><em class='comment'>/*  Create a socket for the client.  */</em>
+<a id='L121' name='L121'></a>    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L122' name='L122'></a><em class='comment'>/*  Name the socket, as agreed with the server.  */</em>
+<a id='L123' name='L123'></a>    address.sin_family = AF_INET;
+<a id='L124' name='L124'></a>    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+<a id='L125' name='L125'></a>    address.sin_port = htons(2205);
+<a id='L126' name='L126'></a>    len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L127' name='L127'></a><em class='comment'>/*  Now connect our socket to the server's socket.  */</em>
+<a id='L128' name='L128'></a>    result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L129' name='L129'></a>    write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L130' name='L130'></a>    close(sockfd);
+<a id='L131' name='L131'></a><em class='comment'>//+++</em>
+<a id='L132' name='L132'></a><em class='comment'>// vty_out (vty, "create session%s", VTY_NEWLINE);</em>
+<a id='L133' name='L133'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L134' name='L134'></a><em class='brace'>}</em>
+<a id='L135' name='L135'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  rsvpd_vty_close_session,
+<a id='L136' name='L136'></a>        rsvpd_vty_close_session_cmd,
+<a id='L137' name='L137'></a>        "close dest",
+<a id='L138' name='L138'></a>        "close session"
+<a id='L139' name='L139'></a>        "RSVPD protocol")
+<a id='L140' name='L140'></a><em class='brace'>{</em>
+<a id='L141' name='L141'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L142' name='L142'></a><em class='comment'>//+++</em>
+<a id='L143' name='L143'></a> <strong class='reserved'>char</strong> *cp;
+<a id='L144' name='L144'></a> <strong class='reserved'>char</strong> buf[255];
+<a id='L145' name='L145'></a> sprintf(buf,"close dest");
+<a id='L146' name='L146'></a>    <strong class='reserved'>int</strong> sockfd;
+<a id='L147' name='L147'></a>    <strong class='reserved'>int</strong> len;
+<a id='L148' name='L148'></a>    <strong class='reserved'>struct</strong> sockaddr_in address;
+<a id='L149' name='L149'></a>    <strong class='reserved'>int</strong> result;
+<a id='L150' name='L150'></a><em class='comment'>/*  Create a socket for the client.  */</em>
+<a id='L151' name='L151'></a>    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L152' name='L152'></a><em class='comment'>/*  Name the socket, as agreed with the server.  */</em>
+<a id='L153' name='L153'></a>    address.sin_family = AF_INET;
+<a id='L154' name='L154'></a>    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+<a id='L155' name='L155'></a>    address.sin_port = htons(2205);
+<a id='L156' name='L156'></a>    len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L157' name='L157'></a><em class='comment'>/*  Now connect our socket to the server's socket.  */</em>
+<a id='L158' name='L158'></a>    result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L159' name='L159'></a>    write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L160' name='L160'></a>    close(sockfd);
+<a id='L161' name='L161'></a><em class='comment'>//+++</em>
+<a id='L162' name='L162'></a><em class='comment'>// vty_out (vty, "create session%s", VTY_NEWLINE);</em>
+<a id='L163' name='L163'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L164' name='L164'></a><em class='brace'>}</em>
+<a id='L165' name='L165'></a>
+<a id='L166' name='L166'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  vpnm_talk2_rsvpd,
+<a id='L167' name='L167'></a>        vpnm_talk2_rsvpd_cmd,
+<a id='L168' name='L168'></a>        "rsvp_cmd_type &lt;0-3&gt; arg0 WORD arg1 WORD arg2 WORD arg3 WORD",
+<a id='L169' name='L169'></a>        "VPN Manager talk to RSVPd via VTY SOCKET "
+<a id='L170' name='L170'></a>        "RSVPD protocol")
+<a id='L171' name='L171'></a><em class='brace'>{</em>
+<a id='L172' name='L172'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L173' name='L173'></a>printf("src:%s dest:%s lsp_id:%s",argv[1],argv[2],argv[3]);
+<a id='L174' name='L174'></a>    <strong class='reserved'>char</strong> buf[255],ch;
+<a id='L175' name='L175'></a>    <strong class='reserved'>int</strong> sockfd;
+<a id='L176' name='L176'></a>    <strong class='reserved'>int</strong> len;
+<a id='L177' name='L177'></a>    <strong class='reserved'>struct</strong> sockaddr_in address;
+<a id='L178' name='L178'></a>    <strong class='reserved'>int</strong> result;
+<a id='L179' name='L179'></a><em class='comment'>/*  Create a socket for the client.  */</em>
+<a id='L180' name='L180'></a>    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L181' name='L181'></a><em class='comment'>/*  Name the socket, as agreed with the server.  */</em>
+<a id='L182' name='L182'></a>    address.sin_family = AF_INET;
+<a id='L183' name='L183'></a> <strong class='reserved'>switch</strong>(atoi(argv[0]))<em class='brace'>{</em>
+<a id='L184' name='L184'></a> <strong class='reserved'>case</strong> <a href='../D/4062.html' title='Multiple defined in 2 places.'>SEND_PATH_MSG</a>:
+<a id='L185' name='L185'></a>        address.sin_addr.s_addr = inet_addr(argv[1]);
+<a id='L186' name='L186'></a>        address.sin_port = htons(2205);
+<a id='L187' name='L187'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L188' name='L188'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L189' name='L189'></a>        <em class='comment'>//write to source</em>
+<a id='L190' name='L190'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L191' name='L191'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L192' name='L192'></a>        sprintf(buf,"dest lsp tcp %s/%s",argv[2],argv[3]);
+<a id='L193' name='L193'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L194' name='L194'></a>        sprintf(buf,"sender %s/%s",argv[1],argv[3]);
+<a id='L195' name='L195'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L196' name='L196'></a>        close(sockfd);
+<a id='L197' name='L197'></a>        <em class='comment'>//write to dest</em>
+<a id='L198' name='L198'></a>        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L199' name='L199'></a>        address.sin_addr.s_addr = inet_addr(argv[2]);
+<a id='L200' name='L200'></a>        address.sin_port = htons(2205);
+<a id='L201' name='L201'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L202' name='L202'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L203' name='L203'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L204' name='L204'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L205' name='L205'></a>        sprintf(buf,"dest lsp tcp %s/%s",argv[2],argv[3]);
+<a id='L206' name='L206'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L207' name='L207'></a>        sprintf(buf,"reserve %s ff %s/%s",argv[2],argv[1],argv[3]);
+<a id='L208' name='L208'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L209' name='L209'></a>        close(sockfd);
+<a id='L210' name='L210'></a>                <em class='comment'>//arg0 =src_ip</em>
+<a id='L211' name='L211'></a>                <em class='comment'>//arg1 =dst_ip</em>
+<a id='L212' name='L212'></a>                <em class='comment'>//arg2 =lsp_id</em>
+<a id='L213' name='L213'></a> <strong class='reserved'>break</strong>;
+<a id='L214' name='L214'></a> <strong class='reserved'>case</strong> <a href='../D/4063.html' title='Multiple defined in 2 places.'>SEND_RESERVE_MSG</a>:
+<a id='L215' name='L215'></a>        address.sin_addr.s_addr = inet_addr(argv[1]);
+<a id='L216' name='L216'></a>        address.sin_port = htons(2205);
+<a id='L217' name='L217'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L218' name='L218'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L219' name='L219'></a>        <em class='comment'>//write to source</em>
+<a id='L220' name='L220'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L221' name='L221'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L222' name='L222'></a>        sprintf(buf,"dest lsp tcp %s/%s",argv[1],argv[3]);
+<a id='L223' name='L223'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L224' name='L224'></a>        sprintf(buf,"reserve %s ff %s/%s",argv[1],argv[2],argv[3]);
+<a id='L225' name='L225'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L226' name='L226'></a>        close(sockfd);
+<a id='L227' name='L227'></a> <strong class='reserved'>break</strong>;
+<a id='L228' name='L228'></a> <strong class='reserved'>case</strong> <a href='../D/4543.html' title='Multiple defined in 2 places.'>WITHDRAW_TUNNEL</a>:
+<a id='L229' name='L229'></a>        address.sin_addr.s_addr = inet_addr(argv[1]);
+<a id='L230' name='L230'></a>        address.sin_port = htons(2205);
+<a id='L231' name='L231'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L232' name='L232'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L233' name='L233'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L234' name='L234'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L235' name='L235'></a>        sprintf(buf,"close");
+<a id='L236' name='L236'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L237' name='L237'></a>        close(sockfd);
+<a id='L238' name='L238'></a>        <em class='comment'>//write to dest</em>
+<a id='L239' name='L239'></a>        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L240' name='L240'></a>        address.sin_addr.s_addr = inet_addr(argv[2]);
+<a id='L241' name='L241'></a>        address.sin_port = htons(2205);
+<a id='L242' name='L242'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L243' name='L243'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L244' name='L244'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L245' name='L245'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L246' name='L246'></a>        sprintf(buf,"close");
+<a id='L247' name='L247'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L248' name='L248'></a>        close(sockfd);
+<a id='L249' name='L249'></a> <strong class='reserved'>break</strong>;
+<a id='L250' name='L250'></a> <strong class='reserved'>case</strong> <a href='../S/718.html#L14' title='Defined at 14 in rsvpd/rsvpd_vty.h.'>RELEASE_TUNNEL</a>:
+<a id='L251' name='L251'></a>        address.sin_addr.s_addr = inet_addr(argv[2]);
+<a id='L252' name='L252'></a>        address.sin_port = htons(2205);
+<a id='L253' name='L253'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L254' name='L254'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L255' name='L255'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L256' name='L256'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L257' name='L257'></a>        sprintf(buf,"close");
+<a id='L258' name='L258'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L259' name='L259'></a>        close(sockfd);
+<a id='L260' name='L260'></a>        <em class='comment'>//write to dest</em>
+<a id='L261' name='L261'></a>        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+<a id='L262' name='L262'></a>        address.sin_addr.s_addr = inet_addr(argv[1]);
+<a id='L263' name='L263'></a>        address.sin_port = htons(2205);
+<a id='L264' name='L264'></a>        len = <strong class='reserved'>sizeof</strong>(address);
+<a id='L265' name='L265'></a>        result = connect(sockfd, (<strong class='reserved'>struct</strong> sockaddr *)&amp;address, len);
+<a id='L266' name='L266'></a>        sprintf(buf,"T%s ",argv[3]);
+<a id='L267' name='L267'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L268' name='L268'></a>        sprintf(buf,"close");
+<a id='L269' name='L269'></a>        write(sockfd,&amp;buf,<strong class='reserved'>sizeof</strong>(buf));
+<a id='L270' name='L270'></a>        close(sockfd);
+<a id='L271' name='L271'></a> <strong class='reserved'>break</strong>;
+<a id='L272' name='L272'></a> <strong class='reserved'>default</strong> :
+<a id='L273' name='L273'></a> <strong class='reserved'>break</strong>;
+<a id='L274' name='L274'></a> <em class='brace'>}</em>
+<a id='L275' name='L275'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L276' name='L276'></a><em class='brace'>}</em>
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  router_rsvpd,
+<a id='L279' name='L279'></a>        router_rsvpd_cmd,
+<a id='L280' name='L280'></a>        "router rsvpd",
+<a id='L281' name='L281'></a>        "Enable a routing process"
+<a id='L282' name='L282'></a>        "RSVPD protocol")
+<a id='L283' name='L283'></a><em class='brace'>{</em>
+<a id='L284' name='L284'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = RSVPD_NODE;
+<a id='L285' name='L285'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Down to rsvpd node%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L286' name='L286'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L287' name='L287'></a><em class='brace'>}</em>
+<a id='L288' name='L288'></a>
+<a id='L289' name='L289'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> rsvpd_node =
+<a id='L290' name='L290'></a><em class='brace'>{</em> RSVPD_NODE, "%s(config-rsvpd)# ", 1 <em class='brace'>}</em>;
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a><strong class='reserved'>void</strong> <a href='../R/9632.html' title='Multiple referred from 3 places.'>rsvpd_init</a>(<strong class='reserved'>void</strong>)
+<a id='L293' name='L293'></a><em class='brace'>{</em>
+<a id='L294' name='L294'></a><a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a>( &amp;rsvpd_node, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> );
+<a id='L295' name='L295'></a><a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a>( RSVPD_NODE );
+<a id='L296' name='L296'></a>
+<a id='L297' name='L297'></a><em class='comment'>//install_element (VIEW_NODE,   &amp;router_rsvpd_cmd);</em>
+<a id='L298' name='L298'></a><em class='comment'>//install_element (ENABLE_NODE, &amp;router_rsvpd_cmd);</em>
+<a id='L299' name='L299'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;router_rsvpd_cmd);
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( RSVPD_NODE, &amp;rsvpd_vty_session_cmd);
+<a id='L302' name='L302'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( RSVPD_NODE, &amp;rsvpd_vty_dest_cmd);
+<a id='L303' name='L303'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( RSVPD_NODE, &amp;rsvpd_vty_sender_cmd);
+<a id='L304' name='L304'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( RSVPD_NODE, &amp;rsvpd_vty_reserve_cmd);
+<a id='L305' name='L305'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( RSVPD_NODE, &amp;rsvpd_vty_close_session_cmd);
+<a id='L306' name='L306'></a>        <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( RSVPD_NODE, &amp;vpnm_talk2_rsvpd_cmd);
+<a id='L307' name='L307'></a><em class='comment'>/*</em>
+<a id='L308' name='L308'></a><em class='comment'>install_element( MPLSADMD_NODE,   &amp;     rsvpd_vty_del_label_space_cmd   );</em>
+<a id='L309' name='L309'></a><em class='comment'>install_element( MPLSADMD_NODE,   &amp;     rsvpd_vty_add_fec_to_label_cmd  );</em>
+<a id='L310' name='L310'></a><em class='comment'>install_element( MPLSADMD_NODE,   &amp;     rsvpd_vty_del_fec_to_label_cmd  );</em>
+<a id='L311' name='L311'></a><em class='comment'>install_element( MPLSADMD_NODE,   &amp;     rsvpd_vty_map_label_tunnel_cmd  );</em>
+<a id='L312' name='L312'></a><em class='comment'>install_element( MPLSADMD_NODE,   &amp;     rsvpd_vty_del_tunnel_cmd        );</em>
+<a id='L313' name='L313'></a><em class='comment'>*/</em>
+<a id='L314' name='L314'></a><em class='brace'>}</em>
+<a id='L315' name='L315'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L15'>[^]</a><a href='#L292'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

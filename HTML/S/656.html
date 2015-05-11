@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_aspath.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_aspath.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/32.html' title='Multiple included from 19 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* AS path related definitions.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1997, 98, 99 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/656.html#L22' title='Defined at 22 in bgpd/bgp_aspath.h.'>_QUAGGA_BGP_ASPATH_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/656.html#L21' title='Referred from 21 in bgpd/bgp_aspath.h.'>_QUAGGA_BGP_ASPATH_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='comment'>/* AS path segment type.  */</em>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../R/56.html' title='Multiple referred from 9 places.'>AS_SET</a>                       1
+<a id='L26' name='L26'></a><em class='sharp'>#define</em> <a href='../R/55.html' title='Multiple referred from 16 places.'>AS_SEQUENCE</a>                  2
+<a id='L27' name='L27'></a><em class='sharp'>#define</em> <a href='../R/47.html' title='Multiple referred from 16 places.'>AS_CONFED_SEQUENCE</a>           3
+<a id='L28' name='L28'></a><em class='sharp'>#define</em> <a href='../R/48.html' title='Multiple referred from 12 places.'>AS_CONFED_SET</a>                4
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><em class='comment'>/* Private AS range defined in RFC2270.  */</em>
+<a id='L31' name='L31'></a><em class='sharp'>#define</em> <a href='../R/380.html' title='Multiple referred from 2 places.'>BGP_PRIVATE_AS_MIN</a>       64512U
+<a id='L32' name='L32'></a><em class='sharp'>#define</em> <a href='../R/379.html' title='Multiple referred from 2 places.'>BGP_PRIVATE_AS_MAX</a>       65535U
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='comment'>/* we leave BGP_AS_MAX as the 16bit AS MAX number.  */</em>
+<a id='L35' name='L35'></a><em class='sharp'>#define</em> <a href='../R/170.html' title='Multiple referred from 5 places.'>BGP_AS_MAX</a>                   65535U
+<a id='L36' name='L36'></a><em class='sharp'>#define</em> <a href='../R/169.html' title='Multiple referred from 11 places.'>BGP_AS4_MAX</a>             4294967295U
+<a id='L37' name='L37'></a><em class='comment'>/* Transition 16Bit AS as defined by IANA */</em>
+<a id='L38' name='L38'></a><em class='sharp'>#define</em> <a href='../R/171.html' title='Multiple referred from 6 places.'>BGP_AS_TRANS</a>             23456U
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='comment'>/* AS_PATH segment data in abstracted form, no limit is placed on length */</em>
+<a id='L41' name='L41'></a><strong class='reserved'>struct</strong> <a href='../R/4534.html' title='Multiple referred from 68 places.'>assegment</a>
+<a id='L42' name='L42'></a><em class='brace'>{</em>
+<a id='L43' name='L43'></a>  <strong class='reserved'>struct</strong> <a href='../S/656.html#L41' title='Defined at 41 in bgpd/bgp_aspath.h.'>assegment</a> *next;
+<a id='L44' name='L44'></a>  <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a> *as;
+<a id='L45' name='L45'></a>  u_short length;
+<a id='L46' name='L46'></a>  u_char type;
+<a id='L47' name='L47'></a><em class='brace'>}</em>;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><em class='comment'>/* AS path may be include some AsSegments.  */</em>
+<a id='L50' name='L50'></a><strong class='reserved'>struct</strong> <a href='../R/4483.html' title='Multiple referred from 412 places.'>aspath</a> 
+<a id='L51' name='L51'></a><em class='brace'>{</em>
+<a id='L52' name='L52'></a>  <em class='comment'>/* Reference count to this aspath.  */</em>
+<a id='L53' name='L53'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> refcnt;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>  <em class='comment'>/* segment data */</em>
+<a id='L56' name='L56'></a>  <strong class='reserved'>struct</strong> <a href='../S/656.html#L41' title='Defined at 41 in bgpd/bgp_aspath.h.'>assegment</a> *segments;
+<a id='L57' name='L57'></a>  
+<a id='L58' name='L58'></a>  <em class='comment'>/* String expression of AS path.  This string is used by vty output</em>
+<a id='L59' name='L59'></a><em class='comment'>     and AS path regular expression match.  */</em>
+<a id='L60' name='L60'></a>  <strong class='reserved'>char</strong> *str;
+<a id='L61' name='L61'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> str_len;
+<a id='L62' name='L62'></a><em class='brace'>}</em>;
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='sharp'>#define</em> <a href='../S/617.html#L527' title='Referred from 527 in bgpd/bgp_aspath.c.'>ASPATH_STR_DEFAULT_LEN</a> 32
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L67' name='L67'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/617.html#L1857' title='Defined at 1857 in bgpd/bgp_aspath.c.'>aspath_init</a> (<strong class='reserved'>void</strong>);
+<a id='L68' name='L68'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/617.html#L1863' title='Defined at 1863 in bgpd/bgp_aspath.c.'>aspath_finish</a> (<strong class='reserved'>void</strong>);
+<a id='L69' name='L69'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L787' title='Defined at 787 in bgpd/bgp_aspath.c.'>aspath_parse</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, size_t, <strong class='reserved'>int</strong>);
+<a id='L70' name='L70'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L635' title='Defined at 635 in bgpd/bgp_aspath.c.'>aspath_dup</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L71' name='L71'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L996' title='Defined at 996 in bgpd/bgp_aspath.c.'>aspath_aggregate</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L72' name='L72'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1208' title='Defined at 1208 in bgpd/bgp_aspath.c.'>aspath_prepend</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L73' name='L73'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1295' title='Defined at 1295 in bgpd/bgp_aspath.c.'>aspath_filter_exclude</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L74' name='L74'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1402' title='Defined at 1402 in bgpd/bgp_aspath.c.'>aspath_add_seq</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a>);
+<a id='L75' name='L75'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1601' title='Defined at 1601 in bgpd/bgp_aspath.c.'>aspath_add_confed_seq</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a>);
+<a id='L76' name='L76'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1832' title='Defined at 1832 in bgpd/bgp_aspath.c.'>aspath_cmp</a> (<strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *);
+<a id='L77' name='L77'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1410' title='Defined at 1410 in bgpd/bgp_aspath.c.'>aspath_cmp_left</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L78' name='L78'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1547' title='Defined at 1547 in bgpd/bgp_aspath.c.'>aspath_cmp_left_confed</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L79' name='L79'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1568' title='Defined at 1568 in bgpd/bgp_aspath.c.'>aspath_delete_confed_seq</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L80' name='L80'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1640' title='Defined at 1640 in bgpd/bgp_aspath.c.'>aspath_empty</a> (<strong class='reserved'>void</strong>);
+<a id='L81' name='L81'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1646' title='Defined at 1646 in bgpd/bgp_aspath.c.'>aspath_empty_get</a> (<strong class='reserved'>void</strong>);
+<a id='L82' name='L82'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1750' title='Defined at 1750 in bgpd/bgp_aspath.c.'>aspath_str2aspath</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L83' name='L83'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/617.html#L320' title='Defined at 320 in bgpd/bgp_aspath.c.'>aspath_free</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L84' name='L84'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L613' title='Defined at 613 in bgpd/bgp_aspath.c.'>aspath_intern</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L85' name='L85'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/617.html#L333' title='Defined at 333 in bgpd/bgp_aspath.c.'>aspath_unintern</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> **);
+<a id='L86' name='L86'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/617.html#L1874' title='Defined at 1874 in bgpd/bgp_aspath.c.'>aspath_print</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L87' name='L87'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/617.html#L1884' title='Defined at 1884 in bgpd/bgp_aspath.c.'>aspath_print_vty</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L88' name='L88'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/617.html#L1906' title='Defined at 1906 in bgpd/bgp_aspath.c.'>aspath_print_all_vty</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L89' name='L89'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1817' title='Defined at 1817 in bgpd/bgp_aspath.c.'>aspath_key_make</a> (<strong class='reserved'>void</strong> *);
+<a id='L90' name='L90'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1100' title='Defined at 1100 in bgpd/bgp_aspath.c.'>aspath_loop_check</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a>);
+<a id='L91' name='L91'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1125' title='Defined at 1125 in bgpd/bgp_aspath.c.'>aspath_private_as_check</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L92' name='L92'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1085' title='Defined at 1085 in bgpd/bgp_aspath.c.'>aspath_firstas_check</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a>);
+<a id='L93' name='L93'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1151' title='Defined at 1151 in bgpd/bgp_aspath.c.'>aspath_confed_check</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L94' name='L94'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L1172' title='Defined at 1172 in bgpd/bgp_aspath.c.'>aspath_left_confed_check</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L95' name='L95'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/617.html#L1656' title='Defined at 1656 in bgpd/bgp_aspath.c.'>aspath_count</a> (<strong class='reserved'>void</strong>);
+<a id='L96' name='L96'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L422' title='Defined at 422 in bgpd/bgp_aspath.c.'>aspath_count_hops</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L97' name='L97'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L404' title='Defined at 404 in bgpd/bgp_aspath.c.'>aspath_count_confeds</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L98' name='L98'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L446' title='Defined at 446 in bgpd/bgp_aspath.c.'>aspath_size</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L99' name='L99'></a><strong class='reserved'>extern</strong> <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a> <a href='../S/617.html#L461' title='Defined at 461 in bgpd/bgp_aspath.c.'>aspath_highest</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L100' name='L100'></a><strong class='reserved'>extern</strong> size_t <a href='../S/617.html#L855' title='Defined at 855 in bgpd/bgp_aspath.c.'>aspath_put</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *, <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>int</strong>);
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *<a href='../S/617.html#L1448' title='Defined at 1448 in bgpd/bgp_aspath.c.'>aspath_reconcile_as4</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L103' name='L103'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/617.html#L481' title='Defined at 481 in bgpd/bgp_aspath.c.'>aspath_has_as4</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *);
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a><em class='comment'>/* For SNMP BGP4PATHATTRASPATHSEGMENT, might be useful for debug */</em>
+<a id='L106' name='L106'></a><strong class='reserved'>extern</strong> u_char *<a href='../S/617.html#L932' title='Defined at 932 in bgpd/bgp_aspath.c.'>aspath_snmp_pathseg</a> (<strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> *, size_t *);
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a><em class='sharp'>#endif</em> <em class='comment'>/* _QUAGGA_BGP_ASPATH_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

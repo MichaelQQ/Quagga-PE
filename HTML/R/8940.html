@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>rd_as</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/641.html#L57'>rd_as</a>              57 bgpd/bgp_mplsvpn.c decode_rd_as (u_char *pnt, struct rd_as *rd_as)</span>
+<span class='curline'><a href='../S/641.html#L59'>rd_as</a>              59 bgpd/bgp_mplsvpn.c   rd_as-&gt;as = (u_int16_t) *pnt++ &lt;&lt; 8;</span>
+<span class='curline'><a href='../S/641.html#L60'>rd_as</a>              60 bgpd/bgp_mplsvpn.c   rd_as-&gt;as |= (u_int16_t) *pnt++;</span>
+<span class='curline'><a href='../S/641.html#L62'>rd_as</a>              62 bgpd/bgp_mplsvpn.c   rd_as-&gt;val = ((u_int32_t) *pnt++ &lt;&lt; 24);</span>
+<span class='curline'><a href='../S/641.html#L63'>rd_as</a>              63 bgpd/bgp_mplsvpn.c   rd_as-&gt;val |= ((u_int32_t) *pnt++ &lt;&lt; 16);</span>
+<span class='curline'><a href='../S/641.html#L64'>rd_as</a>              64 bgpd/bgp_mplsvpn.c   rd_as-&gt;val |= ((u_int32_t) *pnt++ &lt;&lt; 8);</span>
+<span class='curline'><a href='../S/641.html#L65'>rd_as</a>              65 bgpd/bgp_mplsvpn.c   rd_as-&gt;val |= (u_int32_t) *pnt;</span>
+<span class='curline'><a href='../S/641.html#L89'>rd_as</a>              89 bgpd/bgp_mplsvpn.c   struct rd_as rd_as;</span>
+<span class='curline'><a href='../S/641.html#L134'>rd_as</a>             134 bgpd/bgp_mplsvpn.c 	decode_rd_as (pnt + 5, &amp;rd_as);</span>
+<span class='curline'><a href='../S/641.html#L148'>rd_as</a>             148 bgpd/bgp_mplsvpn.c 	zlog_info ("prefix %ld:%ld:%ld:%s/%d", label, rd_as.as, rd_as.val,</span>
+<span class='curline'><a href='../S/641.html#L259'>rd_as</a>             259 bgpd/bgp_mplsvpn.c   struct rd_as rd_as;</span>
+<span class='curline'><a href='../S/641.html#L271'>rd_as</a>             271 bgpd/bgp_mplsvpn.c       decode_rd_as (pnt + 2, &amp;rd_as);</span>
+<span class='curline'><a href='../S/641.html#L272'>rd_as</a>             272 bgpd/bgp_mplsvpn.c       snprintf (buf, size, "%u:%d", rd_as.as, rd_as.val);</span>
+<span class='curline'><a href='../S/641.html#L361'>rd_as</a>             361 bgpd/bgp_mplsvpn.c                     struct rd_as rd_as;</span>
+<span class='curline'><a href='../S/641.html#L371'>rd_as</a>             371 bgpd/bgp_mplsvpn.c                       decode_rd_as (pnt + 2, &amp;rd_as);</span>
+<span class='curline'><a href='../S/641.html#L378'>rd_as</a>             378 bgpd/bgp_mplsvpn.c                       vty_out (vty, "%u:%d", rd_as.as, rd_as.val);</span>
+<span class='curline'><a href='../S/641.html#L468'>rd_as</a>             468 bgpd/bgp_mplsvpn.c 		    struct rd_as rd_as;</span>
+<span class='curline'><a href='../S/641.html#L478'>rd_as</a>             478 bgpd/bgp_mplsvpn.c 		      decode_rd_as (pnt + 2, &amp;rd_as);</span>
+<span class='curline'><a href='../S/641.html#L485'>rd_as</a>             485 bgpd/bgp_mplsvpn.c 		      vty_out (vty, "%u:%d", rd_as.as, rd_as.val);</span>
+</pre>
+</body>
+</html>

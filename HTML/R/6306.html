@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>key</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/617.html#L1820'>key</a>              1820 bgpd/bgp_aspath.c   unsigned int key = 0;</span>
+<span class='curline'><a href='../S/617.html#L1825'>key</a>              1825 bgpd/bgp_aspath.c   key = jhash (aspath-&gt;str, aspath-&gt;str_len, 2334325);</span>
+<span class='curline'><a href='../S/617.html#L1827'>key</a>              1827 bgpd/bgp_aspath.c   return key;</span>
+<span class='curline'><a href='../S/617.html#L1899'>key</a>              1899 bgpd/bgp_aspath.c   vty_out (vty, "[%p:%u] (%ld) ", backet, backet-&gt;key, as-&gt;refcnt);</span>
+<span class='curline'><a href='../S/643.html#L363'>key</a>               363 bgpd/bgp_attr.c   uint32_t key = 0;</span>
+<span class='curline'><a href='../S/643.html#L364'>key</a>               364 bgpd/bgp_attr.c #define MIX(val)	key = jhash_1word(val, key)</span>
+<span class='curline'><a href='../S/643.html#L371'>key</a>               371 bgpd/bgp_attr.c   key += attr-&gt;origin;</span>
+<span class='curline'><a href='../S/643.html#L372'>key</a>               372 bgpd/bgp_attr.c   key += attr-&gt;nexthop.s_addr;</span>
+<span class='curline'><a href='../S/643.html#L373'>key</a>               373 bgpd/bgp_attr.c   key += attr-&gt;med;</span>
+<span class='curline'><a href='../S/643.html#L374'>key</a>               374 bgpd/bgp_attr.c   key += attr-&gt;local_pref;</span>
+<span class='curline'><a href='../S/643.html#L400'>key</a>               400 bgpd/bgp_attr.c       key = jhash(extra-&gt;mp_nexthop_global.s6_addr, 16, key);</span>
+<span class='curline'><a href='../S/643.html#L401'>key</a>               401 bgpd/bgp_attr.c       key = jhash(extra-&gt;mp_nexthop_local.s6_addr, 16, key);</span>
+<span class='curline'><a href='../S/643.html#L405'>key</a>               405 bgpd/bgp_attr.c   return key;</span>
+<span class='curline'><a href='../S/643.html#L817'>key</a>               817 bgpd/bgp_attr.c       CHECK_FLAG (desired_flags, attr_flag_str[i].key) !=</span>
+<span class='curline'><a href='../S/643.html#L818'>key</a>               818 bgpd/bgp_attr.c       CHECK_FLAG (real_flags,    attr_flag_str[i].key)</span>
+<span class='curline'><a href='../S/643.html#L823'>key</a>               823 bgpd/bgp_attr.c             CHECK_FLAG (desired_flags, attr_flag_str[i].key) ? "" : " not",</span>
+<span class='curline'><a href='../S/649.html#L399'>key</a>               399 bgpd/bgp_community.c   unsigned int key = 0;</span>
+<span class='curline'><a href='../S/649.html#L404'>key</a>               404 bgpd/bgp_community.c       key += pnt[c];</span>
+<span class='curline'><a href='../S/649.html#L405'>key</a>               405 bgpd/bgp_community.c       key += pnt[c + 1];</span>
+<span class='curline'><a href='../S/649.html#L406'>key</a>               406 bgpd/bgp_community.c       key += pnt[c + 2];</span>
+<span class='curline'><a href='../S/649.html#L407'>key</a>               407 bgpd/bgp_community.c       key += pnt[c + 3];</span>
+<span class='curline'><a href='../S/649.html#L410'>key</a>               410 bgpd/bgp_community.c   return key;</span>
+<span class='curline'><a href='../S/629.html#L238'>key</a>               238 bgpd/bgp_ecommunity.c   unsigned int key = 0;</span>
+<span class='curline'><a href='../S/629.html#L243'>key</a>               243 bgpd/bgp_ecommunity.c       key += pnt[c];</span>
+<span class='curline'><a href='../S/629.html#L244'>key</a>               244 bgpd/bgp_ecommunity.c       key += pnt[c + 1];</span>
+<span class='curline'><a href='../S/629.html#L245'>key</a>               245 bgpd/bgp_ecommunity.c       key += pnt[c + 2];</span>
+<span class='curline'><a href='../S/629.html#L246'>key</a>               246 bgpd/bgp_ecommunity.c       key += pnt[c + 3];</span>
+<span class='curline'><a href='../S/629.html#L247'>key</a>               247 bgpd/bgp_ecommunity.c       key += pnt[c + 4];</span>
+<span class='curline'><a href='../S/629.html#L248'>key</a>               248 bgpd/bgp_ecommunity.c       key += pnt[c + 5];</span>
+<span class='curline'><a href='../S/629.html#L249'>key</a>               249 bgpd/bgp_ecommunity.c       key += pnt[c + 6];</span>
+<span class='curline'><a href='../S/629.html#L250'>key</a>               250 bgpd/bgp_ecommunity.c       key += pnt[c + 7];</span>
+<span class='curline'><a href='../S/629.html#L253'>key</a>               253 bgpd/bgp_ecommunity.c   return key;</span>
+<span class='curline'><a href='../S/513.html#L154'>key</a>               154 isisd/dict.c   	    if (dict-&gt;compare(first-&gt;key, next-&gt;key) &gt; 0)</span>
+<span class='curline'><a href='../S/513.html#L160'>key</a>               160 isisd/dict.c   	    if (dict-&gt;compare(first-&gt;key, next-&gt;key) &gt;= 0)</span>
+<span class='curline'><a href='../S/513.html#L435'>key</a>               435 isisd/dict.c   dnode_t *dict_lookup(dict_t *dict, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L445'>key</a>               445 isisd/dict.c   	result = dict-&gt;compare(key, root-&gt;key);</span>
+<span class='curline'><a href='../S/513.html#L457'>key</a>               457 isisd/dict.c   		    while (root != nil &amp;&amp; dict-&gt;compare(key, root-&gt;key))</span>
+<span class='curline'><a href='../S/513.html#L473'>key</a>               473 isisd/dict.c   dnode_t *dict_lookup_length(dict_t *dict, const void *key, int length)</span>
+<span class='curline'><a href='../S/513.html#L483'>key</a>               483 isisd/dict.c           result = dict-&gt;grep(key, root-&gt;key, length);</span>
+<span class='curline'><a href='../S/513.html#L495'>key</a>               495 isisd/dict.c                       while (root != nil &amp;&amp; dict-&gt;grep(key, root-&gt;key, length))</span>
+<span class='curline'><a href='../S/513.html#L509'>key</a>               509 isisd/dict.c   dnode_t *dict_lower_bound(dict_t *dict, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L516'>key</a>               516 isisd/dict.c   	int result = dict-&gt;compare(key, root-&gt;key);</span>
+<span class='curline'><a href='../S/513.html#L541'>key</a>               541 isisd/dict.c   dnode_t *dict_upper_bound(dict_t *dict, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L548'>key</a>               548 isisd/dict.c   	int result = dict-&gt;compare(key, root-&gt;key);</span>
+<span class='curline'><a href='../S/513.html#L576'>key</a>               576 isisd/dict.c   void dict_insert(dict_t *dict, dnode_t *node, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L582'>key</a>               582 isisd/dict.c       node-&gt;key = key;</span>
+<span class='curline'><a href='../S/513.html#L592'>key</a>               592 isisd/dict.c   	result = dict-&gt;compare(key, where-&gt;key);</span>
+<span class='curline'><a href='../S/513.html#L847'>key</a>               847 isisd/dict.c   int dict_alloc_insert(dict_t *dict, const void *key, void *data)</span>
+<span class='curline'><a href='../S/513.html#L853'>key</a>               853 isisd/dict.c   	dict_insert(dict, node, key);</span>
+<span class='curline'><a href='../S/513.html#L1027'>key</a>              1027 isisd/dict.c       return dnode-&gt;key;</span>
+<span class='curline'><a href='../S/513.html#L1067'>key</a>              1067 isisd/dict.c   void dict_load_next(dict_load_t *load, dnode_t *newnode, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L1078'>key</a>              1078 isisd/dict.c   	    assert (dict-&gt;compare(nil-&gt;left-&gt;key, key) &lt;= 0);</span>
+<span class='curline'><a href='../S/513.html#L1080'>key</a>              1080 isisd/dict.c   	    assert (dict-&gt;compare(nil-&gt;left-&gt;key, key) &lt; 0);</span>
+<span class='curline'><a href='../S/513.html#L1084'>key</a>              1084 isisd/dict.c       newnode-&gt;key = key;</span>
+<span class='curline'><a href='../S/513.html#L1187'>key</a>              1187 isisd/dict.c   	    if (dest-&gt;compare(leftnode-&gt;key, rightnode-&gt;key) &lt; 0)</span>
+<span class='curline'><a href='../S/513.html#L1206'>key</a>              1206 isisd/dict.c   	    dict_load_next(&amp;load, leftnode, leftnode-&gt;key);</span>
+<span class='curline'><a href='../S/513.html#L1217'>key</a>              1217 isisd/dict.c   	    dict_load_next(&amp;load, rightnode, rightnode-&gt;key);</span>
+<span class='curline'><a href='../S/513.html#L1301'>key</a>              1301 isisd/dict.c       const char *key;</span>
+<span class='curline'><a href='../S/513.html#L1335'>key</a>              1335 isisd/dict.c   		key = dupstring(tok1);</span>
+<span class='curline'><a href='../S/513.html#L1339'>key</a>              1339 isisd/dict.c   		if (!key || !val || !dn) {</span>
+<span class='curline'><a href='../S/513.html#L1341'>key</a>              1341 isisd/dict.c   		    free((void *) key);</span>
+<span class='curline'><a href='../S/513.html#L1347'>key</a>              1347 isisd/dict.c   		dict_load_next(&amp;dl, dn, key);</span>
+<span class='curline'><a href='../S/513.html#L1367'>key</a>              1367 isisd/dict.c       const char *key;</span>
+<span class='curline'><a href='../S/513.html#L1406'>key</a>              1406 isisd/dict.c   		key = dupstring(tok1);</span>
+<span class='curline'><a href='../S/513.html#L1409'>key</a>              1409 isisd/dict.c   		if (!key || !val) {</span>
+<span class='curline'><a href='../S/513.html#L1411'>key</a>              1411 isisd/dict.c   		    free((void *) key);</span>
+<span class='curline'><a href='../S/513.html#L1415'>key</a>              1415 isisd/dict.c   		if (!dict_alloc_insert(d, key, val)) {</span>
+<span class='curline'><a href='../S/513.html#L1417'>key</a>              1417 isisd/dict.c   		    free((void *) key);</span>
+<span class='curline'><a href='../S/513.html#L1433'>key</a>              1433 isisd/dict.c   		key = dnode_getkey(dn);</span>
+<span class='curline'><a href='../S/513.html#L1437'>key</a>              1437 isisd/dict.c   		free((void *) key);</span>
+<span class='curline'><a href='../S/404.html#L5'>key</a>                 5 ldpd/impl_lock.c mpls_lock_handle mpls_lock_create(mpls_lock_key_type key)</span>
+<span class='curline'><a href='../S/406.html#L14'>key</a>                14 ldpd/impl_tree.c mpls_return_enum mpls_tree_insert(mpls_tree_handle tree, uint32_t key, int length,</span>
+<span class='curline'><a href='../S/406.html#L22'>key</a>                22 ldpd/impl_tree.c   p.u.prefix4.s_addr = key;</span>
+<span class='curline'><a href='../S/406.html#L33'>key</a>                33 ldpd/impl_tree.c mpls_return_enum mpls_tree_remove(mpls_tree_handle tree, uint32_t key,</span>
+<span class='curline'><a href='../S/406.html#L41'>key</a>                41 ldpd/impl_tree.c   p.u.prefix4.s_addr = key;</span>
+<span class='curline'><a href='../S/406.html#L53'>key</a>                53 ldpd/impl_tree.c mpls_return_enum mpls_tree_replace(mpls_tree_handle tree, uint32_t key, int length,</span>
+<span class='curline'><a href='../S/406.html#L61'>key</a>                61 ldpd/impl_tree.c   p.u.prefix4.s_addr = key;</span>
+<span class='curline'><a href='../S/406.html#L72'>key</a>                72 ldpd/impl_tree.c mpls_return_enum mpls_tree_get(mpls_tree_handle tree, uint32_t key, int length,</span>
+<span class='curline'><a href='../S/406.html#L80'>key</a>                80 ldpd/impl_tree.c   p.u.prefix4.s_addr = key;</span>
+<span class='curline'><a href='../S/406.html#L90'>key</a>                90 ldpd/impl_tree.c mpls_return_enum mpls_tree_get_longest(mpls_tree_handle tree, uint32_t key,</span>
+<span class='curline'><a href='../S/406.html#L98'>key</a>                98 ldpd/impl_tree.c   p.u.prefix4.s_addr = key;</span>
+<span class='curline'><a href='../S/406.html#L117'>key</a>               117 ldpd/impl_tree.c mpls_return_enum mpls_tree_getfirst(mpls_tree_handle tree, uint32_t * key,</span>
+<span class='curline'><a href='../S/406.html#L130'>key</a>               130 ldpd/impl_tree.c     *key = node-&gt;p.u.prefix4.s_addr;</span>
+<span class='curline'><a href='../S/406.html#L137'>key</a>               137 ldpd/impl_tree.c mpls_return_enum mpls_tree_getnext(mpls_tree_handle tree, uint32_t * key,</span>
+<span class='curline'><a href='../S/406.html#L145'>key</a>               145 ldpd/impl_tree.c   p.u.prefix4.s_addr = *key;</span>
+<span class='curline'><a href='../S/406.html#L154'>key</a>               154 ldpd/impl_tree.c     *key = node-&gt;p.u.prefix4.s_addr;</span>
+<span class='curline'><a href='../S/350.html#L42'>key</a>                42 ldpd/ldp_fec.c   uint32_t key;</span>
+<span class='curline'><a href='../S/350.html#L50'>key</a>                50 ldpd/ldp_fec.c       key = fec-&gt;info.u.prefix.network.u.ipv4;</span>
+<span class='curline'><a href='../S/350.html#L54'>key</a>                54 ldpd/ldp_fec.c       key = fec-&gt;info.u.host.u.ipv4;</span>
+<span class='curline'><a href='../S/350.html#L68'>key</a>                68 ldpd/ldp_fec.c   if (mpls_tree_insert(g-&gt;fec_tree, key, len, (void *)fec) != MPLS_SUCCESS) {</span>
+<span class='curline'><a href='../S/350.html#L80'>key</a>                80 ldpd/ldp_fec.c   uint32_t key;</span>
+<span class='curline'><a href='../S/350.html#L88'>key</a>                88 ldpd/ldp_fec.c       key = fec-&gt;u.prefix.network.u.ipv4;</span>
+<span class='curline'><a href='../S/350.html#L92'>key</a>                92 ldpd/ldp_fec.c       key = fec-&gt;u.host.u.ipv4;</span>
+<span class='curline'><a href='../S/350.html#L106'>key</a>               106 ldpd/ldp_fec.c   mpls_tree_remove(g-&gt;fec_tree, key, len, (void **)&amp;f);</span>
+<span class='curline'><a href='../S/350.html#L172'>key</a>               172 ldpd/ldp_fec.c   uint32_t key;</span>
+<span class='curline'><a href='../S/350.html#L177'>key</a>               177 ldpd/ldp_fec.c       key = fec-&gt;u.prefix.network.u.ipv4;</span>
+<span class='curline'><a href='../S/350.html#L181'>key</a>               181 ldpd/ldp_fec.c       key = fec-&gt;u.host.u.ipv4;</span>
+<span class='curline'><a href='../S/350.html#L196'>key</a>               196 ldpd/ldp_fec.c   if (mpls_tree_get(g-&gt;fec_tree, key, len, (void **)&amp;f) != MPLS_SUCCESS) {</span>
+<span class='curline'><a href='../S/455.html#L19'>key</a>                19 ldpd/mpls_lock_impl.h extern mpls_lock_handle mpls_lock_create(const mpls_lock_key_type key);</span>
+<span class='curline'><a href='../S/426.html#L31'>key</a>                31 ldpd/mpls_tree_impl.h   const uint32_t key, const int length, void *node);</span>
+<span class='curline'><a href='../S/426.html#L38'>key</a>                38 ldpd/mpls_tree_impl.h   const uint32_t key, const int length, void **node);</span>
+<span class='curline'><a href='../S/426.html#L45'>key</a>                45 ldpd/mpls_tree_impl.h   const uint32_t key, const int length, void *nnode, void **onode);</span>
+<span class='curline'><a href='../S/426.html#L52'>key</a>                52 ldpd/mpls_tree_impl.h   const uint32_t key, const int length, void **node);</span>
+<span class='curline'><a href='../S/426.html#L59'>key</a>                59 ldpd/mpls_tree_impl.h   const uint32_t key, void **node);</span>
+<span class='curline'><a href='../S/197.html#L68'>key</a>                68 lib/distribute.c   struct distribute key;</span>
+<span class='curline'><a href='../S/197.html#L72'>key</a>                72 lib/distribute.c   key.ifname = (char *)ifname;</span>
+<span class='curline'><a href='../S/197.html#L74'>key</a>                74 lib/distribute.c   dist = hash_lookup (disthash, &amp;key);</span>
+<span class='curline'><a href='../S/197.html#L108'>key</a>               108 lib/distribute.c   struct distribute key;</span>
+<span class='curline'><a href='../S/197.html#L111'>key</a>               111 lib/distribute.c   key.ifname = (char *)ifname;</span>
+<span class='curline'><a href='../S/197.html#L113'>key</a>               113 lib/distribute.c   return hash_get (disthash, &amp;key, (void * (*) (void *))distribute_hash_alloc);</span>
+<span class='curline'><a href='../S/265.html#L68'>key</a>                68 lib/hash.c       unsigned int key;</span>
+<span class='curline'><a href='../S/265.html#L73'>key</a>                73 lib/hash.c       key = (*hash-&gt;hash_key) (data);</span>
+<span class='curline'><a href='../S/265.html#L74'>key</a>                74 lib/hash.c       index = key % hash-&gt;size;</span>
+<span class='curline'><a href='../S/265.html#L77'>key</a>                77 lib/hash.c         if (backet-&gt;key == key &amp;&amp; (*hash-&gt;hash_cmp) (backet-&gt;data, data))</span>
+<span class='curline'><a href='../S/265.html#L88'>key</a>                88 lib/hash.c           backet-&gt;key = key;</span>
+<span class='curline'><a href='../S/265.html#L122'>key</a>               122 lib/hash.c       unsigned int key;</span>
+<span class='curline'><a href='../S/265.html#L127'>key</a>               127 lib/hash.c       key = (*hash-&gt;hash_key) (data);</span>
+<span class='curline'><a href='../S/265.html#L128'>key</a>               128 lib/hash.c       index = key % hash-&gt;size;</span>
+<span class='curline'><a href='../S/265.html#L132'>key</a>               132 lib/hash.c           if (backet-&gt;key == key &amp;&amp; (*hash-&gt;hash_cmp) (backet-&gt;data, data)) </span>
+<span class='curline'><a href='../S/227.html#L33'>key</a>                33 lib/hash.h       unsigned int key;</span>
+<span class='curline'><a href='../S/258.html#L63'>key</a>                63 lib/if_rmap.c    struct if_rmap key;</span>
+<span class='curline'><a href='../S/258.html#L67'>key</a>                67 lib/if_rmap.c    key.ifname = (char *)ifname;</span>
+<span class='curline'><a href='../S/258.html#L69'>key</a>                69 lib/if_rmap.c    if_rmap = hash_lookup (ifrmaphash, &amp;key);</span>
+<span class='curline'><a href='../S/258.html#L101'>key</a>               101 lib/if_rmap.c    struct if_rmap key;</span>
+<span class='curline'><a href='../S/258.html#L104'>key</a>               104 lib/if_rmap.c    key.ifname = (char *)ifname;</span>
+<span class='curline'><a href='../S/258.html#L106'>key</a>               106 lib/if_rmap.c    return (struct if_rmap *) hash_get (ifrmaphash, &amp;key, if_rmap_hash_alloc);</span>
+<span class='curline'><a href='../S/256.html#L45'>key</a>                45 lib/jhash.c    jhash (void *key, u_int32_t length, u_int32_t initval)</span>
+<span class='curline'><a href='../S/256.html#L48'>key</a>                48 lib/jhash.c      u_int8_t *k = key;</span>
+<span class='curline'><a href='../S/285.html#L27'>key</a>                27 lib/jhash.h    extern u_int32_t jhash(void *key, u_int32_t length, u_int32_t initval);</span>
+<span class='curline'><a href='../S/219.html#L43'>key</a>                43 lib/keychain.c static struct key *</span>
+<span class='curline'><a href='../S/219.html#L46'>key</a>                46 lib/keychain.c   return XCALLOC (MTYPE_KEY, sizeof (struct key));</span>
+<span class='curline'><a href='../S/219.html#L50'>key</a>                50 lib/keychain.c key_free (struct key *key)</span>
+<span class='curline'><a href='../S/219.html#L52'>key</a>                52 lib/keychain.c   XFREE (MTYPE_KEY, key);</span>
+<span class='curline'><a href='../S/219.html#L75'>key</a>                75 lib/keychain.c   const struct key *k1 = arg1;</span>
+<span class='curline'><a href='../S/219.html#L76'>key</a>                76 lib/keychain.c   const struct key *k2 = arg2;</span>
+<span class='curline'><a href='../S/219.html#L86'>key</a>                86 lib/keychain.c key_delete_func (struct key *key)</span>
+<span class='curline'><a href='../S/219.html#L88'>key</a>                88 lib/keychain.c   if (key-&gt;string)</span>
+<span class='curline'><a href='../S/219.html#L89'>key</a>                89 lib/keychain.c     free (key-&gt;string);</span>
+<span class='curline'><a href='../S/219.html#L90'>key</a>                90 lib/keychain.c   key_free (key);</span>
+<span class='curline'><a href='../S/219.html#L105'>key</a>               105 lib/keychain.c   keychain-&gt;key = list_new ();</span>
+<span class='curline'><a href='../S/219.html#L106'>key</a>               106 lib/keychain.c   keychain-&gt;key-&gt;cmp = (int (*)(void *, void *)) key_cmp_func;</span>
+<span class='curline'><a href='../S/219.html#L107'>key</a>               107 lib/keychain.c   keychain-&gt;key-&gt;del = (void (*)(void *)) key_delete_func;</span>
+<span class='curline'><a href='../S/219.html#L119'>key</a>               119 lib/keychain.c   list_delete (keychain-&gt;key);</span>
+<span class='curline'><a href='../S/219.html#L124'>key</a>               124 lib/keychain.c static struct key *</span>
+<span class='curline'><a href='../S/219.html#L128'>key</a>               128 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L130'>key</a>               130 lib/keychain.c   for (ALL_LIST_ELEMENTS_RO (keychain-&gt;key, node, key))</span>
+<span class='curline'><a href='../S/219.html#L132'>key</a>               132 lib/keychain.c       if (key-&gt;index == index)</span>
+<span class='curline'><a href='../S/219.html#L133'>key</a>               133 lib/keychain.c 	return key;</span>
+<span class='curline'><a href='../S/219.html#L138'>key</a>               138 lib/keychain.c struct key *</span>
+<span class='curline'><a href='../S/219.html#L142'>key</a>               142 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L147'>key</a>               147 lib/keychain.c   for (ALL_LIST_ELEMENTS_RO (keychain-&gt;key, node, key))</span>
+<span class='curline'><a href='../S/219.html#L149'>key</a>               149 lib/keychain.c       if (key-&gt;index &gt;= index)</span>
+<span class='curline'><a href='../S/219.html#L151'>key</a>               151 lib/keychain.c 	  if (key-&gt;accept.start == 0)</span>
+<span class='curline'><a href='../S/219.html#L152'>key</a>               152 lib/keychain.c 	    return key;</span>
+<span class='curline'><a href='../S/219.html#L154'>key</a>               154 lib/keychain.c 	  if (key-&gt;accept.start &lt;= now)</span>
+<span class='curline'><a href='../S/219.html#L155'>key</a>               155 lib/keychain.c 	    if (key-&gt;accept.end &gt;= now || key-&gt;accept.end == -1)</span>
+<span class='curline'><a href='../S/219.html#L156'>key</a>               156 lib/keychain.c 	      return key;</span>
+<span class='curline'><a href='../S/219.html#L162'>key</a>               162 lib/keychain.c struct key *</span>
+<span class='curline'><a href='../S/219.html#L166'>key</a>               166 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L171'>key</a>               171 lib/keychain.c   for (ALL_LIST_ELEMENTS_RO (keychain-&gt;key, node, key))</span>
+<span class='curline'><a href='../S/219.html#L173'>key</a>               173 lib/keychain.c       if (key-&gt;accept.start == 0 ||</span>
+<span class='curline'><a href='../S/219.html#L174'>key</a>               174 lib/keychain.c 	  (key-&gt;accept.start &lt;= now &amp;&amp;</span>
+<span class='curline'><a href='../S/219.html#L175'>key</a>               175 lib/keychain.c 	   (key-&gt;accept.end &gt;= now || key-&gt;accept.end == -1)))</span>
+<span class='curline'><a href='../S/219.html#L176'>key</a>               176 lib/keychain.c 	if (strncmp (key-&gt;string, auth_str, 16) == 0)</span>
+<span class='curline'><a href='../S/219.html#L177'>key</a>               177 lib/keychain.c 	  return key;</span>
+<span class='curline'><a href='../S/219.html#L182'>key</a>               182 lib/keychain.c struct key *</span>
+<span class='curline'><a href='../S/219.html#L186'>key</a>               186 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L191'>key</a>               191 lib/keychain.c   for (ALL_LIST_ELEMENTS_RO (keychain-&gt;key, node, key))</span>
+<span class='curline'><a href='../S/219.html#L193'>key</a>               193 lib/keychain.c       if (key-&gt;send.start == 0)</span>
+<span class='curline'><a href='../S/219.html#L194'>key</a>               194 lib/keychain.c 	return key;</span>
+<span class='curline'><a href='../S/219.html#L196'>key</a>               196 lib/keychain.c       if (key-&gt;send.start &lt;= now)</span>
+<span class='curline'><a href='../S/219.html#L197'>key</a>               197 lib/keychain.c 	if (key-&gt;send.end &gt;= now || key-&gt;send.end == -1)</span>
+<span class='curline'><a href='../S/219.html#L198'>key</a>               198 lib/keychain.c 	  return key;</span>
+<span class='curline'><a href='../S/219.html#L203'>key</a>               203 lib/keychain.c static struct key *</span>
+<span class='curline'><a href='../S/219.html#L206'>key</a>               206 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L208'>key</a>               208 lib/keychain.c   key = key_lookup (keychain, index);</span>
+<span class='curline'><a href='../S/219.html#L210'>key</a>               210 lib/keychain.c   if (key)</span>
+<span class='curline'><a href='../S/219.html#L211'>key</a>               211 lib/keychain.c     return key;</span>
+<span class='curline'><a href='../S/219.html#L213'>key</a>               213 lib/keychain.c   key = key_new ();</span>
+<span class='curline'><a href='../S/219.html#L214'>key</a>               214 lib/keychain.c   key-&gt;index = index;</span>
+<span class='curline'><a href='../S/219.html#L215'>key</a>               215 lib/keychain.c   listnode_add_sort (keychain-&gt;key, key);</span>
+<span class='curline'><a href='../S/219.html#L217'>key</a>               217 lib/keychain.c   return key;</span>
+<span class='curline'><a href='../S/219.html#L221'>key</a>               221 lib/keychain.c key_delete (struct keychain *keychain, struct key *key)</span>
+<span class='curline'><a href='../S/219.html#L223'>key</a>               223 lib/keychain.c   listnode_delete (keychain-&gt;key, key);</span>
+<span class='curline'><a href='../S/219.html#L225'>key</a>               225 lib/keychain.c   if (key-&gt;string)</span>
+<span class='curline'><a href='../S/219.html#L226'>key</a>               226 lib/keychain.c     free (key-&gt;string);</span>
+<span class='curline'><a href='../S/219.html#L227'>key</a>               227 lib/keychain.c   key_free (key);</span>
+<span class='curline'><a href='../S/219.html#L269'>key</a>               269 lib/keychain.c DEFUN (key,</span>
+<span class='curline'><a href='../S/219.html#L276'>key</a>               276 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L282'>key</a>               282 lib/keychain.c   key = key_get (keychain, index);</span>
+<span class='curline'><a href='../S/219.html#L283'>key</a>               283 lib/keychain.c   vty-&gt;index_sub = key;</span>
+<span class='curline'><a href='../S/219.html#L297'>key</a>               297 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L303'>key</a>               303 lib/keychain.c   key = key_lookup (keychain, index);</span>
+<span class='curline'><a href='../S/219.html#L304'>key</a>               304 lib/keychain.c   if (! key)</span>
+<span class='curline'><a href='../S/219.html#L310'>key</a>               310 lib/keychain.c   key_delete (keychain, key);</span>
+<span class='curline'><a href='../S/219.html#L323'>key</a>               323 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L325'>key</a>               325 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L327'>key</a>               327 lib/keychain.c   if (key-&gt;string)</span>
+<span class='curline'><a href='../S/219.html#L328'>key</a>               328 lib/keychain.c     free (key-&gt;string);</span>
+<span class='curline'><a href='../S/219.html#L329'>key</a>               329 lib/keychain.c   key-&gt;string = strdup (argv[0]);</span>
+<span class='curline'><a href='../S/219.html#L341'>key</a>               341 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L343'>key</a>               343 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L345'>key</a>               345 lib/keychain.c   if (key-&gt;string)</span>
+<span class='curline'><a href='../S/219.html#L347'>key</a>               347 lib/keychain.c       free (key-&gt;string);</span>
+<span class='curline'><a href='../S/219.html#L348'>key</a>               348 lib/keychain.c       key-&gt;string = NULL;</span>
+<span class='curline'><a href='../S/219.html#L548'>key</a>               548 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L550'>key</a>               550 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L552'>key</a>               552 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;accept, argv[0], argv[1], argv[2],</span>
+<span class='curline'><a href='../S/219.html#L569'>key</a>               569 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L571'>key</a>               571 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L573'>key</a>               573 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;accept, argv[0], argv[1], argv[2],</span>
+<span class='curline'><a href='../S/219.html#L590'>key</a>               590 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L592'>key</a>               592 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L594'>key</a>               594 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;accept, argv[0], argv[2], argv[1],</span>
+<span class='curline'><a href='../S/219.html#L611'>key</a>               611 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L613'>key</a>               613 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L615'>key</a>               615 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;accept, argv[0], argv[2], argv[1],</span>
+<span class='curline'><a href='../S/219.html#L629'>key</a>               629 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L631'>key</a>               631 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L633'>key</a>               633 lib/keychain.c   return key_lifetime_infinite_set (vty, &amp;key-&gt;accept, argv[0], argv[1],</span>
+<span class='curline'><a href='../S/219.html#L647'>key</a>               647 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L649'>key</a>               649 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L651'>key</a>               651 lib/keychain.c   return key_lifetime_infinite_set (vty, &amp;key-&gt;accept, argv[0], argv[2],</span>
+<span class='curline'><a href='../S/219.html#L666'>key</a>               666 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L668'>key</a>               668 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L670'>key</a>               670 lib/keychain.c   return key_lifetime_duration_set (vty, &amp;key-&gt;accept, argv[0], argv[1],</span>
+<span class='curline'><a href='../S/219.html#L685'>key</a>               685 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L687'>key</a>               687 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L689'>key</a>               689 lib/keychain.c   return key_lifetime_duration_set (vty, &amp;key-&gt;accept, argv[0], argv[2],</span>
+<span class='curline'><a href='../S/219.html#L706'>key</a>               706 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L708'>key</a>               708 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L710'>key</a>               710 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;send, argv[0], argv[1], argv[2], argv[3],</span>
+<span class='curline'><a href='../S/219.html#L727'>key</a>               727 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L729'>key</a>               729 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L731'>key</a>               731 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;send, argv[0], argv[1], argv[2], argv[3],</span>
+<span class='curline'><a href='../S/219.html#L748'>key</a>               748 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L750'>key</a>               750 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L752'>key</a>               752 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;send, argv[0], argv[2], argv[1], argv[3],</span>
+<span class='curline'><a href='../S/219.html#L769'>key</a>               769 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L771'>key</a>               771 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L773'>key</a>               773 lib/keychain.c   return key_lifetime_set (vty, &amp;key-&gt;send, argv[0], argv[2], argv[1], argv[3],</span>
+<span class='curline'><a href='../S/219.html#L787'>key</a>               787 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L789'>key</a>               789 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L791'>key</a>               791 lib/keychain.c   return key_lifetime_infinite_set (vty, &amp;key-&gt;send, argv[0], argv[1], argv[2],</span>
+<span class='curline'><a href='../S/219.html#L805'>key</a>               805 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L807'>key</a>               807 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L809'>key</a>               809 lib/keychain.c   return key_lifetime_infinite_set (vty, &amp;key-&gt;send, argv[0], argv[2], argv[1],</span>
+<span class='curline'><a href='../S/219.html#L824'>key</a>               824 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L826'>key</a>               826 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L828'>key</a>               828 lib/keychain.c   return key_lifetime_duration_set (vty, &amp;key-&gt;send, argv[0], argv[1], argv[2],</span>
+<span class='curline'><a href='../S/219.html#L843'>key</a>               843 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L845'>key</a>               845 lib/keychain.c   key = vty-&gt;index_sub;</span>
+<span class='curline'><a href='../S/219.html#L847'>key</a>               847 lib/keychain.c   return key_lifetime_duration_set (vty, &amp;key-&gt;send, argv[0], argv[2], argv[1],</span>
+<span class='curline'><a href='../S/219.html#L882'>key</a>               882 lib/keychain.c   struct key *key;</span>
+<span class='curline'><a href='../S/219.html#L891'>key</a>               891 lib/keychain.c       for (ALL_LIST_ELEMENTS_RO (keychain-&gt;key, knode, key))</span>
+<span class='curline'><a href='../S/219.html#L893'>key</a>               893 lib/keychain.c 	  vty_out (vty, " key %d%s", key-&gt;index, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/219.html#L895'>key</a>               895 lib/keychain.c 	  if (key-&gt;string)</span>
+<span class='curline'><a href='../S/219.html#L896'>key</a>               896 lib/keychain.c 	    vty_out (vty, "  key-string %s%s", key-&gt;string, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/219.html#L898'>key</a>               898 lib/keychain.c 	  if (key-&gt;accept.start)</span>
+<span class='curline'><a href='../S/219.html#L900'>key</a>               900 lib/keychain.c 	      keychain_strftime (buf, BUFSIZ, &amp;key-&gt;accept.start);</span>
+<span class='curline'><a href='../S/219.html#L903'>key</a>               903 lib/keychain.c 	      if (key-&gt;accept.end == -1)</span>
+<span class='curline'><a href='../S/219.html#L905'>key</a>               905 lib/keychain.c 	      else if (key-&gt;accept.duration)</span>
+<span class='curline'><a href='../S/219.html#L907'>key</a>               907 lib/keychain.c 			 (long)(key-&gt;accept.end - key-&gt;accept.start));</span>
+<span class='curline'><a href='../S/219.html#L910'>key</a>               910 lib/keychain.c 		  keychain_strftime (buf, BUFSIZ, &amp;key-&gt;accept.end);</span>
+<span class='curline'><a href='../S/219.html#L916'>key</a>               916 lib/keychain.c 	  if (key-&gt;send.start)</span>
+<span class='curline'><a href='../S/219.html#L918'>key</a>               918 lib/keychain.c 	      keychain_strftime (buf, BUFSIZ, &amp;key-&gt;send.start);</span>
+<span class='curline'><a href='../S/219.html#L921'>key</a>               921 lib/keychain.c 	      if (key-&gt;send.end == -1)</span>
+<span class='curline'><a href='../S/219.html#L923'>key</a>               923 lib/keychain.c 	      else if (key-&gt;send.duration)</span>
+<span class='curline'><a href='../S/219.html#L924'>key</a>               924 lib/keychain.c 		vty_out (vty, " duration %ld", (long)(key-&gt;send.end - key-&gt;send.start));</span>
+<span class='curline'><a href='../S/219.html#L927'>key</a>               927 lib/keychain.c 		  keychain_strftime (buf, BUFSIZ, &amp;key-&gt;send.end);</span>
+<span class='curline'><a href='../S/268.html#L29'>key</a>                29 lib/keychain.h   struct list *key;</span>
+<span class='curline'><a href='../S/268.html#L52'>key</a>                52 lib/keychain.h extern struct key *key_lookup_for_accept (const struct keychain *, u_int32_t);</span>
+<span class='curline'><a href='../S/268.html#L53'>key</a>                53 lib/keychain.h extern struct key *key_match_for_accept (const struct keychain *, const char *);</span>
+<span class='curline'><a href='../S/268.html#L54'>key</a>                54 lib/keychain.h extern struct key *key_lookup_for_send (const struct keychain *);</span>
+<span class='curline'><a href='../S/205.html#L762'>key</a>               762 lib/log.c      lookup (const struct message *mes, int key)</span>
+<span class='curline'><a href='../S/205.html#L766'>key</a>               766 lib/log.c        for (pnt = mes; pnt-&gt;key != 0; pnt++) </span>
+<span class='curline'><a href='../S/205.html#L767'>key</a>               767 lib/log.c          if (pnt-&gt;key == key) </span>
+<span class='curline'><a href='../S/205.html#L783'>key</a>               783 lib/log.c        int pos = index - meslist[0].key;</span>
+<span class='curline'><a href='../S/205.html#L791'>key</a>               791 lib/log.c            &amp;&amp; (meslist[pos].key == index))</span>
+<span class='curline'><a href='../S/205.html#L800'>key</a>               800 lib/log.c      	if (meslist-&gt;key == index)</span>
+<span class='curline'><a href='../S/263.html#L97'>key</a>                97 lib/log.h        int key;</span>
+<span class='curline'><a href='../S/288.html#L304'>key</a>               304 lib/md5.c      hmac_md5(text, text_len, key, key_len, digest)</span>
+<span class='curline'><a href='../S/288.html#L307'>key</a>               307 lib/md5.c      unsigned char*  key;			/* pointer to authentication key */</span>
+<span class='curline'><a href='../S/288.html#L327'>key</a>               327 lib/md5.c             MD5Update(&amp;tctx, key, key_len);</span>
+<span class='curline'><a href='../S/288.html#L330'>key</a>               330 lib/md5.c             key = tk;</span>
+<span class='curline'><a href='../S/288.html#L348'>key</a>               348 lib/md5.c          bcopy( key, k_ipad, key_len);</span>
+<span class='curline'><a href='../S/288.html#L349'>key</a>               349 lib/md5.c          bcopy( key, k_opad, key_len);</span>
+<span class='curline'><a href='../S/178.html#L86'>key</a>                86 lib/md5.h      void hmac_md5(unsigned char* text, int text_len, unsigned char* key,</span>
+<span class='curline'><a href='../S/270.html#L536'>key</a>               536 lib/sockopt.c      void         *key;       /* MD5 Key */</span>
+<span class='curline'><a href='../S/270.html#L543'>key</a>               543 lib/sockopt.c    cmd.key = password;</span>
+<span class='curline'><a href='../S/834.html#L285'>key</a>               285 mplsadmd/libmpls.c int del_olabel(int key){ </span>
+<span class='curline'><a href='../S/834.html#L301'>key</a>               301 mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/834.html#L309'>key</a>               309 mplsadmd/libmpls.c int bind_olabel(int label, int key,int labelspace){ </span>
+<span class='curline'><a href='../S/834.html#L335'>key</a>               335 mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/835.html#L206'>key</a>               206 mplsadmd/mpls.c 			__u32 key;</span>
+<span class='curline'><a href='../S/835.html#L208'>key</a>               208 mplsadmd/mpls.c 			if (get_unsigned(&amp;key, *argv, 0))</span>
+<span class='curline'><a href='../S/835.html#L211'>key</a>               211 mplsadmd/mpls.c 			instr-&gt;mir_instr[c].mir_fwd.u.ml_key = key;</span>
+<span class='curline'><a href='../S/835.html#L257'>key</a>               257 mplsadmd/mpls.c 			unsigned int key;</span>
+<span class='curline'><a href='../S/835.html#L265'>key</a>               265 mplsadmd/mpls.c 				if (get_unsigned(&amp;key, *argv, 0)) {</span>
+<span class='curline'><a href='../S/835.html#L269'>key</a>               269 mplsadmd/mpls.c 				instr-&gt;mir_instr[c].mir_exp_fwd.ef_key[exp] = key;</span>
+<span class='curline'><a href='../S/835.html#L317'>key</a>               317 mplsadmd/mpls.c 			unsigned int key;</span>
+<span class='curline'><a href='../S/835.html#L329'>key</a>               329 mplsadmd/mpls.c 					if (get_unsigned(&amp;key, *argv, 0)) {</span>
+<span class='curline'><a href='../S/835.html#L333'>key</a>               333 mplsadmd/mpls.c 					instr-&gt;mir_instr[c].mir_nf_fwd.nf_key[nfmark] = key;</span>
+<span class='curline'><a href='../S/835.html#L415'>key</a>               415 mplsadmd/mpls.c 			unsigned int key;</span>
+<span class='curline'><a href='../S/835.html#L427'>key</a>               427 mplsadmd/mpls.c 					if (get_unsigned(&amp;key, *argv, 0)) {</span>
+<span class='curline'><a href='../S/835.html#L431'>key</a>               431 mplsadmd/mpls.c 					instr-&gt;mir_instr[c].mir_ds_fwd.df_key[dscp] = key;</span>
+<span class='curline'><a href='../S/835.html#L544'>key</a>               544 mplsadmd/mpls.c 			__u32 key;</span>
+<span class='curline'><a href='../S/835.html#L546'>key</a>               546 mplsadmd/mpls.c 			if (get_unsigned(&amp;key, *argv, 0))</span>
+<span class='curline'><a href='../S/835.html#L548'>key</a>               548 mplsadmd/mpls.c 			mol.mol_label.u.ml_key = key;</span>
+<span class='curline'><a href='../S/835.html#L623'>key</a>               623 mplsadmd/mpls.c 			__u32 key;</span>
+<span class='curline'><a href='../S/835.html#L625'>key</a>               625 mplsadmd/mpls.c 			if (get_unsigned(&amp;key, *argv, 0))</span>
+<span class='curline'><a href='../S/835.html#L627'>key</a>               627 mplsadmd/mpls.c 			xc.mx_out.u.ml_key = key;</span>
+<span class='curline'><a href='../S/835.html#L710'>key</a>               710 mplsadmd/mpls.c 	unsigned int key = -2;</span>
+<span class='curline'><a href='../S/835.html#L723'>key</a>               723 mplsadmd/mpls.c 			if (get_unsigned(&amp;key, *argv, 0))</span>
+<span class='curline'><a href='../S/835.html#L725'>key</a>               725 mplsadmd/mpls.c 			ifr.ifr_ifru.ifru_ivalue = key;</span>
+<span class='curline'><a href='../S/835.html#L869'>key</a>               869 mplsadmd/mpls.c 	unsigned int key;</span>
+<span class='curline'><a href='../S/835.html#L940'>key</a>               940 mplsadmd/mpls.c 					key = ci-&gt;mir_nf_fwd.nf_key[j];</span>
+<span class='curline'><a href='../S/835.html#L941'>key</a>               941 mplsadmd/mpls.c 					if (key){</span>
+<span class='curline'><a href='../S/835.html#L942'>key</a>               942 mplsadmd/mpls.c 						 fprintf(fp,"%d %8.8x ",j,key);</span>
+<span class='curline'><a href='../S/835.html#L943'>key</a>               943 mplsadmd/mpls.c 						 sprintf(print_instructions_buf,"%s%d %8.8x ",print_instructions_buf,j,key);</span>
+<span class='curline'><a href='../S/835.html#L953'>key</a>               953 mplsadmd/mpls.c 					key = ci-&gt;mir_ds_fwd.df_key[j];</span>
+<span class='curline'><a href='../S/835.html#L954'>key</a>               954 mplsadmd/mpls.c 					if (key){</span>
+<span class='curline'><a href='../S/835.html#L955'>key</a>               955 mplsadmd/mpls.c 						 fprintf(fp,"%d %8.8x ",j,key);</span>
+<span class='curline'><a href='../S/835.html#L956'>key</a>               956 mplsadmd/mpls.c 						 sprintf(print_instructions_buf,"%s%d %8.8x ",print_instructions_buf,j,key);</span>
+<span class='curline'><a href='../S/835.html#L966'>key</a>               966 mplsadmd/mpls.c 					key = ci-&gt;mir_exp_fwd.ef_key[j];</span>
+<span class='curline'><a href='../S/835.html#L967'>key</a>               967 mplsadmd/mpls.c 					if (key){</span>
+<span class='curline'><a href='../S/835.html#L968'>key</a>               968 mplsadmd/mpls.c 						 fprintf(fp,"%d %8.8x ",j,key);</span>
+<span class='curline'><a href='../S/835.html#L969'>key</a>               969 mplsadmd/mpls.c 						 sprintf(print_instructions_buf,"%s%d %8.8x ",print_instructions_buf,j,key);</span>
+<span class='curline'><a href='../S/857.html#L181'>key</a>               181 mplsadmd/old_mplsadmd/libmpls.c int del_olabel(int key){ </span>
+<span class='curline'><a href='../S/857.html#L185'>key</a>               185 mplsadmd/old_mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/857.html#L192'>key</a>               192 mplsadmd/old_mplsadmd/libmpls.c int bind_olabel(int label, int key){ </span>
+<span class='curline'><a href='../S/857.html#L199'>key</a>               199 mplsadmd/old_mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/857.html#L206'>key</a>               206 mplsadmd/old_mplsadmd/libmpls.c int unbind_olabel(int label, int key){</span>
+<span class='curline'><a href='../S/857.html#L213'>key</a>               213 mplsadmd/old_mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/857.html#L222'>key</a>               222 mplsadmd/old_mplsadmd/libmpls.c int bind_olabel_labelspace(int inlabel,int labelspace, int key){ </span>
+<span class='curline'><a href='../S/857.html#L229'>key</a>               229 mplsadmd/old_mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/857.html#L235'>key</a>               235 mplsadmd/old_mplsadmd/libmpls.c int unbind_olabel_labelspace(int inlabel,int labelspace, int key){ </span>
+<span class='curline'><a href='../S/857.html#L242'>key</a>               242 mplsadmd/old_mplsadmd/libmpls.c   sprintf(buffer, "%d", key);</span>
+<span class='curline'><a href='../S/865.html#L36'>key</a>                36 mplsadmd/old_mplsadmd/libmpls.h int unbind_olabel(int label, int key);</span>
+<span class='curline'><a href='../S/865.html#L37'>key</a>                37 mplsadmd/old_mplsadmd/libmpls.h int bind_olabel_labelspace(int inlabel,int labelspace, int key);</span>
+<span class='curline'><a href='../S/865.html#L38'>key</a>                38 mplsadmd/old_mplsadmd/libmpls.h int unbind_olabel_labelspace(int inlabel,int labelspace, int key);</span>
+<span class='curline'><a href='../S/849.html#L296'>key</a>               296 mplsadmd/utils.c void missarg(const char *key)</span>
+<span class='curline'><a href='../S/849.html#L298'>key</a>               298 mplsadmd/utils.c 	fprintf(stderr, "Error: argument \"%s\" is required\n", key);</span>
+<span class='curline'><a href='../S/849.html#L308'>key</a>               308 mplsadmd/utils.c void duparg(const char *key, const char *arg)</span>
+<span class='curline'><a href='../S/849.html#L310'>key</a>               310 mplsadmd/utils.c 	fprintf(stderr, "Error: duplicate \"%s\": \"%s\" is the second value.\n", key, arg);</span>
+<span class='curline'><a href='../S/849.html#L314'>key</a>               314 mplsadmd/utils.c void duparg2(const char *key, const char *arg)</span>
+<span class='curline'><a href='../S/849.html#L316'>key</a>               316 mplsadmd/utils.c 	fprintf(stderr, "Error: either \"%s\" is duplicate, or \"%s\" is a garbage.\n", key, arg);</span>
+<span class='curline'><a href='../S/6.html#L63'>key</a>                63 ospf6d/ospf6_lsdb.c ospf6_lsdb_set_key (struct prefix_ipv6 *key, void *value, int len)</span>
+<span class='curline'><a href='../S/6.html#L65'>key</a>                65 ospf6d/ospf6_lsdb.c   assert (key-&gt;prefixlen % 8 == 0);</span>
+<span class='curline'><a href='../S/6.html#L67'>key</a>                67 ospf6d/ospf6_lsdb.c   memcpy ((caddr_t) &amp;key-&gt;prefix + key-&gt;prefixlen / 8,</span>
+<span class='curline'><a href='../S/6.html#L69'>key</a>                69 ospf6d/ospf6_lsdb.c   key-&gt;family = AF_INET6;</span>
+<span class='curline'><a href='../S/6.html#L70'>key</a>                70 ospf6d/ospf6_lsdb.c   key-&gt;prefixlen += len * 8;</span>
+<span class='curline'><a href='../S/6.html#L104'>key</a>               104 ospf6d/ospf6_lsdb.c   struct prefix_ipv6 key;</span>
+<span class='curline'><a href='../S/6.html#L108'>key</a>               108 ospf6d/ospf6_lsdb.c   memset (&amp;key, 0, sizeof (key));</span>
+<span class='curline'><a href='../S/6.html#L109'>key</a>               109 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;lsa-&gt;header-&gt;type, sizeof (lsa-&gt;header-&gt;type));</span>
+<span class='curline'><a href='../S/6.html#L110'>key</a>               110 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;lsa-&gt;header-&gt;adv_router,</span>
+<span class='curline'><a href='../S/6.html#L112'>key</a>               112 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;lsa-&gt;header-&gt;id, sizeof (lsa-&gt;header-&gt;id));</span>
+<span class='curline'><a href='../S/6.html#L114'>key</a>               114 ospf6d/ospf6_lsdb.c   current = route_node_get (lsdb-&gt;table, (struct prefix *) &amp;key);</span>
+<span class='curline'><a href='../S/6.html#L212'>key</a>               212 ospf6d/ospf6_lsdb.c   struct prefix_ipv6 key;</span>
+<span class='curline'><a href='../S/6.html#L214'>key</a>               214 ospf6d/ospf6_lsdb.c   memset (&amp;key, 0, sizeof (key));</span>
+<span class='curline'><a href='../S/6.html#L215'>key</a>               215 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;lsa-&gt;header-&gt;type, sizeof (lsa-&gt;header-&gt;type));</span>
+<span class='curline'><a href='../S/6.html#L216'>key</a>               216 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;lsa-&gt;header-&gt;adv_router,</span>
+<span class='curline'><a href='../S/6.html#L218'>key</a>               218 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;lsa-&gt;header-&gt;id, sizeof (lsa-&gt;header-&gt;id));</span>
+<span class='curline'><a href='../S/6.html#L220'>key</a>               220 ospf6d/ospf6_lsdb.c   node = route_node_lookup (lsdb-&gt;table, (struct prefix *) &amp;key);</span>
+<span class='curline'><a href='../S/6.html#L245'>key</a>               245 ospf6d/ospf6_lsdb.c   struct prefix_ipv6 key;</span>
+<span class='curline'><a href='../S/6.html#L250'>key</a>               250 ospf6d/ospf6_lsdb.c   memset (&amp;key, 0, sizeof (key));</span>
+<span class='curline'><a href='../S/6.html#L251'>key</a>               251 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;type, sizeof (type));</span>
+<span class='curline'><a href='../S/6.html#L252'>key</a>               252 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;adv_router, sizeof (adv_router));</span>
+<span class='curline'><a href='../S/6.html#L253'>key</a>               253 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;id, sizeof (id));</span>
+<span class='curline'><a href='../S/6.html#L255'>key</a>               255 ospf6d/ospf6_lsdb.c   node = route_node_lookup (lsdb-&gt;table, (struct prefix *) &amp;key);</span>
+<span class='curline'><a href='../S/6.html#L267'>key</a>               267 ospf6d/ospf6_lsdb.c   struct prefix_ipv6 key;</span>
+<span class='curline'><a href='../S/6.html#L273'>key</a>               273 ospf6d/ospf6_lsdb.c   memset (&amp;key, 0, sizeof (key));</span>
+<span class='curline'><a href='../S/6.html#L274'>key</a>               274 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;type, sizeof (type));</span>
+<span class='curline'><a href='../S/6.html#L275'>key</a>               275 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;adv_router, sizeof (adv_router));</span>
+<span class='curline'><a href='../S/6.html#L276'>key</a>               276 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;id, sizeof (id));</span>
+<span class='curline'><a href='../S/6.html#L277'>key</a>               277 ospf6d/ospf6_lsdb.c   p = (struct prefix *) &amp;key;</span>
+<span class='curline'><a href='../S/6.html#L372'>key</a>               372 ospf6d/ospf6_lsdb.c   struct prefix_ipv6 key;</span>
+<span class='curline'><a href='../S/6.html#L375'>key</a>               375 ospf6d/ospf6_lsdb.c   memset (&amp;key, 0, sizeof (key));</span>
+<span class='curline'><a href='../S/6.html#L376'>key</a>               376 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;type, sizeof (type));</span>
+<span class='curline'><a href='../S/6.html#L377'>key</a>               377 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;adv_router, sizeof (adv_router));</span>
+<span class='curline'><a href='../S/6.html#L382'>key</a>               382 ospf6d/ospf6_lsdb.c   while (node &amp;&amp; node-&gt;p.prefixlen &lt;= key.prefixlen &amp;&amp;</span>
+<span class='curline'><a href='../S/6.html#L383'>key</a>               383 ospf6d/ospf6_lsdb.c 	 prefix_match (&amp;node-&gt;p, (struct prefix *) &amp;key))</span>
+<span class='curline'><a href='../S/6.html#L384'>key</a>               384 ospf6d/ospf6_lsdb.c     node = node-&gt;link[prefix6_bit(&amp;key.prefix, node-&gt;p.prefixlen)];</span>
+<span class='curline'><a href='../S/6.html#L396'>key</a>               396 ospf6d/ospf6_lsdb.c   if (! prefix_match ((struct prefix *) &amp;key, &amp;node-&gt;p))</span>
+<span class='curline'><a href='../S/6.html#L428'>key</a>               428 ospf6d/ospf6_lsdb.c   struct prefix_ipv6 key;</span>
+<span class='curline'><a href='../S/6.html#L431'>key</a>               431 ospf6d/ospf6_lsdb.c   memset (&amp;key, 0, sizeof (key));</span>
+<span class='curline'><a href='../S/6.html#L432'>key</a>               432 ospf6d/ospf6_lsdb.c   ospf6_lsdb_set_key (&amp;key, &amp;type, sizeof (type));</span>
+<span class='curline'><a href='../S/6.html#L436'>key</a>               436 ospf6d/ospf6_lsdb.c   while (node &amp;&amp; node-&gt;p.prefixlen &lt;= key.prefixlen &amp;&amp;</span>
+<span class='curline'><a href='../S/6.html#L437'>key</a>               437 ospf6d/ospf6_lsdb.c 	 prefix_match (&amp;node-&gt;p, (struct prefix *) &amp;key))</span>
+<span class='curline'><a href='../S/6.html#L438'>key</a>               438 ospf6d/ospf6_lsdb.c     node = node-&gt;link[prefix6_bit(&amp;key.prefix, node-&gt;p.prefixlen)];</span>
+<span class='curline'><a href='../S/6.html#L450'>key</a>               450 ospf6d/ospf6_lsdb.c   if (! prefix_match ((struct prefix *) &amp;key, &amp;node-&gt;p))</span>
+<span class='curline'><a href='../S/756.html#L53'>key</a>                53 ospfd/ospf_neighbor.c               struct prefix *key)</span>
+<span class='curline'><a href='../S/756.html#L55'>key</a>                55 ospfd/ospf_neighbor.c   key-&gt;family = AF_INET;</span>
+<span class='curline'><a href='../S/756.html#L56'>key</a>                56 ospfd/ospf_neighbor.c   key-&gt;prefixlen = IPV4_MAX_BITLEN;</span>
+<span class='curline'><a href='../S/756.html#L60'>key</a>                60 ospfd/ospf_neighbor.c     key-&gt;u.prefix4 = nbr-&gt;router_id;</span>
+<span class='curline'><a href='../S/756.html#L62'>key</a>                62 ospfd/ospf_neighbor.c     key-&gt;u.prefix4 = nbr-&gt;src;</span>
+<span class='curline'><a href='../S/756.html#L432'>key</a>               432 ospfd/ospf_neighbor.c   struct prefix key;</span>
+<span class='curline'><a href='../S/756.html#L435'>key</a>               435 ospfd/ospf_neighbor.c   key.family = AF_INET;</span>
+<span class='curline'><a href='../S/756.html#L436'>key</a>               436 ospfd/ospf_neighbor.c   key.prefixlen = IPV4_MAX_BITLEN;</span>
+<span class='curline'><a href='../S/756.html#L439'>key</a>               439 ospfd/ospf_neighbor.c     key.u.prefix4 = ospfh-&gt;router_id;   /* index vlink nbrs by router-id */</span>
+<span class='curline'><a href='../S/756.html#L441'>key</a>               441 ospfd/ospf_neighbor.c     key.u.prefix4 = iph-&gt;ip_src;</span>
+<span class='curline'><a href='../S/756.html#L443'>key</a>               443 ospfd/ospf_neighbor.c   rn = route_node_get (oi-&gt;nbrs, &amp;key);</span>
+<span class='curline'><a href='../S/750.html#L460'>key</a>               460 ospfd/ospf_opaque.c   u_char key = GET_OPAQUE_TYPE (ntohl (lsa-&gt;data-&gt;id.s_addr));</span>
+<span class='curline'><a href='../S/750.html#L464'>key</a>               464 ospfd/ospf_opaque.c       if (functab-&gt;opaque_type == key)</span>
+<span class='curline'><a href='../S/750.html#L649'>key</a>               649 ospfd/ospf_opaque.c   u_char key = GET_OPAQUE_TYPE (ntohl (lsa-&gt;data-&gt;id.s_addr));</span>
+<span class='curline'><a href='../S/750.html#L681'>key</a>               681 ospfd/ospf_opaque.c       if (oipt-&gt;opaque_type == key)</span>
+<span class='curline'><a href='../S/750.html#L728'>key</a>               728 ospfd/ospf_opaque.c   u_int32_t key = GET_OPAQUE_ID (ntohl (lsa-&gt;data-&gt;id.s_addr));</span>
+<span class='curline'><a href='../S/750.html#L731'>key</a>               731 ospfd/ospf_opaque.c     if (oipi-&gt;opaque_id == key)</span>
+<span class='curline'><a href='../S/798.html#L270'>key</a>               270 ospfd/ospf_te.c   unsigned int key = GET_OPAQUE_ID (ntohl (lsa-&gt;data-&gt;id.s_addr));</span>
+<span class='curline'><a href='../S/798.html#L273'>key</a>               273 ospfd/ospf_te.c     if (lp-&gt;instance == key)</span>
+<span class='curline'><a href='../S/798.html#L276'>key</a>               276 ospfd/ospf_te.c   zlog_warn ("lookup_linkparams_by_instance: Entry not found: key(%x)", key);</span>
+<span class='curline'><a href='../S/596.html#L843'>key</a>               843 ripd/ripd.c          struct key *key;</span>
+<span class='curline'><a href='../S/596.html#L849'>key</a>               849 ripd/ripd.c          key = key_match_for_accept (keychain, (char *) &amp;rte-&gt;prefix);</span>
+<span class='curline'><a href='../S/596.html#L850'>key</a>               850 ripd/ripd.c          if (key)</span>
+<span class='curline'><a href='../S/596.html#L865'>key</a>               865 ripd/ripd.c      struct key *key;</span>
+<span class='curline'><a href='../S/596.html#L918'>key</a>               918 ripd/ripd.c          key = key_lookup_for_accept (keychain, md5-&gt;keyid);</span>
+<span class='curline'><a href='../S/596.html#L919'>key</a>               919 ripd/ripd.c          if (key == NULL)</span>
+<span class='curline'><a href='../S/596.html#L922'>key</a>               922 ripd/ripd.c          strncpy (auth_str, key-&gt;string, RIP_AUTH_MD5_SIZE);</span>
+<span class='curline'><a href='../S/596.html#L952'>key</a>               952 ripd/ripd.c    rip_auth_prepare_str_send (struct rip_interface *ri, struct key *key, </span>
+<span class='curline'><a href='../S/596.html#L955'>key</a>               955 ripd/ripd.c      assert (ri || key);</span>
+<span class='curline'><a href='../S/596.html#L958'>key</a>               958 ripd/ripd.c      if (key &amp;&amp; key-&gt;string)</span>
+<span class='curline'><a href='../S/596.html#L959'>key</a>               959 ripd/ripd.c        strncpy (auth_str, key-&gt;string, len);</span>
+<span class='curline'><a href='../S/596.html#L993'>key</a>               993 ripd/ripd.c                           struct key *key)</span>
+<span class='curline'><a href='../S/596.html#L1012'>key</a>              1012 ripd/ripd.c      if (key)</span>
+<span class='curline'><a href='../S/596.html#L1013'>key</a>              1013 ripd/ripd.c        stream_putc (s, key-&gt;index % 256);</span>
+<span class='curline'><a href='../S/596.html#L1042'>key</a>              1042 ripd/ripd.c                           struct key *key, char *auth_str, int len)</span>
+<span class='curline'><a href='../S/596.html#L1049'>key</a>              1049 ripd/ripd.c            rip_auth_prepare_str_send (ri, key, auth_str, len);</span>
+<span class='curline'><a href='../S/596.html#L1053'>key</a>              1053 ripd/ripd.c            return rip_auth_md5_ah_write (s, ri, key);</span>
+<span class='curline'><a href='../S/596.html#L2148'>key</a>              2148 ripd/ripd.c      struct key *key = NULL;</span>
+<span class='curline'><a href='../S/596.html#L2197'>key</a>              2197 ripd/ripd.c               key = key_lookup_for_send (keychain);</span>
+<span class='curline'><a href='../S/596.html#L2200'>key</a>              2200 ripd/ripd.c          rip_auth_prepare_str_send (ri, key, auth_str, RIP_AUTH_SIMPLE_SIZE);</span>
+<span class='curline'><a href='../S/596.html#L2388'>key</a>              2388 ripd/ripd.c                  doff = rip_auth_header_write (s, ri, key, auth_str, </span>
+<span class='curline'><a href='../S/913.html#L8'>key</a>                 8 vpnmd/vpnm_via_mpls.c static int bind_olabel(int label, int key,int labelspace);</span>
+<span class='curline'><a href='../S/913.html#L47'>key</a>                47 vpnmd/vpnm_via_mpls.c static int bind_olabel(int label, int key,int labelspace){</span>
+<span class='curline'><a href='../S/913.html#L49'>key</a>                49 vpnmd/vpnm_via_mpls.c 	sprintf(buf,"bind_olabel ilabel %d olabelkey %d labelspace %d",label,key,labelspace);</span>
+<span class='curline'><a href='../S/58.html#L964'>key</a>               964 vtysh/vtysh.c  	 key,</span>
+<span class='curline'><a href='../S/957.html#L264'>key</a>               264 zebra/kernel_socket.c   for (mes = rtm_flag_str; mes-&gt;key != 0; mes++)</span>
+<span class='curline'><a href='../S/957.html#L266'>key</a>               266 zebra/kernel_socket.c       if (mes-&gt;key &amp; flag)</span>
+<span class='curline'><a href='../S/940.html#L57'>key</a>                57 zebra/zebra_rib.c   int key;</span>
+</pre>
+</body>
+</html>

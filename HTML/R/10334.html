@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vertex</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/464.html#L160'>vertex</a>            160 isisd/isis_spf.c vid2string (struct isis_vertex *vertex, u_char * buff)</span>
+<span class='curline'><a href='../S/464.html#L162'>vertex</a>            162 isisd/isis_spf.c   switch (vertex-&gt;type)</span>
+<span class='curline'><a href='../S/464.html#L166'>vertex</a>            166 isisd/isis_spf.c       return print_sys_hostname (vertex-&gt;N.id);</span>
+<span class='curline'><a href='../S/464.html#L171'>vertex</a>            171 isisd/isis_spf.c       return print_sys_hostname (vertex-&gt;N.id);</span>
+<span class='curline'><a href='../S/464.html#L180'>vertex</a>            180 isisd/isis_spf.c       prefix2str ((struct prefix *) &amp;vertex-&gt;N.prefix, (char *) buff, BUFSIZ);</span>
+<span class='curline'><a href='../S/464.html#L198'>vertex</a>            198 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L200'>vertex</a>            200 isisd/isis_spf.c   vertex = XCALLOC (MTYPE_ISIS_VERTEX, sizeof (struct isis_vertex));</span>
+<span class='curline'><a href='../S/464.html#L201'>vertex</a>            201 isisd/isis_spf.c   if (vertex == NULL)</span>
+<span class='curline'><a href='../S/464.html#L207'>vertex</a>            207 isisd/isis_spf.c   vertex-&gt;type = vtype;</span>
+<span class='curline'><a href='../S/464.html#L213'>vertex</a>            213 isisd/isis_spf.c       memcpy (vertex-&gt;N.id, (u_char *) id, ISIS_SYS_ID_LEN);</span>
+<span class='curline'><a href='../S/464.html#L217'>vertex</a>            217 isisd/isis_spf.c       memcpy (vertex-&gt;N.id, (u_char *) id, ISIS_SYS_ID_LEN + 1);</span>
+<span class='curline'><a href='../S/464.html#L226'>vertex</a>            226 isisd/isis_spf.c       memcpy (&amp;vertex-&gt;N.prefix, (struct prefix *) id,</span>
+<span class='curline'><a href='../S/464.html#L233'>vertex</a>            233 isisd/isis_spf.c   vertex-&gt;Adj_N = list_new ();</span>
+<span class='curline'><a href='../S/464.html#L234'>vertex</a>            234 isisd/isis_spf.c   vertex-&gt;parents = list_new ();</span>
+<span class='curline'><a href='../S/464.html#L235'>vertex</a>            235 isisd/isis_spf.c   vertex-&gt;parents-&gt;cmp = isis_vertex_cmp;</span>
+<span class='curline'><a href='../S/464.html#L236'>vertex</a>            236 isisd/isis_spf.c   vertex-&gt;children = list_new ();</span>
+<span class='curline'><a href='../S/464.html#L237'>vertex</a>            237 isisd/isis_spf.c   vertex-&gt;children-&gt;cmp = isis_vertex_cmp;</span>
+<span class='curline'><a href='../S/464.html#L239'>vertex</a>            239 isisd/isis_spf.c   return vertex;</span>
+<span class='curline'><a href='../S/464.html#L243'>vertex</a>            243 isisd/isis_spf.c isis_vertex_del (struct isis_vertex *vertex)</span>
+<span class='curline'><a href='../S/464.html#L245'>vertex</a>            245 isisd/isis_spf.c   if (vertex-&gt;Adj_N)</span>
+<span class='curline'><a href='../S/464.html#L246'>vertex</a>            246 isisd/isis_spf.c   list_delete (vertex-&gt;Adj_N);</span>
+<span class='curline'><a href='../S/464.html#L247'>vertex</a>            247 isisd/isis_spf.c   vertex-&gt;Adj_N = NULL;</span>
+<span class='curline'><a href='../S/464.html#L248'>vertex</a>            248 isisd/isis_spf.c   if (vertex-&gt;parents)</span>
+<span class='curline'><a href='../S/464.html#L249'>vertex</a>            249 isisd/isis_spf.c   list_delete (vertex-&gt;parents);</span>
+<span class='curline'><a href='../S/464.html#L250'>vertex</a>            250 isisd/isis_spf.c   vertex-&gt;parents = NULL;</span>
+<span class='curline'><a href='../S/464.html#L251'>vertex</a>            251 isisd/isis_spf.c   if (vertex-&gt;children)</span>
+<span class='curline'><a href='../S/464.html#L252'>vertex</a>            252 isisd/isis_spf.c   list_delete (vertex-&gt;children);</span>
+<span class='curline'><a href='../S/464.html#L253'>vertex</a>            253 isisd/isis_spf.c   vertex-&gt;children = NULL;</span>
+<span class='curline'><a href='../S/464.html#L255'>vertex</a>            255 isisd/isis_spf.c   memset(vertex, 0, sizeof(struct isis_vertex));</span>
+<span class='curline'><a href='../S/464.html#L256'>vertex</a>            256 isisd/isis_spf.c   XFREE (MTYPE_ISIS_VERTEX, vertex);</span>
+<span class='curline'><a href='../S/464.html#L262'>vertex</a>            262 isisd/isis_spf.c isis_vertex_adj_del (struct isis_vertex *vertex, struct isis_adjacency *adj)</span>
+<span class='curline'><a href='../S/464.html#L265'>vertex</a>            265 isisd/isis_spf.c   if (!vertex)</span>
+<span class='curline'><a href='../S/464.html#L267'>vertex</a>            267 isisd/isis_spf.c   for (node = listhead (vertex-&gt;Adj_N); node; node = nextnode)</span>
+<span class='curline'><a href='../S/464.html#L271'>vertex</a>            271 isisd/isis_spf.c       list_delete_node(vertex-&gt;Adj_N, node);</span>
+<span class='curline'><a href='../S/464.html#L444'>vertex</a>            444 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L455'>vertex</a>            455 isisd/isis_spf.c     vertex = isis_vertex_new (sysid, VTYPE_NONPSEUDO_TE_IS);</span>
+<span class='curline'><a href='../S/464.html#L457'>vertex</a>            457 isisd/isis_spf.c     vertex = isis_vertex_new (sysid, VTYPE_NONPSEUDO_IS);</span>
+<span class='curline'><a href='../S/464.html#L459'>vertex</a>            459 isisd/isis_spf.c   listnode_add (spftree-&gt;paths, vertex);</span>
+<span class='curline'><a href='../S/464.html#L463'>vertex</a>            463 isisd/isis_spf.c 	      vtype2string (vertex-&gt;type), vid2string (vertex, buff),</span>
+<span class='curline'><a href='../S/464.html#L464'>vertex</a>            464 isisd/isis_spf.c 	      vertex-&gt;depth, vertex-&gt;d_N);</span>
+<span class='curline'><a href='../S/464.html#L467'>vertex</a>            467 isisd/isis_spf.c   return vertex;</span>
+<span class='curline'><a href='../S/464.html#L474'>vertex</a>            474 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L477'>vertex</a>            477 isisd/isis_spf.c   for (ALL_LIST_ELEMENTS_RO (list, node, vertex))</span>
+<span class='curline'><a href='../S/464.html#L479'>vertex</a>            479 isisd/isis_spf.c       if (vertex-&gt;type != vtype)</span>
+<span class='curline'><a href='../S/464.html#L486'>vertex</a>            486 isisd/isis_spf.c 	  if (memcmp ((u_char *) id, vertex-&gt;N.id, ISIS_SYS_ID_LEN) == 0)</span>
+<span class='curline'><a href='../S/464.html#L487'>vertex</a>            487 isisd/isis_spf.c 	    return vertex;</span>
+<span class='curline'><a href='../S/464.html#L491'>vertex</a>            491 isisd/isis_spf.c 	  if (memcmp ((u_char *) id, vertex-&gt;N.id, ISIS_SYS_ID_LEN + 1) == 0)</span>
+<span class='curline'><a href='../S/464.html#L492'>vertex</a>            492 isisd/isis_spf.c 	    return vertex;</span>
+<span class='curline'><a href='../S/464.html#L502'>vertex</a>            502 isisd/isis_spf.c 	  p2 = (struct prefix *) &amp;vertex-&gt;N.id;</span>
+<span class='curline'><a href='../S/464.html#L506'>vertex</a>            506 isisd/isis_spf.c 	    return vertex;</span>
+<span class='curline'><a href='../S/464.html#L522'>vertex</a>            522 isisd/isis_spf.c   struct isis_vertex *vertex, *v;</span>
+<span class='curline'><a href='../S/464.html#L531'>vertex</a>            531 isisd/isis_spf.c   vertex = isis_vertex_new (id, vtype);</span>
+<span class='curline'><a href='../S/464.html#L532'>vertex</a>            532 isisd/isis_spf.c   vertex-&gt;d_N = cost;</span>
+<span class='curline'><a href='../S/464.html#L533'>vertex</a>            533 isisd/isis_spf.c   vertex-&gt;depth = depth;</span>
+<span class='curline'><a href='../S/464.html#L536'>vertex</a>            536 isisd/isis_spf.c     listnode_add_sort (vertex-&gt;parents, parent);</span>
+<span class='curline'><a href='../S/464.html#L537'>vertex</a>            537 isisd/isis_spf.c     if (listnode_lookup (parent-&gt;children, vertex) == NULL)</span>
+<span class='curline'><a href='../S/464.html#L538'>vertex</a>            538 isisd/isis_spf.c       listnode_add_sort (parent-&gt;children, vertex);</span>
+<span class='curline'><a href='../S/464.html#L543'>vertex</a>            543 isisd/isis_spf.c       listnode_add (vertex-&gt;Adj_N, parent_adj);</span>
+<span class='curline'><a href='../S/464.html#L545'>vertex</a>            545 isisd/isis_spf.c     listnode_add (vertex-&gt;Adj_N, adj);</span>
+<span class='curline'><a href='../S/464.html#L550'>vertex</a>            550 isisd/isis_spf.c               print_sys_hostname (vertex-&gt;N.id),</span>
+<span class='curline'><a href='../S/464.html#L551'>vertex</a>            551 isisd/isis_spf.c 	      vtype2string (vertex-&gt;type), vid2string (vertex, buff),</span>
+<span class='curline'><a href='../S/464.html#L552'>vertex</a>            552 isisd/isis_spf.c 	      vertex-&gt;depth, vertex-&gt;d_N, listcount(vertex-&gt;Adj_N));</span>
+<span class='curline'><a href='../S/464.html#L557'>vertex</a>            557 isisd/isis_spf.c       listnode_add (spftree-&gt;tents, vertex);</span>
+<span class='curline'><a href='../S/464.html#L558'>vertex</a>            558 isisd/isis_spf.c       return vertex;</span>
+<span class='curline'><a href='../S/464.html#L565'>vertex</a>            565 isisd/isis_spf.c       if (v-&gt;d_N &gt; vertex-&gt;d_N)</span>
+<span class='curline'><a href='../S/464.html#L567'>vertex</a>            567 isisd/isis_spf.c 	  list_add_node_prev (spftree-&gt;tents, node, vertex);</span>
+<span class='curline'><a href='../S/464.html#L570'>vertex</a>            570 isisd/isis_spf.c       else if (v-&gt;d_N == vertex-&gt;d_N &amp;&amp; v-&gt;type &gt; vertex-&gt;type)</span>
+<span class='curline'><a href='../S/464.html#L573'>vertex</a>            573 isisd/isis_spf.c           list_add_node_prev (spftree-&gt;tents, node, vertex);</span>
+<span class='curline'><a href='../S/464.html#L579'>vertex</a>            579 isisd/isis_spf.c       listnode_add (spftree-&gt;tents, vertex);</span>
+<span class='curline'><a href='../S/464.html#L581'>vertex</a>            581 isisd/isis_spf.c   return vertex;</span>
+<span class='curline'><a href='../S/464.html#L589'>vertex</a>            589 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L591'>vertex</a>            591 isisd/isis_spf.c   vertex = isis_find_vertex (spftree-&gt;tents, id, vtype);</span>
+<span class='curline'><a href='../S/464.html#L593'>vertex</a>            593 isisd/isis_spf.c   if (vertex)</span>
+<span class='curline'><a href='../S/464.html#L596'>vertex</a>            596 isisd/isis_spf.c       if (vertex-&gt;d_N == cost)</span>
+<span class='curline'><a href='../S/464.html#L599'>vertex</a>            599 isisd/isis_spf.c 	    listnode_add (vertex-&gt;Adj_N, adj);</span>
+<span class='curline'><a href='../S/464.html#L601'>vertex</a>            601 isisd/isis_spf.c 	  if (listcount (vertex-&gt;Adj_N) &gt; ISIS_MAX_PATH_SPLITS)</span>
+<span class='curline'><a href='../S/464.html#L602'>vertex</a>            602 isisd/isis_spf.c 	    remove_excess_adjs (vertex-&gt;Adj_N);</span>
+<span class='curline'><a href='../S/464.html#L603'>vertex</a>            603 isisd/isis_spf.c 	  if (parent &amp;&amp; (listnode_lookup (vertex-&gt;parents, parent) == NULL))</span>
+<span class='curline'><a href='../S/464.html#L604'>vertex</a>            604 isisd/isis_spf.c 	    listnode_add_sort (vertex-&gt;parents, parent);</span>
+<span class='curline'><a href='../S/464.html#L605'>vertex</a>            605 isisd/isis_spf.c 	  if (parent &amp;&amp; (listnode_lookup (parent-&gt;children, vertex) == NULL))</span>
+<span class='curline'><a href='../S/464.html#L606'>vertex</a>            606 isisd/isis_spf.c 	    listnode_add_sort (parent-&gt;children, vertex);</span>
+<span class='curline'><a href='../S/464.html#L609'>vertex</a>            609 isisd/isis_spf.c       else if (vertex-&gt;d_N &lt; cost)</span>
+<span class='curline'><a href='../S/464.html#L618'>vertex</a>            618 isisd/isis_spf.c 	  listnode_delete (spftree-&gt;tents, vertex);</span>
+<span class='curline'><a href='../S/464.html#L619'>vertex</a>            619 isisd/isis_spf.c 	  assert (listcount (vertex-&gt;children) == 0);</span>
+<span class='curline'><a href='../S/464.html#L620'>vertex</a>            620 isisd/isis_spf.c 	  for (ALL_LIST_ELEMENTS (vertex-&gt;parents, pnode, pnextnode, pvertex))</span>
+<span class='curline'><a href='../S/464.html#L621'>vertex</a>            621 isisd/isis_spf.c 	    listnode_delete(pvertex-&gt;children, vertex);</span>
+<span class='curline'><a href='../S/464.html#L622'>vertex</a>            622 isisd/isis_spf.c 	  isis_vertex_del (vertex);</span>
+<span class='curline'><a href='../S/464.html#L635'>vertex</a>            635 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L656'>vertex</a>            656 isisd/isis_spf.c   vertex = isis_find_vertex (spftree-&gt;paths, id, vtype);</span>
+<span class='curline'><a href='../S/464.html#L657'>vertex</a>            657 isisd/isis_spf.c   if (vertex)</span>
+<span class='curline'><a href='../S/464.html#L661'>vertex</a>            661 isisd/isis_spf.c 	          print_sys_hostname (vertex-&gt;N.id),</span>
+<span class='curline'><a href='../S/464.html#L662'>vertex</a>            662 isisd/isis_spf.c 		  vtype2string (vtype), vid2string (vertex, buff), dist);</span>
+<span class='curline'><a href='../S/464.html#L664'>vertex</a>            664 isisd/isis_spf.c       assert (dist &gt;= vertex-&gt;d_N);</span>
+<span class='curline'><a href='../S/464.html#L668'>vertex</a>            668 isisd/isis_spf.c   vertex = isis_find_vertex (spftree-&gt;tents, id, vtype);</span>
+<span class='curline'><a href='../S/464.html#L670'>vertex</a>            670 isisd/isis_spf.c   if (vertex)</span>
+<span class='curline'><a href='../S/464.html#L675'>vertex</a>            675 isisd/isis_spf.c 	          print_sys_hostname (vertex-&gt;N.id),</span>
+<span class='curline'><a href='../S/464.html#L676'>vertex</a>            676 isisd/isis_spf.c                   vtype2string (vtype), vid2string (vertex, buff), dist,</span>
+<span class='curline'><a href='../S/464.html#L680'>vertex</a>            680 isisd/isis_spf.c       if (vertex-&gt;d_N == dist)</span>
+<span class='curline'><a href='../S/464.html#L685'>vertex</a>            685 isisd/isis_spf.c 	    if (listnode_lookup(vertex-&gt;Adj_N, parent_adj) == NULL)</span>
+<span class='curline'><a href='../S/464.html#L686'>vertex</a>            686 isisd/isis_spf.c 	      listnode_add (vertex-&gt;Adj_N, parent_adj);</span>
+<span class='curline'><a href='../S/464.html#L688'>vertex</a>            688 isisd/isis_spf.c 	  if (listcount (vertex-&gt;Adj_N) &gt; ISIS_MAX_PATH_SPLITS)</span>
+<span class='curline'><a href='../S/464.html#L689'>vertex</a>            689 isisd/isis_spf.c 	    remove_excess_adjs (vertex-&gt;Adj_N);</span>
+<span class='curline'><a href='../S/464.html#L690'>vertex</a>            690 isisd/isis_spf.c 	  if (listnode_lookup (vertex-&gt;parents, parent) == NULL)</span>
+<span class='curline'><a href='../S/464.html#L691'>vertex</a>            691 isisd/isis_spf.c 	    listnode_add_sort (vertex-&gt;parents, parent);</span>
+<span class='curline'><a href='../S/464.html#L692'>vertex</a>            692 isisd/isis_spf.c 	  if (listnode_lookup (parent-&gt;children, vertex) == NULL)</span>
+<span class='curline'><a href='../S/464.html#L693'>vertex</a>            693 isisd/isis_spf.c 	    listnode_add_sort (parent-&gt;children, vertex);</span>
+<span class='curline'><a href='../S/464.html#L697'>vertex</a>            697 isisd/isis_spf.c       else if (vertex-&gt;d_N &lt; dist)</span>
+<span class='curline'><a href='../S/464.html#L706'>vertex</a>            706 isisd/isis_spf.c 	  listnode_delete (spftree-&gt;tents, vertex);</span>
+<span class='curline'><a href='../S/464.html#L707'>vertex</a>            707 isisd/isis_spf.c 	  assert (listcount (vertex-&gt;children) == 0);</span>
+<span class='curline'><a href='../S/464.html#L708'>vertex</a>            708 isisd/isis_spf.c 	  for (ALL_LIST_ELEMENTS (vertex-&gt;parents, pnode, pnextnode, pvertex))</span>
+<span class='curline'><a href='../S/464.html#L709'>vertex</a>            709 isisd/isis_spf.c 	    listnode_delete(pvertex-&gt;children, vertex);</span>
+<span class='curline'><a href='../S/464.html#L710'>vertex</a>            710 isisd/isis_spf.c 	  isis_vertex_del (vertex);</span>
+<span class='curline'><a href='../S/464.html#L1176'>vertex</a>           1176 isisd/isis_spf.c add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,</span>
+<span class='curline'><a href='../S/464.html#L1181'>vertex</a>           1181 isisd/isis_spf.c   if (isis_find_vertex (spftree-&gt;paths, vertex-&gt;N.id, vertex-&gt;type))</span>
+<span class='curline'><a href='../S/464.html#L1183'>vertex</a>           1183 isisd/isis_spf.c   listnode_add (spftree-&gt;paths, vertex);</span>
+<span class='curline'><a href='../S/464.html#L1187'>vertex</a>           1187 isisd/isis_spf.c               print_sys_hostname (vertex-&gt;N.id),</span>
+<span class='curline'><a href='../S/464.html#L1188'>vertex</a>           1188 isisd/isis_spf.c 	      vtype2string (vertex-&gt;type), vid2string (vertex, buff),</span>
+<span class='curline'><a href='../S/464.html#L1189'>vertex</a>           1189 isisd/isis_spf.c 	      vertex-&gt;depth, vertex-&gt;d_N);</span>
+<span class='curline'><a href='../S/464.html#L1193'>vertex</a>           1193 isisd/isis_spf.c   if (vertex-&gt;type &gt; VTYPE_ES)</span>
+<span class='curline'><a href='../S/464.html#L1195'>vertex</a>           1195 isisd/isis_spf.c       if (listcount (vertex-&gt;Adj_N) &gt; 0)</span>
+<span class='curline'><a href='../S/464.html#L1196'>vertex</a>           1196 isisd/isis_spf.c 	isis_route_create ((struct prefix *) &amp;vertex-&gt;N.prefix, vertex-&gt;d_N,</span>
+<span class='curline'><a href='../S/464.html#L1197'>vertex</a>           1197 isisd/isis_spf.c 			   vertex-&gt;depth, vertex-&gt;Adj_N, spftree-&gt;area, level);</span>
+<span class='curline'><a href='../S/464.html#L1200'>vertex</a>           1200 isisd/isis_spf.c                     "%s depth %d dist %d", vid2string (vertex, buff),</span>
+<span class='curline'><a href='../S/464.html#L1201'>vertex</a>           1201 isisd/isis_spf.c                     vertex-&gt;depth, vertex-&gt;d_N);</span>
+<span class='curline'><a href='../S/464.html#L1233'>vertex</a>           1233 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L1304'>vertex</a>           1304 isisd/isis_spf.c       vertex = listgetdata (node);</span>
+<span class='curline'><a href='../S/464.html#L1308'>vertex</a>           1308 isisd/isis_spf.c               print_sys_hostname (vertex-&gt;N.id),</span>
+<span class='curline'><a href='../S/464.html#L1309'>vertex</a>           1309 isisd/isis_spf.c 	      vtype2string (vertex-&gt;type), vertex-&gt;depth, vertex-&gt;d_N);</span>
+<span class='curline'><a href='../S/464.html#L1314'>vertex</a>           1314 isisd/isis_spf.c       add_to_paths (spftree, vertex, level);</span>
+<span class='curline'><a href='../S/464.html#L1315'>vertex</a>           1315 isisd/isis_spf.c       switch (vertex-&gt;type)</span>
+<span class='curline'><a href='../S/464.html#L1321'>vertex</a>           1321 isisd/isis_spf.c 	  memcpy (lsp_id, vertex-&gt;N.id, ISIS_SYS_ID_LEN + 1);</span>
+<span class='curline'><a href='../S/464.html#L1328'>vertex</a>           1328 isisd/isis_spf.c 		  isis_spf_process_pseudo_lsp (spftree, lsp, vertex-&gt;d_N,</span>
+<span class='curline'><a href='../S/464.html#L1329'>vertex</a>           1329 isisd/isis_spf.c 					       vertex-&gt;depth, family, sysid,</span>
+<span class='curline'><a href='../S/464.html#L1330'>vertex</a>           1330 isisd/isis_spf.c 					       vertex);</span>
+<span class='curline'><a href='../S/464.html#L1334'>vertex</a>           1334 isisd/isis_spf.c 		  isis_spf_process_lsp (spftree, lsp, vertex-&gt;d_N,</span>
+<span class='curline'><a href='../S/464.html#L1335'>vertex</a>           1335 isisd/isis_spf.c 					vertex-&gt;depth, family, sysid, vertex);</span>
+<span class='curline'><a href='../S/464.html#L1370'>vertex</a>           1370 isisd/isis_spf.c   struct isis_vertex *vertex, *pvertex;</span>
+<span class='curline'><a href='../S/464.html#L1373'>vertex</a>           1373 isisd/isis_spf.c   for (ALL_LIST_ELEMENTS_RO (spftree-&gt;paths, node, vertex))</span>
+<span class='curline'><a href='../S/464.html#L1375'>vertex</a>           1375 isisd/isis_spf.c       if (!vertex-&gt;parents || listcount (vertex-&gt;parents) &lt; 2)</span>
+<span class='curline'><a href='../S/464.html#L1378'>vertex</a>           1378 isisd/isis_spf.c       tiebreaker = nickname % listcount (vertex-&gt;parents);</span>
+<span class='curline'><a href='../S/464.html#L1380'>vertex</a>           1380 isisd/isis_spf.c       for (ALL_LIST_ELEMENTS (vertex-&gt;parents, pnode, nextnode, pvertex))</span>
+<span class='curline'><a href='../S/464.html#L1384'>vertex</a>           1384 isisd/isis_spf.c               listnode_delete (pvertex-&gt;children, vertex);</span>
+<span class='curline'><a href='../S/464.html#L1385'>vertex</a>           1385 isisd/isis_spf.c               listnode_delete (vertex-&gt;parents, pvertex);</span>
+<span class='curline'><a href='../S/464.html#L1691'>vertex</a>           1691 isisd/isis_spf.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/464.html#L1698'>vertex</a>           1698 isisd/isis_spf.c   for (ALL_LIST_ELEMENTS_RO (paths, node, vertex)) {</span>
+<span class='curline'><a href='../S/464.html#L1699'>vertex</a>           1699 isisd/isis_spf.c       if (!LSP_PSEUDO_ID (vertex-&gt;N.id) &amp;&amp;</span>
+<span class='curline'><a href='../S/464.html#L1700'>vertex</a>           1700 isisd/isis_spf.c           memcmp (vertex-&gt;N.id, root_sysid, ISIS_SYS_ID_LEN) == 0) {</span>
+<span class='curline'><a href='../S/464.html#L1706'>vertex</a>           1706 isisd/isis_spf.c 	vty_out (vty, "%-20s %-12s %-6u ", vid2string (vertex, buff),</span>
+<span class='curline'><a href='../S/464.html#L1707'>vertex</a>           1707 isisd/isis_spf.c 	         vtype2string (vertex-&gt;type), vertex-&gt;d_N);</span>
+<span class='curline'><a href='../S/464.html#L1708'>vertex</a>           1708 isisd/isis_spf.c 	for (ALL_LIST_ELEMENTS_RO (vertex-&gt;Adj_N, anode, adj)) {</span>
+<span class='curline'><a href='../S/464.html#L1725'>vertex</a>           1725 isisd/isis_spf.c       if (listcount (vertex-&gt;parents) &gt; 0) {</span>
+<span class='curline'><a href='../S/464.html#L1729'>vertex</a>           1729 isisd/isis_spf.c 	for (ALL_LIST_ELEMENTS_RO (vertex-&gt;parents, pnode, pvertex)) {</span>
+<span class='curline'><a href='../S/464.html#L1743'>vertex</a>           1743 isisd/isis_spf.c       if (listcount (vertex-&gt;children) &gt; 0) {</span>
+<span class='curline'><a href='../S/464.html#L1746'>vertex</a>           1746 isisd/isis_spf.c 	  for (ALL_LIST_ELEMENTS_RO (vertex-&gt;children, cnode, cvertex)) {</span>
+<span class='curline'><a href='../S/516.html#L687'>vertex</a>            687 isisd/trilld.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/516.html#L696'>vertex</a>            696 isisd/trilld.c   for (ALL_LIST_ELEMENTS_RO (rdtree-&gt;paths, node, vertex)) {</span>
+<span class='curline'><a href='../S/516.html#L705'>vertex</a>            705 isisd/trilld.c       vertex-&gt;type != VTYPE_NONPSEUDO_IS &amp;&amp;</span>
+<span class='curline'><a href='../S/516.html#L706'>vertex</a>            706 isisd/trilld.c       vertex-&gt;type != VTYPE_NONPSEUDO_TE_IS</span>
+<span class='curline'><a href='../S/516.html#L709'>vertex</a>            709 isisd/trilld.c       if (listhead (vertex-&gt;Adj_N) &amp;&amp;</span>
+<span class='curline'><a href='../S/516.html#L710'>vertex</a>            710 isisd/trilld.c 	(adj = listgetdata (listhead (vertex-&gt;Adj_N)))) {</span>
+<span class='curline'><a href='../S/516.html#L713'>vertex</a>            713 isisd/trilld.c 	fwdnode-&gt;dest_nick = sysid_to_nick (area, vertex-&gt;N.id);</span>
+<span class='curline'><a href='../S/516.html#L739'>vertex</a>            739 isisd/trilld.c static void trill_add_nickadjlist(struct isis_area *area, struct list *adjlist, struct isis_vertex *vertex)</span>
+<span class='curline'><a href='../S/516.html#L743'>vertex</a>            743 isisd/trilld.c   nick = sysid_to_nick (area, vertex-&gt;N.id);</span>
+<span class='curline'><a href='../S/516.html#L752'>vertex</a>            752 isisd/trilld.c     " in fwd database", sysid_print(vertex-&gt;N.id));</span>
+<span class='curline'><a href='../S/516.html#L765'>vertex</a>            765 isisd/trilld.c   struct isis_vertex *vertex;</span>
+<span class='curline'><a href='../S/516.html#L781'>vertex</a>            781 isisd/trilld.c   for (ALL_LIST_ELEMENTS_RO (rdtree-&gt;paths, node, vertex)) {</span>
+<span class='curline'><a href='../S/516.html#L782'>vertex</a>            782 isisd/trilld.c     if (vertex-&gt;type != VTYPE_NONPSEUDO_IS &amp;&amp;</span>
+<span class='curline'><a href='../S/516.html#L783'>vertex</a>            783 isisd/trilld.c       vertex-&gt;type != VTYPE_NONPSEUDO_TE_IS)</span>
+<span class='curline'><a href='../S/516.html#L785'>vertex</a>            785 isisd/trilld.c     if (memcmp (vertex-&gt;N.id, area-&gt;isis-&gt;sysid, ISIS_SYS_ID_LEN) == 0) {</span>
+<span class='curline'><a href='../S/516.html#L786'>vertex</a>            786 isisd/trilld.c       rbvertex = vertex;</span>
+<span class='curline'><a href='../S/516.html#L810'>vertex</a>            810 isisd/trilld.c       for (ALL_LIST_ELEMENTS_RO (rbvertex-&gt;children, node, vertex)) {</span>
+<span class='curline'><a href='../S/516.html#L811'>vertex</a>            811 isisd/trilld.c         if (vertex-&gt;type == VTYPE_PSEUDO_IS ||</span>
+<span class='curline'><a href='../S/516.html#L812'>vertex</a>            812 isisd/trilld.c             vertex-&gt;type == VTYPE_PSEUDO_TE_IS)</span>
+<span class='curline'><a href='../S/516.html#L813'>vertex</a>            813 isisd/trilld.c 	  listnode_add(childlist, vertex);</span>
+<span class='curline'><a href='../S/516.html#L814'>vertex</a>            814 isisd/trilld.c 	else if (listnode_lookup (rdtree-&gt;paths, vertex))</span>
+<span class='curline'><a href='../S/516.html#L815'>vertex</a>            815 isisd/trilld.c 	  trill_add_nickadjlist (area, adjlist, vertex);</span>
+<span class='curline'><a href='../S/516.html#L825'>vertex</a>            825 isisd/trilld.c 	  if ((vertex = listgetdata(node)) == NULL)</span>
+<span class='curline'><a href='../S/516.html#L827'>vertex</a>            827 isisd/trilld.c 	  for (ALL_LIST_ELEMENTS_RO (vertex-&gt;children, cnode, cvertex)) {</span>
+<span class='curline'><a href='../S/788.html#L1010'>vertex</a>           1010 ospfd/ospf_interface.c ospf_vl_set_params (struct ospf_vl_data *vl_data, struct vertex *v)</span>
+<span class='curline'><a href='../S/788.html#L1093'>vertex</a>           1093 ospfd/ospf_interface.c                   struct vertex *v)</span>
+<span class='curline'><a href='../S/791.html#L298'>vertex</a>            298 ospfd/ospf_interface.h 			      struct vertex *);</span>
+<span class='curline'><a href='../S/813.html#L302'>vertex</a>            302 ospfd/ospf_route.c ospf_intra_add_router (struct route_table *rt, struct vertex *v,</span>
+<span class='curline'><a href='../S/813.html#L394'>vertex</a>            394 ospfd/ospf_route.c ospf_intra_add_transit (struct route_table *rt, struct vertex *v,</span>
+<span class='curline'><a href='../S/813.html#L456'>vertex</a>            456 ospfd/ospf_route.c 		     struct vertex *v, struct ospf_area *area,</span>
+<span class='curline'><a href='../S/813.html#L766'>vertex</a>            766 ospfd/ospf_route.c 				      struct vertex *v)</span>
+<span class='curline'><a href='../S/759.html#L135'>vertex</a>            135 ospfd/ospf_route.h extern void ospf_intra_add_router (struct route_table *, struct vertex *,</span>
+<span class='curline'><a href='../S/759.html#L138'>vertex</a>            138 ospfd/ospf_route.h extern void ospf_intra_add_transit (struct route_table *, struct vertex *,</span>
+<span class='curline'><a href='../S/759.html#L142'>vertex</a>            142 ospfd/ospf_route.h 				 struct router_lsa_link *, struct vertex *,</span>
+<span class='curline'><a href='../S/759.html#L150'>vertex</a>            150 ospfd/ospf_route.h 						  struct vertex *);</span>
+<span class='curline'><a href='../S/805.html#L61'>vertex</a>             61 ospfd/ospf_spf.c   struct vertex * v1 = (struct vertex *) node1;</span>
+<span class='curline'><a href='../S/805.html#L62'>vertex</a>             62 ospfd/ospf_spf.c   struct vertex * v2 = (struct vertex *) node2;</span>
+<span class='curline'><a href='../S/805.html#L88'>vertex</a>             88 ospfd/ospf_spf.c   struct vertex *v = node;</span>
+<span class='curline'><a href='../S/805.html#L111'>vertex</a>            111 ospfd/ospf_spf.c ospf_canonical_nexthops_free (struct vertex *root)</span>
+<span class='curline'><a href='../S/805.html#L114'>vertex</a>            114 ospfd/ospf_spf.c   struct vertex *child;</span>
+<span class='curline'><a href='../S/805.html#L142'>vertex</a>            142 ospfd/ospf_spf.c vertex_parent_new (struct vertex *v, int backlink, struct vertex_nexthop *hop)</span>
+<span class='curline'><a href='../S/805.html#L163'>vertex</a>            163 ospfd/ospf_spf.c static struct vertex *</span>
+<span class='curline'><a href='../S/805.html#L166'>vertex</a>            166 ospfd/ospf_spf.c   struct vertex *new;</span>
+<span class='curline'><a href='../S/805.html#L168'>vertex</a>            168 ospfd/ospf_spf.c   new = XCALLOC (MTYPE_OSPF_VERTEX, sizeof (struct vertex));</span>
+<span class='curline'><a href='../S/805.html#L191'>vertex</a>            191 ospfd/ospf_spf.c   struct vertex *v = data;</span>
+<span class='curline'><a href='../S/805.html#L218'>vertex</a>            218 ospfd/ospf_spf.c ospf_vertex_dump(const char *msg, struct vertex *v,</span>
+<span class='curline'><a href='../S/805.html#L253'>vertex</a>            253 ospfd/ospf_spf.c       struct vertex *cv;</span>
+<span class='curline'><a href='../S/805.html#L263'>vertex</a>            263 ospfd/ospf_spf.c ospf_vertex_add_parent (struct vertex *v)</span>
+<span class='curline'><a href='../S/805.html#L283'>vertex</a>            283 ospfd/ospf_spf.c   struct vertex *v;</span>
+<span class='curline'><a href='../S/805.html#L364'>vertex</a>            364 ospfd/ospf_spf.c ospf_get_next_link (struct vertex *v, struct vertex *w,</span>
+<span class='curline'><a href='../S/805.html#L403'>vertex</a>            403 ospfd/ospf_spf.c ospf_spf_flush_parents (struct vertex *w)</span>
+<span class='curline'><a href='../S/805.html#L421'>vertex</a>            421 ospfd/ospf_spf.c ospf_spf_add_parent (struct vertex *v, struct vertex *w,</span>
+<span class='curline'><a href='../S/805.html#L491'>vertex</a>            491 ospfd/ospf_spf.c ospf_nexthop_calculation (struct ospf_area *area, struct vertex *v,</span>
+<span class='curline'><a href='../S/805.html#L492'>vertex</a>            492 ospfd/ospf_spf.c                           struct vertex *w, struct router_lsa_link *l,</span>
+<span class='curline'><a href='../S/805.html#L748'>vertex</a>            748 ospfd/ospf_spf.c ospf_spf_next (struct vertex *v, struct ospf_area *area,</span>
+<span class='curline'><a href='../S/805.html#L777'>vertex</a>            777 ospfd/ospf_spf.c       struct vertex *w;</span>
+<span class='curline'><a href='../S/805.html#L951'>vertex</a>            951 ospfd/ospf_spf.c ospf_spf_dump (struct vertex *v, int i)</span>
+<span class='curline'><a href='../S/805.html#L988'>vertex</a>            988 ospfd/ospf_spf.c ospf_spf_process_stubs (struct ospf_area *area, struct vertex *v,</span>
+<span class='curline'><a href='../S/805.html#L993'>vertex</a>            993 ospfd/ospf_spf.c   struct vertex *child;</span>
+<span class='curline'><a href='../S/805.html#L1147'>vertex</a>           1147 ospfd/ospf_spf.c   struct vertex *v;</span>
+<span class='curline'><a href='../S/805.html#L1207'>vertex</a>           1207 ospfd/ospf_spf.c       v = (struct vertex *) pqueue_dequeue (candidate);</span>
+<span class='curline'><a href='../S/812.html#L58'>vertex</a>             58 ospfd/ospf_spf.h   struct vertex *parent;	/* parent vertex */</span>
+<span class='curline'><a href='../S/790.html#L438'>vertex</a>            438 ospfd/ospfd.h    struct vertex *spf;</span>
+</pre>
+</body>
+</html>

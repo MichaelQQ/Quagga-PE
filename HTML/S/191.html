@@ -1,0 +1,599 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/zebra.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/zebra.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/360.html' title='Multiple included from 293 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* Zebra common header.</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L22' title='Defined at 22 in lib/zebra.h.'>_ZEBRA_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/191.html#L21' title='Referred from 21 in lib/zebra.h.'>_ZEBRA_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#ifdef</em> HAVE_CONFIG_H
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='665.html'>config.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_CONFIG_H */</em>
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#ifdef</em> SUNOS_5
+<a id='L29' name='L29'></a><em class='sharp'>#define</em> _XPG4_2
+<a id='L30' name='L30'></a><em class='sharp'>#define</em> <a href='../S/665.html#L801' title='Referred from 801 in config.h.'>__EXTENSIONS__</a>
+<a id='L31' name='L31'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>    <a href='../R/10273.html' title='Multiple referred from 809 places.'>u_int32_t</a>;
+<a id='L32' name='L32'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>  <a href='../R/10272.html' title='Multiple referred from 452 places.'>u_int16_t</a>;
+<a id='L33' name='L33'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong>   <a href='../R/10274.html' title='Multiple referred from 67 places.'>u_int8_t</a>;
+<a id='L34' name='L34'></a><em class='sharp'>#endif</em> <em class='comment'>/* SUNOS_5 */</em>
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><em class='sharp'>#ifndef</em> <a href='../S/665.html#L324' title='Defined at 324 in config.h.'>HAVE_SOCKLEN_T</a>
+<a id='L37' name='L37'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>int</strong> <a href='../R/9930.html' title='Multiple referred from 24 places.'>socklen_t</a>;
+<a id='L38' name='L38'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SOCKLEN_T */</em>
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> &lt;stddef.h&gt;
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> &lt;ctype.h&gt;
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> &lt;errno.h&gt;
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> &lt;fcntl.h&gt;
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> &lt;signal.h&gt;
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> &lt;pwd.h&gt;
+<a id='L50' name='L50'></a><em class='sharp'>#include</em> &lt;grp.h&gt;
+<a id='L51' name='L51'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L385' title='Defined at 385 in config.h.'>HAVE_STROPTS_H</a>
+<a id='L52' name='L52'></a><em class='sharp'>#include</em> &lt;stropts.h&gt;
+<a id='L53' name='L53'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_STROPTS_H */</em>
+<a id='L54' name='L54'></a><em class='sharp'>#include</em> &lt;sys/fcntl.h&gt;
+<a id='L55' name='L55'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L491' title='Defined at 491 in config.h.'>HAVE_SYS_SELECT_H</a>
+<a id='L56' name='L56'></a><em class='sharp'>#include</em> &lt;sys/select.h&gt;
+<a id='L57' name='L57'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SYS_SELECT_H */</em>
+<a id='L58' name='L58'></a><em class='sharp'>#include</em> &lt;sys/stat.h&gt;
+<a id='L59' name='L59'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L60' name='L60'></a><em class='sharp'>#include</em> &lt;sys/param.h&gt;
+<a id='L61' name='L61'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L503' title='Defined at 503 in config.h.'>HAVE_SYS_SYSCTL_H</a>
+<a id='L62' name='L62'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L35' title='Defined at 35 in config.h.'>GNU_LINUX</a>
+<a id='L63' name='L63'></a><em class='sharp'>#include</em> &lt;linux/types.h&gt;
+<a id='L64' name='L64'></a><em class='sharp'>#endif</em>
+<a id='L65' name='L65'></a><em class='sharp'>#include</em> &lt;sys/sysctl.h&gt;
+<a id='L66' name='L66'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SYS_SYSCTL_H */</em>
+<a id='L67' name='L67'></a><em class='sharp'>#include</em> &lt;<a href='1008.html'>sys/ioctl.h</a>&gt;
+<a id='L68' name='L68'></a><em class='sharp'>#ifdef</em> HAVE_SYS_CONF_H
+<a id='L69' name='L69'></a><em class='sharp'>#include</em> &lt;sys/conf.h&gt;
+<a id='L70' name='L70'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SYS_CONF_H */</em>
+<a id='L71' name='L71'></a><em class='sharp'>#ifdef</em> HAVE_SYS_KSYM_H
+<a id='L72' name='L72'></a><em class='sharp'>#include</em> &lt;sys/ksym.h&gt;
+<a id='L73' name='L73'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SYS_KSYM_H */</em>
+<a id='L74' name='L74'></a><em class='sharp'>#include</em> &lt;syslog.h&gt;
+<a id='L75' name='L75'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L773' title='Defined at 773 in config.h.'>TIME_WITH_SYS_TIME</a>
+<a id='L76' name='L76'></a><em class='sharp'># include</em> &lt;sys/time.h&gt;
+<a id='L77' name='L77'></a><em class='sharp'># include</em> &lt;time.h&gt;
+<a id='L78' name='L78'></a><em class='sharp'>#else</em>
+<a id='L79' name='L79'></a><em class='sharp'># ifdef</em> <a href='../S/665.html#L509' title='Defined at 509 in config.h.'>HAVE_SYS_TIME_H</a>
+<a id='L80' name='L80'></a><em class='sharp'>#  include</em> &lt;sys/time.h&gt;
+<a id='L81' name='L81'></a><em class='sharp'># else</em>
+<a id='L82' name='L82'></a><em class='sharp'>#  include</em> &lt;time.h&gt;
+<a id='L83' name='L83'></a><em class='sharp'># endif</em>
+<a id='L84' name='L84'></a><em class='sharp'>#endif</em> <em class='comment'>/* TIME_WITH_SYS_TIME */</em>
+<a id='L85' name='L85'></a><em class='sharp'>#include</em> &lt;sys/uio.h&gt;
+<a id='L86' name='L86'></a><em class='sharp'>#include</em> &lt;sys/utsname.h&gt;
+<a id='L87' name='L87'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L303' title='Defined at 303 in config.h.'>HAVE_RUSAGE</a>
+<a id='L88' name='L88'></a><em class='sharp'>#include</em> &lt;sys/resource.h&gt;
+<a id='L89' name='L89'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_RUSAGE */</em>
+<a id='L90' name='L90'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L192' title='Defined at 192 in config.h.'>HAVE_LIMITS_H</a>
+<a id='L91' name='L91'></a><em class='sharp'>#include</em> &lt;limits.h&gt;
+<a id='L92' name='L92'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_LIMITS_H */</em>
+<a id='L93' name='L93'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L150' title='Defined at 150 in config.h.'>HAVE_INTTYPES_H</a>
+<a id='L94' name='L94'></a><em class='sharp'>#include</em> &lt;inttypes.h&gt;
+<a id='L95' name='L95'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_INTTYPES_H */</em>
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a><em class='comment'>/* machine dependent includes */</em>
+<a id='L98' name='L98'></a><em class='sharp'>#ifdef</em> SUNOS_5
+<a id='L99' name='L99'></a><em class='sharp'>#include</em> &lt;strings.h&gt;
+<a id='L100' name='L100'></a><em class='sharp'>#endif</em> <em class='comment'>/* SUNOS_5 */</em>
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><em class='comment'>/* machine dependent includes */</em>
+<a id='L103' name='L103'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L195' title='Defined at 195 in config.h.'>HAVE_LINUX_VERSION_H</a>
+<a id='L104' name='L104'></a><em class='sharp'>#include</em> &lt;<a href='237.html'>linux/version.h</a>&gt;
+<a id='L105' name='L105'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_LINUX_VERSION_H */</em>
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L44' title='Defined at 44 in config.h.'>HAVE_ASM_TYPES_H</a>
+<a id='L108' name='L108'></a><em class='sharp'>#include</em> &lt;asm/types.h&gt;
+<a id='L109' name='L109'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_ASM_TYPES_H */</em>
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a><em class='comment'>/* misc include group */</em>
+<a id='L112' name='L112'></a><em class='sharp'>#include</em> &lt;stdarg.h&gt;
+<a id='L113' name='L113'></a><em class='sharp'>#if</em> !(<strong class='reserved'>defined</strong>(__STDC_VERSION__) &amp;&amp; __STDC_VERSION__ &gt;= 199901L)
+<a id='L114' name='L114'></a><em class='comment'>/* Not C99; do we need to define va_copy? */</em>
+<a id='L115' name='L115'></a><em class='sharp'>#ifndef</em> <a href='../D/11226.html' title='Multiple defined in 2 places.'>va_copy</a>
+<a id='L116' name='L116'></a><em class='sharp'>#ifdef</em> __va_copy
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> <a href='../R/10303.html' title='Multiple referred from 5 places.'>va_copy</a>(DST,SRC) __va_copy(DST,SRC)
+<a id='L118' name='L118'></a><em class='sharp'>#else</em>
+<a id='L119' name='L119'></a><em class='comment'>/* Now we are desperate; this should work on many typical platforms. </em>
+<a id='L120' name='L120'></a><em class='comment'>   But this is slightly dangerous, because the standard does not require</em>
+<a id='L121' name='L121'></a><em class='comment'>   va_copy to be a macro. */</em>
+<a id='L122' name='L122'></a><em class='sharp'>#define</em> <a href='../R/10303.html' title='Multiple referred from 5 places.'>va_copy</a>(DST,SRC) <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;(DST), &amp;(SRC), <strong class='reserved'>sizeof</strong>(va_list))
+<a id='L123' name='L123'></a><em class='sharp'>#warning</em> "Not C99 and no va_copy macro available, falling back to memcpy"
+<a id='L124' name='L124'></a><em class='sharp'>#endif</em> <em class='comment'>/* __va_copy */</em>
+<a id='L125' name='L125'></a><em class='sharp'>#endif</em> <em class='comment'>/* !va_copy */</em>
+<a id='L126' name='L126'></a><em class='sharp'>#endif</em> <em class='comment'>/* !C99 */</em>
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a><em class='sharp'>#ifdef</em> HAVE_LCAPS
+<a id='L130' name='L130'></a><em class='sharp'>#include</em> &lt;sys/capability.h&gt;
+<a id='L131' name='L131'></a><em class='sharp'>#include</em> &lt;sys/prctl.h&gt;
+<a id='L132' name='L132'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_LCAPS */</em>
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a><em class='sharp'>#ifdef</em> HAVE_SOLARIS_CAPABILITIES
+<a id='L135' name='L135'></a><em class='sharp'>#include</em> &lt;priv.h&gt;
+<a id='L136' name='L136'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SOLARIS_CAPABILITIES */</em>
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a><em class='comment'>/* network include group */</em>
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L141' name='L141'></a>
+<a id='L142' name='L142'></a><em class='sharp'>#ifdef</em> HAVE_SYS_SOCKIO_H
+<a id='L143' name='L143'></a><em class='sharp'>#include</em> &lt;sys/sockio.h&gt;
+<a id='L144' name='L144'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SYS_SOCKIO_H */</em>
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a><em class='sharp'>#ifdef</em> __APPLE__
+<a id='L147' name='L147'></a><em class='sharp'>#define</em> __APPLE_USE_RFC_3542
+<a id='L148' name='L148'></a><em class='sharp'>#endif</em>
+<a id='L149' name='L149'></a>
+<a id='L150' name='L150'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L234' title='Defined at 234 in config.h.'>HAVE_NETINET_IN_H</a>
+<a id='L151' name='L151'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L152' name='L152'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET_IN_H */</em>
+<a id='L153' name='L153'></a><em class='sharp'>#include</em> &lt;netinet/in_systm.h&gt;
+<a id='L154' name='L154'></a><em class='sharp'>#include</em> &lt;netinet/ip.h&gt;
+<a id='L155' name='L155'></a><em class='sharp'>#include</em> &lt;netinet/tcp.h&gt;
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a><em class='sharp'>#ifdef</em> HAVE_NET_NETOPT_H
+<a id='L158' name='L158'></a><em class='sharp'>#include</em> &lt;net/netopt.h&gt;
+<a id='L159' name='L159'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NET_NETOPT_H */</em>
+<a id='L160' name='L160'></a>
+<a id='L161' name='L161'></a><em class='sharp'>#include</em> &lt;<a href='252.html'>net/if.h</a>&gt;
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><em class='sharp'>#ifdef</em> HAVE_NET_IF_DL_H
+<a id='L164' name='L164'></a><em class='sharp'>#include</em> &lt;net/if_dl.h&gt;
+<a id='L165' name='L165'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NET_IF_DL_H */</em>
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a><em class='sharp'>#ifdef</em> HAVE_NET_IF_VAR_H
+<a id='L168' name='L168'></a><em class='sharp'>#include</em> &lt;net/if_var.h&gt;
+<a id='L169' name='L169'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NET_IF_VAR_H */</em>
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L261' title='Defined at 261 in config.h.'>HAVE_NET_ROUTE_H</a>
+<a id='L172' name='L172'></a><em class='sharp'>#include</em> &lt;<a href='147.html'>net/route.h</a>&gt;
+<a id='L173' name='L173'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NET_ROUTE_H */</em>
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L246' title='Defined at 246 in config.h.'>HAVE_NETLINK</a>
+<a id='L176' name='L176'></a><em class='sharp'>#include</em> &lt;<a href='../I/157.html'>linux/netlink.h</a>&gt;
+<a id='L177' name='L177'></a><em class='sharp'>#include</em> &lt;linux/rtnetlink.h&gt;
+<a id='L178' name='L178'></a><em class='sharp'>#include</em> &lt;<a href='199.html'>linux/filter.h</a>&gt;
+<a id='L179' name='L179'></a><em class='sharp'>#else</em>
+<a id='L180' name='L180'></a><em class='sharp'>#define</em> <a href='../R/3415.html' title='Multiple referred from 6 places.'>RT_TABLE_MAIN</a>           0
+<a id='L181' name='L181'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETLINK */</em>
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L216' title='Defined at 216 in config.h.'>HAVE_NETDB_H</a>
+<a id='L184' name='L184'></a><em class='sharp'>#include</em> &lt;netdb.h&gt;
+<a id='L185' name='L185'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETDB_H */</em>
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a><em class='sharp'>#include</em> &lt;arpa/inet.h&gt;
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a><em class='sharp'>#ifdef</em> HAVE_INET_ND_H
+<a id='L190' name='L190'></a><em class='sharp'>#include</em> &lt;inet/nd.h&gt;
+<a id='L191' name='L191'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_INET_ND_H */</em>
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a><em class='sharp'>#ifdef</em> HAVE_NETINET_IN_VAR_H
+<a id='L194' name='L194'></a><em class='sharp'>#include</em> &lt;netinet/in_var.h&gt;
+<a id='L195' name='L195'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET_IN_VAR_H */</em>
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a><em class='sharp'>#ifdef</em> HAVE_NETINET6_IN6_VAR_H
+<a id='L198' name='L198'></a><em class='sharp'>#include</em> &lt;netinet6/in6_var.h&gt;
+<a id='L199' name='L199'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET6_IN6_VAR_H */</em>
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a><em class='sharp'>#ifdef</em> HAVE_NETINET_IN6_VAR_H
+<a id='L202' name='L202'></a><em class='sharp'>#include</em> &lt;netinet/in6_var.h&gt;
+<a id='L203' name='L203'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET_IN6_VAR_H */</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a><em class='sharp'>#ifdef</em> HAVE_NETINET6_IN_H
+<a id='L206' name='L206'></a><em class='sharp'>#include</em> &lt;netinet6/in.h&gt;
+<a id='L207' name='L207'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET6_IN_H */</em>
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a>
+<a id='L210' name='L210'></a><em class='sharp'>#ifdef</em> HAVE_NETINET6_IP6_H
+<a id='L211' name='L211'></a><em class='sharp'>#include</em> &lt;netinet6/ip6.h&gt;
+<a id='L212' name='L212'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET6_IP6_H */</em>
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L228' title='Defined at 228 in config.h.'>HAVE_NETINET_ICMP6_H</a>
+<a id='L215' name='L215'></a><em class='sharp'>#include</em> &lt;netinet/icmp6.h&gt;
+<a id='L216' name='L216'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET_ICMP6_H */</em>
+<a id='L217' name='L217'></a>
+<a id='L218' name='L218'></a><em class='sharp'>#ifdef</em> HAVE_NETINET6_ND6_H
+<a id='L219' name='L219'></a><em class='sharp'>#include</em> &lt;netinet6/nd6.h&gt;
+<a id='L220' name='L220'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET6_ND6_H */</em>
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a><em class='comment'>/* Some systems do not define UINT32_MAX, etc.. from inttypes.h</em>
+<a id='L223' name='L223'></a><em class='comment'> * e.g. this makes life easier for FBSD 4.11 users.</em>
+<a id='L224' name='L224'></a><em class='comment'> */</em>
+<a id='L225' name='L225'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L226' title='Defined at 226 in lib/zebra.h.'>INT8_MAX</a>
+<a id='L226' name='L226'></a><em class='sharp'>#define</em> <a href='../S/191.html#L225' title='Referred from 225 in lib/zebra.h.'>INT8_MAX</a>        (127)
+<a id='L227' name='L227'></a><em class='sharp'>#endif</em>
+<a id='L228' name='L228'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L229' title='Defined at 229 in lib/zebra.h.'>INT16_MAX</a>
+<a id='L229' name='L229'></a><em class='sharp'>#define</em> <a href='../S/191.html#L228' title='Referred from 228 in lib/zebra.h.'>INT16_MAX</a>       (32767)
+<a id='L230' name='L230'></a><em class='sharp'>#endif</em>
+<a id='L231' name='L231'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L232' title='Defined at 232 in lib/zebra.h.'>INT32_MAX</a>
+<a id='L232' name='L232'></a><em class='sharp'>#define</em> <a href='../S/191.html#L231' title='Referred from 231 in lib/zebra.h.'>INT32_MAX</a>       (2147483647)
+<a id='L233' name='L233'></a><em class='sharp'>#endif</em>
+<a id='L234' name='L234'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L235' title='Defined at 235 in lib/zebra.h.'>UINT8_MAX</a>
+<a id='L235' name='L235'></a><em class='sharp'>#define</em> <a href='../S/191.html#L234' title='Referred from 234 in lib/zebra.h.'>UINT8_MAX</a>       (255U)
+<a id='L236' name='L236'></a><em class='sharp'>#endif</em>
+<a id='L237' name='L237'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L238' title='Defined at 238 in lib/zebra.h.'>UINT16_MAX</a>
+<a id='L238' name='L238'></a><em class='sharp'>#define</em> <a href='../R/3732.html' title='Multiple referred from 4 places.'>UINT16_MAX</a>      (65535U)
+<a id='L239' name='L239'></a><em class='sharp'>#endif</em>
+<a id='L240' name='L240'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L241' title='Defined at 241 in lib/zebra.h.'>UINT32_MAX</a>
+<a id='L241' name='L241'></a><em class='sharp'>#define</em> <a href='../R/3733.html' title='Multiple referred from 15 places.'>UINT32_MAX</a>      (4294967295U)
+<a id='L242' name='L242'></a><em class='sharp'>#endif</em>
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L123' title='Defined at 123 in config.h.'>HAVE_GLIBC_BACKTRACE</a>
+<a id='L245' name='L245'></a><em class='sharp'>#include</em> &lt;execinfo.h&gt;
+<a id='L246' name='L246'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_GLIBC_BACKTRACE */</em>
+<a id='L247' name='L247'></a>
+<a id='L248' name='L248'></a><em class='sharp'>#ifdef</em> BSDI_NRL
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a><em class='sharp'>#ifdef</em> HAVE_NETINET6_IN6_H
+<a id='L251' name='L251'></a><em class='sharp'>#include</em> &lt;netinet6/in6.h&gt;
+<a id='L252' name='L252'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_NETINET6_IN6_H */</em>
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a><em class='sharp'>#ifdef</em> NRL
+<a id='L255' name='L255'></a><em class='sharp'>#include</em> &lt;netinet6/in6.h&gt;
+<a id='L256' name='L256'></a><em class='sharp'>#endif</em> <em class='comment'>/* NRL */</em>
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a><em class='sharp'>#define</em> <a href='../R/904.html' title='Multiple referred from 4 places.'>IN6_ARE_ADDR_EQUAL</a> IN6_IS_ADDR_EQUAL
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a><em class='sharp'>#endif</em> <em class='comment'>/* BSDI_NRL */</em>
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a><em class='comment'>/* Local includes: */</em>
+<a id='L263' name='L263'></a><em class='sharp'>#if</em> !(<strong class='reserved'>defined</strong>(__GNUC__) || <strong class='reserved'>defined</strong>(VTYSH_EXTRACT_PL)) 
+<a id='L264' name='L264'></a><em class='sharp'>#define</em> <strong class='reserved'>__attribute__</strong>(<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>)
+<a id='L265' name='L265'></a><em class='sharp'>#endif</em>  <em class='comment'>/* !__GNUC__ || VTYSH_EXTRACT_PL */</em>
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a><em class='sharp'>#include</em> "<a href='228.html'>zassert.h</a>"
+<a id='L268' name='L268'></a><em class='sharp'>#include</em> "<a href='184.html'>str.h</a>"
+<a id='L269' name='L269'></a>
+<a id='L270' name='L270'></a>
+<a id='L271' name='L271'></a><em class='sharp'>#ifdef</em> HAVE_BROKEN_CMSG_FIRSTHDR
+<a id='L272' name='L272'></a><em class='comment'>/* This bug is present in Solaris 8 and pre-patch Solaris 9 &lt;sys/socket.h&gt;;</em>
+<a id='L273' name='L273'></a><em class='comment'>   please refer to http://bugzilla.quagga.net/show_bug.cgi?id=142 */</em>
+<a id='L274' name='L274'></a>
+<a id='L275' name='L275'></a><em class='comment'>/* Check that msg_controllen is large enough. */</em>
+<a id='L276' name='L276'></a><em class='sharp'>#define</em> <a href='../R/3865.html' title='Multiple referred from 5 places.'>ZCMSG_FIRSTHDR</a>(mhdr) \
+<a id='L277' name='L277'></a>  (((size_t)((mhdr)-&gt;msg_controllen) &gt;= <strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> cmsghdr)) ? \
+<a id='L278' name='L278'></a>   CMSG_FIRSTHDR(mhdr) : (<strong class='reserved'>struct</strong> cmsghdr *)<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a><em class='sharp'>#warning</em> "CMSG_FIRSTHDR is broken on this platform, using a workaround"
+<a id='L281' name='L281'></a>
+<a id='L282' name='L282'></a><em class='sharp'>#else</em> <em class='comment'>/* HAVE_BROKEN_CMSG_FIRSTHDR */</em>
+<a id='L283' name='L283'></a><em class='sharp'>#define</em> <a href='../R/3865.html' title='Multiple referred from 5 places.'>ZCMSG_FIRSTHDR</a>(M) CMSG_FIRSTHDR(M)
+<a id='L284' name='L284'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_BROKEN_CMSG_FIRSTHDR */</em>
+<a id='L285' name='L285'></a>
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>
+<a id='L288' name='L288'></a><em class='comment'>/* </em>
+<a id='L289' name='L289'></a><em class='comment'> * RFC 3542 defines several macros for using struct cmsghdr.</em>
+<a id='L290' name='L290'></a><em class='comment'> * Here, we define those that are not present</em>
+<a id='L291' name='L291'></a><em class='comment'> */</em>
+<a id='L292' name='L292'></a>
+<a id='L293' name='L293'></a><em class='comment'>/*</em>
+<a id='L294' name='L294'></a><em class='comment'> * Internal defines, for use only in this file.</em>
+<a id='L295' name='L295'></a><em class='comment'> * These are likely wrong on other than ILP32 machines, so warn.</em>
+<a id='L296' name='L296'></a><em class='comment'> */</em>
+<a id='L297' name='L297'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L298' title='Defined at 298 in lib/zebra.h.'>_CMSG_DATA_ALIGN</a>
+<a id='L298' name='L298'></a><em class='sharp'>#define</em> <a href='../R/4015.html' title='Multiple referred from 3 places.'>_CMSG_DATA_ALIGN</a>(n)           (((n) + 3) &amp; ~3)
+<a id='L299' name='L299'></a><em class='sharp'>#endif</em> <em class='comment'>/* _CMSG_DATA_ALIGN */</em>
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L302' title='Defined at 302 in lib/zebra.h.'>_CMSG_HDR_ALIGN</a>
+<a id='L302' name='L302'></a><em class='sharp'>#define</em> <a href='../R/4016.html' title='Multiple referred from 2 places.'>_CMSG_HDR_ALIGN</a>(n)            (((n) + 3) &amp; ~3)
+<a id='L303' name='L303'></a><em class='sharp'>#endif</em> <em class='comment'>/* _CMSG_HDR_ALIGN */</em>
+<a id='L304' name='L304'></a>
+<a id='L305' name='L305'></a><em class='comment'>/*</em>
+<a id='L306' name='L306'></a><em class='comment'> * CMSG_SPACE and CMSG_LEN are required in RFC3542, but were new in that</em>
+<a id='L307' name='L307'></a><em class='comment'> * version.</em>
+<a id='L308' name='L308'></a><em class='comment'> */</em>
+<a id='L309' name='L309'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L310' title='Defined at 310 in lib/zebra.h.'>CMSG_SPACE</a>
+<a id='L310' name='L310'></a><em class='sharp'>#define</em> <a href='../R/508.html' title='Multiple referred from 9 places.'>CMSG_SPACE</a>(l)       (<a href='../S/191.html#L298' title='Defined at 298 in lib/zebra.h.'>_CMSG_DATA_ALIGN</a>(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> cmsghdr)) + \
+<a id='L311' name='L311'></a>                              <a href='../S/191.html#L302' title='Defined at 302 in lib/zebra.h.'>_CMSG_HDR_ALIGN</a>(l))
+<a id='L312' name='L312'></a><em class='sharp'>#warning</em> "assuming 4-byte alignment for CMSG_SPACE"
+<a id='L313' name='L313'></a><em class='sharp'>#endif</em>  <em class='comment'>/* CMSG_SPACE */</em>
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a>
+<a id='L316' name='L316'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L317' title='Defined at 317 in lib/zebra.h.'>CMSG_LEN</a>
+<a id='L317' name='L317'></a><em class='sharp'>#define</em> <a href='../R/507.html' title='Multiple referred from 5 places.'>CMSG_LEN</a>(l)         (<a href='../S/191.html#L298' title='Defined at 298 in lib/zebra.h.'>_CMSG_DATA_ALIGN</a>(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> cmsghdr)) + (l))
+<a id='L318' name='L318'></a><em class='sharp'>#warning</em> "assuming 4-byte alignment for CMSG_LEN"
+<a id='L319' name='L319'></a><em class='sharp'>#endif</em> <em class='comment'>/* CMSG_LEN */</em>
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a><em class='comment'>/*  The definition of struct in_pktinfo is missing in old version of</em>
+<a id='L323' name='L323'></a><em class='comment'>    GLIBC 2.1 (Redhat 6.1).  */</em>
+<a id='L324' name='L324'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong> (<a href='../S/665.html#L35' title='Defined at 35 in config.h.'>GNU_LINUX</a>) &amp;&amp; ! <strong class='reserved'>defined</strong> (<a href='../S/665.html#L424' title='Defined at 424 in config.h.'>HAVE_STRUCT_IN_PKTINFO</a>)
+<a id='L325' name='L325'></a><strong class='reserved'>struct</strong> <a href='../R/6003.html' title='Multiple referred from 10 places.'>in_pktinfo</a>
+<a id='L326' name='L326'></a><em class='brace'>{</em>
+<a id='L327' name='L327'></a>  <strong class='reserved'>int</strong> ipi_ifindex;
+<a id='L328' name='L328'></a>  <strong class='reserved'>struct</strong> in_addr ipi_spec_dst;
+<a id='L329' name='L329'></a>  <strong class='reserved'>struct</strong> in_addr ipi_addr;
+<a id='L330' name='L330'></a><em class='brace'>}</em>;
+<a id='L331' name='L331'></a><em class='sharp'>#endif</em>
+<a id='L332' name='L332'></a>
+<a id='L333' name='L333'></a><em class='comment'>/* </em>
+<a id='L334' name='L334'></a><em class='comment'> * OSPF Fragmentation / fragmented writes</em>
+<a id='L335' name='L335'></a><em class='comment'> *</em>
+<a id='L336' name='L336'></a><em class='comment'> * ospfd can support writing fragmented packets, for cases where</em>
+<a id='L337' name='L337'></a><em class='comment'> * kernel will not fragment IP_HDRINCL and/or multicast destined</em>
+<a id='L338' name='L338'></a><em class='comment'> * packets (ie TTBOMK all kernels, BSD, SunOS, Linux). However,</em>
+<a id='L339' name='L339'></a><em class='comment'> * SunOS, probably BSD too, clobber the user supplied IP ID and IP</em>
+<a id='L340' name='L340'></a><em class='comment'> * flags fields, hence user-space fragmentation will not work.</em>
+<a id='L341' name='L341'></a><em class='comment'> * Only Linux is known to leave IP header unmolested.</em>
+<a id='L342' name='L342'></a><em class='comment'> * Further, fragmentation really should be done the kernel, which already</em>
+<a id='L343' name='L343'></a><em class='comment'> * supports it, and which avoids nasty IP ID state problems.</em>
+<a id='L344' name='L344'></a><em class='comment'> *</em>
+<a id='L345' name='L345'></a><em class='comment'> * Fragmentation of OSPF packets can be required on networks with router</em>
+<a id='L346' name='L346'></a><em class='comment'> * with many many interfaces active in one area, or on networks with links</em>
+<a id='L347' name='L347'></a><em class='comment'> * with low MTUs.</em>
+<a id='L348' name='L348'></a><em class='comment'> */</em>
+<a id='L349' name='L349'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L35' title='Defined at 35 in config.h.'>GNU_LINUX</a>
+<a id='L350' name='L350'></a><em class='sharp'>#define</em> <a href='../R/3821.html' title='Multiple referred from 5 places.'>WANT_OSPF_WRITE_FRAGMENT</a>
+<a id='L351' name='L351'></a><em class='sharp'>#endif</em>
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a><em class='comment'>/* </em>
+<a id='L354' name='L354'></a><em class='comment'> * IP_HDRINCL / struct ip byte order</em>
+<a id='L355' name='L355'></a><em class='comment'> *</em>
+<a id='L356' name='L356'></a><em class='comment'> * Linux: network byte order</em>
+<a id='L357' name='L357'></a><em class='comment'> * *BSD: network, except for length and offset. (cf Stevens)</em>
+<a id='L358' name='L358'></a><em class='comment'> * SunOS: nominally as per BSD. but bug: network order on LE.</em>
+<a id='L359' name='L359'></a><em class='comment'> * OpenBSD: network byte order, apart from older versions which are as per </em>
+<a id='L360' name='L360'></a><em class='comment'> *          *BSD</em>
+<a id='L361' name='L361'></a><em class='comment'> */</em>
+<a id='L362' name='L362'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong>(__NetBSD__) || <strong class='reserved'>defined</strong>(__FreeBSD__) \
+<a id='L363' name='L363'></a>   || (<strong class='reserved'>defined</strong>(__OpenBSD__) &amp;&amp; (OpenBSD &lt; 200311)) \
+<a id='L364' name='L364'></a>   || (<strong class='reserved'>defined</strong>(__APPLE__)) \
+<a id='L365' name='L365'></a>   || (<strong class='reserved'>defined</strong>(SUNOS_5) &amp;&amp; <strong class='reserved'>defined</strong>(<a href='../S/665.html#L822' title='Defined at 822 in config.h.'>WORDS_BIGENDIAN</a>))
+<a id='L366' name='L366'></a><em class='sharp'>#define</em> <a href='../R/818.html' title='Multiple referred from 2 places.'>HAVE_IP_HDRINCL_BSD_ORDER</a>
+<a id='L367' name='L367'></a><em class='sharp'>#endif</em>
+<a id='L368' name='L368'></a>
+<a id='L369' name='L369'></a><em class='comment'>/* Define BYTE_ORDER, if not defined. Useful for compiler conditional</em>
+<a id='L370' name='L370'></a><em class='comment'> * code, rather than preprocessor conditional.</em>
+<a id='L371' name='L371'></a><em class='comment'> * Not all the world has this BSD define.</em>
+<a id='L372' name='L372'></a><em class='comment'> */</em>
+<a id='L373' name='L373'></a><em class='sharp'>#ifndef</em> <a href='../D/472.html' title='Multiple defined in 2 places.'>BYTE_ORDER</a>
+<a id='L374' name='L374'></a><em class='sharp'>#define</em> <a href='../R/418.html' title='Multiple referred from 4 places.'>BIG_ENDIAN</a>      4321    <em class='comment'>/* least-significant byte first (vax, pc) */</em>
+<a id='L375' name='L375'></a><em class='sharp'>#define</em> <a href='../R/1501.html' title='Multiple referred from 4 places.'>LITTLE_ENDIAN</a>   1234    <em class='comment'>/* most-significant byte first (IBM, net) */</em>
+<a id='L376' name='L376'></a><em class='sharp'>#define</em> PDP_ENDIAN      3412    <em class='comment'>/* LSB first in word, MSW first in long (pdp) */</em>
+<a id='L377' name='L377'></a>
+<a id='L378' name='L378'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong>(<a href='../S/665.html#L822' title='Defined at 822 in config.h.'>WORDS_BIGENDIAN</a>)
+<a id='L379' name='L379'></a><em class='sharp'>#define</em> <a href='../R/440.html' title='Multiple referred from 7 places.'>BYTE_ORDER</a>      <a href='../S/191.html#L374' title='Defined at 374 in lib/zebra.h.'>BIG_ENDIAN</a>
+<a id='L380' name='L380'></a><em class='sharp'>#else</em> <em class='comment'>/* !WORDS_BIGENDIAN */</em>
+<a id='L381' name='L381'></a><em class='sharp'>#define</em> <a href='../R/440.html' title='Multiple referred from 7 places.'>BYTE_ORDER</a>      <a href='../S/191.html#L375' title='Defined at 375 in lib/zebra.h.'>LITTLE_ENDIAN</a>
+<a id='L382' name='L382'></a><em class='sharp'>#endif</em> <em class='comment'>/* WORDS_BIGENDIAN */</em>
+<a id='L383' name='L383'></a>
+<a id='L384' name='L384'></a><em class='sharp'>#endif</em> <em class='comment'>/* ndef BYTE_ORDER */</em>
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a><em class='comment'>/* MAX / MIN are not commonly defined, but useful */</em>
+<a id='L387' name='L387'></a><em class='sharp'>#ifndef</em> <a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>
+<a id='L388' name='L388'></a><em class='sharp'>#define</em> <a href='../R/1555.html' title='Multiple referred from 22 places.'>MAX</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) ((<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) &gt; (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) ? (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) : (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>))
+<a id='L389' name='L389'></a><em class='sharp'>#endif</em> 
+<a id='L390' name='L390'></a><em class='sharp'>#ifndef</em> <a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>
+<a id='L391' name='L391'></a><em class='sharp'>#define</em> <a href='../R/1617.html' title='Multiple referred from 42 places.'>MIN</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) ((<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) &lt; (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) ? (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>) : (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>))
+<a id='L392' name='L392'></a><em class='sharp'>#endif</em>
+<a id='L393' name='L393'></a>
+<a id='L394' name='L394'></a><em class='sharp'>#define</em> <a href='../R/3928.html' title='Multiple referred from 3 places.'>ZEBRA_NUM_OF</a>(<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>) (<strong class='reserved'>sizeof</strong> (<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>) / <strong class='reserved'>sizeof</strong> (<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>[0]))
+<a id='L395' name='L395'></a>
+<a id='L396' name='L396'></a><em class='comment'>/* For old definition. */</em>
+<a id='L397' name='L397'></a><em class='sharp'>#ifndef</em> <a href='../D/1095.html' title='Multiple defined in 2 places.'>IN6_ARE_ADDR_EQUAL</a>
+<a id='L398' name='L398'></a><em class='sharp'>#define</em> <a href='../R/904.html' title='Multiple referred from 4 places.'>IN6_ARE_ADDR_EQUAL</a> IN6_IS_ADDR_EQUAL
+<a id='L399' name='L399'></a><em class='sharp'>#endif</em> <em class='comment'>/* IN6_ARE_ADDR_EQUAL */</em>
+<a id='L400' name='L400'></a>
+<a id='L401' name='L401'></a><em class='comment'>/* default zebra TCP port for zclient */</em>
+<a id='L402' name='L402'></a><em class='sharp'>#define</em> <a href='../R/3929.html' title='Multiple referred from 2 places.'>ZEBRA_PORT</a>                      2600
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a><em class='comment'>/* Zebra message types. */</em>
+<a id='L405' name='L405'></a><em class='sharp'>#define</em> <a href='../R/3902.html' title='Multiple referred from 5 places.'>ZEBRA_INTERFACE_ADD</a>                1
+<a id='L406' name='L406'></a><em class='sharp'>#define</em> <a href='../R/3905.html' title='Multiple referred from 4 places.'>ZEBRA_INTERFACE_DELETE</a>             2
+<a id='L407' name='L407'></a><em class='sharp'>#define</em> <a href='../R/3903.html' title='Multiple referred from 12 places.'>ZEBRA_INTERFACE_ADDRESS_ADD</a>        3
+<a id='L408' name='L408'></a><em class='sharp'>#define</em> <a href='../R/3904.html' title='Multiple referred from 8 places.'>ZEBRA_INTERFACE_ADDRESS_DELETE</a>     4
+<a id='L409' name='L409'></a><em class='sharp'>#define</em> <a href='../R/3909.html' title='Multiple referred from 3 places.'>ZEBRA_INTERFACE_UP</a>                 5
+<a id='L410' name='L410'></a><em class='sharp'>#define</em> <a href='../R/3906.html' title='Multiple referred from 3 places.'>ZEBRA_INTERFACE_DOWN</a>               6
+<a id='L411' name='L411'></a><em class='sharp'>#define</em> <a href='../R/3912.html' title='Multiple referred from 30 places.'>ZEBRA_IPV4_ROUTE_ADD</a>               7
+<a id='L412' name='L412'></a><em class='sharp'>#define</em> <a href='../R/3913.html' title='Multiple referred from 14 places.'>ZEBRA_IPV4_ROUTE_DELETE</a>            8
+<a id='L413' name='L413'></a><em class='sharp'>#define</em> <a href='../R/3916.html' title='Multiple referred from 19 places.'>ZEBRA_IPV6_ROUTE_ADD</a>               9
+<a id='L414' name='L414'></a><em class='sharp'>#define</em> <a href='../R/3917.html' title='Multiple referred from 10 places.'>ZEBRA_IPV6_ROUTE_DELETE</a>           10
+<a id='L415' name='L415'></a><em class='sharp'>#define</em> <a href='../R/3931.html' title='Multiple referred from 17 places.'>ZEBRA_REDISTRIBUTE_ADD</a>            11
+<a id='L416' name='L416'></a><em class='sharp'>#define</em> <a href='../R/3934.html' title='Multiple referred from 10 places.'>ZEBRA_REDISTRIBUTE_DELETE</a>         12
+<a id='L417' name='L417'></a><em class='sharp'>#define</em> <a href='../R/3932.html' title='Multiple referred from 5 places.'>ZEBRA_REDISTRIBUTE_DEFAULT_ADD</a>    13
+<a id='L418' name='L418'></a><em class='sharp'>#define</em> <a href='../R/3933.html' title='Multiple referred from 3 places.'>ZEBRA_REDISTRIBUTE_DEFAULT_DELETE</a> 14
+<a id='L419' name='L419'></a><em class='sharp'>#define</em> <a href='../R/3911.html' title='Multiple referred from 4 places.'>ZEBRA_IPV4_NEXTHOP_LOOKUP</a>         15
+<a id='L420' name='L420'></a><em class='sharp'>#define</em> <a href='../R/3915.html' title='Multiple referred from 4 places.'>ZEBRA_IPV6_NEXTHOP_LOOKUP</a>         16
+<a id='L421' name='L421'></a><em class='sharp'>#define</em> <a href='../R/3910.html' title='Multiple referred from 4 places.'>ZEBRA_IPV4_IMPORT_LOOKUP</a>          17
+<a id='L422' name='L422'></a><em class='sharp'>#define</em> <a href='../S/205.html#L842' title='Referred from 842 in lib/log.c.'>ZEBRA_IPV6_IMPORT_LOOKUP</a>          18
+<a id='L423' name='L423'></a><em class='sharp'>#define</em> <a href='../S/205.html#L843' title='Referred from 843 in lib/log.c.'>ZEBRA_INTERFACE_RENAME</a>            19
+<a id='L424' name='L424'></a><em class='sharp'>#define</em> <a href='../R/3942.html' title='Multiple referred from 3 places.'>ZEBRA_ROUTER_ID_ADD</a>               20
+<a id='L425' name='L425'></a><em class='sharp'>#define</em> <a href='../R/3943.html' title='Multiple referred from 2 places.'>ZEBRA_ROUTER_ID_DELETE</a>            21
+<a id='L426' name='L426'></a><em class='sharp'>#define</em> <a href='../R/3944.html' title='Multiple referred from 3 places.'>ZEBRA_ROUTER_ID_UPDATE</a>            22
+<a id='L427' name='L427'></a><em class='sharp'>#define</em> <a href='../R/3895.html' title='Multiple referred from 3 places.'>ZEBRA_HELLO</a>                       23
+<a id='L428' name='L428'></a><em class='sharp'>#define</em> ZEBRA_MESSAGE_MAX                 24
+<a id='L429' name='L429'></a>
+<a id='L430' name='L430'></a><em class='comment'>/* Marker value used in new Zserv, in the byte location corresponding</em>
+<a id='L431' name='L431'></a><em class='comment'> * the command value in the old zserv header. To allow old and new</em>
+<a id='L432' name='L432'></a><em class='comment'> * Zserv headers to be distinguished from each other.</em>
+<a id='L433' name='L433'></a><em class='comment'> */</em>
+<a id='L434' name='L434'></a><em class='sharp'>#define</em> <a href='../R/3893.html' title='Multiple referred from 7 places.'>ZEBRA_HEADER_MARKER</a>              255
+<a id='L435' name='L435'></a>
+<a id='L436' name='L436'></a><em class='comment'>/* Zebra route's types are defined in route_types.h */</em>
+<a id='L437' name='L437'></a><em class='sharp'>#include</em> "<a href='280.html'>route_types.h</a>"
+<a id='L438' name='L438'></a>
+<a id='L439' name='L439'></a><em class='comment'>/* Note: whenever a new route-type or zserv-command is added the</em>
+<a id='L440' name='L440'></a><em class='comment'> * corresponding {command,route}_types[] table in lib/log.c MUST be</em>
+<a id='L441' name='L441'></a><em class='comment'> * updated! */</em>
+<a id='L442' name='L442'></a>
+<a id='L443' name='L443'></a><em class='comment'>/* Map a route type to a string.  For example, ZEBRA_ROUTE_RIPNG -&gt; "ripng". */</em>
+<a id='L444' name='L444'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/205.html#L879' title='Defined at 879 in lib/log.c.'>zebra_route_string</a>(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> route_type);
+<a id='L445' name='L445'></a><em class='comment'>/* Map a route type to a char.  For example, ZEBRA_ROUTE_RIPNG -&gt; 'R'. */</em>
+<a id='L446' name='L446'></a><strong class='reserved'>extern</strong> <strong class='reserved'>char</strong> <a href='../S/205.html#L885' title='Defined at 885 in lib/log.c.'>zebra_route_char</a>(<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> route_type);
+<a id='L447' name='L447'></a><em class='comment'>/* Map a zserv command type to the same string, </em>
+<a id='L448' name='L448'></a><em class='comment'> * e.g. ZEBRA_INTERFACE_ADD -&gt; "ZEBRA_INTERFACE_ADD" */</em>
+<a id='L449' name='L449'></a><em class='comment'>/* Map a protocol name to its number. e.g. ZEBRA_ROUTE_BGP-&gt;9*/</em>
+<a id='L450' name='L450'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/205.html#L902' title='Defined at 902 in lib/log.c.'>proto_name2num</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s);
+<a id='L451' name='L451'></a><em class='comment'>/* Map redistribute X argument to protocol number.</em>
+<a id='L452' name='L452'></a><em class='comment'> * unlike proto_name2num, this accepts shorthands and takes</em>
+<a id='L453' name='L453'></a><em class='comment'> * an AFI value to restrict input */</em>
+<a id='L454' name='L454'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/205.html#L913' title='Defined at 913 in lib/log.c.'>proto_redistnum</a>(<strong class='reserved'>int</strong> afi, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s);
+<a id='L455' name='L455'></a>
+<a id='L456' name='L456'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/205.html#L891' title='Defined at 891 in lib/log.c.'>zserv_command_string</a> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>);
+<a id='L457' name='L457'></a>
+<a id='L458' name='L458'></a><em class='comment'>/* Zebra's family types. */</em>
+<a id='L459' name='L459'></a><em class='sharp'>#define</em> <a href='../R/3883.html' title='Multiple referred from 3 places.'>ZEBRA_FAMILY_IPV4</a>                1
+<a id='L460' name='L460'></a><em class='sharp'>#define</em> <a href='../R/3884.html' title='Multiple referred from 3 places.'>ZEBRA_FAMILY_IPV6</a>                2
+<a id='L461' name='L461'></a><em class='sharp'>#define</em> ZEBRA_FAMILY_MAX                 3
+<a id='L462' name='L462'></a>
+<a id='L463' name='L463'></a><em class='comment'>/* Error codes of zebra. */</em>
+<a id='L464' name='L464'></a><em class='sharp'>#define</em> <a href='../R/3879.html' title='Multiple referred from 2 places.'>ZEBRA_ERR_NOERROR</a>                0
+<a id='L465' name='L465'></a><em class='sharp'>#define</em> <a href='../R/3880.html' title='Multiple referred from 4 places.'>ZEBRA_ERR_RTEXIST</a>               -1
+<a id='L466' name='L466'></a><em class='sharp'>#define</em> <a href='../R/3882.html' title='Multiple referred from 4 places.'>ZEBRA_ERR_RTUNREACH</a>             -2
+<a id='L467' name='L467'></a><em class='sharp'>#define</em> <a href='../R/3877.html' title='Multiple referred from 3 places.'>ZEBRA_ERR_EPERM</a>                 -3
+<a id='L468' name='L468'></a><em class='sharp'>#define</em> <a href='../R/3881.html' title='Multiple referred from 6 places.'>ZEBRA_ERR_RTNOEXIST</a>             -4
+<a id='L469' name='L469'></a><em class='sharp'>#define</em> <a href='../S/957.html#L1125' title='Referred from 1125 in zebra/kernel_socket.c.'>ZEBRA_ERR_KERNEL</a>                -5
+<a id='L470' name='L470'></a>
+<a id='L471' name='L471'></a><em class='comment'>/* Zebra message flags */</em>
+<a id='L472' name='L472'></a><em class='sharp'>#define</em> <a href='../R/3888.html' title='Multiple referred from 6 places.'>ZEBRA_FLAG_INTERNAL</a>           0x01
+<a id='L473' name='L473'></a><em class='sharp'>#define</em> <a href='../R/3891.html' title='Multiple referred from 6 places.'>ZEBRA_FLAG_SELFROUTE</a>          0x02
+<a id='L474' name='L474'></a><em class='sharp'>#define</em> <a href='../R/3885.html' title='Multiple referred from 24 places.'>ZEBRA_FLAG_BLACKHOLE</a>          0x04
+<a id='L475' name='L475'></a><em class='sharp'>#define</em> <a href='../R/3887.html' title='Multiple referred from 6 places.'>ZEBRA_FLAG_IBGP</a>               0x08
+<a id='L476' name='L476'></a><em class='sharp'>#define</em> <a href='../R/3890.html' title='Multiple referred from 27 places.'>ZEBRA_FLAG_SELECTED</a>           0x10
+<a id='L477' name='L477'></a><em class='sharp'>#define</em> <a href='../R/3886.html' title='Multiple referred from 3 places.'>ZEBRA_FLAG_CHANGED</a>            0x20
+<a id='L478' name='L478'></a><em class='sharp'>#define</em> <a href='../S/957.html#L843' title='Referred from 843 in zebra/kernel_socket.c.'>ZEBRA_FLAG_STATIC</a>             0x40
+<a id='L479' name='L479'></a><em class='sharp'>#define</em> <a href='../R/3889.html' title='Multiple referred from 16 places.'>ZEBRA_FLAG_REJECT</a>             0x80
+<a id='L480' name='L480'></a>
+<a id='L481' name='L481'></a><em class='comment'>/* Zebra nexthop flags. */</em>
+<a id='L482' name='L482'></a><em class='sharp'>#define</em> <a href='../R/3921.html' title='Multiple referred from 15 places.'>ZEBRA_NEXTHOP_IFINDEX</a>            1
+<a id='L483' name='L483'></a><em class='sharp'>#define</em> <a href='../R/3922.html' title='Multiple referred from 8 places.'>ZEBRA_NEXTHOP_IFNAME</a>             2
+<a id='L484' name='L484'></a><em class='sharp'>#define</em> <a href='../R/3923.html' title='Multiple referred from 11 places.'>ZEBRA_NEXTHOP_IPV4</a>               3
+<a id='L485' name='L485'></a><em class='sharp'>#define</em> <a href='../R/3924.html' title='Multiple referred from 9 places.'>ZEBRA_NEXTHOP_IPV4_IFINDEX</a>       4
+<a id='L486' name='L486'></a><em class='sharp'>#define</em> ZEBRA_NEXTHOP_IPV4_IFNAME        5
+<a id='L487' name='L487'></a><em class='sharp'>#define</em> <a href='../R/3925.html' title='Multiple referred from 8 places.'>ZEBRA_NEXTHOP_IPV6</a>               6
+<a id='L488' name='L488'></a><em class='sharp'>#define</em> <a href='../R/3926.html' title='Multiple referred from 3 places.'>ZEBRA_NEXTHOP_IPV6_IFINDEX</a>       7
+<a id='L489' name='L489'></a><em class='sharp'>#define</em> <a href='../R/3927.html' title='Multiple referred from 3 places.'>ZEBRA_NEXTHOP_IPV6_IFNAME</a>        8
+<a id='L490' name='L490'></a><em class='sharp'>#define</em> <a href='../R/3920.html' title='Multiple referred from 2 places.'>ZEBRA_NEXTHOP_BLACKHOLE</a>          9
+<a id='L491' name='L491'></a>
+<a id='L492' name='L492'></a><em class='sharp'>#ifndef</em> <a href='../S/191.html#L493' title='Defined at 493 in lib/zebra.h.'>INADDR_LOOPBACK</a>
+<a id='L493' name='L493'></a><em class='sharp'>#define</em> <a href='../R/908.html' title='Multiple referred from 8 places.'>INADDR_LOOPBACK</a> 0x7f000001      <em class='comment'>/* Internet address 127.0.0.1.  */</em>
+<a id='L494' name='L494'></a><em class='sharp'>#endif</em>
+<a id='L495' name='L495'></a>
+<a id='L496' name='L496'></a><em class='comment'>/* Address family numbers from RFC1700. */</em>
+<a id='L497' name='L497'></a><em class='sharp'>#define</em> <a href='../R/10.html' title='Multiple referred from 680 places.'>AFI_IP</a>                    1
+<a id='L498' name='L498'></a><em class='sharp'>#define</em> <a href='../R/11.html' title='Multiple referred from 416 places.'>AFI_IP6</a>                   2
+<a id='L499' name='L499'></a><em class='sharp'>#define</em> <a href='../R/12.html' title='Multiple referred from 89 places.'>AFI_MAX</a>                   3
+<a id='L500' name='L500'></a>
+<a id='L501' name='L501'></a><em class='comment'>/* Subsequent Address Family Identifier. */</em>
+<a id='L502' name='L502'></a><em class='sharp'>#define</em> <a href='../R/3428.html' title='Multiple referred from 549 places.'>SAFI_UNICAST</a>              1
+<a id='L503' name='L503'></a><em class='sharp'>#define</em> <a href='../R/3426.html' title='Multiple referred from 161 places.'>SAFI_MULTICAST</a>            2
+<a id='L504' name='L504'></a><em class='sharp'>#define</em> <a href='../R/3427.html' title='Multiple referred from 5 places.'>SAFI_RESERVED_3</a>           3
+<a id='L505' name='L505'></a><em class='sharp'>#define</em> <a href='../R/3425.html' title='Multiple referred from 94 places.'>SAFI_MPLS_VPN</a>             4
+<a id='L506' name='L506'></a><em class='sharp'>#define</em> <a href='../R/3423.html' title='Multiple referred from 72 places.'>SAFI_MAX</a>                  5
+<a id='L507' name='L507'></a>
+<a id='L508' name='L508'></a><em class='comment'>/* Filter direction.  */</em>
+<a id='L509' name='L509'></a><em class='sharp'>#define</em> <a href='../R/745.html' title='Multiple referred from 49 places.'>FILTER_IN</a>                 0
+<a id='L510' name='L510'></a><em class='sharp'>#define</em> <a href='../R/751.html' title='Multiple referred from 38 places.'>FILTER_OUT</a>                1
+<a id='L511' name='L511'></a><em class='sharp'>#define</em> <a href='../R/750.html' title='Multiple referred from 11 places.'>FILTER_MAX</a>                2
+<a id='L512' name='L512'></a>
+<a id='L513' name='L513'></a><em class='comment'>/* Default Administrative Distance of each protocol. */</em>
+<a id='L514' name='L514'></a><em class='sharp'>#define</em> ZEBRA_KERNEL_DISTANCE_DEFAULT      0
+<a id='L515' name='L515'></a><em class='sharp'>#define</em> ZEBRA_CONNECT_DISTANCE_DEFAULT     0
+<a id='L516' name='L516'></a><em class='sharp'>#define</em> <a href='../R/3969.html' title='Multiple referred from 4 places.'>ZEBRA_STATIC_DISTANCE_DEFAULT</a>      1
+<a id='L517' name='L517'></a><em class='sharp'>#define</em> <a href='../R/3941.html' title='Multiple referred from 5 places.'>ZEBRA_RIP_DISTANCE_DEFAULT</a>       120
+<a id='L518' name='L518'></a><em class='sharp'>#define</em> <a href='../S/101.html#L199' title='Referred from 199 in ripngd/ripng_peer.c.'>ZEBRA_RIPNG_DISTANCE_DEFAULT</a>     120
+<a id='L519' name='L519'></a><em class='sharp'>#define</em> ZEBRA_OSPF_DISTANCE_DEFAULT      110
+<a id='L520' name='L520'></a><em class='sharp'>#define</em> ZEBRA_OSPF6_DISTANCE_DEFAULT     110
+<a id='L521' name='L521'></a><em class='sharp'>#define</em> ZEBRA_ISIS_DISTANCE_DEFAULT      115
+<a id='L522' name='L522'></a><em class='sharp'>#define</em> <a href='../R/3896.html' title='Multiple referred from 4 places.'>ZEBRA_IBGP_DISTANCE_DEFAULT</a>      200
+<a id='L523' name='L523'></a><em class='sharp'>#define</em> <a href='../R/3876.html' title='Multiple referred from 2 places.'>ZEBRA_EBGP_DISTANCE_DEFAULT</a>       20
+<a id='L524' name='L524'></a>
+<a id='L525' name='L525'></a><em class='comment'>/* Flag manipulation macros. */</em>
+<a id='L526' name='L526'></a><em class='sharp'>#define</em> <a href='../R/461.html' title='Multiple referred from 1073 places.'>CHECK_FLAG</a>(V,<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)      ((V) &amp; (<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>))
+<a id='L527' name='L527'></a><em class='sharp'>#define</em> <a href='../R/3442.html' title='Multiple referred from 364 places.'>SET_FLAG</a>(V,<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)        (V) |= (<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)
+<a id='L528' name='L528'></a><em class='sharp'>#define</em> <a href='../R/3738.html' title='Multiple referred from 209 places.'>UNSET_FLAG</a>(V,<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)      (V) &amp;= ~(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)
+<a id='L529' name='L529'></a>
+<a id='L530' name='L530'></a><em class='comment'>/* AFI and SAFI type. */</em>
+<a id='L531' name='L531'></a><strong class='reserved'>typedef</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../R/4417.html' title='Multiple referred from 327 places.'>afi_t</a>;
+<a id='L532' name='L532'></a><strong class='reserved'>typedef</strong> <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> <a href='../R/9687.html' title='Multiple referred from 311 places.'>safi_t</a>;
+<a id='L533' name='L533'></a>
+<a id='L534' name='L534'></a><em class='comment'>/* Zebra types. Used in Zserv message header. */</em>
+<a id='L535' name='L535'></a><strong class='reserved'>typedef</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../R/10627.html' title='Multiple referred from 95 places.'>zebra_size_t</a>;
+<a id='L536' name='L536'></a><strong class='reserved'>typedef</strong> <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> zebra_command_t;
+<a id='L537' name='L537'></a>
+<a id='L538' name='L538'></a><em class='comment'>/* FIFO -- first in first out structure and macros.  */</em>
+<a id='L539' name='L539'></a><strong class='reserved'>struct</strong> <a href='../R/5731.html' title='Multiple referred from 94 places.'>fifo</a>
+<a id='L540' name='L540'></a><em class='brace'>{</em>
+<a id='L541' name='L541'></a>  <strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *next;
+<a id='L542' name='L542'></a>  <strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *prev;
+<a id='L543' name='L543'></a><em class='brace'>}</em>;
+<a id='L544' name='L544'></a>
+<a id='L545' name='L545'></a><em class='sharp'>#define</em> <a href='../R/743.html' title='Multiple referred from 3 places.'>FIFO_INIT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)                                  \
+<a id='L546' name='L546'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em>                                                \
+<a id='L547' name='L547'></a>    <strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *Xfifo = (<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>);          \
+<a id='L548' name='L548'></a>    Xfifo-&gt;next = Xfifo-&gt;prev = Xfifo;                \
+<a id='L549' name='L549'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L550' name='L550'></a>
+<a id='L551' name='L551'></a><em class='sharp'>#define</em> <a href='../R/739.html' title='Multiple referred from 2 places.'>FIFO_ADD</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>,N)                                 \
+<a id='L552' name='L552'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em>                                                \
+<a id='L553' name='L553'></a>    <strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *Xfifo = (<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>);          \
+<a id='L554' name='L554'></a>    <strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *Xnode = (<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(N);          \
+<a id='L555' name='L555'></a>    Xnode-&gt;next = Xfifo;                              \
+<a id='L556' name='L556'></a>    Xnode-&gt;prev = Xfifo-&gt;prev;                        \
+<a id='L557' name='L557'></a>    Xfifo-&gt;prev = Xfifo-&gt;prev-&gt;next = Xnode;          \
+<a id='L558' name='L558'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L559' name='L559'></a>
+<a id='L560' name='L560'></a><em class='sharp'>#define</em> <a href='../S/639.html#L206' title='Referred from 206 in bgpd/bgp_advertise.c.'>FIFO_DEL</a>(N)                                   \
+<a id='L561' name='L561'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em>                                                \
+<a id='L562' name='L562'></a>    <strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *Xnode = (<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(N);          \
+<a id='L563' name='L563'></a>    Xnode-&gt;prev-&gt;next = Xnode-&gt;next;                  \
+<a id='L564' name='L564'></a>    Xnode-&gt;next-&gt;prev = Xnode-&gt;prev;                  \
+<a id='L565' name='L565'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L566' name='L566'></a>
+<a id='L567' name='L567'></a><em class='sharp'>#define</em> <a href='../R/742.html' title='Multiple referred from 6 places.'>FIFO_HEAD</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)                                  \
+<a id='L568' name='L568'></a>  ((((<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>))-&gt;next == (<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)) \
+<a id='L569' name='L569'></a>  ? <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> : (<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;next)
+<a id='L570' name='L570'></a>
+<a id='L571' name='L571'></a><em class='sharp'>#define</em> <a href='../S/191.html#L575' title='Referred from 575 in lib/zebra.h.'>FIFO_EMPTY</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)                                 \
+<a id='L572' name='L572'></a>  (((<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>))-&gt;next == (<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>))
+<a id='L573' name='L573'></a>
+<a id='L574' name='L574'></a><em class='sharp'>#define</em> FIFO_TOP(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)                                   \
+<a id='L575' name='L575'></a>  (<a href='../S/191.html#L571' title='Defined at 571 in lib/zebra.h.'>FIFO_EMPTY</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>) ? <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> : ((<strong class='reserved'>struct</strong> <a href='../S/191.html#L539' title='Defined at 539 in lib/zebra.h.'>fifo</a> *)(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>))-&gt;next)
+<a id='L576' name='L576'></a>
+<a id='L577' name='L577'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

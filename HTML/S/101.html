@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ripngd/ripng_peer.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1031.html'>ripngd</a>/ripng_peer.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L43'>[^]</a><a href='#L212'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L43' title='Defined at 43.'>ripng_peer_new</a></li>
+<li><a href='#L49' title='Defined at 49.'>ripng_peer_free</a></li>
+<li><a href='#L55' title='Defined at 55.'>ripng_peer_lookup</a></li>
+<li><a href='#L69' title='Defined at 69.'>ripng_peer_lookup_next</a></li>
+<li><a href='#L86' title='Defined at 86.'>ripng_peer_timeout</a></li>
+<li><a href='#L99' title='Defined at 99.'>ripng_peer_get</a></li>
+<li><a href='#L128' title='Defined at 128.'>ripng_peer_update</a></li>
+<li><a href='#L136' title='Defined at 136.'>ripng_peer_bad_route</a></li>
+<li><a href='#L144' title='Defined at 144.'>ripng_peer_bad_packet</a></li>
+<li><a href='#L153' title='Defined at 153.'>ripng_peer_uptime</a></li>
+<li><a href='#L187' title='Defined at 187.'>ripng_peer_display</a></li>
+<li><a href='#L206' title='Defined at 206.'>ripng_peer_list_cmp</a></li>
+<li><a href='#L212' title='Defined at 212.'>ripng_peer_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* RIPng peer support</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2000 Kunihiro Ishiguro &lt;kunihiro@zebra.org&gt;</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='comment'>/* RIPng support added by Vincent Jardin &lt;vincent.jardin@6wind.com&gt;</em>
+<a id='L23' name='L23'></a><em class='comment'> * Copyright (C) 2002 6WIND</em>
+<a id='L24' name='L24'></a><em class='comment'> */</em>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='110.html'>ripngd/ripngd.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='98.html'>ripngd/ripng_nexthop.h</a>"
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='comment'>/* Linked list of RIPng peer. */</em>
+<a id='L40' name='L40'></a><strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *peer_list;
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *
+<a id='L43' name='L43'></a><a href='../S/101.html#L112' title='Referred from 112 in ripngd/ripng_peer.c.'>ripng_peer_new</a> (<strong class='reserved'>void</strong>)
+<a id='L44' name='L44'></a><em class='brace'>{</em>
+<a id='L45' name='L45'></a>  <strong class='reserved'>return</strong> <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_RIPNG_PEER, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a>));
+<a id='L46' name='L46'></a><em class='brace'>}</em>
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L49' name='L49'></a><a href='../S/101.html#L92' title='Referred from 92 in ripngd/ripng_peer.c.'>ripng_peer_free</a> (<strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L50' name='L50'></a><em class='brace'>{</em>
+<a id='L51' name='L51'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_RIPNG_PEER, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L52' name='L52'></a><em class='brace'>}</em>
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a><strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *
+<a id='L55' name='L55'></a><a href='../R/9333.html' title='Multiple referred from 2 places.'>ripng_peer_lookup</a> (<strong class='reserved'>struct</strong> in6_addr *addr)
+<a id='L56' name='L56'></a><em class='brace'>{</em>
+<a id='L57' name='L57'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L58' name='L58'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (peer_list, node, nnode, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>))
+<a id='L61' name='L61'></a>    <em class='brace'>{</em>
+<a id='L62' name='L62'></a>      <strong class='reserved'>if</strong> (<a href='../S/249.html#L122' title='Defined at 122 in lib/prefix.h.'>IPV6_ADDR_SAME</a> (&amp;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;addr, addr))
+<a id='L63' name='L63'></a>        <strong class='reserved'>return</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L64' name='L64'></a>    <em class='brace'>}</em>
+<a id='L65' name='L65'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L66' name='L66'></a><em class='brace'>}</em>
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *
+<a id='L69' name='L69'></a><a href='../S/110.html#L371' title='Referred from 371 in ripngd/ripngd.h.'>ripng_peer_lookup_next</a> (<strong class='reserved'>struct</strong> in6_addr *addr)
+<a id='L70' name='L70'></a><em class='brace'>{</em>
+<a id='L71' name='L71'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L72' name='L72'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (peer_list, node, nnode, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>))
+<a id='L75' name='L75'></a>    <em class='brace'>{</em>
+<a id='L76' name='L76'></a>      <strong class='reserved'>if</strong> (<a href='../S/98.html#L44' title='Defined at 44 in ripngd/ripng_nexthop.h.'>addr6_cmp</a>(&amp;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;addr, addr) &gt; 0) 
+<a id='L77' name='L77'></a>        <strong class='reserved'>return</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L78' name='L78'></a>    <em class='brace'>}</em>
+<a id='L79' name='L79'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L80' name='L80'></a><em class='brace'>}</em>
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a><em class='comment'>/* RIPng peer is timeout.</em>
+<a id='L83' name='L83'></a><em class='comment'> * Garbage collector.</em>
+<a id='L84' name='L84'></a><em class='comment'> **/</em>
+<a id='L85' name='L85'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L86' name='L86'></a><a href='../S/101.html#L118' title='Referred from 118 in ripngd/ripng_peer.c.'>ripng_peer_timeout</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t)
+<a id='L87' name='L87'></a><em class='brace'>{</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (t);
+<a id='L91' name='L91'></a>  <a href='../S/243.html#L165' title='Defined at 165 in lib/linklist.c.'>listnode_delete</a> (peer_list, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L92' name='L92'></a>  <a href='../S/101.html#L49' title='Defined at 49 in ripngd/ripng_peer.c.'>ripng_peer_free</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L95' name='L95'></a><em class='brace'>}</em>
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a><em class='comment'>/* Get RIPng peer.  At the same time update timeout thread. */</em>
+<a id='L98' name='L98'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *
+<a id='L99' name='L99'></a><a href='../R/9330.html' title='Multiple referred from 3 places.'>ripng_peer_get</a> (<strong class='reserved'>struct</strong> in6_addr *addr)
+<a id='L100' name='L100'></a><em class='brace'>{</em>
+<a id='L101' name='L101'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/101.html#L55' title='Defined at 55 in ripngd/ripng_peer.c.'>ripng_peer_lookup</a> (addr);
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L106' name='L106'></a>    <em class='brace'>{</em>
+<a id='L107' name='L107'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_timeout)
+<a id='L108' name='L108'></a>        <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_timeout);
+<a id='L109' name='L109'></a>    <em class='brace'>}</em>
+<a id='L110' name='L110'></a>  <strong class='reserved'>else</strong>
+<a id='L111' name='L111'></a>    <em class='brace'>{</em>
+<a id='L112' name='L112'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/101.html#L43' title='Defined at 43 in ripngd/ripng_peer.c.'>ripng_peer_new</a> ();
+<a id='L113' name='L113'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;addr = *addr; <em class='comment'>/* XXX */</em>
+<a id='L114' name='L114'></a>      <a href='../S/243.html#L84' title='Defined at 84 in lib/linklist.c.'>listnode_add_sort</a> (peer_list, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L115' name='L115'></a>    <em class='brace'>}</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <em class='comment'>/* Update timeout thread. */</em>
+<a id='L118' name='L118'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_timeout = <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/101.html#L86' title='Defined at 86 in ripngd/ripng_peer.c.'>ripng_peer_timeout</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>,
+<a id='L119' name='L119'></a>                                      <a href='../S/110.html#L51' title='Defined at 51 in ripngd/ripngd.h.'>RIPNG_PEER_TIMER_DEFAULT</a>);
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>  <em class='comment'>/* Last update time set. */</em>
+<a id='L122' name='L122'></a>  time (&amp;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;uptime);
+<a id='L123' name='L123'></a>  
+<a id='L124' name='L124'></a>  <strong class='reserved'>return</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L125' name='L125'></a><em class='brace'>}</em>
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a><strong class='reserved'>void</strong>
+<a id='L128' name='L128'></a><a href='../R/9337.html' title='Multiple referred from 3 places.'>ripng_peer_update</a> (<strong class='reserved'>struct</strong> sockaddr_in6 *from, u_char version)
+<a id='L129' name='L129'></a><em class='brace'>{</em>
+<a id='L130' name='L130'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L131' name='L131'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/101.html#L99' title='Defined at 99 in ripngd/ripng_peer.c.'>ripng_peer_get</a> (&amp;from-&gt;sin6_addr);
+<a id='L132' name='L132'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;version = version;
+<a id='L133' name='L133'></a><em class='brace'>}</em>
+<a id='L134' name='L134'></a>
+<a id='L135' name='L135'></a><strong class='reserved'>void</strong>
+<a id='L136' name='L136'></a><a href='../R/9327.html' title='Multiple referred from 6 places.'>ripng_peer_bad_route</a> (<strong class='reserved'>struct</strong> sockaddr_in6 *from)
+<a id='L137' name='L137'></a><em class='brace'>{</em>
+<a id='L138' name='L138'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L139' name='L139'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/101.html#L99' title='Defined at 99 in ripngd/ripng_peer.c.'>ripng_peer_get</a> (&amp;from-&gt;sin6_addr);
+<a id='L140' name='L140'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;recv_badroutes++;
+<a id='L141' name='L141'></a><em class='brace'>}</em>
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a><strong class='reserved'>void</strong>
+<a id='L144' name='L144'></a><a href='../R/9326.html' title='Multiple referred from 8 places.'>ripng_peer_bad_packet</a> (<strong class='reserved'>struct</strong> sockaddr_in6 *from)
+<a id='L145' name='L145'></a><em class='brace'>{</em>
+<a id='L146' name='L146'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L147' name='L147'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/101.html#L99' title='Defined at 99 in ripngd/ripng_peer.c.'>ripng_peer_get</a> (&amp;from-&gt;sin6_addr);
+<a id='L148' name='L148'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;recv_badpackets++;
+<a id='L149' name='L149'></a><em class='brace'>}</em>
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a><em class='comment'>/* Display peer uptime. */</em>
+<a id='L152' name='L152'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *
+<a id='L153' name='L153'></a><a href='../S/101.html#L200' title='Referred from 200 in ripngd/ripng_peer.c.'>ripng_peer_uptime</a> (<strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>char</strong> *buf, size_t len)
+<a id='L154' name='L154'></a><em class='brace'>{</em>
+<a id='L155' name='L155'></a>  time_t uptime;
+<a id='L156' name='L156'></a>  <strong class='reserved'>struct</strong> tm *tm;
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a>  <em class='comment'>/* If there is no connection has been done before print `never'. */</em>
+<a id='L159' name='L159'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;uptime == 0)
+<a id='L160' name='L160'></a>    <em class='brace'>{</em>
+<a id='L161' name='L161'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "never   ");
+<a id='L162' name='L162'></a>      <strong class='reserved'>return</strong> buf;
+<a id='L163' name='L163'></a>    <em class='brace'>}</em>
+<a id='L164' name='L164'></a>
+<a id='L165' name='L165'></a>  <em class='comment'>/* Get current time. */</em>
+<a id='L166' name='L166'></a>  uptime = time (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L167' name='L167'></a>  uptime -= <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;uptime;
+<a id='L168' name='L168'></a>  tm = gmtime (&amp;uptime);
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>  <em class='comment'>/* Making formatted timer strings. */</em>
+<a id='L171' name='L171'></a><em class='sharp'>#define</em> <a href='../R/2134.html' title='Multiple referred from 9 places.'>ONE_DAY_SECOND</a> 60*60*24
+<a id='L172' name='L172'></a><em class='sharp'>#define</em> <a href='../R/2135.html' title='Multiple referred from 9 places.'>ONE_WEEK_SECOND</a> 60*60*24*7
+<a id='L173' name='L173'></a>
+<a id='L174' name='L174'></a>  <strong class='reserved'>if</strong> (uptime &lt; <a href='../D/2546.html' title='Multiple defined in 9 places.'>ONE_DAY_SECOND</a>)
+<a id='L175' name='L175'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%02d:%02d:%02d", 
+<a id='L176' name='L176'></a>              tm-&gt;tm_hour, tm-&gt;tm_min, tm-&gt;tm_sec);
+<a id='L177' name='L177'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (uptime &lt; <a href='../D/2547.html' title='Multiple defined in 9 places.'>ONE_WEEK_SECOND</a>)
+<a id='L178' name='L178'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%dd%02dh%02dm", 
+<a id='L179' name='L179'></a>              tm-&gt;tm_yday, tm-&gt;tm_hour, tm-&gt;tm_min);
+<a id='L180' name='L180'></a>  <strong class='reserved'>else</strong>
+<a id='L181' name='L181'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%02dw%dd%02dh", 
+<a id='L182' name='L182'></a>              tm-&gt;tm_yday/7, tm-&gt;tm_yday - ((tm-&gt;tm_yday/7) * 7), tm-&gt;tm_hour);
+<a id='L183' name='L183'></a>  <strong class='reserved'>return</strong> buf;
+<a id='L184' name='L184'></a><em class='brace'>}</em>
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a><strong class='reserved'>void</strong>
+<a id='L187' name='L187'></a><a href='../R/9328.html' title='Multiple referred from 2 places.'>ripng_peer_display</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L188' name='L188'></a><em class='brace'>{</em>
+<a id='L189' name='L189'></a>  <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L190' name='L190'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L191' name='L191'></a><em class='sharp'>#define</em> <a href='../R/3260.html' title='Multiple referred from 2 places.'>RIPNG_UPTIME_LEN</a> 25
+<a id='L192' name='L192'></a>  <strong class='reserved'>char</strong> timebuf[<a href='../S/101.html#L191' title='Defined at 191 in ripngd/ripng_peer.c.'>RIPNG_UPTIME_LEN</a>];
+<a id='L193' name='L193'></a>
+<a id='L194' name='L194'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (peer_list, node, nnode, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>))
+<a id='L195' name='L195'></a>    <em class='brace'>{</em>
+<a id='L196' name='L196'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    %s %s%14s %10d %10d %10d      %s%s", <a href='../S/250.html#L899' title='Defined at 899 in lib/prefix.c.'>inet6_ntoa</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;addr),
+<a id='L197' name='L197'></a>               <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>, " ",
+<a id='L198' name='L198'></a>               <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;recv_badpackets, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;recv_badroutes,
+<a id='L199' name='L199'></a>               <a href='../S/191.html#L518' title='Defined at 518 in lib/zebra.h.'>ZEBRA_RIPNG_DISTANCE_DEFAULT</a>,
+<a id='L200' name='L200'></a>               <a href='../S/101.html#L153' title='Defined at 153 in ripngd/ripng_peer.c.'>ripng_peer_uptime</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, timebuf, <a href='../S/101.html#L191' title='Defined at 191 in ripngd/ripng_peer.c.'>RIPNG_UPTIME_LEN</a>),
+<a id='L201' name='L201'></a>               <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L202' name='L202'></a>    <em class='brace'>}</em>
+<a id='L203' name='L203'></a><em class='brace'>}</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L206' name='L206'></a><a href='../S/101.html#L215' title='Referred from 215 in ripngd/ripng_peer.c.'>ripng_peer_list_cmp</a> (<strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *p1, <strong class='reserved'>struct</strong> <a href='../S/110.html#L289' title='Defined at 289 in ripngd/ripngd.h.'>ripng_peer</a> *p2)
+<a id='L207' name='L207'></a><em class='brace'>{</em>
+<a id='L208' name='L208'></a>  <strong class='reserved'>return</strong> <a href='../S/98.html#L44' title='Defined at 44 in ripngd/ripng_nexthop.h.'>addr6_cmp</a>(&amp;p1-&gt;addr, &amp;p2-&gt;addr) &gt; 0;
+<a id='L209' name='L209'></a><em class='brace'>}</em>
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a><strong class='reserved'>void</strong>
+<a id='L212' name='L212'></a><a href='../R/9331.html' title='Multiple referred from 2 places.'>ripng_peer_init</a> ()
+<a id='L213' name='L213'></a><em class='brace'>{</em>
+<a id='L214' name='L214'></a>  peer_list = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L215' name='L215'></a>  peer_list-&gt;<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = (<strong class='reserved'>int</strong> (*)(<strong class='reserved'>void</strong> *, <strong class='reserved'>void</strong> *)) <a href='../S/101.html#L206' title='Defined at 206 in ripngd/ripng_peer.c.'>ripng_peer_list_cmp</a>;
+<a id='L216' name='L216'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L43'>[^]</a><a href='#L212'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

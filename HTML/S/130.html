@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>brctld/old_brctld/brctld_vty.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1014.html'>brctld</a>/<a href='../files/1015.html'>old_brctld</a>/brctld_vty.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L5'>[^]</a><a href='#L40'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L5' title='Defined at 5.'>DEFUN</a></li>
+<li><a href='#L16' title='Defined at 16.'>DEFUN</a></li>
+<li><a href='#L26' title='Defined at 26.'>DEFUN</a></li>
+<li><a href='#L40' title='Defined at 40.'>brctld_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='191.html'>zebra.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L4' name='L4'></a>
+<a id='L5' name='L5'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(router_brctld,
+<a id='L6' name='L6'></a>        router_brctld_cmd,
+<a id='L7' name='L7'></a>        "router brctld",
+<a id='L8' name='L8'></a>        "Enable a routing process "
+<a id='L9' name='L9'></a>        "BRCTLD process")
+<a id='L10' name='L10'></a><em class='brace'>{</em>
+<a id='L11' name='L11'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = BRCTLD_NODE;
+<a id='L12' name='L12'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Down to lmd node%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L13' name='L13'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L14' name='L14'></a><em class='brace'>}</em>
+<a id='L15' name='L15'></a>
+<a id='L16' name='L16'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  createLabelPool_brctld,
+<a id='L17' name='L17'></a>        createLabelPool_brctld_cmd,
+<a id='L18' name='L18'></a>        "createLabelPool pool_id &lt;1-100&gt; min_label &lt;1-10000&gt; max_label &lt;1-100000&gt;",
+<a id='L19' name='L19'></a>        "create a new Label Pool for use"
+<a id='L20' name='L20'></a>        "BRCTLD protocol")
+<a id='L21' name='L21'></a><em class='brace'>{</em>
+<a id='L22' name='L22'></a> <em class='comment'>//vty-&gt;node = BRCTLD_NODE;</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L25' name='L25'></a><em class='brace'>}</em>
+<a id='L26' name='L26'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  version_brctld,
+<a id='L27' name='L27'></a>        version_brctld_cmd,
+<a id='L28' name='L28'></a>        "version",
+<a id='L29' name='L29'></a>        "show bridge version "
+<a id='L30' name='L30'></a>        "bridge control user space tool")
+<a id='L31' name='L31'></a><em class='brace'>{</em>
+<a id='L32' name='L32'></a> <em class='comment'>//vty-&gt;node = BRCTLD_NODE;</em>
+<a id='L33' name='L33'></a> <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"version 1%s",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L34' name='L34'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L35' name='L35'></a><em class='brace'>}</em>
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> brctld_node =
+<a id='L38' name='L38'></a><em class='brace'>{</em> BRCTLD_NODE, "%s(config-brctld)# ", 1 <em class='brace'>}</em>;
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>void</strong> <a href='../R/5192.html' title='Multiple referred from 4 places.'>brctld_init</a>(<strong class='reserved'>void</strong>)
+<a id='L41' name='L41'></a><em class='brace'>{</em>
+<a id='L42' name='L42'></a>        <a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a>( &amp;brctld_node, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> );
+<a id='L43' name='L43'></a>        <a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a>( BRCTLD_NODE );
+<a id='L44' name='L44'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( CONFIG_NODE, &amp;router_brctld_cmd);
+<a id='L45' name='L45'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( BRCTLD_NODE, &amp;version_brctld_cmd);
+<a id='L46' name='L46'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L5'>[^]</a><a href='#L40'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

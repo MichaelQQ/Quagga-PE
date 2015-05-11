@@ -1,0 +1,609 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>mplsadmd/utils.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1024.html'>mplsadmd</a>/utils.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L33'>[^]</a><a href='#L523'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L33' title='Defined at 33.'>get_integer</a></li>
+<li><a href='#L47' title='Defined at 47.'>get_unsigned</a></li>
+<li><a href='#L61' title='Defined at 61.'>get_u64</a></li>
+<li><a href='#L75' title='Defined at 75.'>get_u32</a></li>
+<li><a href='#L89' title='Defined at 89.'>get_u16</a></li>
+<li><a href='#L103' title='Defined at 103.'>get_u8</a></li>
+<li><a href='#L117' title='Defined at 117.'>get_s16</a></li>
+<li><a href='#L131' title='Defined at 131.'>get_s8</a></li>
+<li><a href='#L145' title='Defined at 145.'>get_addr_1</a></li>
+<li><a href='#L203' title='Defined at 203.'>get_prefix_1</a></li>
+<li><a href='#L254' title='Defined at 254.'>get_addr</a></li>
+<li><a href='#L267' title='Defined at 267.'>get_prefix</a></li>
+<li><a href='#L280' title='Defined at 280.'>get_addr32</a></li>
+<li><a href='#L290' title='Defined at 290.'>incomplete_command</a></li>
+<li><a href='#L296' title='Defined at 296.'>missarg</a></li>
+<li><a href='#L302' title='Defined at 302.'>invarg</a></li>
+<li><a href='#L308' title='Defined at 308.'>duparg</a></li>
+<li><a href='#L314' title='Defined at 314.'>duparg2</a></li>
+<li><a href='#L320' title='Defined at 320.'>matches</a></li>
+<li><a href='#L328' title='Defined at 328.'>inet_addr_match</a></li>
+<li><a href='#L358' title='Defined at 358.'>__get_hz</a></li>
+<li><a href='#L390' title='Defined at 390.'>__get_user_hz</a></li>
+<li><a href='#L424' title='Defined at 424.'>resolve_address</a></li>
+<li><a href='#L504' title='Defined at 504.'>hexstring_n2a</a></li>
+<li><a href='#L523' title='Defined at 523.'>hexstring_a2n</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * utils.c</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> *              This program is free software; you can redistribute it and/or</em>
+<a id='L5' name='L5'></a><em class='comment'> *              modify it under the terms of the GNU General Public License</em>
+<a id='L6' name='L6'></a><em class='comment'> *              as published by the Free Software Foundation; either version</em>
+<a id='L7' name='L7'></a><em class='comment'> *              2 of the License, or (at your option) any later version.</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * Authors:     Alexey Kuznetsov, &lt;kuznet@ms2.inr.ac.ru&gt;</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * Changes:</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * Rani Assaf &lt;rani@magic.metawire.com&gt; 980929: resolve addresses</em>
+<a id='L15' name='L15'></a><em class='comment'> */</em>
+<a id='L16' name='L16'></a>
+<a id='L17' name='L17'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L18' name='L18'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L19' name='L19'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L20' name='L20'></a><em class='sharp'>#include</em> &lt;syslog.h&gt;
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;fcntl.h&gt;
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;netdb.h&gt;
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;arpa/inet.h&gt;
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> &lt;resolv.h&gt;
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> &lt;asm/types.h&gt;
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> &lt;linux/pkt_sched.h&gt;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='844.html'>utils.h</a>"
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><strong class='reserved'>int</strong> <a href='../R/5824.html' title='Multiple referred from 2 places.'>get_integer</a>(<strong class='reserved'>int</strong> *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L34' name='L34'></a><em class='brace'>{</em>
+<a id='L35' name='L35'></a>        <strong class='reserved'>long</strong> res;
+<a id='L36' name='L36'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L39' name='L39'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L40' name='L40'></a>        res = strtol(arg, &amp;ptr, base);
+<a id='L41' name='L41'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; INT_MAX || res &lt; INT_MIN)
+<a id='L42' name='L42'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L43' name='L43'></a>        *val = res;
+<a id='L44' name='L44'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L45' name='L45'></a><em class='brace'>}</em>
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><strong class='reserved'>int</strong> <a href='../R/5841.html' title='Multiple referred from 35 places.'>get_unsigned</a>(<strong class='reserved'>unsigned</strong> *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L48' name='L48'></a><em class='brace'>{</em>
+<a id='L49' name='L49'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> res;
+<a id='L50' name='L50'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L53' name='L53'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L54' name='L54'></a>        res = strtoul(arg, &amp;ptr, base);
+<a id='L55' name='L55'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; UINT_MAX)
+<a id='L56' name='L56'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L57' name='L57'></a>        *val = res;
+<a id='L58' name='L58'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L59' name='L59'></a><em class='brace'>}</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><strong class='reserved'>int</strong> <a href='../S/844.html#L86' title='Referred from 86 in mplsadmd/utils.h.'>get_u64</a>(__u64 *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <strong class='reserved'>long</strong> res;
+<a id='L64' name='L64'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L67' name='L67'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L68' name='L68'></a>        res = strtoull(arg, &amp;ptr, base);
+<a id='L69' name='L69'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res == 0xFFFFFFFFULL)
+<a id='L70' name='L70'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L71' name='L71'></a>        *val = res;
+<a id='L72' name='L72'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L73' name='L73'></a><em class='brace'>}</em>
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a><strong class='reserved'>int</strong> <a href='../S/844.html#L87' title='Referred from 87 in mplsadmd/utils.h.'>get_u32</a>(__u32 *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L76' name='L76'></a><em class='brace'>{</em>
+<a id='L77' name='L77'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> res;
+<a id='L78' name='L78'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L81' name='L81'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L82' name='L82'></a>        res = strtoul(arg, &amp;ptr, base);
+<a id='L83' name='L83'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; 0xFFFFFFFFUL)
+<a id='L84' name='L84'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L85' name='L85'></a>        *val = res;
+<a id='L86' name='L86'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L87' name='L87'></a><em class='brace'>}</em>
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a><strong class='reserved'>int</strong> <a href='../R/5837.html' title='Multiple referred from 2 places.'>get_u16</a>(__u16 *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L90' name='L90'></a><em class='brace'>{</em>
+<a id='L91' name='L91'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> res;
+<a id='L92' name='L92'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L95' name='L95'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L96' name='L96'></a>        res = strtoul(arg, &amp;ptr, base);
+<a id='L97' name='L97'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; 0xFFFF)
+<a id='L98' name='L98'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L99' name='L99'></a>        *val = res;
+<a id='L100' name='L100'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L101' name='L101'></a><em class='brace'>}</em>
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><strong class='reserved'>int</strong> <a href='../R/5840.html' title='Multiple referred from 2 places.'>get_u8</a>(__u8 *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L104' name='L104'></a><em class='brace'>{</em>
+<a id='L105' name='L105'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> res;
+<a id='L106' name='L106'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L107' name='L107'></a>
+<a id='L108' name='L108'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L109' name='L109'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L110' name='L110'></a>        res = strtoul(arg, &amp;ptr, base);
+<a id='L111' name='L111'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; 0xFF)
+<a id='L112' name='L112'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L113' name='L113'></a>        *val = res;
+<a id='L114' name='L114'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L115' name='L115'></a><em class='brace'>}</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><strong class='reserved'>int</strong> <a href='../R/5835.html' title='Multiple referred from 2 places.'>get_s16</a>(__s16 *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L118' name='L118'></a><em class='brace'>{</em>
+<a id='L119' name='L119'></a>        <strong class='reserved'>long</strong> res;
+<a id='L120' name='L120'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L123' name='L123'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L124' name='L124'></a>        res = strtol(arg, &amp;ptr, base);
+<a id='L125' name='L125'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; 0x7FFF || res &lt; -0x8000)
+<a id='L126' name='L126'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L127' name='L127'></a>        *val = res;
+<a id='L128' name='L128'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L129' name='L129'></a><em class='brace'>}</em>
+<a id='L130' name='L130'></a>
+<a id='L131' name='L131'></a><strong class='reserved'>int</strong> <a href='../S/844.html#L91' title='Referred from 91 in mplsadmd/utils.h.'>get_s8</a>(__s8 *val, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> base)
+<a id='L132' name='L132'></a><em class='brace'>{</em>
+<a id='L133' name='L133'></a>        <strong class='reserved'>long</strong> res;
+<a id='L134' name='L134'></a>        <strong class='reserved'>char</strong> *ptr;
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>        <strong class='reserved'>if</strong> (!arg || !*arg)
+<a id='L137' name='L137'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L138' name='L138'></a>        res = strtol(arg, &amp;ptr, base);
+<a id='L139' name='L139'></a>        <strong class='reserved'>if</strong> (!ptr || ptr == arg || *ptr || res &gt; 0x7F || res &lt; -0x80)
+<a id='L140' name='L140'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L141' name='L141'></a>        *val = res;
+<a id='L142' name='L142'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L143' name='L143'></a><em class='brace'>}</em>
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a><strong class='reserved'>int</strong> <a href='../R/5820.html' title='Multiple referred from 4 places.'>get_addr_1</a>(<a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> *addr, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>int</strong> family)
+<a id='L146' name='L146'></a><em class='brace'>{</em>
+<a id='L147' name='L147'></a>        <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *cp;
+<a id='L148' name='L148'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *ap = (<strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong>*)addr-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L149' name='L149'></a>        <strong class='reserved'>int</strong> i;
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a>        memset(addr, 0, <strong class='reserved'>sizeof</strong>(*addr));
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a>        <strong class='reserved'>if</strong> (strcmp(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "default") == 0 ||
+<a id='L154' name='L154'></a>            strcmp(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "all") == 0 ||
+<a id='L155' name='L155'></a>            strcmp(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "any") == 0) <em class='brace'>{</em>
+<a id='L156' name='L156'></a>                <strong class='reserved'>if</strong> (family == <a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>)
+<a id='L157' name='L157'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L158' name='L158'></a>                addr-&gt;family = family;
+<a id='L159' name='L159'></a>                addr-&gt;bytelen = (family == AF_INET6 ? 16 : 4);
+<a id='L160' name='L160'></a>                addr-&gt;bitlen = -1;
+<a id='L161' name='L161'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L162' name='L162'></a>        <em class='brace'>}</em>
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a>        <strong class='reserved'>if</strong> (strchr(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, ':')) <em class='brace'>{</em>
+<a id='L165' name='L165'></a>                addr-&gt;family = AF_INET6;
+<a id='L166' name='L166'></a>                <strong class='reserved'>if</strong> (family != AF_UNSPEC &amp;&amp; family != AF_INET6)
+<a id='L167' name='L167'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L168' name='L168'></a>                <strong class='reserved'>if</strong> (<a href='../S/213.html#L74' title='Defined at 74 in lib/sockunion.c.'>inet_pton</a>(AF_INET6, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, addr-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>) &lt;= 0)
+<a id='L169' name='L169'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L170' name='L170'></a>                addr-&gt;bytelen = 16;
+<a id='L171' name='L171'></a>                addr-&gt;bitlen = -1;
+<a id='L172' name='L172'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L173' name='L173'></a>        <em class='brace'>}</em>
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a>        <strong class='reserved'>if</strong> (family == <a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>) <em class='brace'>{</em>
+<a id='L176' name='L176'></a>                <strong class='reserved'>struct</strong> <a href='../S/844.html#L57' title='Defined at 57 in mplsadmd/utils.h.'>dn_naddr</a> dna;
+<a id='L177' name='L177'></a>                addr-&gt;family = <a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>;
+<a id='L178' name='L178'></a>                <strong class='reserved'>if</strong> (<a href='../S/851.html#L56' title='Defined at 56 in mplsadmd/dnet_pton.c.'>dnet_pton</a>(<a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, &amp;dna) &lt;= 0)
+<a id='L179' name='L179'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L180' name='L180'></a>                <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(addr-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, dna.a_addr, 2);
+<a id='L181' name='L181'></a>                addr-&gt;bytelen = 2;
+<a id='L182' name='L182'></a>                addr-&gt;bitlen = -1;
+<a id='L183' name='L183'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L184' name='L184'></a>        <em class='brace'>}</em>
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a>        addr-&gt;family = AF_INET;
+<a id='L187' name='L187'></a>        <strong class='reserved'>if</strong> (family != AF_UNSPEC &amp;&amp; family != AF_INET)
+<a id='L188' name='L188'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L189' name='L189'></a>        addr-&gt;bytelen = 4;
+<a id='L190' name='L190'></a>        addr-&gt;bitlen = -1;
+<a id='L191' name='L191'></a>        <strong class='reserved'>for</strong> (cp=<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, i=0; *cp; cp++) <em class='brace'>{</em>
+<a id='L192' name='L192'></a>                <strong class='reserved'>if</strong> (*cp &lt;= '9' &amp;&amp; *cp &gt;= '0') <em class='brace'>{</em>
+<a id='L193' name='L193'></a>                        ap[i] = 10*ap[i] + (*cp-'0');
+<a id='L194' name='L194'></a>                        <strong class='reserved'>continue</strong>;
+<a id='L195' name='L195'></a>                <em class='brace'>}</em>
+<a id='L196' name='L196'></a>                <strong class='reserved'>if</strong> (*cp == '.' &amp;&amp; ++i &lt;= 3)
+<a id='L197' name='L197'></a>                        <strong class='reserved'>continue</strong>;
+<a id='L198' name='L198'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L199' name='L199'></a>        <em class='brace'>}</em>
+<a id='L200' name='L200'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L201' name='L201'></a><em class='brace'>}</em>
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a><strong class='reserved'>int</strong> <a href='../R/5832.html' title='Multiple referred from 2 places.'>get_prefix_1</a>(<a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> *dst, <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> family)
+<a id='L204' name='L204'></a><em class='brace'>{</em>
+<a id='L205' name='L205'></a>        <strong class='reserved'>int</strong> err;
+<a id='L206' name='L206'></a>        <strong class='reserved'>unsigned</strong> plen;
+<a id='L207' name='L207'></a>        <strong class='reserved'>char</strong> *slash;
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a>        memset(dst, 0, <strong class='reserved'>sizeof</strong>(*dst));
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a>        <strong class='reserved'>if</strong> (strcmp(arg, "default") == 0 ||
+<a id='L212' name='L212'></a>            strcmp(arg, "any") == 0 ||
+<a id='L213' name='L213'></a>            strcmp(arg, "all") == 0) <em class='brace'>{</em>
+<a id='L214' name='L214'></a>                <strong class='reserved'>if</strong> (family == <a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>)
+<a id='L215' name='L215'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L216' name='L216'></a>                dst-&gt;family = family;
+<a id='L217' name='L217'></a>                dst-&gt;bytelen = 0;
+<a id='L218' name='L218'></a>                dst-&gt;bitlen = 0;
+<a id='L219' name='L219'></a>                <strong class='reserved'>return</strong> 0;
+<a id='L220' name='L220'></a>        <em class='brace'>}</em>
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a>        slash = strchr(arg, '/');
+<a id='L223' name='L223'></a>        <strong class='reserved'>if</strong> (slash)
+<a id='L224' name='L224'></a>                *slash = 0;
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a>        err = <a href='../S/849.html#L145' title='Defined at 145 in mplsadmd/utils.c.'>get_addr_1</a>(dst, arg, family);
+<a id='L227' name='L227'></a>        <strong class='reserved'>if</strong> (err == 0) <em class='brace'>{</em>
+<a id='L228' name='L228'></a>                <strong class='reserved'>switch</strong>(dst-&gt;family) <em class='brace'>{</em>
+<a id='L229' name='L229'></a>                        <strong class='reserved'>case</strong> AF_INET6:
+<a id='L230' name='L230'></a>                                dst-&gt;bitlen = 128;
+<a id='L231' name='L231'></a>                                <strong class='reserved'>break</strong>;
+<a id='L232' name='L232'></a>                        <strong class='reserved'>case</strong> <a href='../S/844.html#L54' title='Defined at 54 in mplsadmd/utils.h.'>AF_DECnet</a>:
+<a id='L233' name='L233'></a>                                dst-&gt;bitlen = 16;
+<a id='L234' name='L234'></a>                                <strong class='reserved'>break</strong>;
+<a id='L235' name='L235'></a>                        <strong class='reserved'>default</strong>:
+<a id='L236' name='L236'></a>                        <strong class='reserved'>case</strong> AF_INET:
+<a id='L237' name='L237'></a>                                dst-&gt;bitlen = 32;
+<a id='L238' name='L238'></a>                <em class='brace'>}</em>
+<a id='L239' name='L239'></a>                <strong class='reserved'>if</strong> (slash) <em class='brace'>{</em>
+<a id='L240' name='L240'></a>                        <strong class='reserved'>if</strong> (<a href='../S/849.html#L33' title='Defined at 33 in mplsadmd/utils.c.'>get_integer</a>(&amp;plen, slash+1, 0) || plen &gt; dst-&gt;bitlen) <em class='brace'>{</em>
+<a id='L241' name='L241'></a>                                err = -1;
+<a id='L242' name='L242'></a>                                <strong class='reserved'>goto</strong> done;
+<a id='L243' name='L243'></a>                        <em class='brace'>}</em>
+<a id='L244' name='L244'></a>                        dst-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> |= <a href='../S/844.html#L50' title='Defined at 50 in mplsadmd/utils.h.'>PREFIXLEN_SPECIFIED</a>;
+<a id='L245' name='L245'></a>                        dst-&gt;bitlen = plen;
+<a id='L246' name='L246'></a>                <em class='brace'>}</em>
+<a id='L247' name='L247'></a>        <em class='brace'>}</em>
+<a id='L248' name='L248'></a>done:
+<a id='L249' name='L249'></a>        <strong class='reserved'>if</strong> (slash)
+<a id='L250' name='L250'></a>                *slash = '/';
+<a id='L251' name='L251'></a>        <strong class='reserved'>return</strong> err;
+<a id='L252' name='L252'></a><em class='brace'>}</em>
+<a id='L253' name='L253'></a>
+<a id='L254' name='L254'></a><strong class='reserved'>int</strong> <a href='../R/5818.html' title='Multiple referred from 3 places.'>get_addr</a>(<a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> *dst, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> family)
+<a id='L255' name='L255'></a><em class='brace'>{</em>
+<a id='L256' name='L256'></a>        <strong class='reserved'>if</strong> (family == AF_PACKET) <em class='brace'>{</em>
+<a id='L257' name='L257'></a>                fprintf(stderr, "Error: \"%s\" may be inet address, but it is not allowed in this context.\n", arg);
+<a id='L258' name='L258'></a>                exit(1);
+<a id='L259' name='L259'></a>        <em class='brace'>}</em>
+<a id='L260' name='L260'></a>        <strong class='reserved'>if</strong> (<a href='../S/849.html#L145' title='Defined at 145 in mplsadmd/utils.c.'>get_addr_1</a>(dst, arg, family)) <em class='brace'>{</em>
+<a id='L261' name='L261'></a>                fprintf(stderr, "Error: an inet address is expected rather than \"%s\".\n", arg);
+<a id='L262' name='L262'></a>                exit(1);
+<a id='L263' name='L263'></a>        <em class='brace'>}</em>
+<a id='L264' name='L264'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L265' name='L265'></a><em class='brace'>}</em>
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a><strong class='reserved'>int</strong> <a href='../S/844.html#L79' title='Referred from 79 in mplsadmd/utils.h.'>get_prefix</a>(<a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> *dst, <strong class='reserved'>char</strong> *arg, <strong class='reserved'>int</strong> family)
+<a id='L268' name='L268'></a><em class='brace'>{</em>
+<a id='L269' name='L269'></a>        <strong class='reserved'>if</strong> (family == AF_PACKET) <em class='brace'>{</em>
+<a id='L270' name='L270'></a>                fprintf(stderr, "Error: \"%s\" may be inet prefix, but it is not allowed in this context.\n", arg);
+<a id='L271' name='L271'></a>                exit(1);
+<a id='L272' name='L272'></a>        <em class='brace'>}</em>
+<a id='L273' name='L273'></a>        <strong class='reserved'>if</strong> (<a href='../S/849.html#L203' title='Defined at 203 in mplsadmd/utils.c.'>get_prefix_1</a>(dst, arg, family)) <em class='brace'>{</em>
+<a id='L274' name='L274'></a>                fprintf(stderr, "Error: an inet prefix is expected rather than \"%s\".\n", arg);
+<a id='L275' name='L275'></a>                exit(1);
+<a id='L276' name='L276'></a>        <em class='brace'>}</em>
+<a id='L277' name='L277'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L278' name='L278'></a><em class='brace'>}</em>
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a>__u32 <a href='../S/844.html#L75' title='Referred from 75 in mplsadmd/utils.h.'>get_addr32</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L281' name='L281'></a><em class='brace'>{</em>
+<a id='L282' name='L282'></a>        <a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> addr;
+<a id='L283' name='L283'></a>        <strong class='reserved'>if</strong> (<a href='../S/849.html#L145' title='Defined at 145 in mplsadmd/utils.c.'>get_addr_1</a>(&amp;addr, <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, AF_INET)) <em class='brace'>{</em>
+<a id='L284' name='L284'></a>                fprintf(stderr, "Error: an IP address is expected rather than \"%s\"\n", <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L285' name='L285'></a>                exit(1);
+<a id='L286' name='L286'></a>        <em class='brace'>}</em>
+<a id='L287' name='L287'></a>        <strong class='reserved'>return</strong> addr.<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[0];
+<a id='L288' name='L288'></a><em class='brace'>}</em>
+<a id='L289' name='L289'></a>
+<a id='L290' name='L290'></a><strong class='reserved'>void</strong> <a href='../R/6009.html' title='Multiple referred from 2 places.'>incomplete_command</a>(<strong class='reserved'>void</strong>)
+<a id='L291' name='L291'></a><em class='brace'>{</em>
+<a id='L292' name='L292'></a>        fprintf(stderr, "Command line is not complete. Try option \"help\"\n");
+<a id='L293' name='L293'></a>        exit(-1);
+<a id='L294' name='L294'></a><em class='brace'>}</em>
+<a id='L295' name='L295'></a>
+<a id='L296' name='L296'></a><strong class='reserved'>void</strong> <a href='../S/844.html#L101' title='Referred from 101 in mplsadmd/utils.h.'>missarg</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>)
+<a id='L297' name='L297'></a><em class='brace'>{</em>
+<a id='L298' name='L298'></a>        fprintf(stderr, "Error: argument \"%s\" is required\n", <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>);
+<a id='L299' name='L299'></a>        exit(-1);
+<a id='L300' name='L300'></a><em class='brace'>}</em>
+<a id='L301' name='L301'></a>
+<a id='L302' name='L302'></a><strong class='reserved'>void</strong> <a href='../R/6062.html' title='Multiple referred from 27 places.'>invarg</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg)
+<a id='L303' name='L303'></a><em class='brace'>{</em>
+<a id='L304' name='L304'></a>        fprintf(stderr, "Error: argument \"%s\" is wrong: %s\n", arg, <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L305' name='L305'></a>        exit(-1);
+<a id='L306' name='L306'></a><em class='brace'>}</em>
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a><strong class='reserved'>void</strong> <a href='../S/844.html#L103' title='Referred from 103 in mplsadmd/utils.h.'>duparg</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg)
+<a id='L309' name='L309'></a><em class='brace'>{</em>
+<a id='L310' name='L310'></a>        fprintf(stderr, "Error: duplicate \"%s\": \"%s\" is the second value.\n", <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>, arg);
+<a id='L311' name='L311'></a>        exit(-1);
+<a id='L312' name='L312'></a><em class='brace'>}</em>
+<a id='L313' name='L313'></a>
+<a id='L314' name='L314'></a><strong class='reserved'>void</strong> <a href='../S/844.html#L104' title='Referred from 104 in mplsadmd/utils.h.'>duparg2</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *arg)
+<a id='L315' name='L315'></a><em class='brace'>{</em>
+<a id='L316' name='L316'></a>        fprintf(stderr, "Error: either \"%s\" is duplicate, or \"%s\" is a garbage.\n", <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>, arg);
+<a id='L317' name='L317'></a>        exit(-1);
+<a id='L318' name='L318'></a><em class='brace'>}</em>
+<a id='L319' name='L319'></a>
+<a id='L320' name='L320'></a><strong class='reserved'>int</strong> <a href='../R/6907.html' title='Multiple referred from 50 places.'>matches</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *cmd, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *pattern)
+<a id='L321' name='L321'></a><em class='brace'>{</em>
+<a id='L322' name='L322'></a>        <strong class='reserved'>int</strong> len = strlen(cmd);
+<a id='L323' name='L323'></a>        <strong class='reserved'>if</strong> (len &gt; strlen(pattern))
+<a id='L324' name='L324'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L325' name='L325'></a>        <strong class='reserved'>return</strong> <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(pattern, cmd, len);
+<a id='L326' name='L326'></a><em class='brace'>}</em>
+<a id='L327' name='L327'></a>
+<a id='L328' name='L328'></a><strong class='reserved'>int</strong> <a href='../S/844.html#L106' title='Referred from 106 in mplsadmd/utils.h.'>inet_addr_match</a>(<strong class='reserved'>const</strong> <a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>const</strong> <a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>int</strong> bits)
+<a id='L329' name='L329'></a><em class='brace'>{</em>
+<a id='L330' name='L330'></a>        __u32 *a1 = <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L331' name='L331'></a>        __u32 *a2 = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L332' name='L332'></a>        <strong class='reserved'>int</strong> words = bits &gt;&gt; 0x05;
+<a id='L333' name='L333'></a>
+<a id='L334' name='L334'></a>        bits &amp;= 0x1f;
+<a id='L335' name='L335'></a>
+<a id='L336' name='L336'></a>        <strong class='reserved'>if</strong> (words)
+<a id='L337' name='L337'></a>                <strong class='reserved'>if</strong> (<a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(a1, a2, words &lt;&lt; 2))
+<a id='L338' name='L338'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a>        <strong class='reserved'>if</strong> (bits) <em class='brace'>{</em>
+<a id='L341' name='L341'></a>                __u32 w1, w2;
+<a id='L342' name='L342'></a>                __u32 mask;
+<a id='L343' name='L343'></a>
+<a id='L344' name='L344'></a>                w1 = a1[words];
+<a id='L345' name='L345'></a>                w2 = a2[words];
+<a id='L346' name='L346'></a>
+<a id='L347' name='L347'></a>                mask = htonl((0xffffffff) &lt;&lt; (0x20 - bits));
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a>                <strong class='reserved'>if</strong> ((w1 ^ w2) &amp; mask)
+<a id='L350' name='L350'></a>                        <strong class='reserved'>return</strong> 1;
+<a id='L351' name='L351'></a>        <em class='brace'>}</em>
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L354' name='L354'></a><em class='brace'>}</em>
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a><strong class='reserved'>int</strong> __iproute2_hz_internal;
+<a id='L357' name='L357'></a>
+<a id='L358' name='L358'></a><strong class='reserved'>int</strong> <a href='../R/4229.html' title='Multiple referred from 2 places.'>__get_hz</a>(<strong class='reserved'>void</strong>)
+<a id='L359' name='L359'></a><em class='brace'>{</em>
+<a id='L360' name='L360'></a>        <strong class='reserved'>char</strong> <a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>[1024];
+<a id='L361' name='L361'></a>        <strong class='reserved'>int</strong> hz = 0;
+<a id='L362' name='L362'></a>        FILE *fp;
+<a id='L363' name='L363'></a>
+<a id='L364' name='L364'></a>        <strong class='reserved'>if</strong> (getenv("HZ"))
+<a id='L365' name='L365'></a>                <strong class='reserved'>return</strong> atoi(getenv("HZ")) ? : HZ;
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a>        <strong class='reserved'>if</strong> (getenv("PROC_NET_PSCHED")) <em class='brace'>{</em>
+<a id='L368' name='L368'></a>                <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>sizeof</strong>(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)-1, "%s", getenv("PROC_NET_PSCHED"));
+<a id='L369' name='L369'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (getenv("PROC_ROOT")) <em class='brace'>{</em>
+<a id='L370' name='L370'></a>                <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>sizeof</strong>(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)-1, "%s/net/psched", getenv("PROC_ROOT"));
+<a id='L371' name='L371'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L372' name='L372'></a>                strcpy(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "/proc/net/psched");
+<a id='L373' name='L373'></a>        <em class='brace'>}</em>
+<a id='L374' name='L374'></a>        fp = fopen(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "r");
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a>        <strong class='reserved'>if</strong> (fp) <em class='brace'>{</em>
+<a id='L377' name='L377'></a>                <strong class='reserved'>unsigned</strong> nom, denom;
+<a id='L378' name='L378'></a>                <strong class='reserved'>if</strong> (fscanf(fp, "%*08x%*08x%08x%08x", &amp;nom, &amp;denom) == 2)
+<a id='L379' name='L379'></a>                        <strong class='reserved'>if</strong> (nom == 1000000)
+<a id='L380' name='L380'></a>                                hz = denom;
+<a id='L381' name='L381'></a>                fclose(fp);
+<a id='L382' name='L382'></a>        <em class='brace'>}</em>
+<a id='L383' name='L383'></a>        <strong class='reserved'>if</strong> (hz)
+<a id='L384' name='L384'></a>                <strong class='reserved'>return</strong> hz;
+<a id='L385' name='L385'></a>        <strong class='reserved'>return</strong> HZ;
+<a id='L386' name='L386'></a><em class='brace'>}</em>
+<a id='L387' name='L387'></a>
+<a id='L388' name='L388'></a><strong class='reserved'>int</strong> __iproute2_user_hz_internal;
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a><strong class='reserved'>int</strong> <a href='../R/4230.html' title='Multiple referred from 2 places.'>__get_user_hz</a>(<strong class='reserved'>void</strong>)
+<a id='L391' name='L391'></a><em class='brace'>{</em>
+<a id='L392' name='L392'></a>        <strong class='reserved'>return</strong> sysconf(_SC_CLK_TCK);
+<a id='L393' name='L393'></a><em class='brace'>}</em>
+<a id='L394' name='L394'></a><em class='comment'>/*</em>
+<a id='L395' name='L395'></a><em class='comment'>const char *rt_addr_n2a(int af, int len, const void *addr, char *buf, int buflen)</em>
+<a id='L396' name='L396'></a><em class='comment'>{</em>
+<a id='L397' name='L397'></a><em class='comment'>        switch (af) {</em>
+<a id='L398' name='L398'></a><em class='comment'>        case AF_INET:</em>
+<a id='L399' name='L399'></a><em class='comment'>        case AF_INET6:</em>
+<a id='L400' name='L400'></a><em class='comment'>                return inet_ntop(af, addr, buf, buflen);</em>
+<a id='L401' name='L401'></a><em class='comment'>        case AF_IPX:</em>
+<a id='L402' name='L402'></a><em class='comment'>                return ipx_ntop(af, addr, buf, buflen);</em>
+<a id='L403' name='L403'></a><em class='comment'>        case AF_DECnet:</em>
+<a id='L404' name='L404'></a><em class='comment'>        {</em>
+<a id='L405' name='L405'></a><em class='comment'>                struct dn_naddr dna = { 2, { 0, 0, }};</em>
+<a id='L406' name='L406'></a><em class='comment'>                memcpy(dna.a_addr, addr, 2);</em>
+<a id='L407' name='L407'></a><em class='comment'>                return dnet_ntop(af, &amp;dna, buf, buflen);</em>
+<a id='L408' name='L408'></a><em class='comment'>        }</em>
+<a id='L409' name='L409'></a><em class='comment'>        default:</em>
+<a id='L410' name='L410'></a><em class='comment'>                return "???";</em>
+<a id='L411' name='L411'></a><em class='comment'>        }</em>
+<a id='L412' name='L412'></a><em class='comment'>}</em>
+<a id='L413' name='L413'></a><em class='comment'>*/</em>
+<a id='L414' name='L414'></a><em class='sharp'>#ifdef</em> RESOLVE_HOSTNAMES
+<a id='L415' name='L415'></a><strong class='reserved'>struct</strong> <a href='../R/7290.html' title='Multiple referred from 3 places.'>namerec</a>
+<a id='L416' name='L416'></a><em class='brace'>{</em>
+<a id='L417' name='L417'></a>        <strong class='reserved'>struct</strong> <a href='../S/849.html#L415' title='Defined at 415 in mplsadmd/utils.c.'>namerec</a> *next;
+<a id='L418' name='L418'></a>        <a href='../S/844.html#L48' title='Defined at 48 in mplsadmd/utils.h.'>inet_prefix</a> addr;
+<a id='L419' name='L419'></a>        <strong class='reserved'>char</strong>        *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L420' name='L420'></a><em class='brace'>}</em>;
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/849.html#L415' title='Defined at 415 in mplsadmd/utils.c.'>namerec</a> *nht[256];
+<a id='L423' name='L423'></a>
+<a id='L424' name='L424'></a><strong class='reserved'>char</strong> *resolve_address(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *addr, <strong class='reserved'>int</strong> len, <strong class='reserved'>int</strong> af)
+<a id='L425' name='L425'></a><em class='brace'>{</em>
+<a id='L426' name='L426'></a>        <strong class='reserved'>struct</strong> <a href='../S/849.html#L415' title='Defined at 415 in mplsadmd/utils.c.'>namerec</a> *n;
+<a id='L427' name='L427'></a>        <strong class='reserved'>struct</strong> hostent *h_ent;
+<a id='L428' name='L428'></a>        <strong class='reserved'>unsigned</strong> <a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>;
+<a id='L429' name='L429'></a>        <strong class='reserved'>static</strong> <strong class='reserved'>int</strong> notfirst;
+<a id='L430' name='L430'></a>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a>        <strong class='reserved'>if</strong> (af == AF_INET6 &amp;&amp; ((__u32*)addr)[0] == 0 &amp;&amp;
+<a id='L433' name='L433'></a>            ((__u32*)addr)[1] == 0 &amp;&amp; ((__u32*)addr)[2] == htonl(0xffff)) <em class='brace'>{</em>
+<a id='L434' name='L434'></a>                af = AF_INET;
+<a id='L435' name='L435'></a>                addr += 12;
+<a id='L436' name='L436'></a>                len = 4;
+<a id='L437' name='L437'></a>        <em class='brace'>}</em>
+<a id='L438' name='L438'></a>
+<a id='L439' name='L439'></a>        <a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a> = addr[len-1] ^ addr[len-2] ^ addr[len-3] ^ addr[len-4];
+<a id='L440' name='L440'></a>
+<a id='L441' name='L441'></a>        <strong class='reserved'>for</strong> (n = nht[<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>]; n; n = n-&gt;next) <em class='brace'>{</em>
+<a id='L442' name='L442'></a>                <strong class='reserved'>if</strong> (n-&gt;addr.family == af &amp;&amp;
+<a id='L443' name='L443'></a>                    n-&gt;addr.bytelen == len &amp;&amp;
+<a id='L444' name='L444'></a>                    <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(n-&gt;addr.<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, addr, len) == 0)
+<a id='L445' name='L445'></a>                        <strong class='reserved'>return</strong> n-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L446' name='L446'></a>        <em class='brace'>}</em>
+<a id='L447' name='L447'></a>        <strong class='reserved'>if</strong> ((n = malloc(<strong class='reserved'>sizeof</strong>(*n))) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L448' name='L448'></a>                <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L449' name='L449'></a>        n-&gt;addr.family = af;
+<a id='L450' name='L450'></a>        n-&gt;addr.bytelen = len;
+<a id='L451' name='L451'></a>        n-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L452' name='L452'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(n-&gt;addr.<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, addr, len);
+<a id='L453' name='L453'></a>        n-&gt;next = nht[<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>];
+<a id='L454' name='L454'></a>        nht[<a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a>] = n;
+<a id='L455' name='L455'></a>        <strong class='reserved'>if</strong> (++notfirst == 1)
+<a id='L456' name='L456'></a>                sethostent(1);
+<a id='L457' name='L457'></a>        fflush(stdout);
+<a id='L458' name='L458'></a>
+<a id='L459' name='L459'></a>        <strong class='reserved'>if</strong> ((h_ent = gethostbyaddr(addr, len, af)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L460' name='L460'></a>                n-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = strdup(h_ent-&gt;h_name);
+<a id='L461' name='L461'></a>
+<a id='L462' name='L462'></a>        <em class='comment'>/* Even if we fail, "negative" entry is remembered. */</em>
+<a id='L463' name='L463'></a>        <strong class='reserved'>return</strong> n-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L464' name='L464'></a><em class='brace'>}</em>
+<a id='L465' name='L465'></a><em class='sharp'>#endif</em>
+<a id='L466' name='L466'></a>
+<a id='L467' name='L467'></a><em class='comment'>/*</em>
+<a id='L468' name='L468'></a><em class='comment'>const char *format_host(int af, int len, const void *addr,</em>
+<a id='L469' name='L469'></a><em class='comment'>                        char *buf, int buflen)</em>
+<a id='L470' name='L470'></a><em class='comment'>{</em>
+<a id='L471' name='L471'></a><em class='comment'>#ifdef RESOLVE_HOSTNAMES</em>
+<a id='L472' name='L472'></a><em class='comment'>        if (resolve_hosts) {</em>
+<a id='L473' name='L473'></a><em class='comment'>                char *n;</em>
+<a id='L474' name='L474'></a><em class='comment'>                if (len &lt;= 0) {</em>
+<a id='L475' name='L475'></a><em class='comment'>                        switch (af) {</em>
+<a id='L476' name='L476'></a><em class='comment'>                        case AF_INET:</em>
+<a id='L477' name='L477'></a><em class='comment'>                                len = 4;</em>
+<a id='L478' name='L478'></a><em class='comment'>                                break;</em>
+<a id='L479' name='L479'></a><em class='comment'>                        case AF_INET6:</em>
+<a id='L480' name='L480'></a><em class='comment'>                                len = 16;</em>
+<a id='L481' name='L481'></a><em class='comment'>                                break;</em>
+<a id='L482' name='L482'></a><em class='comment'>                        case AF_IPX:</em>
+<a id='L483' name='L483'></a><em class='comment'>                                len = 10;</em>
+<a id='L484' name='L484'></a><em class='comment'>                                break;</em>
+<a id='L485' name='L485'></a><em class='comment'>#ifdef AF_DECnet */</em>
+<a id='L486' name='L486'></a>                        <em class='comment'>/* I see no reasons why gethostbyname</em>
+<a id='L487' name='L487'></a><em class='comment'>                           may not work for DECnet */</em><em class='comment'>/*</em>
+<a id='L488' name='L488'></a><em class='comment'>                        case AF_DECnet:</em>
+<a id='L489' name='L489'></a><em class='comment'>                                len = 2;</em>
+<a id='L490' name='L490'></a><em class='comment'>                                break;</em>
+<a id='L491' name='L491'></a><em class='comment'>#endif</em>
+<a id='L492' name='L492'></a><em class='comment'>                        default: ;</em>
+<a id='L493' name='L493'></a><em class='comment'>                        }</em>
+<a id='L494' name='L494'></a><em class='comment'>                }</em>
+<a id='L495' name='L495'></a><em class='comment'>                if (len &gt; 0 &amp;&amp;</em>
+<a id='L496' name='L496'></a><em class='comment'>                    (n = resolve_address(addr, len, af)) != NULL)</em>
+<a id='L497' name='L497'></a><em class='comment'>                        return n;</em>
+<a id='L498' name='L498'></a><em class='comment'>        }</em>
+<a id='L499' name='L499'></a><em class='comment'>#endif</em>
+<a id='L500' name='L500'></a><em class='comment'>        return rt_addr_n2a(af, len, addr, buf, buflen);</em>
+<a id='L501' name='L501'></a><em class='comment'>}</em>
+<a id='L502' name='L502'></a><em class='comment'>*/</em>
+<a id='L503' name='L503'></a>
+<a id='L504' name='L504'></a>__u8* <a href='../S/844.html#L93' title='Referred from 93 in mplsadmd/utils.h.'>hexstring_n2a</a>(<strong class='reserved'>const</strong> __u8 *str, <strong class='reserved'>int</strong> len, __u8 *buf, <strong class='reserved'>int</strong> blen)
+<a id='L505' name='L505'></a><em class='brace'>{</em>
+<a id='L506' name='L506'></a>        __u8 *ptr = buf;
+<a id='L507' name='L507'></a>        <strong class='reserved'>int</strong> i;
+<a id='L508' name='L508'></a>
+<a id='L509' name='L509'></a>        <strong class='reserved'>for</strong> (i=0; i&lt;len; i++) <em class='brace'>{</em>
+<a id='L510' name='L510'></a>                <strong class='reserved'>if</strong> (blen &lt; 3)
+<a id='L511' name='L511'></a>                        <strong class='reserved'>break</strong>;
+<a id='L512' name='L512'></a>                sprintf(ptr, "%02x", str[i]);
+<a id='L513' name='L513'></a>                ptr += 2;
+<a id='L514' name='L514'></a>                blen -= 2;
+<a id='L515' name='L515'></a>                <strong class='reserved'>if</strong> (i != len-1 &amp;&amp; blen &gt; 1) <em class='brace'>{</em>
+<a id='L516' name='L516'></a>                        *ptr++ = ':';
+<a id='L517' name='L517'></a>                        blen--;
+<a id='L518' name='L518'></a>                <em class='brace'>}</em>
+<a id='L519' name='L519'></a>        <em class='brace'>}</em>
+<a id='L520' name='L520'></a>        <strong class='reserved'>return</strong> buf;
+<a id='L521' name='L521'></a><em class='brace'>}</em>
+<a id='L522' name='L522'></a>
+<a id='L523' name='L523'></a>__u8* <a href='../S/844.html#L94' title='Referred from 94 in mplsadmd/utils.h.'>hexstring_a2n</a>(<strong class='reserved'>const</strong> __u8 *str, __u8 *buf, <strong class='reserved'>int</strong> blen)
+<a id='L524' name='L524'></a><em class='brace'>{</em>
+<a id='L525' name='L525'></a>        <strong class='reserved'>int</strong> cnt = 0;
+<a id='L526' name='L526'></a>
+<a id='L527' name='L527'></a>        <strong class='reserved'>for</strong> (;;) <em class='brace'>{</em>
+<a id='L528' name='L528'></a>                <strong class='reserved'>unsigned</strong> acc;
+<a id='L529' name='L529'></a>                <strong class='reserved'>char</strong> ch;
+<a id='L530' name='L530'></a>
+<a id='L531' name='L531'></a>                acc = 0;
+<a id='L532' name='L532'></a>
+<a id='L533' name='L533'></a>                <strong class='reserved'>while</strong> ((ch = *str) != ':' &amp;&amp; ch != 0) <em class='brace'>{</em>
+<a id='L534' name='L534'></a>                        <strong class='reserved'>if</strong> (ch &gt;= '0' &amp;&amp; ch &lt;= '9')
+<a id='L535' name='L535'></a>                                ch -= '0';
+<a id='L536' name='L536'></a>                        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ch &gt;= 'a' &amp;&amp; ch &lt;= 'f')
+<a id='L537' name='L537'></a>                                ch -= 'a'-10;
+<a id='L538' name='L538'></a>                        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ch &gt;= 'A' &amp;&amp; ch &lt;= 'F')
+<a id='L539' name='L539'></a>                                ch -= 'A'-10;
+<a id='L540' name='L540'></a>                        <strong class='reserved'>else</strong>
+<a id='L541' name='L541'></a>                                <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L542' name='L542'></a>                        acc = (acc&lt;&lt;4) + ch;
+<a id='L543' name='L543'></a>                        str++;
+<a id='L544' name='L544'></a>                <em class='brace'>}</em>
+<a id='L545' name='L545'></a>
+<a id='L546' name='L546'></a>                <strong class='reserved'>if</strong> (acc &gt; 255)
+<a id='L547' name='L547'></a>                        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L548' name='L548'></a>                <strong class='reserved'>if</strong> (cnt &lt; blen) <em class='brace'>{</em>
+<a id='L549' name='L549'></a>                        buf[cnt] = acc;
+<a id='L550' name='L550'></a>                        cnt++;
+<a id='L551' name='L551'></a>                <em class='brace'>}</em>
+<a id='L552' name='L552'></a>                <strong class='reserved'>if</strong> (ch == 0)
+<a id='L553' name='L553'></a>                        <strong class='reserved'>break</strong>;
+<a id='L554' name='L554'></a>                ++str;
+<a id='L555' name='L555'></a>        <em class='brace'>}</em>
+<a id='L556' name='L556'></a>        <strong class='reserved'>if</strong> (cnt &lt; blen)
+<a id='L557' name='L557'></a>                memset(buf+cnt, 0, blen-cnt);
+<a id='L558' name='L558'></a>        <strong class='reserved'>return</strong> buf;
+<a id='L559' name='L559'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L33'>[^]</a><a href='#L523'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

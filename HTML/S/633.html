@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_btoa.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_btoa.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L51'>[^]</a><a href='#L116'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L51' title='Defined at 51.'>attr_parse</a></li>
+<li><a href='#L116' title='Defined at 116.'>main</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP dump to ascii converter</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1999 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='191.html'>zebra.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='616.html'>bgpd/bgp_dump.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='642.html'>bgpd/bgp_attr.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='656.html'>bgpd/bgp_aspath.h</a>"
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><strong class='reserved'>enum</strong> MRT_MSG_TYPES <em class='brace'>{</em>
+<a id='L35' name='L35'></a>   MSG_NULL,
+<a id='L36' name='L36'></a>   MSG_START,                   <em class='comment'>/* sender is starting up */</em>
+<a id='L37' name='L37'></a>   MSG_DIE,                     <em class='comment'>/* receiver should shut down */</em>
+<a id='L38' name='L38'></a>   MSG_I_AM_DEAD,               <em class='comment'>/* sender is shutting down */</em>
+<a id='L39' name='L39'></a>   MSG_PEER_DOWN,               <em class='comment'>/* sender's peer is down */</em>
+<a id='L40' name='L40'></a>   MSG_PROTOCOL_BGP,            <em class='comment'>/* msg is a BGP packet */</em>
+<a id='L41' name='L41'></a>   MSG_PROTOCOL_RIP,            <em class='comment'>/* msg is a RIP packet */</em>
+<a id='L42' name='L42'></a>   MSG_PROTOCOL_IDRP,           <em class='comment'>/* msg is an IDRP packet */</em>
+<a id='L43' name='L43'></a>   MSG_PROTOCOL_RIPNG,          <em class='comment'>/* msg is a RIPNG packet */</em>
+<a id='L44' name='L44'></a>   MSG_PROTOCOL_BGP4PLUS,       <em class='comment'>/* msg is a BGP4+ packet */</em>
+<a id='L45' name='L45'></a>   MSG_PROTOCOL_BGP4PLUS_01,    <em class='comment'>/* msg is a BGP4+ (draft 01) packet */</em>
+<a id='L46' name='L46'></a>   MSG_PROTOCOL_OSPF,           <em class='comment'>/* msg is an OSPF packet */</em>
+<a id='L47' name='L47'></a>   <a href='../R/1926.html' title='Multiple referred from 3 places.'>MSG_TABLE_DUMP</a>               <em class='comment'>/* routing table dump */</em>
+<a id='L48' name='L48'></a><em class='brace'>}</em>;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>int</strong>
+<a id='L51' name='L51'></a><a href='../S/633.html#L262' title='Referred from 262 in bgpd/bgp_btoa.c.'>attr_parse</a> (<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> len)
+<a id='L52' name='L52'></a><em class='brace'>{</em>
+<a id='L53' name='L53'></a>  u_int flag;
+<a id='L54' name='L54'></a>  u_int type;
+<a id='L55' name='L55'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> length;
+<a id='L56' name='L56'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> lim;
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>  lim = s-&gt;getp + len;
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a>  printf ("attr_parse s-&gt;getp %d, len %d, lim %d\n", s-&gt;getp, len, lim);
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a>  <strong class='reserved'>while</strong> (s-&gt;getp &lt; lim)
+<a id='L63' name='L63'></a>    <em class='brace'>{</em>
+<a id='L64' name='L64'></a>      flag = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L65' name='L65'></a>      type = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a>      <strong class='reserved'>if</strong> (flag &amp; ATTR_FLAG_EXTLEN)
+<a id='L68' name='L68'></a>        length = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L69' name='L69'></a>      <strong class='reserved'>else</strong>
+<a id='L70' name='L70'></a>        length = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>      printf ("FLAG: %d\n", flag);
+<a id='L73' name='L73'></a>      printf ("TYPE: %d\n", type);
+<a id='L74' name='L74'></a>      printf ("Len: %d\n", length);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>      <strong class='reserved'>switch</strong> (type)
+<a id='L77' name='L77'></a>        <em class='brace'>{</em>
+<a id='L78' name='L78'></a>        <strong class='reserved'>case</strong> <a href='../S/608.html#L620' title='Defined at 620 in bgpd/bgpd.h.'>BGP_ATTR_ORIGIN</a>:
+<a id='L79' name='L79'></a>          <em class='brace'>{</em>
+<a id='L80' name='L80'></a>            u_char origin;
+<a id='L81' name='L81'></a>            origin = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L82' name='L82'></a>            printf ("ORIGIN: %d\n", origin);
+<a id='L83' name='L83'></a>          <em class='brace'>}</em>
+<a id='L84' name='L84'></a>          <strong class='reserved'>break</strong>;
+<a id='L85' name='L85'></a>        <strong class='reserved'>case</strong> <a href='../S/608.html#L621' title='Defined at 621 in bgpd/bgpd.h.'>BGP_ATTR_AS_PATH</a>:
+<a id='L86' name='L86'></a>          <em class='brace'>{</em>
+<a id='L87' name='L87'></a>            <strong class='reserved'>struct</strong> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a> <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>;
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>            <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>.<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + s-&gt;getp);
+<a id='L90' name='L90'></a>            <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>.length = length;
+<a id='L91' name='L91'></a>            <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>.str = <a href='../S/617.html#L498' title='Defined at 498 in bgpd/bgp_aspath.c.'>aspath_make_str_count</a> (&amp;<a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>);
+<a id='L92' name='L92'></a>            printf ("ASPATH: %s\n", <a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>.str);
+<a id='L93' name='L93'></a>            free (<a href='../S/656.html#L50' title='Defined at 50 in bgpd/bgp_aspath.h.'>aspath</a>.str);
+<a id='L94' name='L94'></a>            
+<a id='L95' name='L95'></a>            stream_forward (s, length);
+<a id='L96' name='L96'></a>          <em class='brace'>}</em>
+<a id='L97' name='L97'></a>          <strong class='reserved'>break</strong>;
+<a id='L98' name='L98'></a>        <strong class='reserved'>case</strong> <a href='../S/608.html#L622' title='Defined at 622 in bgpd/bgpd.h.'>BGP_ATTR_NEXT_HOP</a>: 
+<a id='L99' name='L99'></a>          <em class='brace'>{</em>
+<a id='L100' name='L100'></a>            <strong class='reserved'>struct</strong> in_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L101' name='L101'></a>            <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr = <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (s);
+<a id='L102' name='L102'></a>            printf ("NEXTHOP: %s\n", inet_ntoa (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>));
+<a id='L103' name='L103'></a>            <em class='comment'>/* stream_forward (s, length); */</em>
+<a id='L104' name='L104'></a>          <em class='brace'>}</em>
+<a id='L105' name='L105'></a>          <strong class='reserved'>break</strong>;
+<a id='L106' name='L106'></a>        <strong class='reserved'>default</strong>:
+<a id='L107' name='L107'></a>          stream_forward (s, length);
+<a id='L108' name='L108'></a>          <strong class='reserved'>break</strong>;
+<a id='L109' name='L109'></a>        <em class='brace'>}</em>
+<a id='L110' name='L110'></a>    <em class='brace'>}</em>
+<a id='L111' name='L111'></a>
+<a id='L112' name='L112'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L113' name='L113'></a><em class='brace'>}</em>
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a><strong class='reserved'>int</strong>
+<a id='L116' name='L116'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> **argv)
+<a id='L117' name='L117'></a><em class='brace'>{</em>
+<a id='L118' name='L118'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L119' name='L119'></a>  FILE *fp;
+<a id='L120' name='L120'></a>  <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L121' name='L121'></a>  time_t now;
+<a id='L122' name='L122'></a>  <strong class='reserved'>int</strong> type;
+<a id='L123' name='L123'></a>  <strong class='reserved'>int</strong> subtype;
+<a id='L124' name='L124'></a>  <strong class='reserved'>int</strong> len;
+<a id='L125' name='L125'></a>  <strong class='reserved'>int</strong> source_as;
+<a id='L126' name='L126'></a>  <strong class='reserved'>int</strong> dest_as;
+<a id='L127' name='L127'></a>  <strong class='reserved'>int</strong> ifindex;
+<a id='L128' name='L128'></a>  <strong class='reserved'>int</strong> family;
+<a id='L129' name='L129'></a>  <strong class='reserved'>struct</strong> in_addr sip;
+<a id='L130' name='L130'></a>  <strong class='reserved'>struct</strong> in_addr dip;
+<a id='L131' name='L131'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> viewno, seq_num;
+<a id='L132' name='L132'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a>  s = <a href='../S/296.html#L90' title='Defined at 90 in lib/stream.c.'>stream_new</a> (10000);
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  <strong class='reserved'>if</strong> (argc != 2)
+<a id='L137' name='L137'></a>    <em class='brace'>{</em>
+<a id='L138' name='L138'></a>      fprintf (stderr, "Usage: %s FILENAME\n", argv[0]);
+<a id='L139' name='L139'></a>      exit (1);
+<a id='L140' name='L140'></a>    <em class='brace'>}</em>
+<a id='L141' name='L141'></a>  fp = fopen (argv[1], "r");
+<a id='L142' name='L142'></a>  <strong class='reserved'>if</strong> (!fp)
+<a id='L143' name='L143'></a>    <em class='brace'>{</em>
+<a id='L144' name='L144'></a>      perror ("fopen");
+<a id='L145' name='L145'></a>      exit (1);
+<a id='L146' name='L146'></a>    <em class='brace'>}</em>
+<a id='L147' name='L147'></a>  
+<a id='L148' name='L148'></a>  <strong class='reserved'>while</strong> (1)
+<a id='L149' name='L149'></a>    <em class='brace'>{</em>
+<a id='L150' name='L150'></a>      <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (s);
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a>      ret = fread (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, 12, 1, fp);
+<a id='L153' name='L153'></a>      <strong class='reserved'>if</strong> (feof (fp))
+<a id='L154' name='L154'></a>        <em class='brace'>{</em>
+<a id='L155' name='L155'></a>          printf ("END OF FILE\n");
+<a id='L156' name='L156'></a>          <strong class='reserved'>break</strong>;
+<a id='L157' name='L157'></a>        <em class='brace'>}</em>
+<a id='L158' name='L158'></a>      <strong class='reserved'>if</strong> (ferror (fp))
+<a id='L159' name='L159'></a>        <em class='brace'>{</em>
+<a id='L160' name='L160'></a>          printf ("ERROR OF FREAD\n");
+<a id='L161' name='L161'></a>          <strong class='reserved'>break</strong>;
+<a id='L162' name='L162'></a>        <em class='brace'>}</em>
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a>      <em class='comment'>/* Extract header. */</em>
+<a id='L165' name='L165'></a>      now = <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a> (s);
+<a id='L166' name='L166'></a>      type = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L167' name='L167'></a>      subtype = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L168' name='L168'></a>      len = <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a> (s);
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>      printf ("TIME: %s", ctime (&amp;now));
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>      <em class='comment'>/* printf ("TYPE: %d/%d\n", type, subtype); */</em>
+<a id='L173' name='L173'></a>
+<a id='L174' name='L174'></a>      <strong class='reserved'>if</strong> (type == <a href='../S/616.html#L26' title='Defined at 26 in bgpd/bgp_dump.h.'>MSG_PROTOCOL_BGP4MP</a>)
+<a id='L175' name='L175'></a>        printf ("TYPE: BGP4MP");
+<a id='L176' name='L176'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (type == <a href='../D/2299.html' title='Multiple defined in 2 places.'>MSG_TABLE_DUMP</a>)
+<a id='L177' name='L177'></a>        printf ("TYPE: MSG_TABLE_DUMP");
+<a id='L178' name='L178'></a>      <strong class='reserved'>else</strong>
+<a id='L179' name='L179'></a>        printf ("TYPE: Unknown %d", type);
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a>      <strong class='reserved'>if</strong> (type == <a href='../D/2299.html' title='Multiple defined in 2 places.'>MSG_TABLE_DUMP</a>)
+<a id='L182' name='L182'></a>        <strong class='reserved'>switch</strong> (subtype)
+<a id='L183' name='L183'></a>          <em class='brace'>{</em>
+<a id='L184' name='L184'></a>          <strong class='reserved'>case</strong> <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>:
+<a id='L185' name='L185'></a>            printf ("/AFI_IP\n");
+<a id='L186' name='L186'></a>            <strong class='reserved'>break</strong>;
+<a id='L187' name='L187'></a>          <strong class='reserved'>case</strong> <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>:
+<a id='L188' name='L188'></a>            printf ("/AFI_IP6\n");
+<a id='L189' name='L189'></a>            <strong class='reserved'>break</strong>;
+<a id='L190' name='L190'></a>          <strong class='reserved'>default</strong>:
+<a id='L191' name='L191'></a>            printf ("/UNKNOWN %d", subtype);
+<a id='L192' name='L192'></a>            <strong class='reserved'>break</strong>;
+<a id='L193' name='L193'></a>          <em class='brace'>}</em>
+<a id='L194' name='L194'></a>      <strong class='reserved'>else</strong>
+<a id='L195' name='L195'></a>        <em class='brace'>{</em>
+<a id='L196' name='L196'></a>          <strong class='reserved'>switch</strong> (subtype)
+<a id='L197' name='L197'></a>            <em class='brace'>{</em>
+<a id='L198' name='L198'></a>            <strong class='reserved'>case</strong> <a href='../S/616.html#L28' title='Defined at 28 in bgpd/bgp_dump.h.'>BGP4MP_STATE_CHANGE</a>:
+<a id='L199' name='L199'></a>              printf ("/CHANGE\n");
+<a id='L200' name='L200'></a>              <strong class='reserved'>break</strong>;
+<a id='L201' name='L201'></a>            <strong class='reserved'>case</strong> <a href='../S/616.html#L29' title='Defined at 29 in bgpd/bgp_dump.h.'>BGP4MP_MESSAGE</a>:
+<a id='L202' name='L202'></a>              printf ("/MESSAGE\n");
+<a id='L203' name='L203'></a>              <strong class='reserved'>break</strong>;
+<a id='L204' name='L204'></a>            <strong class='reserved'>case</strong> <a href='../S/616.html#L30' title='Defined at 30 in bgpd/bgp_dump.h.'>BGP4MP_ENTRY</a>:
+<a id='L205' name='L205'></a>              printf ("/ENTRY\n");
+<a id='L206' name='L206'></a>              <strong class='reserved'>break</strong>;
+<a id='L207' name='L207'></a>            <strong class='reserved'>case</strong> <a href='../S/616.html#L31' title='Defined at 31 in bgpd/bgp_dump.h.'>BGP4MP_SNAPSHOT</a>:
+<a id='L208' name='L208'></a>              printf ("/SNAPSHOT\n");
+<a id='L209' name='L209'></a>              <strong class='reserved'>break</strong>;
+<a id='L210' name='L210'></a>            <strong class='reserved'>default</strong>:
+<a id='L211' name='L211'></a>              printf ("/UNKNOWN %d", subtype);
+<a id='L212' name='L212'></a>              <strong class='reserved'>break</strong>;
+<a id='L213' name='L213'></a>            <em class='brace'>}</em>
+<a id='L214' name='L214'></a>        <em class='brace'>}</em>
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a>      printf ("len: %d\n", len);
+<a id='L217' name='L217'></a>
+<a id='L218' name='L218'></a>      ret = fread (s-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + 12, len, 1, fp);
+<a id='L219' name='L219'></a>      <strong class='reserved'>if</strong> (feof (fp))
+<a id='L220' name='L220'></a>        <em class='brace'>{</em>
+<a id='L221' name='L221'></a>          printf ("ENDOF FILE 2\n");
+<a id='L222' name='L222'></a>          <strong class='reserved'>break</strong>;
+<a id='L223' name='L223'></a>        <em class='brace'>}</em>
+<a id='L224' name='L224'></a>      <strong class='reserved'>if</strong> (ferror (fp))
+<a id='L225' name='L225'></a>        <em class='brace'>{</em>
+<a id='L226' name='L226'></a>          printf ("ERROR OF FREAD 2\n");
+<a id='L227' name='L227'></a>          <strong class='reserved'>break</strong>;
+<a id='L228' name='L228'></a>        <em class='brace'>}</em>
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a>      <em class='comment'>/* printf ("now read %d\n", len); */</em>
+<a id='L231' name='L231'></a>
+<a id='L232' name='L232'></a>      <strong class='reserved'>if</strong> (type == <a href='../D/2299.html' title='Multiple defined in 2 places.'>MSG_TABLE_DUMP</a>)
+<a id='L233' name='L233'></a>        <em class='brace'>{</em>
+<a id='L234' name='L234'></a>          u_char status;
+<a id='L235' name='L235'></a>          time_t originated;
+<a id='L236' name='L236'></a>          <strong class='reserved'>struct</strong> in_addr <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L237' name='L237'></a>          <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> attrlen;
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a>          viewno = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L240' name='L240'></a>          seq_num = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L241' name='L241'></a>          printf ("VIEW: %d\n", viewno);
+<a id='L242' name='L242'></a>          printf ("SEQUENCE: %d\n", seq_num);
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>          <em class='comment'>/* start */</em>
+<a id='L245' name='L245'></a>          <strong class='reserved'>while</strong> (s-&gt;getp &lt; len - 16)
+<a id='L246' name='L246'></a>            <em class='brace'>{</em>
+<a id='L247' name='L247'></a>              p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.s_addr = <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (s);
+<a id='L248' name='L248'></a>              p.prefixlen = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L249' name='L249'></a>              printf ("PREFIX: %s/%d\n", inet_ntoa (p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p.prefixlen);
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>              status = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L252' name='L252'></a>              originated = <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a> (s);
+<a id='L253' name='L253'></a>              <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>.s_addr = <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (s);
+<a id='L254' name='L254'></a>              source_as = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a>(s);
+<a id='L255' name='L255'></a>
+<a id='L256' name='L256'></a>              printf ("FROM: %s AS%d\n", inet_ntoa (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>), source_as);
+<a id='L257' name='L257'></a>              printf ("ORIGINATED: %s", ctime (&amp;originated));
+<a id='L258' name='L258'></a>
+<a id='L259' name='L259'></a>              attrlen = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L260' name='L260'></a>              printf ("ATTRLEN: %d\n", attrlen);
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>              <a href='../S/633.html#L51' title='Defined at 51 in bgpd/bgp_btoa.c.'>attr_parse</a> (s, attrlen);
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a>              printf ("STATUS: 0x%x\n", status);
+<a id='L265' name='L265'></a>            <em class='brace'>}</em>
+<a id='L266' name='L266'></a>        <em class='brace'>}</em>
+<a id='L267' name='L267'></a>      <strong class='reserved'>else</strong>
+<a id='L268' name='L268'></a>        <em class='brace'>{</em>
+<a id='L269' name='L269'></a>          source_as = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L270' name='L270'></a>          dest_as = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L271' name='L271'></a>          printf ("source_as: %d\n", source_as);
+<a id='L272' name='L272'></a>          printf ("dest_as: %d\n", dest_as);
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a>          ifindex = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L275' name='L275'></a>          family = <a href='../S/296.html#L325' title='Defined at 325 in lib/stream.c.'>stream_getw</a> (s);
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a>          printf ("ifindex: %d\n", ifindex);
+<a id='L278' name='L278'></a>          printf ("family: %d\n", family);
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a>          sip.s_addr = <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (s);
+<a id='L281' name='L281'></a>          dip.s_addr = <a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a> (s);
+<a id='L282' name='L282'></a>          
+<a id='L283' name='L283'></a>          printf ("saddr: %s\n", inet_ntoa (sip));
+<a id='L284' name='L284'></a>          printf ("daddr: %s\n", inet_ntoa (dip));
+<a id='L285' name='L285'></a>
+<a id='L286' name='L286'></a>          printf ("\n");
+<a id='L287' name='L287'></a>        <em class='brace'>}</em>
+<a id='L288' name='L288'></a>    <em class='brace'>}</em>
+<a id='L289' name='L289'></a>  fclose (fp);
+<a id='L290' name='L290'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L291' name='L291'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L51'>[^]</a><a href='#L116'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

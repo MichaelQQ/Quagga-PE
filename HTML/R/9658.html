@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>rte</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/596.html#L362'>rte</a>               362 ripd/ripd.c    rip_rte_process (struct rte *rte, struct sockaddr_in *from,</span>
+<span class='curline'><a href='../S/596.html#L379'>rte</a>               379 ripd/ripd.c      p.prefix = rte-&gt;prefix;</span>
+<span class='curline'><a href='../S/596.html#L380'>rte</a>               380 ripd/ripd.c      p.prefixlen = ip_masklen (rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L401'>rte</a>               401 ripd/ripd.c          newinfo.nexthop = rte-&gt;nexthop;</span>
+<span class='curline'><a href='../S/596.html#L404'>rte</a>               404 ripd/ripd.c          newinfo.metric = rte-&gt;metric;</span>
+<span class='curline'><a href='../S/596.html#L405'>rte</a>               405 ripd/ripd.c          newinfo.metric_out = rte-&gt;metric; /* XXX */</span>
+<span class='curline'><a href='../S/596.html#L406'>rte</a>               406 ripd/ripd.c          newinfo.tag = ntohs (rte-&gt;tag);   /* XXX */</span>
+<span class='curline'><a href='../S/596.html#L421'>rte</a>               421 ripd/ripd.c          rte-&gt;nexthop = newinfo.nexthop_out;</span>
+<span class='curline'><a href='../S/596.html#L422'>rte</a>               422 ripd/ripd.c          rte-&gt;tag = htons (newinfo.tag_out);       /* XXX */</span>
+<span class='curline'><a href='../S/596.html#L423'>rte</a>               423 ripd/ripd.c          rte-&gt;metric = newinfo.metric_out; /* XXX: the routemap uses the metric_out field */</span>
+<span class='curline'><a href='../S/596.html#L431'>rte</a>               431 ripd/ripd.c      ret = rip_offset_list_apply_in (&amp;p, ifp, &amp;rte-&gt;metric);</span>
+<span class='curline'><a href='../S/596.html#L436'>rte</a>               436 ripd/ripd.c        rte-&gt;metric += ifp-&gt;metric;</span>
+<span class='curline'><a href='../S/596.html#L438'>rte</a>               438 ripd/ripd.c      if (rte-&gt;metric &gt; RIP_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/596.html#L439'>rte</a>               439 ripd/ripd.c        rte-&gt;metric = RIP_METRIC_INFINITY;</span>
+<span class='curline'><a href='../S/596.html#L442'>rte</a>               442 ripd/ripd.c      if (rte-&gt;nexthop.s_addr == 0)</span>
+<span class='curline'><a href='../S/596.html#L445'>rte</a>               445 ripd/ripd.c        nexthop = &amp;rte-&gt;nexthop;</span>
+<span class='curline'><a href='../S/596.html#L492'>rte</a>               492 ripd/ripd.c                  || rte-&gt;metric == RIP_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/596.html#L520'>rte</a>               520 ripd/ripd.c          if (rte-&gt;metric != RIP_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/596.html#L530'>rte</a>               530 ripd/ripd.c              rinfo-&gt;metric = rte-&gt;metric;</span>
+<span class='curline'><a href='../S/596.html#L531'>rte</a>               531 ripd/ripd.c              rinfo-&gt;tag = ntohs (rte-&gt;tag);</span>
+<span class='curline'><a href='../S/596.html#L598'>rte</a>               598 ripd/ripd.c          if ((same &amp;&amp; rinfo-&gt;metric != rte-&gt;metric)</span>
+<span class='curline'><a href='../S/596.html#L599'>rte</a>               599 ripd/ripd.c              || (rte-&gt;metric &lt; rinfo-&gt;metric)</span>
+<span class='curline'><a href='../S/596.html#L601'>rte</a>               601 ripd/ripd.c                  &amp;&amp; (rinfo-&gt;metric == rte-&gt;metric)</span>
+<span class='curline'><a href='../S/596.html#L602'>rte</a>               602 ripd/ripd.c                  &amp;&amp; ntohs (rte-&gt;tag) != rinfo-&gt;tag)</span>
+<span class='curline'><a href='../S/596.html#L610'>rte</a>               610 ripd/ripd.c              rinfo-&gt;metric = rte-&gt;metric;</span>
+<span class='curline'><a href='../S/596.html#L611'>rte</a>               611 ripd/ripd.c              rinfo-&gt;tag = ntohs (rte-&gt;tag);</span>
+<span class='curline'><a href='../S/596.html#L701'>rte</a>               701 ripd/ripd.c      struct rte *rte;</span>
+<span class='curline'><a href='../S/596.html#L718'>rte</a>               718 ripd/ripd.c      rte = packet-&gt;rte;</span>
+<span class='curline'><a href='../S/596.html#L720'>rte</a>               720 ripd/ripd.c      for (lim = (caddr_t) packet + size; (caddr_t) rte &lt; lim; rte++)</span>
+<span class='curline'><a href='../S/596.html#L724'>rte</a>               724 ripd/ripd.c    	  netmask = ip_masklen (rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L726'>rte</a>               726 ripd/ripd.c              if (rte-&gt;family == htons (RIP_FAMILY_AUTH))</span>
+<span class='curline'><a href='../S/596.html#L728'>rte</a>               728 ripd/ripd.c                  if (rte-&gt;tag == htons (RIP_AUTH_SIMPLE_PASSWORD))</span>
+<span class='curline'><a href='../S/596.html#L730'>rte</a>               730 ripd/ripd.c    		  p = (u_char *)&amp;rte-&gt;prefix;</span>
+<span class='curline'><a href='../S/596.html#L733'>rte</a>               733 ripd/ripd.c    			     ntohs (rte-&gt;family), ntohs (rte-&gt;tag), p);</span>
+<span class='curline'><a href='../S/596.html#L735'>rte</a>               735 ripd/ripd.c                  else if (rte-&gt;tag == htons (RIP_AUTH_MD5))</span>
+<span class='curline'><a href='../S/596.html#L739'>rte</a>               739 ripd/ripd.c    		  md5 = (struct rip_md5_info *) &amp;packet-&gt;rte;</span>
+<span class='curline'><a href='../S/596.html#L750'>rte</a>               750 ripd/ripd.c                  else if (rte-&gt;tag == htons (RIP_AUTH_DATA))</span>
+<span class='curline'><a href='../S/596.html#L752'>rte</a>               752 ripd/ripd.c    		  p = (u_char *)&amp;rte-&gt;prefix;</span>
+<span class='curline'><a href='../S/596.html#L755'>rte</a>               755 ripd/ripd.c    			     ntohs (rte-&gt;family), ntohs (rte-&gt;tag));</span>
+<span class='curline'><a href='../S/596.html#L765'>rte</a>               765 ripd/ripd.c    			     ntohs (rte-&gt;family), ntohs (rte-&gt;tag));</span>
+<span class='curline'><a href='../S/596.html#L770'>rte</a>               770 ripd/ripd.c                           inet_ntop (AF_INET, &amp;rte-&gt;prefix, pbuf, BUFSIZ),</span>
+<span class='curline'><a href='../S/596.html#L771'>rte</a>               771 ripd/ripd.c                           netmask, inet_ntop (AF_INET, &amp;rte-&gt;nexthop, nbuf,</span>
+<span class='curline'><a href='../S/596.html#L772'>rte</a>               772 ripd/ripd.c                                               BUFSIZ), ntohs (rte-&gt;family),</span>
+<span class='curline'><a href='../S/596.html#L773'>rte</a>               773 ripd/ripd.c                           ntohs (rte-&gt;tag), (u_long) ntohl (rte-&gt;metric));</span>
+<span class='curline'><a href='../S/596.html#L778'>rte</a>               778 ripd/ripd.c    		     inet_ntop (AF_INET, &amp;rte-&gt;prefix, pbuf, BUFSIZ),</span>
+<span class='curline'><a href='../S/596.html#L779'>rte</a>               779 ripd/ripd.c    		     ntohs (rte-&gt;family), ntohs (rte-&gt;tag),</span>
+<span class='curline'><a href='../S/596.html#L780'>rte</a>               780 ripd/ripd.c    		     (u_long)ntohl (rte-&gt;metric));</span>
+<span class='curline'><a href='../S/596.html#L816'>rte</a>               816 ripd/ripd.c    rip_auth_simple_password (struct rte *rte, struct sockaddr_in *from,</span>
+<span class='curline'><a href='../S/596.html#L829'>rte</a>               829 ripd/ripd.c          || rte-&gt;tag != htons(RIP_AUTH_SIMPLE_PASSWORD))</span>
+<span class='curline'><a href='../S/596.html#L835'>rte</a>               835 ripd/ripd.c          auth_str = (char *) &amp;rte-&gt;prefix;</span>
+<span class='curline'><a href='../S/596.html#L849'>rte</a>               849 ripd/ripd.c          key = key_match_for_accept (keychain, (char *) &amp;rte-&gt;prefix);</span>
+<span class='curline'><a href='../S/596.html#L876'>rte</a>               876 ripd/ripd.c      md5 = (struct rip_md5_info *) &amp;packet-&gt;rte;</span>
+<span class='curline'><a href='../S/596.html#L1107'>rte</a>              1107 ripd/ripd.c      struct rte *rte;</span>
+<span class='curline'><a href='../S/596.html#L1145'>rte</a>              1145 ripd/ripd.c      rte = packet-&gt;rte;</span>
+<span class='curline'><a href='../S/596.html#L1147'>rte</a>              1147 ripd/ripd.c      for (lim = (caddr_t) packet + size; (caddr_t) rte &lt; lim; rte++)</span>
+<span class='curline'><a href='../S/596.html#L1156'>rte</a>              1156 ripd/ripd.c    	  rte == packet-&gt;rte &amp;&amp;</span>
+<span class='curline'><a href='../S/596.html#L1157'>rte</a>              1157 ripd/ripd.c    	  rte-&gt;family == htons(RIP_FAMILY_AUTH))</span>
+<span class='curline'><a href='../S/596.html#L1160'>rte</a>              1160 ripd/ripd.c          if (rte-&gt;family != htons(AF_INET))</span>
+<span class='curline'><a href='../S/596.html#L1164'>rte</a>              1164 ripd/ripd.c    		     ntohs (rte-&gt;family), inet_ntoa (from-&gt;sin_addr));</span>
+<span class='curline'><a href='../S/596.html#L1170'>rte</a>              1170 ripd/ripd.c          if (! rip_destination_check (rte-&gt;prefix))</span>
+<span class='curline'><a href='../S/596.html#L1178'>rte</a>              1178 ripd/ripd.c          rte-&gt;metric = ntohl (rte-&gt;metric);</span>
+<span class='curline'><a href='../S/596.html#L1181'>rte</a>              1181 ripd/ripd.c          if (! (rte-&gt;metric &gt;= 1 &amp;&amp; rte-&gt;metric &lt;= 16))</span>
+<span class='curline'><a href='../S/596.html#L1189'>rte</a>              1189 ripd/ripd.c          if (packet-&gt;version == RIPv1 &amp;&amp; rte-&gt;nexthop.s_addr != 0)</span>
+<span class='curline'><a href='../S/596.html#L1192'>rte</a>              1192 ripd/ripd.c    		     inet_ntoa (rte-&gt;nexthop));</span>
+<span class='curline'><a href='../S/596.html#L1201'>rte</a>              1201 ripd/ripd.c          if (packet-&gt;version == RIPv2 &amp;&amp; rte-&gt;nexthop.s_addr != 0)</span>
+<span class='curline'><a href='../S/596.html#L1206'>rte</a>              1206 ripd/ripd.c    	  addrval = ntohl (rte-&gt;nexthop.s_addr);</span>
+<span class='curline'><a href='../S/596.html#L1210'>rte</a>              1210 ripd/ripd.c    			 inet_ntoa (rte-&gt;nexthop));</span>
+<span class='curline'><a href='../S/596.html#L1214'>rte</a>              1214 ripd/ripd.c    	  if (! if_lookup_address (rte-&gt;nexthop))</span>
+<span class='curline'><a href='../S/596.html#L1219'>rte</a>              1219 ripd/ripd.c    	      rn = route_node_match_ipv4 (rip-&gt;table, &amp;rte-&gt;nexthop);</span>
+<span class='curline'><a href='../S/596.html#L1229'>rte</a>              1229 ripd/ripd.c    			zlog_debug ("Next hop %s is on RIP network.  Set nexthop to the packet's originator", inet_ntoa (rte-&gt;nexthop));</span>
+<span class='curline'><a href='../S/596.html#L1230'>rte</a>              1230 ripd/ripd.c    		      rte-&gt;nexthop = rinfo-&gt;from;</span>
+<span class='curline'><a href='../S/596.html#L1235'>rte</a>              1235 ripd/ripd.c    			zlog_debug ("Next hop %s is not directly reachable. Treat it as 0.0.0.0", inet_ntoa (rte-&gt;nexthop));</span>
+<span class='curline'><a href='../S/596.html#L1236'>rte</a>              1236 ripd/ripd.c    		      rte-&gt;nexthop.s_addr = 0;</span>
+<span class='curline'><a href='../S/596.html#L1244'>rte</a>              1244 ripd/ripd.c    		    zlog_debug ("Next hop %s is not directly reachable. Treat it as 0.0.0.0", inet_ntoa (rte-&gt;nexthop));</span>
+<span class='curline'><a href='../S/596.html#L1245'>rte</a>              1245 ripd/ripd.c    		  rte-&gt;nexthop.s_addr = 0;</span>
+<span class='curline'><a href='../S/596.html#L1261'>rte</a>              1261 ripd/ripd.c          if ((packet-&gt;version == RIPv1 &amp;&amp; rte-&gt;prefix.s_addr != 0) </span>
+<span class='curline'><a href='../S/596.html#L1263'>rte</a>              1263 ripd/ripd.c    	      &amp;&amp; (rte-&gt;prefix.s_addr != 0 &amp;&amp; rte-&gt;mask.s_addr == 0)))</span>
+<span class='curline'><a href='../S/596.html#L1277'>rte</a>              1277 ripd/ripd.c    	  destination = ntohl (rte-&gt;prefix.s_addr);</span>
+<span class='curline'><a href='../S/596.html#L1280'>rte</a>              1280 ripd/ripd.c    	      masklen2ip (8, &amp;rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L1282'>rte</a>              1282 ripd/ripd.c    	      masklen2ip (16, &amp;rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L1284'>rte</a>              1284 ripd/ripd.c    	      masklen2ip (24, &amp;rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L1289'>rte</a>              1289 ripd/ripd.c    	  if ((subnetted == 1) &amp;&amp; ((rte-&gt;prefix.s_addr &amp; destination) ==</span>
+<span class='curline'><a href='../S/596.html#L1292'>rte</a>              1292 ripd/ripd.c    	      masklen2ip (ifaddr.prefixlen, &amp;rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L1293'>rte</a>              1293 ripd/ripd.c    	      if ((rte-&gt;prefix.s_addr &amp; rte-&gt;mask.s_addr) != rte-&gt;prefix.s_addr)</span>
+<span class='curline'><a href='../S/596.html#L1294'>rte</a>              1294 ripd/ripd.c    		masklen2ip (32, &amp;rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L1296'>rte</a>              1296 ripd/ripd.c    		zlog_debug ("Subnetted route %s", inet_ntoa (rte-&gt;prefix));</span>
+<span class='curline'><a href='../S/596.html#L1300'>rte</a>              1300 ripd/ripd.c    	      if ((rte-&gt;prefix.s_addr &amp; rte-&gt;mask.s_addr) != rte-&gt;prefix.s_addr)</span>
+<span class='curline'><a href='../S/596.html#L1306'>rte</a>              1306 ripd/ripd.c    	      zlog_debug ("Resultant route %s", inet_ntoa (rte-&gt;prefix));</span>
+<span class='curline'><a href='../S/596.html#L1307'>rte</a>              1307 ripd/ripd.c    	      zlog_debug ("Resultant mask %s", inet_ntoa (rte-&gt;mask));</span>
+<span class='curline'><a href='../S/596.html#L1314'>rte</a>              1314 ripd/ripd.c    	  &amp;&amp; (rte-&gt;mask.s_addr != 0) </span>
+<span class='curline'><a href='../S/596.html#L1315'>rte</a>              1315 ripd/ripd.c    	  &amp;&amp; ((rte-&gt;prefix.s_addr &amp; rte-&gt;mask.s_addr) != rte-&gt;prefix.s_addr))</span>
+<span class='curline'><a href='../S/596.html#L1318'>rte</a>              1318 ripd/ripd.c    		     inet_ntoa (rte-&gt;prefix), ip_masklen (rte-&gt;mask));</span>
+<span class='curline'><a href='../S/596.html#L1325'>rte</a>              1325 ripd/ripd.c    	  &amp;&amp; (rte-&gt;prefix.s_addr == 0)</span>
+<span class='curline'><a href='../S/596.html#L1326'>rte</a>              1326 ripd/ripd.c    	  &amp;&amp; (rte-&gt;mask.s_addr != 0))</span>
+<span class='curline'><a href='../S/596.html#L1330'>rte</a>              1330 ripd/ripd.c    	  rte-&gt;mask.s_addr = 0;</span>
+<span class='curline'><a href='../S/596.html#L1334'>rte</a>              1334 ripd/ripd.c          rip_rte_process (rte, from, ifc-&gt;ifp);</span>
+<span class='curline'><a href='../S/596.html#L1649'>rte</a>              1649 ripd/ripd.c      struct rte *rte;</span>
+<span class='curline'><a href='../S/596.html#L1672'>rte</a>              1672 ripd/ripd.c      rte = packet-&gt;rte;</span>
+<span class='curline'><a href='../S/596.html#L1676'>rte</a>              1676 ripd/ripd.c      if (lim == (caddr_t) rte)</span>
+<span class='curline'><a href='../S/596.html#L1683'>rte</a>              1683 ripd/ripd.c      if (lim == ((caddr_t) (rte + 1)) &amp;&amp;</span>
+<span class='curline'><a href='../S/596.html#L1684'>rte</a>              1684 ripd/ripd.c          ntohs (rte-&gt;family) == 0 &amp;&amp;</span>
+<span class='curline'><a href='../S/596.html#L1685'>rte</a>              1685 ripd/ripd.c          ntohl (rte-&gt;metric) == RIP_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/596.html#L1712'>rte</a>              1712 ripd/ripd.c          for (; ((caddr_t) rte) &lt; lim; rte++)</span>
+<span class='curline'><a href='../S/596.html#L1714'>rte</a>              1714 ripd/ripd.c    	  p.prefix = rte-&gt;prefix;</span>
+<span class='curline'><a href='../S/596.html#L1715'>rte</a>              1715 ripd/ripd.c    	  p.prefixlen = ip_masklen (rte-&gt;mask);</span>
+<span class='curline'><a href='../S/596.html#L1722'>rte</a>              1722 ripd/ripd.c    	      rte-&gt;metric = htonl (rinfo-&gt;metric);</span>
+<span class='curline'><a href='../S/596.html#L1726'>rte</a>              1726 ripd/ripd.c    	    rte-&gt;metric = htonl (RIP_METRIC_INFINITY);</span>
+<span class='curline'><a href='../S/596.html#L1967'>rte</a>              1967 ripd/ripd.c          &amp;&amp; (packet-&gt;rte-&gt;family == htons(RIP_FAMILY_AUTH)))</span>
+<span class='curline'><a href='../S/596.html#L2027'>rte</a>              2027 ripd/ripd.c          if (packet-&gt;rte-&gt;family != htons(RIP_FAMILY_AUTH))</span>
+<span class='curline'><a href='../S/596.html#L2036'>rte</a>              2036 ripd/ripd.c          switch (ntohs(packet-&gt;rte-&gt;tag))</span>
+<span class='curline'><a href='../S/596.html#L2040'>rte</a>              2040 ripd/ripd.c                ret = rip_auth_simple_password (packet-&gt;rte, &amp;from, ifp);</span>
+<span class='curline'><a href='../S/596.html#L2055'>rte</a>              2055 ripd/ripd.c                              ntohs (packet-&gt;rte-&gt;tag));</span>
+<span class='curline'><a href='../S/596.html#L2736'>rte</a>              2736 ripd/ripd.c      struct rte *rte;</span>
+<span class='curline'><a href='../S/596.html#L2744'>rte</a>              2744 ripd/ripd.c      rte = rip_packet.rte;</span>
+<span class='curline'><a href='../S/596.html#L2745'>rte</a>              2745 ripd/ripd.c      rte-&gt;metric = htonl (RIP_METRIC_INFINITY);</span>
+<span class='curline'><a href='../S/593.html#L174'>rte</a>               174 ripd/ripd.h      struct rte rte[1];		/* Address structure. */</span>
+<span class='curline'><a href='../S/105.html#L65'>rte</a>                65 ripngd/ripng_nexthop.c   struct list *rte;</span>
+<span class='curline'><a href='../S/105.html#L67'>rte</a>                67 ripngd/ripng_nexthop.c   rte = list_new();</span>
+<span class='curline'><a href='../S/105.html#L68'>rte</a>                68 ripngd/ripng_nexthop.c   rte-&gt;cmp = (int (*)(void *, void *)) _ripng_rte_cmp;</span>
+<span class='curline'><a href='../S/105.html#L69'>rte</a>                69 ripngd/ripng_nexthop.c   rte-&gt;del = (void (*)(void *)) _ripng_rte_del;</span>
+<span class='curline'><a href='../S/105.html#L71'>rte</a>                71 ripngd/ripng_nexthop.c   return rte;</span>
+<span class='curline'><a href='../S/105.html#L155'>rte</a>               155 ripngd/ripng_nexthop.c 	    sizeof (struct rte)) / sizeof (struct rte);</span>
+<span class='curline'><a href='../S/99.html#L299'>rte</a>               299 ripngd/ripngd.c   struct rte *rte;</span>
+<span class='curline'><a href='../S/99.html#L315'>rte</a>               315 ripngd/ripngd.c   rte = packet-&gt;rte;</span>
+<span class='curline'><a href='../S/99.html#L317'>rte</a>               317 ripngd/ripngd.c   for (lim = (caddr_t) packet + size; (caddr_t) rte &lt; lim; rte++)</span>
+<span class='curline'><a href='../S/99.html#L319'>rte</a>               319 ripngd/ripngd.c       if (rte-&gt;metric == RIPNG_METRIC_NEXTHOP)</span>
+<span class='curline'><a href='../S/99.html#L320'>rte</a>               320 ripngd/ripngd.c 	zlog_debug ("  nexthop %s/%d", inet6_ntoa (rte-&gt;addr), rte-&gt;prefixlen);</span>
+<span class='curline'><a href='../S/99.html#L323'>rte</a>               323 ripngd/ripngd.c 		   inet6_ntoa (rte-&gt;addr), rte-&gt;prefixlen, </span>
+<span class='curline'><a href='../S/99.html#L324'>rte</a>               324 ripngd/ripngd.c 		   rte-&gt;metric, ntohs (rte-&gt;tag));</span>
+<span class='curline'><a href='../S/99.html#L330'>rte</a>               330 ripngd/ripngd.c ripng_nexthop_rte (struct rte *rte,</span>
+<span class='curline'><a href='../S/99.html#L339'>rte</a>               339 ripngd/ripngd.c 	       inet6_ntoa (rte-&gt;addr), ntohs (rte-&gt;tag), rte-&gt;prefixlen);</span>
+<span class='curline'><a href='../S/99.html#L344'>rte</a>               344 ripngd/ripngd.c   if (ntohs (rte-&gt;tag) != 0)</span>
+<span class='curline'><a href='../S/99.html#L346'>rte</a>               346 ripngd/ripngd.c 	       ntohs (rte-&gt;tag), inet6_ntoa (from-&gt;sin6_addr));</span>
+<span class='curline'><a href='../S/99.html#L348'>rte</a>               348 ripngd/ripngd.c   if (rte-&gt;prefixlen != 0)</span>
+<span class='curline'><a href='../S/99.html#L350'>rte</a>               350 ripngd/ripngd.c 	       rte-&gt;prefixlen, inet6_ntoa (from-&gt;sin6_addr));</span>
+<span class='curline'><a href='../S/99.html#L356'>rte</a>               356 ripngd/ripngd.c   if (IN6_IS_ADDR_UNSPECIFIED (&amp;rte-&gt;addr))</span>
+<span class='curline'><a href='../S/99.html#L363'>rte</a>               363 ripngd/ripngd.c   if (IN6_IS_ADDR_LINKLOCAL (&amp;rte-&gt;addr))</span>
+<span class='curline'><a href='../S/99.html#L366'>rte</a>               366 ripngd/ripngd.c       IPV6_ADDR_COPY (&amp;nexthop-&gt;address, &amp;rte-&gt;addr);</span>
+<span class='curline'><a href='../S/99.html#L378'>rte</a>               378 ripngd/ripngd.c 	     inet6_ntoa (rte-&gt;addr),</span>
+<span class='curline'><a href='../S/99.html#L624'>rte</a>               624 ripngd/ripngd.c ripng_route_process (struct rte *rte, struct sockaddr_in6 *from,</span>
+<span class='curline'><a href='../S/99.html#L641'>rte</a>               641 ripngd/ripngd.c   IPV6_ADDR_COPY (&amp;p.prefix, &amp;rte-&gt;addr);</span>
+<span class='curline'><a href='../S/99.html#L642'>rte</a>               642 ripngd/ripngd.c   p.prefixlen = rte-&gt;prefixlen;</span>
+<span class='curline'><a href='../S/99.html#L671'>rte</a>               671 ripngd/ripngd.c       newinfo.metric = rte-&gt;metric;</span>
+<span class='curline'><a href='../S/99.html#L672'>rte</a>               672 ripngd/ripngd.c       newinfo.metric_out = rte-&gt;metric; /* XXX */</span>
+<span class='curline'><a href='../S/99.html#L673'>rte</a>               673 ripngd/ripngd.c       newinfo.tag    = ntohs(rte-&gt;tag); /* XXX */</span>
+<span class='curline'><a href='../S/99.html#L704'>rte</a>               704 ripngd/ripngd.c       rte-&gt;tag     = htons(newinfo.tag_out); /* XXX */</span>
+<span class='curline'><a href='../S/99.html#L705'>rte</a>               705 ripngd/ripngd.c       rte-&gt;metric  = newinfo.metric_out; /* XXX: the routemap uses the metric_out field */</span>
+<span class='curline'><a href='../S/99.html#L715'>rte</a>               715 ripngd/ripngd.c   ret = ripng_offset_list_apply_in (&amp;p, ifp, &amp;rte-&gt;metric);</span>
+<span class='curline'><a href='../S/99.html#L720'>rte</a>               720 ripngd/ripngd.c     rte-&gt;metric += ifp-&gt;metric;</span>
+<span class='curline'><a href='../S/99.html#L722'>rte</a>               722 ripngd/ripngd.c   if (rte-&gt;metric &gt; RIPNG_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/99.html#L723'>rte</a>               723 ripngd/ripngd.c     rte-&gt;metric = RIPNG_METRIC_INFINITY;</span>
+<span class='curline'><a href='../S/99.html#L758'>rte</a>               758 ripngd/ripngd.c       if (rte-&gt;metric != RIPNG_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/99.html#L769'>rte</a>               769 ripngd/ripngd.c 	  rinfo-&gt;metric = rte-&gt;metric;</span>
+<span class='curline'><a href='../S/99.html#L770'>rte</a>               770 ripngd/ripngd.c 	  rinfo-&gt;tag = ntohs (rte-&gt;tag);</span>
+<span class='curline'><a href='../S/99.html#L820'>rte</a>               820 ripngd/ripngd.c       if ((same &amp;&amp; rinfo-&gt;metric != rte-&gt;metric) ||</span>
+<span class='curline'><a href='../S/99.html#L821'>rte</a>               821 ripngd/ripngd.c 	  rte-&gt;metric &lt; rinfo-&gt;metric)</span>
+<span class='curline'><a href='../S/99.html#L827'>rte</a>               827 ripngd/ripngd.c 	  rinfo-&gt;metric = rte-&gt;metric;</span>
+<span class='curline'><a href='../S/99.html#L828'>rte</a>               828 ripngd/ripngd.c 	  rinfo-&gt;tag = ntohs (rte-&gt;tag);</span>
+<span class='curline'><a href='../S/99.html#L1117'>rte</a>              1117 ripngd/ripngd.c   struct rte *rte;</span>
+<span class='curline'><a href='../S/99.html#L1174'>rte</a>              1174 ripngd/ripngd.c   rte = packet-&gt;rte;</span>
+<span class='curline'><a href='../S/99.html#L1176'>rte</a>              1176 ripngd/ripngd.c   for (lim = ((caddr_t) packet) + size; (caddr_t) rte &lt; lim; rte++) </span>
+<span class='curline'><a href='../S/99.html#L1181'>rte</a>              1181 ripngd/ripngd.c       if (rte-&gt;metric == RIPNG_METRIC_NEXTHOP)</span>
+<span class='curline'><a href='../S/99.html#L1183'>rte</a>              1183 ripngd/ripngd.c 	  ripng_nexthop_rte (rte, from, &amp;nexthop);</span>
+<span class='curline'><a href='../S/99.html#L1192'>rte</a>              1192 ripngd/ripngd.c       if (IN6_IS_ADDR_MULTICAST (&amp;rte-&gt;addr))</span>
+<span class='curline'><a href='../S/99.html#L1195'>rte</a>              1195 ripngd/ripngd.c 		     inet6_ntoa (rte-&gt;addr), rte-&gt;prefixlen, rte-&gt;metric);</span>
+<span class='curline'><a href='../S/99.html#L1199'>rte</a>              1199 ripngd/ripngd.c       if (IN6_IS_ADDR_LINKLOCAL (&amp;rte-&gt;addr))</span>
+<span class='curline'><a href='../S/99.html#L1202'>rte</a>              1202 ripngd/ripngd.c 		     inet6_ntoa (rte-&gt;addr), rte-&gt;prefixlen, rte-&gt;metric);</span>
+<span class='curline'><a href='../S/99.html#L1206'>rte</a>              1206 ripngd/ripngd.c       if (IN6_IS_ADDR_LOOPBACK (&amp;rte-&gt;addr))</span>
+<span class='curline'><a href='../S/99.html#L1209'>rte</a>              1209 ripngd/ripngd.c 		     inet6_ntoa (rte-&gt;addr), rte-&gt;prefixlen, rte-&gt;metric);</span>
+<span class='curline'><a href='../S/99.html#L1216'>rte</a>              1216 ripngd/ripngd.c       if (rte-&gt;prefixlen &gt; 128)</span>
+<span class='curline'><a href='../S/99.html#L1219'>rte</a>              1219 ripngd/ripngd.c 		     inet6_ntoa (rte-&gt;addr), rte-&gt;prefixlen,</span>
+<span class='curline'><a href='../S/99.html#L1226'>rte</a>              1226 ripngd/ripngd.c       if (! (rte-&gt;metric &gt;= 1 &amp;&amp; rte-&gt;metric &lt;= 16))</span>
+<span class='curline'><a href='../S/99.html#L1228'>rte</a>              1228 ripngd/ripngd.c 	  zlog_warn ("Invalid metric %d from %s%%%s", rte-&gt;metric,</span>
+<span class='curline'><a href='../S/99.html#L1239'>rte</a>              1239 ripngd/ripngd.c       ripng_route_process (rte, from, &amp;nexthop, ifp);</span>
+<span class='curline'><a href='../S/99.html#L1249'>rte</a>              1249 ripngd/ripngd.c   struct rte *rte;</span>
+<span class='curline'><a href='../S/99.html#L1272'>rte</a>              1272 ripngd/ripngd.c   rte = packet-&gt;rte;</span>
+<span class='curline'><a href='../S/99.html#L1276'>rte</a>              1276 ripngd/ripngd.c   if (lim == (caddr_t) rte)</span>
+<span class='curline'><a href='../S/99.html#L1285'>rte</a>              1285 ripngd/ripngd.c   if (lim == ((caddr_t) (rte + 1)) &amp;&amp;</span>
+<span class='curline'><a href='../S/99.html#L1286'>rte</a>              1286 ripngd/ripngd.c       IN6_IS_ADDR_UNSPECIFIED (&amp;rte-&gt;addr) &amp;&amp;</span>
+<span class='curline'><a href='../S/99.html#L1287'>rte</a>              1287 ripngd/ripngd.c       rte-&gt;prefixlen == 0 &amp;&amp;</span>
+<span class='curline'><a href='../S/99.html#L1288'>rte</a>              1288 ripngd/ripngd.c       rte-&gt;metric == RIPNG_METRIC_INFINITY)</span>
+<span class='curline'><a href='../S/99.html#L1307'>rte</a>              1307 ripngd/ripngd.c       for (; ((caddr_t) rte) &lt; lim; rte++)</span>
+<span class='curline'><a href='../S/99.html#L1309'>rte</a>              1309 ripngd/ripngd.c 	  p.prefix = rte-&gt;addr;</span>
+<span class='curline'><a href='../S/99.html#L1310'>rte</a>              1310 ripngd/ripngd.c 	  p.prefixlen = rte-&gt;prefixlen;</span>
+<span class='curline'><a href='../S/99.html#L1318'>rte</a>              1318 ripngd/ripngd.c 	      rte-&gt;metric = rinfo-&gt;metric;</span>
+<span class='curline'><a href='../S/99.html#L1322'>rte</a>              1322 ripngd/ripngd.c 	    rte-&gt;metric = RIPNG_METRIC_INFINITY;</span>
+<span class='curline'><a href='../S/99.html#L1865'>rte</a>              1865 ripngd/ripngd.c   struct rte *rte;</span>
+<span class='curline'><a href='../S/99.html#L1882'>rte</a>              1882 ripngd/ripngd.c   rte = ripng_packet.rte;</span>
+<span class='curline'><a href='../S/99.html#L1883'>rte</a>              1883 ripngd/ripngd.c   rte-&gt;metric = RIPNG_METRIC_INFINITY;</span>
+<span class='curline'><a href='../S/110.html#L159'>rte</a>               159 ripngd/ripngd.h   struct rte rte[1];</span>
+</pre>
+</body>
+</html>

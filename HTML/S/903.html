@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vpnmd/vpnmd_socket.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1035.html'>vpnmd</a>/vpnmd_socket.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L8'>[^]</a><a href='#L45'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L8' title='Defined at 8.'>write_incoming_data_plane</a></li>
+<li><a href='#L45' title='Defined at 45.'>write_outgoing_data_plane</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='915.html'>vpnmd_ldp_msg.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='896.html'>vpnmd_rsvp_msg.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='908.html'>vpnmd_table.h</a>"
+<a id='L4' name='L4'></a>
+<a id='L5' name='L5'></a><em class='sharp'>#define</em> <a href='../R/3825.html' title='Multiple referred from 4 places.'>WITHDRAW_DOIT</a> -1
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a><em class='comment'>//temp date-plane function</em>
+<a id='L8' name='L8'></a><strong class='reserved'>int</strong> <a href='../S/894.html#L4' title='Referred from 4 in vpnmd/vpnmd_socket.h.'>write_incoming_data_plane</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip)<em class='brace'>{</em>
+<a id='L9' name='L9'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn_this;
+<a id='L10' name='L10'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw;
+<a id='L11' name='L11'></a>
+<a id='L12' name='L12'></a>        <strong class='reserved'>if</strong>(vpn!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L13' name='L13'></a>                vpn_this=vpn;
+<a id='L14' name='L14'></a>                <strong class='reserved'>while</strong>(vpn_this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L15' name='L15'></a>                        <strong class='reserved'>if</strong>(vpn_this-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>)<em class='brace'>{</em>
+<a id='L16' name='L16'></a>                                pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn_this,ip);
+<a id='L17' name='L17'></a>                                <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L18' name='L18'></a>                                        printf("quarry PW fail.\n");
+<a id='L19' name='L19'></a>                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L20' name='L20'></a>                                        <strong class='reserved'>if</strong>(pw-&gt;in_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)
+<a id='L21' name='L21'></a>                                                printf("Add vpn %d's incoming data plane forwarding information\n", vpn_this-&gt;vpn_id);
+<a id='L22' name='L22'></a>                                <em class='brace'>}</em>
+<a id='L23' name='L23'></a>                        <em class='brace'>}</em><em class='comment'>//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L24' name='L24'></a>                        vpn_this=vpn_this-&gt;next;
+<a id='L25' name='L25'></a>                <em class='brace'>}</em><em class='comment'>//end while()</em>
+<a id='L26' name='L26'></a>                <em class='comment'>//have only one vpn_entry not to check</em>
+<a id='L27' name='L27'></a>                <strong class='reserved'>if</strong>(vpn_this-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>)<em class='brace'>{</em>
+<a id='L28' name='L28'></a>                        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn_this,ip);
+<a id='L29' name='L29'></a>                        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L30' name='L30'></a>                                printf("quarry PW fail.\n");
+<a id='L31' name='L31'></a>                                <strong class='reserved'>return</strong> -1;
+<a id='L32' name='L32'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L33' name='L33'></a>                                <strong class='reserved'>if</strong>(pw-&gt;in_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)
+<a id='L34' name='L34'></a>                                        printf("Add vpn %d's incoming data plane forwarding information\n", vpn_this-&gt;vpn_id);
+<a id='L35' name='L35'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L36' name='L36'></a>                        <em class='brace'>}</em>
+<a id='L37' name='L37'></a>                <em class='brace'>}</em><em class='comment'>//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L38' name='L38'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L39' name='L39'></a>   printf("NO vpn_entry .\n");
+<a id='L40' name='L40'></a>   <strong class='reserved'>return</strong> -1;
+<a id='L41' name='L41'></a>        <em class='brace'>}</em>
+<a id='L42' name='L42'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L43' name='L43'></a><em class='brace'>}</em>
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><strong class='reserved'>int</strong> <a href='../S/894.html#L5' title='Referred from 5 in vpnmd/vpnmd_socket.h.'>write_outgoing_data_plane</a>(<a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> ip)<em class='brace'>{</em>
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn_this;
+<a id='L48' name='L48'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw;
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>        <strong class='reserved'>if</strong>(vpn!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L51' name='L51'></a>                vpn_this=vpn;
+<a id='L52' name='L52'></a>                <strong class='reserved'>while</strong>(vpn_this-&gt;next!=<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)<em class='brace'>{</em>
+<a id='L53' name='L53'></a>                        <strong class='reserved'>if</strong>(vpn_this-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>)<em class='brace'>{</em>
+<a id='L54' name='L54'></a>                                pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn_this,ip);
+<a id='L55' name='L55'></a>                                <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L56' name='L56'></a>                                        printf("quarry PW fail.\n");
+<a id='L57' name='L57'></a>                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L58' name='L58'></a>                                        <strong class='reserved'>if</strong>(pw-&gt;out_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)
+<a id='L59' name='L59'></a>                                                printf("Add vpn %d's outgoing data plane forwarding information\n",vpn_this-&gt;vpn_id);
+<a id='L60' name='L60'></a>                                <em class='brace'>}</em>
+<a id='L61' name='L61'></a>                        <em class='brace'>}</em><em class='comment'>//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L62' name='L62'></a>                        vpn_this=vpn_this-&gt;next;
+<a id='L63' name='L63'></a>                <em class='brace'>}</em><em class='comment'>//end while()</em>
+<a id='L64' name='L64'></a>                <em class='comment'>//have only one vpn_entry not to check</em>
+<a id='L65' name='L65'></a>                <strong class='reserved'>if</strong>(vpn_this-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>)<em class='brace'>{</em>
+<a id='L66' name='L66'></a>                        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn_this,ip);
+<a id='L67' name='L67'></a>                        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L68' name='L68'></a>                                printf("quarry PW fail.\n");
+<a id='L69' name='L69'></a>                                <strong class='reserved'>return</strong> -1;
+<a id='L70' name='L70'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L71' name='L71'></a>                                <strong class='reserved'>if</strong>(pw-&gt;out_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)
+<a id='L72' name='L72'></a>                                        printf("Add vpn %d's incoming data plane forwarding information\n", vpn_this-&gt;vpn_id);
+<a id='L73' name='L73'></a>                                <strong class='reserved'>return</strong> 0;
+<a id='L74' name='L74'></a>                        <em class='brace'>}</em>
+<a id='L75' name='L75'></a>                <em class='brace'>}</em><em class='comment'>//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L76' name='L76'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L77' name='L77'></a>   printf("NO vpn_entry .\n");
+<a id='L78' name='L78'></a>   <strong class='reserved'>return</strong> -1;
+<a id='L79' name='L79'></a>        <em class='brace'>}</em>
+<a id='L80' name='L80'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L81' name='L81'></a><em class='brace'>}</em>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='comment'>//delete data-plane information</em>
+<a id='L84' name='L84'></a><em class='comment'>/*</em>
+<a id='L85' name='L85'></a><em class='comment'>int del_incoming_data_plane(int fd,vpn_entry *vpn,unsigned long ip){</em>
+<a id='L86' name='L86'></a><em class='comment'>        vpn_entry *vpn_this;</em>
+<a id='L87' name='L87'></a><em class='comment'>        pw_info_entry *pw;</em>
+<a id='L88' name='L88'></a><em class='comment'>        </em>
+<a id='L89' name='L89'></a><em class='comment'>        unsigned char temp_state;</em>
+<a id='L90' name='L90'></a><em class='comment'>        vpn_ldp_xmsg vlx;</em>
+<a id='L91' name='L91'></a><em class='comment'></em>
+<a id='L92' name='L92'></a><em class='comment'>        if(vpn!=NULL){</em>
+<a id='L93' name='L93'></a><em class='comment'>                vpn_this=vpn;</em>
+<a id='L94' name='L94'></a><em class='comment'>                while(vpn_this-&gt;next!=NULL){</em>
+<a id='L95' name='L95'></a><em class='comment'>                        if(vpn_this-&gt;in_use==USED){</em>
+<a id='L96' name='L96'></a><em class='comment'>                                pw=get_pw_entry(vpn_this,ip);</em>
+<a id='L97' name='L97'></a><em class='comment'>                                if(!pw){</em>
+<a id='L98' name='L98'></a><em class='comment'>                                        printf("quarry PW fail.\n");</em>
+<a id='L99' name='L99'></a><em class='comment'>                                }else{</em>
+<a id='L100' name='L100'></a><em class='comment'>                                        if(pw-&gt;in_state != NOT_READY){</em>
+<a id='L101' name='L101'></a><em class='comment'>                                                vlx.mid = VPN_M_MOD_ID;</em>
+<a id='L102' name='L102'></a><em class='comment'>                                                vlx.type = WITHDRAW_PW;</em>
+<a id='L103' name='L103'></a><em class='comment'>                                                vlx.u.vi.vc_type = 0x05;</em>
+<a id='L104' name='L104'></a><em class='comment'>                                                vlx.u.vi.vpn_id = vpn_this-&gt;vpn_id;</em>
+<a id='L105' name='L105'></a><em class='comment'>                                                vlx.u.vi.label = pw-&gt;in_pw_label;</em>
+<a id='L106' name='L106'></a><em class='comment'>                                                vlx.u.vi.remote_ip.s_addr = ip;</em>
+<a id='L107' name='L107'></a><em class='comment'>                                                if(send_msg_to_other_process(fd, LDP_PORT, &amp;vlx, sizeof(vlx))==-1){</em>
+<a id='L108' name='L108'></a><em class='comment'>                                                        printf("send_msg_to_other_process fail.\n");</em>
+<a id='L109' name='L109'></a><em class='comment'>                                                        return -1;</em>
+<a id='L110' name='L110'></a><em class='comment'>                                                }</em>
+<a id='L111' name='L111'></a><em class='comment'>                                                temp_state = pw-&gt;in_state;</em>
+<a id='L112' name='L112'></a><em class='comment'>                                                if(pw-&gt;out_state==NOT_READY){</em>
+<a id='L113' name='L113'></a><em class='comment'>                                                        del_pw_info(vpn,ip,-1);</em>
+<a id='L114' name='L114'></a><em class='comment'>                                                }else{</em>
+<a id='L115' name='L115'></a><em class='comment'>                                                        pw-&gt;in_state = NOT_READY;</em>
+<a id='L116' name='L116'></a><em class='comment'>                                                        pw-&gt;in_pw_label = 0;</em>
+<a id='L117' name='L117'></a><em class='comment'>                                                }//end if(pw-&gt;out_state==NOT_READY)</em>
+<a id='L118' name='L118'></a><em class='comment'>                                                if(temp_state== READY){</em>
+<a id='L119' name='L119'></a><em class='comment'>                                                        printf("Delete vpn %d's incoming data plane forwarding information\n", vpn_this-&gt;vpn_id);</em>
+<a id='L120' name='L120'></a><em class='comment'>                                                }//end if(temp_state== READY)</em>
+<a id='L121' name='L121'></a><em class='comment'>                                        }//end if(pw-&gt;in_state != NOT_READY)</em>
+<a id='L122' name='L122'></a><em class='comment'>                                }//end if(!pw)</em>
+<a id='L123' name='L123'></a><em class='comment'>                        }//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L124' name='L124'></a><em class='comment'>                        vpn_this=vpn_this-&gt;next;</em>
+<a id='L125' name='L125'></a><em class='comment'>                }//end while()</em>
+<a id='L126' name='L126'></a><em class='comment'>                //have only one vpn_entry not to check</em>
+<a id='L127' name='L127'></a><em class='comment'>                if(vpn_this-&gt;in_use==USED){</em>
+<a id='L128' name='L128'></a><em class='comment'>                        pw=get_pw_entry(vpn_this,ip);</em>
+<a id='L129' name='L129'></a><em class='comment'>                        if(!pw){</em>
+<a id='L130' name='L130'></a><em class='comment'>                                printf("quarry PW fail.\n");</em>
+<a id='L131' name='L131'></a><em class='comment'>                                return -1;</em>
+<a id='L132' name='L132'></a><em class='comment'>                        }else{</em>
+<a id='L133' name='L133'></a><em class='comment'>                                if(pw-&gt;in_state != NOT_READY){</em>
+<a id='L134' name='L134'></a><em class='comment'>                                        vlx.mid = VPN_M_MOD_ID;</em>
+<a id='L135' name='L135'></a><em class='comment'>                                        vlx.type = WITHDRAW_PW;</em>
+<a id='L136' name='L136'></a><em class='comment'>                                        vlx.u.vi.vc_type = 0x05;</em>
+<a id='L137' name='L137'></a><em class='comment'>                                        vlx.u.vi.vpn_id = vpn_this-&gt;vpn_id;</em>
+<a id='L138' name='L138'></a><em class='comment'>                                        vlx.u.vi.label = pw-&gt;in_pw_label;</em>
+<a id='L139' name='L139'></a><em class='comment'>                                        vlx.u.vi.remote_ip.s_addr = ip;</em>
+<a id='L140' name='L140'></a><em class='comment'>                                        if(send_msg_to_other_process(fd, LDP_PORT, &amp;vlx, sizeof(vlx))==-1){</em>
+<a id='L141' name='L141'></a><em class='comment'>                                                printf("send_msg_to_other_process fail.\n");</em>
+<a id='L142' name='L142'></a><em class='comment'>                                                return -1;</em>
+<a id='L143' name='L143'></a><em class='comment'>                                        }</em>
+<a id='L144' name='L144'></a><em class='comment'>                                        temp_state = pw-&gt;in_state;</em>
+<a id='L145' name='L145'></a><em class='comment'>                                        if(pw-&gt;out_state==NOT_READY){</em>
+<a id='L146' name='L146'></a><em class='comment'>                                                del_pw_info(vpn,ip,-1);</em>
+<a id='L147' name='L147'></a><em class='comment'>                                        }else{</em>
+<a id='L148' name='L148'></a><em class='comment'>                                                pw-&gt;in_state = NOT_READY;</em>
+<a id='L149' name='L149'></a><em class='comment'>                                                pw-&gt;in_pw_label = 0;</em>
+<a id='L150' name='L150'></a><em class='comment'>                                        }//end if(pw-&gt;out_state==NOT_READY)</em>
+<a id='L151' name='L151'></a><em class='comment'>                                        if(temp_state== READY){</em>
+<a id='L152' name='L152'></a><em class='comment'>                                                printf("Delete vpn %d's incoming data plane forwarding information\n", vpn_this-&gt;vpn_id);</em>
+<a id='L153' name='L153'></a><em class='comment'>                                        }//end if(temp_state== READY)</em>
+<a id='L154' name='L154'></a><em class='comment'>                                }//end if(pw-&gt;in_state != NOT_READY)</em>
+<a id='L155' name='L155'></a><em class='comment'>                                return 0;</em>
+<a id='L156' name='L156'></a><em class='comment'>                        }//end if(!pw)</em>
+<a id='L157' name='L157'></a><em class='comment'>                }//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L158' name='L158'></a><em class='comment'>        }else{</em>
+<a id='L159' name='L159'></a><em class='comment'>   printf("NO vpn_entry .\n");</em>
+<a id='L160' name='L160'></a><em class='comment'>   return -1;</em>
+<a id='L161' name='L161'></a><em class='comment'>        }</em>
+<a id='L162' name='L162'></a><em class='comment'>        return 0;</em>
+<a id='L163' name='L163'></a><em class='comment'>}</em>
+<a id='L164' name='L164'></a><em class='comment'></em>
+<a id='L165' name='L165'></a><em class='comment'>int del_outgoing_data_plane(int fd,vpn_entry *vpn,unsigned long ip){</em>
+<a id='L166' name='L166'></a><em class='comment'>        vpn_entry *vpn_this;</em>
+<a id='L167' name='L167'></a><em class='comment'>        pw_info_entry *pw;</em>
+<a id='L168' name='L168'></a><em class='comment'>        </em>
+<a id='L169' name='L169'></a><em class='comment'>        unsigned char temp_state;</em>
+<a id='L170' name='L170'></a><em class='comment'>        vpn_ldp_xmsg vlx;</em>
+<a id='L171' name='L171'></a><em class='comment'></em>
+<a id='L172' name='L172'></a><em class='comment'>        if(vpn!=NULL){</em>
+<a id='L173' name='L173'></a><em class='comment'>                vpn_this=vpn;</em>
+<a id='L174' name='L174'></a><em class='comment'>                while(vpn_this-&gt;next!=NULL){</em>
+<a id='L175' name='L175'></a><em class='comment'>                        if(vpn_this-&gt;in_use==USED){</em>
+<a id='L176' name='L176'></a><em class='comment'>                                pw=get_pw_entry(vpn_this,ip);</em>
+<a id='L177' name='L177'></a><em class='comment'>                                if(!pw){</em>
+<a id='L178' name='L178'></a><em class='comment'>                                        printf("quarry PW fail.\n");</em>
+<a id='L179' name='L179'></a><em class='comment'>                                }else{</em>
+<a id='L180' name='L180'></a><em class='comment'>                                        if(pw-&gt;out_state != NOT_READY){</em>
+<a id='L181' name='L181'></a><em class='comment'>                                                vlx.mid = VPN_M_MOD_ID;</em>
+<a id='L182' name='L182'></a><em class='comment'>                                                vlx.type = RELEASE_PW;</em>
+<a id='L183' name='L183'></a><em class='comment'>                                                vlx.u.vi.vc_type = 0x05;</em>
+<a id='L184' name='L184'></a><em class='comment'>                                                vlx.u.vi.vpn_id = vpn_this-&gt;vpn_id;</em>
+<a id='L185' name='L185'></a><em class='comment'>                                                vlx.u.vi.label = pw-&gt;out_pw_label;</em>
+<a id='L186' name='L186'></a><em class='comment'>                                                vlx.u.vi.remote_ip.s_addr = ip;</em>
+<a id='L187' name='L187'></a><em class='comment'>                                                if(send_msg_to_other_process(fd, LDP_PORT, &amp;vlx, sizeof(vlx))==-1){</em>
+<a id='L188' name='L188'></a><em class='comment'>                                                        printf("send_msg_to_other_process fail.\n");</em>
+<a id='L189' name='L189'></a><em class='comment'>                                                        return -1;</em>
+<a id='L190' name='L190'></a><em class='comment'>                                                }</em>
+<a id='L191' name='L191'></a><em class='comment'>                                                if(pw-&gt;in_state == NOT_READY){</em>
+<a id='L192' name='L192'></a><em class='comment'>                                                        del_pw_info(vpn,ip,-1);</em>
+<a id='L193' name='L193'></a><em class='comment'>                                                }else{</em>
+<a id='L194' name='L194'></a><em class='comment'>                                                        pw-&gt;out_state = NOT_READY;</em>
+<a id='L195' name='L195'></a><em class='comment'>                                                        pw-&gt;out_pw_label = 0;</em>
+<a id='L196' name='L196'></a><em class='comment'>                                                }//end if(pw-&gt;in_state == NOT_READY)</em>
+<a id='L197' name='L197'></a><em class='comment'>                                                printf("Delete vpn %d's outgoing data plane forwarding information\n", vpn_this-&gt;vpn_id);</em>
+<a id='L198' name='L198'></a><em class='comment'>                                        }//end if(pw-&gt;out_state != NOT_READY)</em>
+<a id='L199' name='L199'></a><em class='comment'>                                }//end if(!pw)</em>
+<a id='L200' name='L200'></a><em class='comment'>                        }//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L201' name='L201'></a><em class='comment'>                        vpn_this=vpn_this-&gt;next;</em>
+<a id='L202' name='L202'></a><em class='comment'>                }//end while()</em>
+<a id='L203' name='L203'></a><em class='comment'>                //have only one vpn_entry not to check</em>
+<a id='L204' name='L204'></a><em class='comment'>                if(vpn_this-&gt;in_use==USED){</em>
+<a id='L205' name='L205'></a><em class='comment'>                        pw=get_pw_entry(vpn_this,ip);</em>
+<a id='L206' name='L206'></a><em class='comment'>                        if(!pw){</em>
+<a id='L207' name='L207'></a><em class='comment'>                                printf("quarry PW fail.\n");</em>
+<a id='L208' name='L208'></a><em class='comment'>                                return -1;</em>
+<a id='L209' name='L209'></a><em class='comment'>                        }else{</em>
+<a id='L210' name='L210'></a><em class='comment'>                                if(pw-&gt;out_state != NOT_READY){</em>
+<a id='L211' name='L211'></a><em class='comment'>                                        vlx.mid = VPN_M_MOD_ID;</em>
+<a id='L212' name='L212'></a><em class='comment'>                                        vlx.type = RELEASE_PW;</em>
+<a id='L213' name='L213'></a><em class='comment'>                                        vlx.u.vi.vc_type = 0x05;</em>
+<a id='L214' name='L214'></a><em class='comment'>                                        vlx.u.vi.vpn_id = vpn_this-&gt;vpn_id;</em>
+<a id='L215' name='L215'></a><em class='comment'>                                        vlx.u.vi.label = pw-&gt;out_pw_label;</em>
+<a id='L216' name='L216'></a><em class='comment'>                                        vlx.u.vi.remote_ip.s_addr = ip;</em>
+<a id='L217' name='L217'></a><em class='comment'>                                        if(send_msg_to_other_process(fd, LDP_PORT, &amp;vlx, sizeof(vlx))==-1){</em>
+<a id='L218' name='L218'></a><em class='comment'>                                                printf("send_msg_to_other_process fail.\n");</em>
+<a id='L219' name='L219'></a><em class='comment'>                                                return -1;</em>
+<a id='L220' name='L220'></a><em class='comment'>                                        }</em>
+<a id='L221' name='L221'></a><em class='comment'>                                        if(pw-&gt;in_state == NOT_READY){</em>
+<a id='L222' name='L222'></a><em class='comment'>                                                del_pw_info(vpn,ip,-1);</em>
+<a id='L223' name='L223'></a><em class='comment'>                                        }else{</em>
+<a id='L224' name='L224'></a><em class='comment'>                                                pw-&gt;out_state = NOT_READY;</em>
+<a id='L225' name='L225'></a><em class='comment'>                                                pw-&gt;out_pw_label = 0;</em>
+<a id='L226' name='L226'></a><em class='comment'>                                        }//end if(pw-&gt;out_state==NOT_READY)             </em>
+<a id='L227' name='L227'></a><em class='comment'>                                        printf("Delete vpn %d's outgoing data plane forwarding information\n", vpn_this-&gt;vpn_id);</em>
+<a id='L228' name='L228'></a><em class='comment'>                                }//end if(pw-&gt;out_state != NOT_READY)</em>
+<a id='L229' name='L229'></a><em class='comment'>                                return 0;</em>
+<a id='L230' name='L230'></a><em class='comment'>                        }//end if(!pw)</em>
+<a id='L231' name='L231'></a><em class='comment'>                }//end if(vpn_this-&gt;in_use==USED)</em>
+<a id='L232' name='L232'></a><em class='comment'>        }else{</em>
+<a id='L233' name='L233'></a><em class='comment'>        printf("NO vpn_entry .\n");</em>
+<a id='L234' name='L234'></a><em class='comment'>        return -1;</em>
+<a id='L235' name='L235'></a><em class='comment'>        }</em>
+<a id='L236' name='L236'></a><em class='comment'>        return 0;</em>
+<a id='L237' name='L237'></a><em class='comment'>}</em>
+<a id='L238' name='L238'></a><em class='comment'>*/</em>
+<a id='L239' name='L239'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L8'>[^]</a><a href='#L45'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

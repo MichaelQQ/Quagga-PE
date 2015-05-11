@@ -1,0 +1,534 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/buffer.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/buffer.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L70'>[^]</a><a href='#L463'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L70' title='Defined at 70.'>buffer_new</a></li>
+<li><a href='#L94' title='Defined at 94.'>buffer_free</a></li>
+<li><a href='#L102' title='Defined at 102.'>buffer_getstr</a></li>
+<li><a href='#L125' title='Defined at 125.'>buffer_empty</a></li>
+<li><a href='#L132' title='Defined at 132.'>buffer_reset</a></li>
+<li><a href='#L147' title='Defined at 147.'>buffer_add</a></li>
+<li><a href='#L166' title='Defined at 166.'>buffer_put</a></li>
+<li><a href='#L190' title='Defined at 190.'>buffer_putc</a></li>
+<li><a href='#L197' title='Defined at 197.'>buffer_putstr</a></li>
+<li><a href='#L205' title='Defined at 205.'>buffer_flush_all</a></li>
+<li><a href='#L229' title='Defined at 229.'>buffer_flush_window</a></li>
+<li><a href='#L393' title='Defined at 393.'>buffer_flush_available</a></li>
+<li><a href='#L463' title='Defined at 463.'>buffer_write</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Buffering of output and input. </em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1998 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify</em>
+<a id='L8' name='L8'></a><em class='comment'> * it under the terms of the GNU General Public License as published</em>
+<a id='L9' name='L9'></a><em class='comment'> * by the Free Software Foundation; either version 2, or (at your</em>
+<a id='L10' name='L10'></a><em class='comment'> * option) any later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> * </em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the</em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330,</em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA. </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='225.html'>buffer.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='301.html'>network.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> &lt;stddef.h&gt;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><em class='comment'>/* Buffer master. */</em>
+<a id='L34' name='L34'></a><strong class='reserved'>struct</strong> <a href='../R/5198.html' title='Multiple referred from 489 places.'>buffer</a>
+<a id='L35' name='L35'></a><em class='brace'>{</em>
+<a id='L36' name='L36'></a>  <em class='comment'>/* Data list. */</em>
+<a id='L37' name='L37'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *head;
+<a id='L38' name='L38'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *tail;
+<a id='L39' name='L39'></a>  
+<a id='L40' name='L40'></a>  <em class='comment'>/* Size of each buffer_data chunk. */</em>
+<a id='L41' name='L41'></a>  size_t size;
+<a id='L42' name='L42'></a><em class='brace'>}</em>;
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a><em class='comment'>/* Data container. */</em>
+<a id='L45' name='L45'></a><strong class='reserved'>struct</strong> <a href='../R/5200.html' title='Multiple referred from 15 places.'>buffer_data</a>
+<a id='L46' name='L46'></a><em class='brace'>{</em>
+<a id='L47' name='L47'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *next;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a>  <em class='comment'>/* Location to add new data. */</em>
+<a id='L50' name='L50'></a>  size_t cp;
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a>  <em class='comment'>/* Pointer to data not yet flushed. */</em>
+<a id='L53' name='L53'></a>  size_t sp;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>  <em class='comment'>/* Actual data stream (variable length). */</em>
+<a id='L56' name='L56'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[];  <em class='comment'>/* real dimension is buffer-&gt;size */</em>
+<a id='L57' name='L57'></a><em class='brace'>}</em>;
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><em class='comment'>/* It should always be true that: 0 &lt;= sp &lt;= cp &lt;= size */</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='comment'>/* Default buffer size (used if none specified).  It is rounded up to the</em>
+<a id='L62' name='L62'></a><em class='comment'>   next page boundery. */</em>
+<a id='L63' name='L63'></a><em class='sharp'>#define</em> <a href='../S/185.html#L84' title='Referred from 84 in lib/buffer.c.'>BUFFER_SIZE_DEFAULT</a>             4096
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a><em class='sharp'>#define</em> <a href='../R/431.html' title='Multiple referred from 3 places.'>BUFFER_DATA_FREE</a>(D) <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a>(MTYPE_BUFFER_DATA, (D))
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><em class='comment'>/* Make new buffer. */</em>
+<a id='L69' name='L69'></a><strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *
+<a id='L70' name='L70'></a><a href='../R/5207.html' title='Multiple referred from 9 places.'>buffer_new</a> (size_t size)
+<a id='L71' name='L71'></a><em class='brace'>{</em>
+<a id='L72' name='L72'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>;
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BUFFER, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>));
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>  <strong class='reserved'>if</strong> (size)
+<a id='L77' name='L77'></a>    <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size = size;
+<a id='L78' name='L78'></a>  <strong class='reserved'>else</strong>
+<a id='L79' name='L79'></a>    <em class='brace'>{</em>
+<a id='L80' name='L80'></a>      <strong class='reserved'>static</strong> size_t default_size;
+<a id='L81' name='L81'></a>      <strong class='reserved'>if</strong> (!default_size)
+<a id='L82' name='L82'></a>        <em class='brace'>{</em>
+<a id='L83' name='L83'></a>          <strong class='reserved'>long</strong> pgsz = sysconf(_SC_PAGESIZE);
+<a id='L84' name='L84'></a>          default_size = ((((<a href='../S/185.html#L63' title='Defined at 63 in lib/buffer.c.'>BUFFER_SIZE_DEFAULT</a>-1)/pgsz)+1)*pgsz);
+<a id='L85' name='L85'></a>        <em class='brace'>}</em>
+<a id='L86' name='L86'></a>      <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size = default_size;
+<a id='L87' name='L87'></a>    <em class='brace'>}</em>
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>  <strong class='reserved'>return</strong> <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>;
+<a id='L90' name='L90'></a><em class='brace'>}</em>
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><em class='comment'>/* Free buffer. */</em>
+<a id='L93' name='L93'></a><strong class='reserved'>void</strong>
+<a id='L94' name='L94'></a><a href='../R/5205.html' title='Multiple referred from 9 places.'>buffer_free</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L95' name='L95'></a><em class='brace'>{</em>
+<a id='L96' name='L96'></a>  <a href='../S/185.html#L132' title='Defined at 132 in lib/buffer.c.'>buffer_reset</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>);
+<a id='L97' name='L97'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BUFFER, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>);
+<a id='L98' name='L98'></a><em class='brace'>}</em>
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a><em class='comment'>/* Make string clone. */</em>
+<a id='L101' name='L101'></a><strong class='reserved'>char</strong> *
+<a id='L102' name='L102'></a><a href='../R/5206.html' title='Multiple referred from 4 places.'>buffer_getstr</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L103' name='L103'></a><em class='brace'>{</em>
+<a id='L104' name='L104'></a>  size_t totlen = 0;
+<a id='L105' name='L105'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L106' name='L106'></a>  <strong class='reserved'>char</strong> *s;
+<a id='L107' name='L107'></a>  <strong class='reserved'>char</strong> *p;
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a>  <strong class='reserved'>for</strong> (<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;next)
+<a id='L110' name='L110'></a>    totlen += <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp - <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp;
+<a id='L111' name='L111'></a>  <strong class='reserved'>if</strong> (!(s = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_TMP, totlen+1)))
+<a id='L112' name='L112'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L113' name='L113'></a>  p = s;
+<a id='L114' name='L114'></a>  <strong class='reserved'>for</strong> (<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;next)
+<a id='L115' name='L115'></a>    <em class='brace'>{</em>
+<a id='L116' name='L116'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(p, <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp, <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp - <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp);
+<a id='L117' name='L117'></a>      p += <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp - <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp;
+<a id='L118' name='L118'></a>    <em class='brace'>}</em>
+<a id='L119' name='L119'></a>  *p = '\0';
+<a id='L120' name='L120'></a>  <strong class='reserved'>return</strong> s;
+<a id='L121' name='L121'></a><em class='brace'>}</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a><em class='comment'>/* Return 1 if buffer is empty. */</em>
+<a id='L124' name='L124'></a><strong class='reserved'>int</strong>
+<a id='L125' name='L125'></a><a href='../S/225.html#L53' title='Referred from 53 in lib/buffer.h.'>buffer_empty</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L126' name='L126'></a><em class='brace'>{</em>
+<a id='L127' name='L127'></a>  <strong class='reserved'>return</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L128' name='L128'></a><em class='brace'>}</em>
+<a id='L129' name='L129'></a>
+<a id='L130' name='L130'></a><em class='comment'>/* Clear and free all allocated data. */</em>
+<a id='L131' name='L131'></a><strong class='reserved'>void</strong>
+<a id='L132' name='L132'></a><a href='../R/5211.html' title='Multiple referred from 13 places.'>buffer_reset</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L133' name='L133'></a><em class='brace'>{</em>
+<a id='L134' name='L134'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L135' name='L135'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *next;
+<a id='L136' name='L136'></a>  
+<a id='L137' name='L137'></a>  <strong class='reserved'>for</strong> (<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = next)
+<a id='L138' name='L138'></a>    <em class='brace'>{</em>
+<a id='L139' name='L139'></a>      next = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;next;
+<a id='L140' name='L140'></a>      <a href='../S/185.html#L66' title='Defined at 66 in lib/buffer.c.'>BUFFER_DATA_FREE</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L141' name='L141'></a>    <em class='brace'>}</em>
+<a id='L142' name='L142'></a>  <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L143' name='L143'></a><em class='brace'>}</em>
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a><em class='comment'>/* Add buffer_data to the end of buffer. */</em>
+<a id='L146' name='L146'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *
+<a id='L147' name='L147'></a><a href='../S/185.html#L178' title='Referred from 178 in lib/buffer.c.'>buffer_add</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L148' name='L148'></a><em class='brace'>{</em>
+<a id='L149' name='L149'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *d;
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a>  d = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_BUFFER_DATA, offsetof(<strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a>, <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size]));
+<a id='L152' name='L152'></a>  d-&gt;cp = d-&gt;sp = 0;
+<a id='L153' name='L153'></a>  d-&gt;next = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail)
+<a id='L156' name='L156'></a>    <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail-&gt;next = d;
+<a id='L157' name='L157'></a>  <strong class='reserved'>else</strong>
+<a id='L158' name='L158'></a>    <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head = d;
+<a id='L159' name='L159'></a>  <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail = d;
+<a id='L160' name='L160'></a>
+<a id='L161' name='L161'></a>  <strong class='reserved'>return</strong> d;
+<a id='L162' name='L162'></a><em class='brace'>}</em>
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a><em class='comment'>/* Write data to buffer. */</em>
+<a id='L165' name='L165'></a><strong class='reserved'>void</strong>
+<a id='L166' name='L166'></a><a href='../R/5208.html' title='Multiple referred from 9 places.'>buffer_put</a>(<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *p, size_t size)
+<a id='L167' name='L167'></a><em class='brace'>{</em>
+<a id='L168' name='L168'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail;
+<a id='L169' name='L169'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ptr = p;
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a>  <em class='comment'>/* We use even last one byte of data buffer. */</em>
+<a id='L172' name='L172'></a>  <strong class='reserved'>while</strong> (size)    
+<a id='L173' name='L173'></a>    <em class='brace'>{</em>
+<a id='L174' name='L174'></a>      size_t chunk;
+<a id='L175' name='L175'></a>
+<a id='L176' name='L176'></a>      <em class='comment'>/* If there is no data buffer add it. */</em>
+<a id='L177' name='L177'></a>      <strong class='reserved'>if</strong> (<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp == <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size)
+<a id='L178' name='L178'></a>        <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/185.html#L147' title='Defined at 147 in lib/buffer.c.'>buffer_add</a> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>);
+<a id='L179' name='L179'></a>
+<a id='L180' name='L180'></a>      chunk = ((size &lt;= (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size - <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp)) ? size : (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size - <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp));
+<a id='L181' name='L181'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> ((<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp), ptr, chunk);
+<a id='L182' name='L182'></a>      size -= chunk;
+<a id='L183' name='L183'></a>      ptr += chunk;
+<a id='L184' name='L184'></a>      <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp += chunk;
+<a id='L185' name='L185'></a>    <em class='brace'>}</em>
+<a id='L186' name='L186'></a><em class='brace'>}</em>
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a><em class='comment'>/* Insert character into the buffer. */</em>
+<a id='L189' name='L189'></a><strong class='reserved'>void</strong>
+<a id='L190' name='L190'></a><a href='../R/5209.html' title='Multiple referred from 7 places.'>buffer_putc</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, u_char c)
+<a id='L191' name='L191'></a><em class='brace'>{</em>
+<a id='L192' name='L192'></a>  <a href='../S/185.html#L166' title='Defined at 166 in lib/buffer.c.'>buffer_put</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, &amp;c, 1);
+<a id='L193' name='L193'></a><em class='brace'>}</em>
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a><em class='comment'>/* Put string to the buffer. */</em>
+<a id='L196' name='L196'></a><strong class='reserved'>void</strong>
+<a id='L197' name='L197'></a><a href='../R/5210.html' title='Multiple referred from 8 places.'>buffer_putstr</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *c)
+<a id='L198' name='L198'></a><em class='brace'>{</em>
+<a id='L199' name='L199'></a>  <a href='../S/185.html#L166' title='Defined at 166 in lib/buffer.c.'>buffer_put</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, c, strlen(c));
+<a id='L200' name='L200'></a><em class='brace'>}</em>
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a><em class='comment'>/* Keep flushing data to the fd until the buffer is empty or an error is</em>
+<a id='L203' name='L203'></a><em class='comment'>   encountered or the operation would block. */</em>
+<a id='L204' name='L204'></a><a href='../S/225.html#L69' title='Defined at 69 in lib/buffer.h.'>buffer_status_t</a>
+<a id='L205' name='L205'></a><a href='../R/5202.html' title='Multiple referred from 2 places.'>buffer_flush_all</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>int</strong> fd)
+<a id='L206' name='L206'></a><em class='brace'>{</em>
+<a id='L207' name='L207'></a>  <a href='../S/225.html#L69' title='Defined at 69 in lib/buffer.h.'>buffer_status_t</a> ret;
+<a id='L208' name='L208'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *head;
+<a id='L209' name='L209'></a>  size_t head_sp;
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a>  <strong class='reserved'>if</strong> (!<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head)
+<a id='L212' name='L212'></a>    <strong class='reserved'>return</strong> <a href='../S/225.html#L63' title='Defined at 63 in lib/buffer.h.'>BUFFER_EMPTY</a>;
+<a id='L213' name='L213'></a>  head_sp = (head = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head)-&gt;sp;
+<a id='L214' name='L214'></a>  <em class='comment'>/* Flush all data. */</em>
+<a id='L215' name='L215'></a>  <strong class='reserved'>while</strong> ((ret = <a href='../S/185.html#L393' title='Defined at 393 in lib/buffer.c.'>buffer_flush_available</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, fd)) == BUFFER_PENDING)
+<a id='L216' name='L216'></a>    <em class='brace'>{</em>
+<a id='L217' name='L217'></a>      <strong class='reserved'>if</strong> ((<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head == head) &amp;&amp; (head_sp == head-&gt;sp) &amp;&amp; (errno != EINTR))
+<a id='L218' name='L218'></a>        <em class='comment'>/* No data was flushed, so kernel buffer must be full. */</em>
+<a id='L219' name='L219'></a>        <strong class='reserved'>return</strong> ret;
+<a id='L220' name='L220'></a>      head_sp = (head = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head)-&gt;sp;
+<a id='L221' name='L221'></a>    <em class='brace'>}</em>
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L224' name='L224'></a><em class='brace'>}</em>
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a><em class='comment'>/* Flush enough data to fill a terminal window of the given scene (used only</em>
+<a id='L227' name='L227'></a><em class='comment'>   by vty telnet interface). */</em>
+<a id='L228' name='L228'></a><a href='../S/225.html#L69' title='Defined at 69 in lib/buffer.h.'>buffer_status_t</a>
+<a id='L229' name='L229'></a><a href='../R/5204.html' title='Multiple referred from 3 places.'>buffer_flush_window</a> (<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>int</strong> fd, <strong class='reserved'>int</strong> width, <strong class='reserved'>int</strong> height, 
+<a id='L230' name='L230'></a>                     <strong class='reserved'>int</strong> erase_flag, <strong class='reserved'>int</strong> no_more_flag)
+<a id='L231' name='L231'></a><em class='brace'>{</em>
+<a id='L232' name='L232'></a>  <strong class='reserved'>int</strong> nbytes;
+<a id='L233' name='L233'></a>  <strong class='reserved'>int</strong> iov_alloc;
+<a id='L234' name='L234'></a>  <strong class='reserved'>int</strong> iov_index;
+<a id='L235' name='L235'></a>  <strong class='reserved'>struct</strong> iovec *iov;
+<a id='L236' name='L236'></a>  <strong class='reserved'>struct</strong> iovec small_iov[3];
+<a id='L237' name='L237'></a>  <strong class='reserved'>char</strong> more[] = " --More-- ";
+<a id='L238' name='L238'></a>  <strong class='reserved'>char</strong> erase[] = <em class='brace'>{</em> 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+<a id='L239' name='L239'></a>                   ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+<a id='L240' name='L240'></a>                   0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08<em class='brace'>}</em>;
+<a id='L241' name='L241'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L242' name='L242'></a>  <strong class='reserved'>int</strong> column;
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>  <strong class='reserved'>if</strong> (!<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head)
+<a id='L245' name='L245'></a>    <strong class='reserved'>return</strong> <a href='../S/225.html#L63' title='Defined at 63 in lib/buffer.h.'>BUFFER_EMPTY</a>;
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a>  <strong class='reserved'>if</strong> (height &lt; 1)
+<a id='L248' name='L248'></a>    <em class='brace'>{</em>
+<a id='L249' name='L249'></a>      zlog_warn("%s called with non-positive window height %d, forcing to 1",
+<a id='L250' name='L250'></a>                __func__, height);
+<a id='L251' name='L251'></a>      height = 1;
+<a id='L252' name='L252'></a>    <em class='brace'>}</em>
+<a id='L253' name='L253'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (height &gt;= 2)
+<a id='L254' name='L254'></a>    height--;
+<a id='L255' name='L255'></a>  <strong class='reserved'>if</strong> (width &lt; 1)
+<a id='L256' name='L256'></a>    <em class='brace'>{</em>
+<a id='L257' name='L257'></a>      zlog_warn("%s called with non-positive window width %d, forcing to 1",
+<a id='L258' name='L258'></a>                __func__, width);
+<a id='L259' name='L259'></a>      width = 1;
+<a id='L260' name='L260'></a>    <em class='brace'>}</em>
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>  <em class='comment'>/* For erase and more data add two to b's buffer_data count.*/</em>
+<a id='L263' name='L263'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head-&gt;next == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L264' name='L264'></a>    <em class='brace'>{</em>
+<a id='L265' name='L265'></a>      iov_alloc = <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(small_iov);
+<a id='L266' name='L266'></a>      iov = small_iov;
+<a id='L267' name='L267'></a>    <em class='brace'>}</em>
+<a id='L268' name='L268'></a>  <strong class='reserved'>else</strong>
+<a id='L269' name='L269'></a>    <em class='brace'>{</em>
+<a id='L270' name='L270'></a>      iov_alloc = ((height*(width+2))/<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size)+10;
+<a id='L271' name='L271'></a>      iov = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_TMP, iov_alloc*<strong class='reserved'>sizeof</strong>(*iov));
+<a id='L272' name='L272'></a>    <em class='brace'>}</em>
+<a id='L273' name='L273'></a>  iov_index = 0;
+<a id='L274' name='L274'></a>
+<a id='L275' name='L275'></a>  <em class='comment'>/* Previously print out is performed. */</em>
+<a id='L276' name='L276'></a>  <strong class='reserved'>if</strong> (erase_flag)
+<a id='L277' name='L277'></a>    <em class='brace'>{</em>
+<a id='L278' name='L278'></a>      iov[iov_index].iov_base = erase;
+<a id='L279' name='L279'></a>      iov[iov_index].iov_len = <strong class='reserved'>sizeof</strong> erase;
+<a id='L280' name='L280'></a>      iov_index++;
+<a id='L281' name='L281'></a>    <em class='brace'>}</em>
+<a id='L282' name='L282'></a>
+<a id='L283' name='L283'></a>  <em class='comment'>/* Output data. */</em>
+<a id='L284' name='L284'></a>  column = 1;  <em class='comment'>/* Column position of next character displayed. */</em>
+<a id='L285' name='L285'></a>  <strong class='reserved'>for</strong> (<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> &amp;&amp; (height &gt; 0); <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;next)
+<a id='L286' name='L286'></a>    <em class='brace'>{</em>
+<a id='L287' name='L287'></a>      size_t cp;
+<a id='L288' name='L288'></a>
+<a id='L289' name='L289'></a>      cp = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp;
+<a id='L290' name='L290'></a>      <strong class='reserved'>while</strong> ((cp &lt; <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;cp) &amp;&amp; (height &gt; 0))
+<a id='L291' name='L291'></a>        <em class='brace'>{</em>
+<a id='L292' name='L292'></a>          <em class='comment'>/* Calculate lines remaining and column position after displaying</em>
+<a id='L293' name='L293'></a><em class='comment'>             this character. */</em>
+<a id='L294' name='L294'></a>          <strong class='reserved'>if</strong> (<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[cp] == '\r')
+<a id='L295' name='L295'></a>            column = 1;
+<a id='L296' name='L296'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> ((<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[cp] == '\n') || (column == width))
+<a id='L297' name='L297'></a>            <em class='brace'>{</em>
+<a id='L298' name='L298'></a>              column = 1;
+<a id='L299' name='L299'></a>              height--;
+<a id='L300' name='L300'></a>            <em class='brace'>}</em>
+<a id='L301' name='L301'></a>          <strong class='reserved'>else</strong>
+<a id='L302' name='L302'></a>            column++;
+<a id='L303' name='L303'></a>          cp++;
+<a id='L304' name='L304'></a>        <em class='brace'>}</em>
+<a id='L305' name='L305'></a>      iov[iov_index].iov_base = (<strong class='reserved'>char</strong> *)(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> + <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp);
+<a id='L306' name='L306'></a>      iov[iov_index++].iov_len = cp-<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp;
+<a id='L307' name='L307'></a>      <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;sp = cp;
+<a id='L308' name='L308'></a>
+<a id='L309' name='L309'></a>      <strong class='reserved'>if</strong> (iov_index == iov_alloc)
+<a id='L310' name='L310'></a>        <em class='comment'>/* This should not ordinarily happen. */</em>
+<a id='L311' name='L311'></a>        <em class='brace'>{</em>
+<a id='L312' name='L312'></a>          iov_alloc *= 2;
+<a id='L313' name='L313'></a>          <strong class='reserved'>if</strong> (iov != small_iov)
+<a id='L314' name='L314'></a>            <em class='brace'>{</em>
+<a id='L315' name='L315'></a>              zlog_warn("%s: growing iov array to %d; "
+<a id='L316' name='L316'></a>                        "width %d, height %d, size %lu",
+<a id='L317' name='L317'></a>                        __func__, iov_alloc, width, height, (u_long)<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;size);
+<a id='L318' name='L318'></a>              iov = <a href='../D/4560.html' title='Multiple defined in 4 places.'>XREALLOC</a>(MTYPE_TMP, iov, iov_alloc*<strong class='reserved'>sizeof</strong>(*iov));
+<a id='L319' name='L319'></a>            <em class='brace'>}</em>
+<a id='L320' name='L320'></a>          <strong class='reserved'>else</strong>
+<a id='L321' name='L321'></a>            <em class='brace'>{</em>
+<a id='L322' name='L322'></a>              <em class='comment'>/* This should absolutely never occur. */</em>
+<a id='L323' name='L323'></a>              zlog_err("%s: corruption detected: iov_small overflowed; "
+<a id='L324' name='L324'></a>                       "head %p, tail %p, head-&gt;next %p",
+<a id='L325' name='L325'></a>                       __func__, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head-&gt;next);
+<a id='L326' name='L326'></a>              iov = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_TMP, iov_alloc*<strong class='reserved'>sizeof</strong>(*iov));
+<a id='L327' name='L327'></a>              <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(iov, small_iov, <strong class='reserved'>sizeof</strong>(small_iov));
+<a id='L328' name='L328'></a>            <em class='brace'>}</em>
+<a id='L329' name='L329'></a>        <em class='brace'>}</em>
+<a id='L330' name='L330'></a>    <em class='brace'>}</em>
+<a id='L331' name='L331'></a>
+<a id='L332' name='L332'></a>  <em class='comment'>/* In case of `more' display need. */</em>
+<a id='L333' name='L333'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail &amp;&amp; (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail-&gt;sp &lt; <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail-&gt;cp) &amp;&amp; !no_more_flag)
+<a id='L334' name='L334'></a>    <em class='brace'>{</em>
+<a id='L335' name='L335'></a>      iov[iov_index].iov_base = more;
+<a id='L336' name='L336'></a>      iov[iov_index].iov_len = <strong class='reserved'>sizeof</strong> more;
+<a id='L337' name='L337'></a>      iov_index++;
+<a id='L338' name='L338'></a>    <em class='brace'>}</em>
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a><em class='sharp'>#ifdef</em> IOV_MAX
+<a id='L342' name='L342'></a>  <em class='comment'>/* IOV_MAX are normally defined in &lt;sys/uio.h&gt; , Posix.1g.</em>
+<a id='L343' name='L343'></a><em class='comment'>     example: Solaris2.6 are defined IOV_MAX size at 16.     */</em>
+<a id='L344' name='L344'></a>  <em class='brace'>{</em>
+<a id='L345' name='L345'></a>    <strong class='reserved'>struct</strong> iovec *c_iov = iov;
+<a id='L346' name='L346'></a>    nbytes = 0; <em class='comment'>/* Make sure it's initialized. */</em>
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a>    <strong class='reserved'>while</strong> (iov_index &gt; 0)
+<a id='L349' name='L349'></a>      <em class='brace'>{</em>
+<a id='L350' name='L350'></a>         <strong class='reserved'>int</strong> iov_size;
+<a id='L351' name='L351'></a>
+<a id='L352' name='L352'></a>         iov_size = ((iov_index &gt; IOV_MAX) ? IOV_MAX : iov_index);
+<a id='L353' name='L353'></a>         <strong class='reserved'>if</strong> ((nbytes = writev(fd, c_iov, iov_size)) &lt; 0)
+<a id='L354' name='L354'></a>           <em class='brace'>{</em>
+<a id='L355' name='L355'></a>             zlog_warn("%s: writev to fd %d failed: %s",
+<a id='L356' name='L356'></a>                       __func__, fd, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L357' name='L357'></a>             <strong class='reserved'>break</strong>;
+<a id='L358' name='L358'></a>           <em class='brace'>}</em>
+<a id='L359' name='L359'></a>
+<a id='L360' name='L360'></a>         <em class='comment'>/* move pointer io-vector */</em>
+<a id='L361' name='L361'></a>         c_iov += iov_size;
+<a id='L362' name='L362'></a>         iov_index -= iov_size;
+<a id='L363' name='L363'></a>      <em class='brace'>}</em>
+<a id='L364' name='L364'></a>  <em class='brace'>}</em>
+<a id='L365' name='L365'></a><em class='sharp'>#else</em>  <em class='comment'>/* IOV_MAX */</em>
+<a id='L366' name='L366'></a>   <strong class='reserved'>if</strong> ((nbytes = writev (fd, iov, iov_index)) &lt; 0)
+<a id='L367' name='L367'></a>     zlog_warn("%s: writev to fd %d failed: %s",
+<a id='L368' name='L368'></a>               __func__, fd, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L369' name='L369'></a><em class='sharp'>#endif</em> <em class='comment'>/* IOV_MAX */</em>
+<a id='L370' name='L370'></a>
+<a id='L371' name='L371'></a>  <em class='comment'>/* Free printed buffer data. */</em>
+<a id='L372' name='L372'></a>  <strong class='reserved'>while</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head &amp;&amp; (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head-&gt;sp == <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head-&gt;cp))
+<a id='L373' name='L373'></a>    <em class='brace'>{</em>
+<a id='L374' name='L374'></a>      <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *del;
+<a id='L375' name='L375'></a>      <strong class='reserved'>if</strong> (!(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head = (del = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head)-&gt;next))
+<a id='L376' name='L376'></a>        <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L377' name='L377'></a>      <a href='../S/185.html#L66' title='Defined at 66 in lib/buffer.c.'>BUFFER_DATA_FREE</a>(del);
+<a id='L378' name='L378'></a>    <em class='brace'>}</em>
+<a id='L379' name='L379'></a>
+<a id='L380' name='L380'></a>  <strong class='reserved'>if</strong> (iov != small_iov)
+<a id='L381' name='L381'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, iov);
+<a id='L382' name='L382'></a>
+<a id='L383' name='L383'></a>  <strong class='reserved'>return</strong> (nbytes &lt; 0) ? <a href='../S/225.html#L59' title='Defined at 59 in lib/buffer.h.'>BUFFER_ERROR</a> :
+<a id='L384' name='L384'></a>                        (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head ? BUFFER_PENDING : <a href='../S/225.html#L63' title='Defined at 63 in lib/buffer.h.'>BUFFER_EMPTY</a>);
+<a id='L385' name='L385'></a><em class='brace'>}</em>
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a><em class='comment'>/* This function (unlike other buffer_flush* functions above) is designed</em>
+<a id='L388' name='L388'></a><em class='comment'>to work with non-blocking sockets.  It does not attempt to write out</em>
+<a id='L389' name='L389'></a><em class='comment'>all of the queued data, just a "big" chunk.  It returns 0 if it was</em>
+<a id='L390' name='L390'></a><em class='comment'>able to empty out the buffers completely, 1 if more flushing is</em>
+<a id='L391' name='L391'></a><em class='comment'>required later, or -1 on a fatal write error. */</em>
+<a id='L392' name='L392'></a><a href='../S/225.html#L69' title='Defined at 69 in lib/buffer.h.'>buffer_status_t</a>
+<a id='L393' name='L393'></a><a href='../R/5203.html' title='Multiple referred from 7 places.'>buffer_flush_available</a>(<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>int</strong> fd)
+<a id='L394' name='L394'></a><em class='brace'>{</em>
+<a id='L395' name='L395'></a>
+<a id='L396' name='L396'></a><em class='comment'>/* These are just reasonable values to make sure a significant amount of</em>
+<a id='L397' name='L397'></a><em class='comment'>data is written.  There's no need to go crazy and try to write it all</em>
+<a id='L398' name='L398'></a><em class='comment'>in one shot. */</em>
+<a id='L399' name='L399'></a><em class='sharp'>#ifdef</em> IOV_MAX
+<a id='L400' name='L400'></a><em class='sharp'>#define</em> <a href='../R/1564.html' title='Multiple referred from 2 places.'>MAX_CHUNKS</a> ((IOV_MAX &gt;= 16) ? 16 : IOV_MAX)
+<a id='L401' name='L401'></a><em class='sharp'>#else</em>
+<a id='L402' name='L402'></a><em class='sharp'>#define</em> <a href='../R/1564.html' title='Multiple referred from 2 places.'>MAX_CHUNKS</a> 16
+<a id='L403' name='L403'></a><em class='sharp'>#endif</em>
+<a id='L404' name='L404'></a><em class='sharp'>#define</em> <a href='../S/185.html#L412' title='Referred from 412 in lib/buffer.c.'>MAX_FLUSH</a> 131072
+<a id='L405' name='L405'></a>
+<a id='L406' name='L406'></a>  <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *d;
+<a id='L407' name='L407'></a>  size_t written;
+<a id='L408' name='L408'></a>  <strong class='reserved'>struct</strong> iovec iov[<a href='../D/1855.html' title='Multiple defined in 3 places.'>MAX_CHUNKS</a>];
+<a id='L409' name='L409'></a>  size_t iovcnt = 0;
+<a id='L410' name='L410'></a>  size_t nbyte = 0;
+<a id='L411' name='L411'></a>
+<a id='L412' name='L412'></a>  <strong class='reserved'>for</strong> (d = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head; d &amp;&amp; (iovcnt &lt; <a href='../D/1855.html' title='Multiple defined in 3 places.'>MAX_CHUNKS</a>) &amp;&amp; (nbyte &lt; <a href='../D/1858.html' title='Multiple defined in 2 places.'>MAX_FLUSH</a>);
+<a id='L413' name='L413'></a>       d = d-&gt;next, iovcnt++)
+<a id='L414' name='L414'></a>    <em class='brace'>{</em>
+<a id='L415' name='L415'></a>      iov[iovcnt].iov_base = d-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>+d-&gt;sp;
+<a id='L416' name='L416'></a>      nbyte += (iov[iovcnt].iov_len = d-&gt;cp-d-&gt;sp);
+<a id='L417' name='L417'></a>    <em class='brace'>}</em>
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a>  <strong class='reserved'>if</strong> (!nbyte)
+<a id='L420' name='L420'></a>    <em class='comment'>/* No data to flush: should we issue a warning message? */</em>
+<a id='L421' name='L421'></a>    <strong class='reserved'>return</strong> <a href='../S/225.html#L63' title='Defined at 63 in lib/buffer.h.'>BUFFER_EMPTY</a>;
+<a id='L422' name='L422'></a>
+<a id='L423' name='L423'></a>  <em class='comment'>/* only place where written should be sign compared */</em>
+<a id='L424' name='L424'></a>  <strong class='reserved'>if</strong> ((ssize_t)(written = writev(fd,iov,iovcnt)) &lt; 0)
+<a id='L425' name='L425'></a>    <em class='brace'>{</em>
+<a id='L426' name='L426'></a>      <strong class='reserved'>if</strong> (<a href='../S/301.html#L37' title='Defined at 37 in lib/network.h.'>ERRNO_IO_RETRY</a>(errno))
+<a id='L427' name='L427'></a>        <em class='comment'>/* Calling code should try again later. */</em>
+<a id='L428' name='L428'></a>        <strong class='reserved'>return</strong> BUFFER_PENDING;
+<a id='L429' name='L429'></a>      zlog_warn("%s: write error on fd %d: %s",
+<a id='L430' name='L430'></a>                __func__, fd, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L431' name='L431'></a>      <strong class='reserved'>return</strong> <a href='../S/225.html#L59' title='Defined at 59 in lib/buffer.h.'>BUFFER_ERROR</a>;
+<a id='L432' name='L432'></a>    <em class='brace'>}</em>
+<a id='L433' name='L433'></a>
+<a id='L434' name='L434'></a>  <em class='comment'>/* Free printed buffer data. */</em>
+<a id='L435' name='L435'></a>  <strong class='reserved'>while</strong> (written &gt; 0)
+<a id='L436' name='L436'></a>    <em class='brace'>{</em>
+<a id='L437' name='L437'></a>      <strong class='reserved'>struct</strong> <a href='../S/185.html#L45' title='Defined at 45 in lib/buffer.c.'>buffer_data</a> *d;
+<a id='L438' name='L438'></a>      <strong class='reserved'>if</strong> (!(d = <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head))
+<a id='L439' name='L439'></a>        <em class='brace'>{</em>
+<a id='L440' name='L440'></a>          zlog_err("%s: corruption detected: buffer queue empty, "
+<a id='L441' name='L441'></a>                   "but written is %lu", __func__, (u_long)written);
+<a id='L442' name='L442'></a>          <strong class='reserved'>break</strong>;
+<a id='L443' name='L443'></a>        <em class='brace'>}</em>
+<a id='L444' name='L444'></a>      <strong class='reserved'>if</strong> (written &lt; d-&gt;cp-d-&gt;sp)
+<a id='L445' name='L445'></a>        <em class='brace'>{</em>
+<a id='L446' name='L446'></a>          d-&gt;sp += written;
+<a id='L447' name='L447'></a>          <strong class='reserved'>return</strong> BUFFER_PENDING;
+<a id='L448' name='L448'></a>        <em class='brace'>}</em>
+<a id='L449' name='L449'></a>
+<a id='L450' name='L450'></a>      written -= (d-&gt;cp-d-&gt;sp);
+<a id='L451' name='L451'></a>      <strong class='reserved'>if</strong> (!(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head = d-&gt;next))
+<a id='L452' name='L452'></a>        <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;tail = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L453' name='L453'></a>      <a href='../S/185.html#L66' title='Defined at 66 in lib/buffer.c.'>BUFFER_DATA_FREE</a>(d);
+<a id='L454' name='L454'></a>    <em class='brace'>}</em>
+<a id='L455' name='L455'></a>
+<a id='L456' name='L456'></a>  <strong class='reserved'>return</strong> <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head ? BUFFER_PENDING : <a href='../S/225.html#L63' title='Defined at 63 in lib/buffer.h.'>BUFFER_EMPTY</a>;
+<a id='L457' name='L457'></a>
+<a id='L458' name='L458'></a><em class='sharp'>#undef</em> <a href='../R/1564.html' title='Multiple referred from 2 places.'>MAX_CHUNKS</a>
+<a id='L459' name='L459'></a><em class='sharp'>#undef</em> <a href='../S/185.html#L412' title='Referred from 412 in lib/buffer.c.'>MAX_FLUSH</a>
+<a id='L460' name='L460'></a><em class='brace'>}</em>
+<a id='L461' name='L461'></a>
+<a id='L462' name='L462'></a><a href='../S/225.html#L69' title='Defined at 69 in lib/buffer.h.'>buffer_status_t</a>
+<a id='L463' name='L463'></a><a href='../R/5215.html' title='Multiple referred from 3 places.'>buffer_write</a>(<strong class='reserved'>struct</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>int</strong> fd, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *p, size_t size)
+<a id='L464' name='L464'></a><em class='brace'>{</em>
+<a id='L465' name='L465'></a>  ssize_t nbytes;
+<a id='L466' name='L466'></a>
+<a id='L467' name='L467'></a><em class='sharp'>#if</em> 0
+<a id='L468' name='L468'></a>  <em class='comment'>/* Should we attempt to drain any previously buffered data?  This could help</em>
+<a id='L469' name='L469'></a><em class='comment'>     reduce latency in pushing out the data if we are stuck in a long-running</em>
+<a id='L470' name='L470'></a><em class='comment'>     thread that is preventing the main select loop from calling the flush</em>
+<a id='L471' name='L471'></a><em class='comment'>     thread... */</em>
+<a id='L472' name='L472'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head &amp;&amp; (<a href='../S/185.html#L393' title='Defined at 393 in lib/buffer.c.'>buffer_flush_available</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, fd) == <a href='../S/225.html#L59' title='Defined at 59 in lib/buffer.h.'>BUFFER_ERROR</a>))
+<a id='L473' name='L473'></a>    <strong class='reserved'>return</strong> <a href='../S/225.html#L59' title='Defined at 59 in lib/buffer.h.'>BUFFER_ERROR</a>;
+<a id='L474' name='L474'></a><em class='sharp'>#endif</em>
+<a id='L475' name='L475'></a>  <strong class='reserved'>if</strong> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head)
+<a id='L476' name='L476'></a>    <em class='comment'>/* Buffer is not empty, so do not attempt to write the new data. */</em>
+<a id='L477' name='L477'></a>    nbytes = 0;
+<a id='L478' name='L478'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> ((nbytes = write(fd, p, size)) &lt; 0)
+<a id='L479' name='L479'></a>    <em class='brace'>{</em>
+<a id='L480' name='L480'></a>      <strong class='reserved'>if</strong> (<a href='../S/301.html#L37' title='Defined at 37 in lib/network.h.'>ERRNO_IO_RETRY</a>(errno))
+<a id='L481' name='L481'></a>        nbytes = 0;
+<a id='L482' name='L482'></a>      <strong class='reserved'>else</strong>
+<a id='L483' name='L483'></a>        <em class='brace'>{</em>
+<a id='L484' name='L484'></a>          zlog_warn("%s: write error on fd %d: %s",
+<a id='L485' name='L485'></a>                    __func__, fd, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L486' name='L486'></a>          <strong class='reserved'>return</strong> <a href='../S/225.html#L59' title='Defined at 59 in lib/buffer.h.'>BUFFER_ERROR</a>;
+<a id='L487' name='L487'></a>        <em class='brace'>}</em>
+<a id='L488' name='L488'></a>    <em class='brace'>}</em>
+<a id='L489' name='L489'></a>  <em class='comment'>/* Add any remaining data to the buffer. */</em>
+<a id='L490' name='L490'></a>  <em class='brace'>{</em>
+<a id='L491' name='L491'></a>    size_t written = nbytes;
+<a id='L492' name='L492'></a>    <strong class='reserved'>if</strong> (written &lt; size)
+<a id='L493' name='L493'></a>      <a href='../S/185.html#L166' title='Defined at 166 in lib/buffer.c.'>buffer_put</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, ((<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *)p)+written, size-written);
+<a id='L494' name='L494'></a>  <em class='brace'>}</em>
+<a id='L495' name='L495'></a>  <strong class='reserved'>return</strong> <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;head ? BUFFER_PENDING : <a href='../S/225.html#L63' title='Defined at 63 in lib/buffer.h.'>BUFFER_EMPTY</a>;
+<a id='L496' name='L496'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L70'>[^]</a><a href='#L463'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

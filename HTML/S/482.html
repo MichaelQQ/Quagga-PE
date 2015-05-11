@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/dummy_trilld.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/dummy_trilld.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L52'>[^]</a><a href='#L76'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L52' title='Defined at 52.'>trill_area_init</a></li>
+<li><a href='#L53' title='Defined at 53.'>trill_area_free</a></li>
+<li><a href='#L54' title='Defined at 54.'>tlv_add_trill_nickname</a></li>
+<li><a href='#L59' title='Defined at 59.'>trill_process_spf</a></li>
+<li><a href='#L60' title='Defined at 60.'>trill_parse_router_capability_tlvs</a></li>
+<li><a href='#L62' title='Defined at 62.'>trill_area_nickname</a></li>
+<li><a href='#L66' title='Defined at 66.'>get_root_nick</a></li>
+<li><a href='#L70' title='Defined at 70.'>trill_nicknode_lookup</a></li>
+<li><a href='#L75' title='Defined at 75.'>trill_nick_destroy</a></li>
+<li><a href='#L76' title='Defined at 76.'>trill_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_trill.h</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright 2009 Sun Microsystems, Inc.  All rights reserved.</em>
+<a id='L5' name='L5'></a><em class='comment'> * modified by gandi.net</em>
+<a id='L6' name='L6'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free</em>
+<a id='L8' name='L8'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option)</em>
+<a id='L9' name='L9'></a><em class='comment'> * any later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT</em>
+<a id='L12' name='L12'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</em>
+<a id='L13' name='L13'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for</em>
+<a id='L14' name='L14'></a><em class='comment'> * more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> * </em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License along</em>
+<a id='L17' name='L17'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc.,</em>
+<a id='L18' name='L18'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L19' name='L19'></a><em class='comment'> */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;errno.h&gt;
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> &lt;dirent.h&gt;
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> &lt;sys/stat.h&gt;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='227.html'>hash.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='480.html'>isisd/dict.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='488.html'>isisd/isis_common.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='524.html'>isisd/isis_circuit.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='497.html'>isisd/isis_flags.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='483.html'>isisd/isis_tlv.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='501.html'>isisd/isis_lsp.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='485.html'>isisd/trilld.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='510.html'>isisd/isisd.h</a>"
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><strong class='reserved'>void</strong> <a href='../R/10217.html' title='Multiple referred from 2 places.'>trill_area_init</a>(<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area)<em class='brace'>{</em><em class='brace'>}</em>
+<a id='L53' name='L53'></a><strong class='reserved'>void</strong> <a href='../R/10216.html' title='Multiple referred from 2 places.'>trill_area_free</a>(<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area)<em class='brace'>{</em><em class='brace'>}</em>
+<a id='L54' name='L54'></a><strong class='reserved'>int</strong> <a href='../R/10189.html' title='Multiple referred from 2 places.'>tlv_add_trill_nickname</a> (<strong class='reserved'>struct</strong> <a href='../S/485.html#L58' title='Defined at 58 in isisd/trilld.h.'>trill_nickname</a> *nick_info,
+<a id='L55' name='L55'></a>                            <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *<a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a>, <strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area)
+<a id='L56' name='L56'></a><em class='brace'>{</em>
+<a id='L57' name='L57'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L58' name='L58'></a><em class='brace'>}</em>
+<a id='L59' name='L59'></a><strong class='reserved'>void</strong> <a href='../R/10249.html' title='Multiple referred from 2 places.'>trill_process_spf</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area) <em class='brace'>{</em><em class='brace'>}</em>
+<a id='L60' name='L60'></a><strong class='reserved'>void</strong> <a href='../R/10247.html' title='Multiple referred from 2 places.'>trill_parse_router_capability_tlvs</a> (<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area,
+<a id='L61' name='L61'></a>                                         <strong class='reserved'>struct</strong> <a href='../S/501.html#L31' title='Defined at 31 in isisd/isis_lsp.h.'>isis_lsp</a> *lsp) <em class='brace'>{</em> <em class='brace'>}</em>
+<a id='L62' name='L62'></a><strong class='reserved'>int</strong> <a href='../R/10218.html' title='Multiple referred from 4 places.'>trill_area_nickname</a>(<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area, <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> nickname)
+<a id='L63' name='L63'></a><em class='brace'>{</em>
+<a id='L64' name='L64'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L65' name='L65'></a><em class='brace'>}</em>
+<a id='L66' name='L66'></a><a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> <a href='../R/5834.html' title='Multiple referred from 3 places.'>get_root_nick</a>(<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area)
+<a id='L67' name='L67'></a><em class='brace'>{</em>
+<a id='L68' name='L68'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L69' name='L69'></a><em class='brace'>}</em>
+<a id='L70' name='L70'></a><a href='../S/485.html#L105' title='Defined at 105 in isisd/trilld.h.'>nicknode_t</a> * <a href='../R/10244.html' title='Multiple referred from 4 places.'>trill_nicknode_lookup</a>(<strong class='reserved'>struct</strong> <a href='../S/510.html#L84' title='Defined at 84 in isisd/isisd.h.'>isis_area</a> *area,
+<a id='L71' name='L71'></a>                                   <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> nick)
+<a id='L72' name='L72'></a><em class='brace'>{</em>
+<a id='L73' name='L73'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L74' name='L74'></a><em class='brace'>}</em>
+<a id='L75' name='L75'></a><strong class='reserved'>void</strong> <a href='../R/10231.html' title='Multiple referred from 3 places.'>trill_nick_destroy</a>(<strong class='reserved'>struct</strong> <a href='../S/501.html#L31' title='Defined at 31 in isisd/isis_lsp.h.'>isis_lsp</a> *lsp)<em class='brace'>{</em><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L52'>[^]</a><a href='#L76'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

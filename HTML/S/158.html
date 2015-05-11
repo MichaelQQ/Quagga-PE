@@ -1,0 +1,377 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>babeld/neighbour.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1012.html'>babeld</a>/neighbour.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L61'>[^]</a><a href='#L314'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L61' title='Defined at 61.'>find_neighbour_nocreate</a></li>
+<li><a href='#L73' title='Defined at 73.'>flush_neighbour</a></li>
+<li><a href='#L92' title='Defined at 92.'>find_neighbour</a></li>
+<li><a href='#L128' title='Defined at 128.'>update_neighbour</a></li>
+<li><a href='#L215' title='Defined at 215.'>reset_txcost</a></li>
+<li><a href='#L237' title='Defined at 237.'>neighbour_txcost</a></li>
+<li><a href='#L243' title='Defined at 243.'>check_neighbours</a></li>
+<li><a href='#L280' title='Defined at 280.'>neighbour_rxcost</a></li>
+<li><a href='#L314' title='Defined at 314.'>neighbour_cost</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*  </em>
+<a id='L2' name='L2'></a><em class='comment'> *  This file is free software: you may copy, redistribute and/or modify it  </em>
+<a id='L3' name='L3'></a><em class='comment'> *  under the terms of the GNU General Public License as published by the  </em>
+<a id='L4' name='L4'></a><em class='comment'> *  Free Software Foundation, either version 2 of the License, or (at your  </em>
+<a id='L5' name='L5'></a><em class='comment'> *  option) any later version.  </em>
+<a id='L6' name='L6'></a><em class='comment'> *  </em>
+<a id='L7' name='L7'></a><em class='comment'> *  This file is distributed in the hope that it will be useful, but  </em>
+<a id='L8' name='L8'></a><em class='comment'> *  WITHOUT ANY WARRANTY; without even the implied warranty of  </em>
+<a id='L9' name='L9'></a><em class='comment'> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  </em>
+<a id='L10' name='L10'></a><em class='comment'> *  General Public License for more details.  </em>
+<a id='L11' name='L11'></a><em class='comment'> *  </em>
+<a id='L12' name='L12'></a><em class='comment'> *  You should have received a copy of the GNU General Public License  </em>
+<a id='L13' name='L13'></a><em class='comment'> *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.  </em>
+<a id='L14' name='L14'></a><em class='comment'> *  </em>
+<a id='L15' name='L15'></a><em class='comment'> * This file incorporates work covered by the following copyright and  </em>
+<a id='L16' name='L16'></a><em class='comment'> * permission notice:  </em>
+<a id='L17' name='L17'></a><em class='comment'> *</em>
+<a id='L18' name='L18'></a><em class='comment'>Copyright (c) 2007, 2008 by Juliusz Chroboczek</em>
+<a id='L19' name='L19'></a><em class='comment'></em>
+<a id='L20' name='L20'></a><em class='comment'>Permission is hereby granted, free of charge, to any person obtaining a copy</em>
+<a id='L21' name='L21'></a><em class='comment'>of this software and associated documentation files (the "Software"), to deal</em>
+<a id='L22' name='L22'></a><em class='comment'>in the Software without restriction, including without limitation the rights</em>
+<a id='L23' name='L23'></a><em class='comment'>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</em>
+<a id='L24' name='L24'></a><em class='comment'>copies of the Software, and to permit persons to whom the Software is</em>
+<a id='L25' name='L25'></a><em class='comment'>furnished to do so, subject to the following conditions:</em>
+<a id='L26' name='L26'></a><em class='comment'></em>
+<a id='L27' name='L27'></a><em class='comment'>The above copyright notice and this permission notice shall be included in</em>
+<a id='L28' name='L28'></a><em class='comment'>all copies or substantial portions of the Software.</em>
+<a id='L29' name='L29'></a><em class='comment'></em>
+<a id='L30' name='L30'></a><em class='comment'>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</em>
+<a id='L31' name='L31'></a><em class='comment'>IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</em>
+<a id='L32' name='L32'></a><em class='comment'>FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE</em>
+<a id='L33' name='L33'></a><em class='comment'>AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</em>
+<a id='L34' name='L34'></a><em class='comment'>LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</em>
+<a id='L35' name='L35'></a><em class='comment'>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</em>
+<a id='L36' name='L36'></a><em class='comment'>THE SOFTWARE.</em>
+<a id='L37' name='L37'></a><em class='comment'>*/</em>
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> &lt;sys/time.h&gt;
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> &lt;time.h&gt;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='144.html'>babel_main.h</a>"
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='165.html'>babeld.h</a>"
+<a id='L50' name='L50'></a><em class='sharp'>#include</em> "<a href='168.html'>util.h</a>"
+<a id='L51' name='L51'></a><em class='sharp'>#include</em> "<a href='159.html'>babel_interface.h</a>"
+<a id='L52' name='L52'></a><em class='sharp'>#include</em> "<a href='172.html'>neighbour.h</a>"
+<a id='L53' name='L53'></a><em class='sharp'>#include</em> "<a href='148.html'>source.h</a>"
+<a id='L54' name='L54'></a><em class='sharp'>#include</em> "<a href='147.html'>route.h</a>"
+<a id='L55' name='L55'></a><em class='sharp'>#include</em> "<a href='176.html'>message.h</a>"
+<a id='L56' name='L56'></a><em class='sharp'>#include</em> "<a href='143.html'>resend.h</a>"
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a><strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neighs = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *
+<a id='L61' name='L61'></a><a href='../S/158.html#L97' title='Referred from 97 in babeld/neighbour.c.'>find_neighbour_nocreate</a>(<strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *address, <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp)
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>    <strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh;
+<a id='L64' name='L64'></a>    <a href='../S/172.html#L55' title='Defined at 55 in babeld/neighbour.h.'>FOR_ALL_NEIGHBOURS</a>(neigh) <em class='brace'>{</em>
+<a id='L65' name='L65'></a>        <strong class='reserved'>if</strong>(<a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(address, neigh-&gt;address, 16) == 0 &amp;&amp;
+<a id='L66' name='L66'></a>           neigh-&gt;ifp == ifp)
+<a id='L67' name='L67'></a>            <strong class='reserved'>return</strong> neigh;
+<a id='L68' name='L68'></a>    <em class='brace'>}</em>
+<a id='L69' name='L69'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L70' name='L70'></a><em class='brace'>}</em>
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a><strong class='reserved'>void</strong>
+<a id='L73' name='L73'></a><a href='../R/5771.html' title='Multiple referred from 2 places.'>flush_neighbour</a>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh)
+<a id='L74' name='L74'></a><em class='brace'>{</em>
+<a id='L75' name='L75'></a>    <a href='../S/154.html#L283' title='Defined at 283 in babeld/route.c.'>flush_neighbour_routes</a>(neigh);
+<a id='L76' name='L76'></a>    <strong class='reserved'>if</strong>(unicast_neighbour == neigh)
+<a id='L77' name='L77'></a>        <a href='../S/166.html#L767' title='Defined at 767 in babeld/message.c.'>flush_unicast</a>(1);
+<a id='L78' name='L78'></a>    <a href='../S/146.html#L69' title='Defined at 69 in babeld/resend.c.'>flush_resends</a>(neigh);
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a>    <strong class='reserved'>if</strong>(neighs == neigh) <em class='brace'>{</em>
+<a id='L81' name='L81'></a>        neighs = neigh-&gt;next;
+<a id='L82' name='L82'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L83' name='L83'></a>        <strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *previous = neighs;
+<a id='L84' name='L84'></a>        <strong class='reserved'>while</strong>(previous-&gt;next != neigh)
+<a id='L85' name='L85'></a>            previous = previous-&gt;next;
+<a id='L86' name='L86'></a>        previous-&gt;next = neigh-&gt;next;
+<a id='L87' name='L87'></a>    <em class='brace'>}</em>
+<a id='L88' name='L88'></a>    free(neigh);
+<a id='L89' name='L89'></a><em class='brace'>}</em>
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *
+<a id='L92' name='L92'></a><a href='../R/5752.html' title='Multiple referred from 2 places.'>find_neighbour</a>(<strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> *address, <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp)
+<a id='L93' name='L93'></a><em class='brace'>{</em>
+<a id='L94' name='L94'></a>    <strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh;
+<a id='L95' name='L95'></a>    <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> timeval zero = <em class='brace'>{</em>0, 0<em class='brace'>}</em>;
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a>    neigh = <a href='../S/158.html#L61' title='Defined at 61 in babeld/neighbour.c.'>find_neighbour_nocreate</a>(address, ifp);
+<a id='L98' name='L98'></a>    <strong class='reserved'>if</strong>(neigh)
+<a id='L99' name='L99'></a>        <strong class='reserved'>return</strong> neigh;
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>,"Creating neighbour %s on %s.",
+<a id='L102' name='L102'></a>           <a href='../S/151.html#L247' title='Defined at 247 in babeld/util.c.'>format_address</a>(address), ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>    neigh = malloc(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a>));
+<a id='L105' name='L105'></a>    <strong class='reserved'>if</strong>(neigh == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L106' name='L106'></a>        zlog_err("malloc(neighbour): %s", <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(errno));
+<a id='L107' name='L107'></a>        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L108' name='L108'></a>    <em class='brace'>}</em>
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a>    neigh-&gt;hello_seqno = -1;
+<a id='L111' name='L111'></a>    <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(neigh-&gt;address, address, 16);
+<a id='L112' name='L112'></a>    neigh-&gt;reach = 0;
+<a id='L113' name='L113'></a>    neigh-&gt;txcost = <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L114' name='L114'></a>    neigh-&gt;ihu_time = babel_now;
+<a id='L115' name='L115'></a>    neigh-&gt;hello_time = zero;
+<a id='L116' name='L116'></a>    neigh-&gt;hello_interval = 0;
+<a id='L117' name='L117'></a>    neigh-&gt;ihu_interval = 0;
+<a id='L118' name='L118'></a>    neigh-&gt;ifp = ifp;
+<a id='L119' name='L119'></a>    neigh-&gt;next = neighs;
+<a id='L120' name='L120'></a>    neighs = neigh;
+<a id='L121' name='L121'></a>    <a href='../D/10613.html' title='Multiple defined in 2 places.'>send_hello</a>(ifp);
+<a id='L122' name='L122'></a>    <strong class='reserved'>return</strong> neigh;
+<a id='L123' name='L123'></a><em class='brace'>}</em>
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><em class='comment'>/* Recompute a neighbour's rxcost.  Return true if anything changed.</em>
+<a id='L126' name='L126'></a><em class='comment'>   This does not call local_notify_neighbour, see update_neighbour_metric. */</em>
+<a id='L127' name='L127'></a><strong class='reserved'>int</strong>
+<a id='L128' name='L128'></a><a href='../R/10290.html' title='Multiple referred from 3 places.'>update_neighbour</a>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh, <strong class='reserved'>int</strong> hello, <strong class='reserved'>int</strong> hello_interval)
+<a id='L129' name='L129'></a><em class='brace'>{</em>
+<a id='L130' name='L130'></a>    <strong class='reserved'>int</strong> missed_hellos;
+<a id='L131' name='L131'></a>    <strong class='reserved'>int</strong> rc = 0;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>    <strong class='reserved'>if</strong>(hello &lt; 0) <em class='brace'>{</em>
+<a id='L134' name='L134'></a>        <strong class='reserved'>if</strong>(neigh-&gt;hello_interval &lt;= 0)
+<a id='L135' name='L135'></a>            <strong class='reserved'>return</strong> rc;
+<a id='L136' name='L136'></a>        missed_hellos =
+<a id='L137' name='L137'></a>            ((<strong class='reserved'>int</strong>)<a href='../D/11090.html' title='Multiple defined in 2 places.'>timeval_minus_msec</a>(&amp;babel_now, &amp;neigh-&gt;hello_time) -
+<a id='L138' name='L138'></a>             neigh-&gt;hello_interval * 7) /
+<a id='L139' name='L139'></a>            (neigh-&gt;hello_interval * 10);
+<a id='L140' name='L140'></a>        <strong class='reserved'>if</strong>(missed_hellos &lt;= 0)
+<a id='L141' name='L141'></a>            <strong class='reserved'>return</strong> rc;
+<a id='L142' name='L142'></a>        <a href='../S/151.html#L100' title='Defined at 100 in babeld/util.c.'>timeval_add_msec</a>(&amp;neigh-&gt;hello_time, &amp;neigh-&gt;hello_time,
+<a id='L143' name='L143'></a>                          missed_hellos * neigh-&gt;hello_interval * 10);
+<a id='L144' name='L144'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L145' name='L145'></a>        <strong class='reserved'>if</strong>(neigh-&gt;hello_seqno &gt;= 0 &amp;&amp; neigh-&gt;reach &gt; 0) <em class='brace'>{</em>
+<a id='L146' name='L146'></a>            missed_hellos = <a href='../S/168.html#L79' title='Defined at 79 in babeld/util.h.'>seqno_minus</a>(hello, neigh-&gt;hello_seqno) - 1;
+<a id='L147' name='L147'></a>            <strong class='reserved'>if</strong>(missed_hellos &lt; -8) <em class='brace'>{</em>
+<a id='L148' name='L148'></a>                <em class='comment'>/* Probably a neighbour that rebooted and lost its seqno.</em>
+<a id='L149' name='L149'></a><em class='comment'>                   Reboot the universe. */</em>
+<a id='L150' name='L150'></a>                neigh-&gt;reach = 0;
+<a id='L151' name='L151'></a>                missed_hellos = 0;
+<a id='L152' name='L152'></a>                rc = 1;
+<a id='L153' name='L153'></a>            <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong>(missed_hellos &lt; 0) <em class='brace'>{</em>
+<a id='L154' name='L154'></a>                <strong class='reserved'>if</strong>(hello_interval &gt; neigh-&gt;hello_interval) <em class='brace'>{</em>
+<a id='L155' name='L155'></a>                    <em class='comment'>/* This neighbour has increased its hello interval,</em>
+<a id='L156' name='L156'></a><em class='comment'>                       and we didn't notice. */</em>
+<a id='L157' name='L157'></a>                    neigh-&gt;reach &lt;&lt;= -missed_hellos;
+<a id='L158' name='L158'></a>                    missed_hellos = 0;
+<a id='L159' name='L159'></a>                <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L160' name='L160'></a>                    <em class='comment'>/* Late hello.  Probably due to the link layer buffering</em>
+<a id='L161' name='L161'></a><em class='comment'>                       packets during a link outage.  Ignore it, but reset</em>
+<a id='L162' name='L162'></a><em class='comment'>                       the expected seqno. */</em>
+<a id='L163' name='L163'></a>                    neigh-&gt;hello_seqno = hello;
+<a id='L164' name='L164'></a>                    hello = -1;
+<a id='L165' name='L165'></a>                    missed_hellos = 0;
+<a id='L166' name='L166'></a>                <em class='brace'>}</em>
+<a id='L167' name='L167'></a>                rc = 1;
+<a id='L168' name='L168'></a>            <em class='brace'>}</em>
+<a id='L169' name='L169'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L170' name='L170'></a>            missed_hellos = 0;
+<a id='L171' name='L171'></a>        <em class='brace'>}</em>
+<a id='L172' name='L172'></a>        neigh-&gt;hello_time = babel_now;
+<a id='L173' name='L173'></a>        neigh-&gt;hello_interval = hello_interval;
+<a id='L174' name='L174'></a>    <em class='brace'>}</em>
+<a id='L175' name='L175'></a>
+<a id='L176' name='L176'></a>    <strong class='reserved'>if</strong>(missed_hellos &gt; 0) <em class='brace'>{</em>
+<a id='L177' name='L177'></a>        neigh-&gt;reach &gt;&gt;= missed_hellos;
+<a id='L178' name='L178'></a>        neigh-&gt;hello_seqno = <a href='../S/168.html#L85' title='Defined at 85 in babeld/util.h.'>seqno_plus</a>(neigh-&gt;hello_seqno, missed_hellos);
+<a id='L179' name='L179'></a>        missed_hellos = 0;
+<a id='L180' name='L180'></a>        rc = 1;
+<a id='L181' name='L181'></a>    <em class='brace'>}</em>
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a>    <strong class='reserved'>if</strong>(hello &gt;= 0) <em class='brace'>{</em>
+<a id='L184' name='L184'></a>        neigh-&gt;hello_seqno = hello;
+<a id='L185' name='L185'></a>        neigh-&gt;reach &gt;&gt;= 1;
+<a id='L186' name='L186'></a>        neigh-&gt;reach |= 0x8000;
+<a id='L187' name='L187'></a>        <strong class='reserved'>if</strong>((neigh-&gt;reach &amp; 0xFC00) != 0xFC00)
+<a id='L188' name='L188'></a>            rc = 1;
+<a id='L189' name='L189'></a>    <em class='brace'>}</em>
+<a id='L190' name='L190'></a>
+<a id='L191' name='L191'></a>    <em class='comment'>/* Make sure to give neighbours some feedback early after association */</em>
+<a id='L192' name='L192'></a>    <strong class='reserved'>if</strong>((neigh-&gt;reach &amp; 0xBF00) == 0x8000) <em class='brace'>{</em>
+<a id='L193' name='L193'></a>        <em class='comment'>/* A new neighbour */</em>
+<a id='L194' name='L194'></a>        <a href='../D/10613.html' title='Multiple defined in 2 places.'>send_hello</a>(neigh-&gt;ifp);
+<a id='L195' name='L195'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L196' name='L196'></a>        <em class='comment'>/* Don't send hellos, in order to avoid a positive feedback loop. */</em>
+<a id='L197' name='L197'></a>        <strong class='reserved'>int</strong> <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> = (neigh-&gt;reach &amp; 0xC000);
+<a id='L198' name='L198'></a>        <strong class='reserved'>int</strong> <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> = (neigh-&gt;reach &amp; 0x3000);
+<a id='L199' name='L199'></a>        <strong class='reserved'>if</strong>((<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> == 0xC000 &amp;&amp; <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> == 0) || (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> == 0 &amp;&amp; <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> == 0x3000)) <em class='brace'>{</em>
+<a id='L200' name='L200'></a>            <em class='comment'>/* Reachability is either 1100 or 0011 */</em>
+<a id='L201' name='L201'></a>            <a href='../S/166.html#L1222' title='Defined at 1222 in babeld/message.c.'>send_self_update</a>(neigh-&gt;ifp);
+<a id='L202' name='L202'></a>        <em class='brace'>}</em>
+<a id='L203' name='L203'></a>    <em class='brace'>}</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a>    <strong class='reserved'>if</strong>((neigh-&gt;reach &amp; 0xFC00) == 0xC000) <em class='brace'>{</em>
+<a id='L206' name='L206'></a>        <em class='comment'>/* This is a newish neighbour, let's request a full route dump.</em>
+<a id='L207' name='L207'></a><em class='comment'>           We ought to avoid this when the network is dense */</em>
+<a id='L208' name='L208'></a>        <a href='../S/166.html#L1371' title='Defined at 1371 in babeld/message.c.'>send_unicast_request</a>(neigh, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 0);
+<a id='L209' name='L209'></a>        <a href='../S/166.html#L1240' title='Defined at 1240 in babeld/message.c.'>send_ihu</a>(neigh, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L210' name='L210'></a>    <em class='brace'>}</em>
+<a id='L211' name='L211'></a>    <strong class='reserved'>return</strong> rc;
+<a id='L212' name='L212'></a><em class='brace'>}</em>
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L215' name='L215'></a><a href='../S/158.html#L264' title='Referred from 264 in babeld/neighbour.c.'>reset_txcost</a>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh)
+<a id='L216' name='L216'></a><em class='brace'>{</em>
+<a id='L217' name='L217'></a>    <strong class='reserved'>unsigned</strong> delay;
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>    delay = <a href='../D/11090.html' title='Multiple defined in 2 places.'>timeval_minus_msec</a>(&amp;babel_now, &amp;neigh-&gt;ihu_time);
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a>    <strong class='reserved'>if</strong>(neigh-&gt;ihu_interval &gt; 0 &amp;&amp; delay &lt; neigh-&gt;ihu_interval * 10U * 3U)
+<a id='L222' name='L222'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L223' name='L223'></a>
+<a id='L224' name='L224'></a>    <em class='comment'>/* If we're losing a lot of packets, we probably lost an IHU too */</em>
+<a id='L225' name='L225'></a>    <strong class='reserved'>if</strong>(delay &gt;= 180000 || (neigh-&gt;reach &amp; 0xFFF0) == 0 ||
+<a id='L226' name='L226'></a>       (neigh-&gt;ihu_interval &gt; 0 &amp;&amp;
+<a id='L227' name='L227'></a>        delay &gt;= neigh-&gt;ihu_interval * 10U * 10U)) <em class='brace'>{</em>
+<a id='L228' name='L228'></a>        neigh-&gt;txcost = <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L229' name='L229'></a>        neigh-&gt;ihu_time = babel_now;
+<a id='L230' name='L230'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L231' name='L231'></a>    <em class='brace'>}</em>
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L234' name='L234'></a><em class='brace'>}</em>
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a><strong class='reserved'>unsigned</strong>
+<a id='L237' name='L237'></a><a href='../R/7305.html' title='Multiple referred from 2 places.'>neighbour_txcost</a>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh)
+<a id='L238' name='L238'></a><em class='brace'>{</em>
+<a id='L239' name='L239'></a>    <strong class='reserved'>return</strong> neigh-&gt;txcost;
+<a id='L240' name='L240'></a><em class='brace'>}</em>
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a><strong class='reserved'>unsigned</strong>
+<a id='L243' name='L243'></a><a href='../R/5246.html' title='Multiple referred from 2 places.'>check_neighbours</a>()
+<a id='L244' name='L244'></a><em class='brace'>{</em>
+<a id='L245' name='L245'></a>    <strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh;
+<a id='L246' name='L246'></a>    <strong class='reserved'>int</strong> changed, rc;
+<a id='L247' name='L247'></a>    <strong class='reserved'>unsigned</strong> msecs = 50000;
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a>    <a href='../D/6268.html' title='Multiple defined in 5 places.'>debugf</a>(<a href='../S/168.html#L142' title='Defined at 142 in babeld/util.h.'>BABEL_DEBUG_COMMON</a>,"Checking neighbours.");
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a>    neigh = neighs;
+<a id='L252' name='L252'></a>    <strong class='reserved'>while</strong>(neigh) <em class='brace'>{</em>
+<a id='L253' name='L253'></a>        changed = <a href='../S/158.html#L128' title='Defined at 128 in babeld/neighbour.c.'>update_neighbour</a>(neigh, -1, 0);
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a>        <strong class='reserved'>if</strong>(neigh-&gt;reach == 0 ||
+<a id='L256' name='L256'></a>           neigh-&gt;hello_time.tv_sec &gt; babel_now.tv_sec || <em class='comment'>/* clock stepped */</em>
+<a id='L257' name='L257'></a>           <a href='../D/11090.html' title='Multiple defined in 2 places.'>timeval_minus_msec</a>(&amp;babel_now, &amp;neigh-&gt;hello_time) &gt; 300000) <em class='brace'>{</em>
+<a id='L258' name='L258'></a>            <strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *old = neigh;
+<a id='L259' name='L259'></a>            neigh = neigh-&gt;next;
+<a id='L260' name='L260'></a>            <a href='../S/158.html#L73' title='Defined at 73 in babeld/neighbour.c.'>flush_neighbour</a>(old);
+<a id='L261' name='L261'></a>            <strong class='reserved'>continue</strong>;
+<a id='L262' name='L262'></a>        <em class='brace'>}</em>
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a>        rc = <a href='../S/158.html#L215' title='Defined at 215 in babeld/neighbour.c.'>reset_txcost</a>(neigh);
+<a id='L265' name='L265'></a>        changed = changed || rc;
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a>        <a href='../S/154.html#L637' title='Defined at 637 in babeld/route.c.'>update_neighbour_metric</a>(neigh, changed);
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a>        <strong class='reserved'>if</strong>(neigh-&gt;hello_interval &gt; 0)
+<a id='L270' name='L270'></a>            msecs = <a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>(msecs, neigh-&gt;hello_interval * 10U);
+<a id='L271' name='L271'></a>        <strong class='reserved'>if</strong>(neigh-&gt;ihu_interval &gt; 0)
+<a id='L272' name='L272'></a>            msecs = <a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>(msecs, neigh-&gt;ihu_interval * 10U);
+<a id='L273' name='L273'></a>        neigh = neigh-&gt;next;
+<a id='L274' name='L274'></a>    <em class='brace'>}</em>
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>    <strong class='reserved'>return</strong> msecs;
+<a id='L277' name='L277'></a><em class='brace'>}</em>
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a><strong class='reserved'>unsigned</strong>
+<a id='L280' name='L280'></a><a href='../R/7304.html' title='Multiple referred from 4 places.'>neighbour_rxcost</a>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh)
+<a id='L281' name='L281'></a><em class='brace'>{</em>
+<a id='L282' name='L282'></a>    <strong class='reserved'>unsigned</strong> delay;
+<a id='L283' name='L283'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> reach = neigh-&gt;reach;
+<a id='L284' name='L284'></a>
+<a id='L285' name='L285'></a>    delay = <a href='../D/11090.html' title='Multiple defined in 2 places.'>timeval_minus_msec</a>(&amp;babel_now, &amp;neigh-&gt;hello_time);
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>    <strong class='reserved'>if</strong>((reach &amp; 0xFFF0) == 0 || delay &gt;= 180000) <em class='brace'>{</em>
+<a id='L288' name='L288'></a>        <strong class='reserved'>return</strong> <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L289' name='L289'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong>(<a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(neigh-&gt;ifp)-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/159.html#L98' title='Defined at 98 in babeld/babel_interface.h.'>BABEL_IF_LQ</a>) <em class='brace'>{</em>
+<a id='L290' name='L290'></a>        <strong class='reserved'>int</strong> sreach =
+<a id='L291' name='L291'></a>            ((reach &amp; 0x8000) &gt;&gt; 2) +
+<a id='L292' name='L292'></a>            ((reach &amp; 0x4000) &gt;&gt; 1) +
+<a id='L293' name='L293'></a>            (reach &amp; 0x3FFF);
+<a id='L294' name='L294'></a>        <em class='comment'>/* 0 &lt;= sreach &lt;= 0x7FFF */</em>
+<a id='L295' name='L295'></a>        <strong class='reserved'>int</strong> cost = (0x8000 * <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(neigh-&gt;ifp)-&gt;cost) / (sreach + 1);
+<a id='L296' name='L296'></a>        <em class='comment'>/* cost &gt;= interface-&gt;cost */</em>
+<a id='L297' name='L297'></a>        <strong class='reserved'>if</strong>(delay &gt;= 40000)
+<a id='L298' name='L298'></a>            cost = (cost * (delay - 20000) + 10000) / 20000;
+<a id='L299' name='L299'></a>        <strong class='reserved'>return</strong> <a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a>(cost, <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>);
+<a id='L300' name='L300'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L301' name='L301'></a>        <em class='comment'>/* To lose one hello is a misfortune, to lose two is carelessness. */</em>
+<a id='L302' name='L302'></a>        <strong class='reserved'>if</strong>((reach &amp; 0xC000) == 0xC000)
+<a id='L303' name='L303'></a>            <strong class='reserved'>return</strong> <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(neigh-&gt;ifp)-&gt;cost;
+<a id='L304' name='L304'></a>        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong>((reach &amp; 0xC000) == 0)
+<a id='L305' name='L305'></a>            <strong class='reserved'>return</strong> <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L306' name='L306'></a>        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong>((reach &amp; 0x2000))
+<a id='L307' name='L307'></a>            <strong class='reserved'>return</strong> <a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(neigh-&gt;ifp)-&gt;cost;
+<a id='L308' name='L308'></a>        <strong class='reserved'>else</strong>
+<a id='L309' name='L309'></a>            <strong class='reserved'>return</strong> <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L310' name='L310'></a>    <em class='brace'>}</em>
+<a id='L311' name='L311'></a><em class='brace'>}</em>
+<a id='L312' name='L312'></a>
+<a id='L313' name='L313'></a><strong class='reserved'>unsigned</strong>
+<a id='L314' name='L314'></a><a href='../R/7303.html' title='Multiple referred from 5 places.'>neighbour_cost</a>(<strong class='reserved'>struct</strong> <a href='../S/172.html#L39' title='Defined at 39 in babeld/neighbour.h.'>neighbour</a> *neigh)
+<a id='L315' name='L315'></a><em class='brace'>{</em>
+<a id='L316' name='L316'></a>    <strong class='reserved'>unsigned</strong> <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>;
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a>    <strong class='reserved'>if</strong>(!<a href='../D/6755.html' title='Multiple defined in 2 places.'>if_up</a>(neigh-&gt;ifp))
+<a id='L319' name='L319'></a>        <strong class='reserved'>return</strong> <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> = <a href='../S/158.html#L237' title='Defined at 237 in babeld/neighbour.c.'>neighbour_txcost</a>(neigh);
+<a id='L322' name='L322'></a>
+<a id='L323' name='L323'></a>    <strong class='reserved'>if</strong>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &gt;= <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>)
+<a id='L324' name='L324'></a>        <strong class='reserved'>return</strong> <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L325' name='L325'></a>
+<a id='L326' name='L326'></a>    <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> = <a href='../S/158.html#L280' title='Defined at 280 in babeld/neighbour.c.'>neighbour_rxcost</a>(neigh);
+<a id='L327' name='L327'></a>    <strong class='reserved'>if</strong>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> &gt;= <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>)
+<a id='L328' name='L328'></a>        <strong class='reserved'>return</strong> <a href='../S/165.html#L46' title='Defined at 46 in babeld/babeld.h.'>INFINITY</a>;
+<a id='L329' name='L329'></a>
+<a id='L330' name='L330'></a>    <strong class='reserved'>if</strong>(!(<a href='../S/159.html#L89' title='Defined at 89 in babeld/babel_interface.h.'>babel_get_if_nfo</a>(neigh-&gt;ifp)-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/159.html#L98' title='Defined at 98 in babeld/babel_interface.h.'>BABEL_IF_LQ</a>)
+<a id='L331' name='L331'></a>       || (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &lt; 256 &amp;&amp; <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> &lt; 256)) <em class='brace'>{</em>
+<a id='L332' name='L332'></a>        <strong class='reserved'>return</strong> <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>;
+<a id='L333' name='L333'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L334' name='L334'></a>        <em class='comment'>/* a = 256/alpha, b = 256/beta, where alpha and beta are the expected</em>
+<a id='L335' name='L335'></a><em class='comment'>           probabilities of a packet getting through in the direct and reverse</em>
+<a id='L336' name='L336'></a><em class='comment'>           directions. */</em>
+<a id='L337' name='L337'></a>        <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> = <a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>(<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, 256);
+<a id='L338' name='L338'></a>        <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> = <a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a>(<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, 256);
+<a id='L339' name='L339'></a>        <em class='comment'>/* 1/(alpha * beta), which is just plain ETX. */</em>
+<a id='L340' name='L340'></a>        <em class='comment'>/* Since a and b are capped to 16 bits, overflow is impossible. */</em>
+<a id='L341' name='L341'></a>        <strong class='reserved'>return</strong> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> * <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> + 128) &gt;&gt; 8;
+<a id='L342' name='L342'></a>    <em class='brace'>}</em>
+<a id='L343' name='L343'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L61'>[^]</a><a href='#L314'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

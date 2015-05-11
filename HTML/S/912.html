@@ -1,0 +1,350 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vpnmd/vpnm_via_ldp.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1035.html'>vpnmd</a>/vpnm_via_ldp.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L8'>[^]</a><a href='#L301'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L8' title='Defined at 8.'>set_in_pw_info</a></li>
+<li><a href='#L95' title='Defined at 95.'>set_out_pw_info</a></li>
+<li><a href='#L183' title='Defined at 183.'>withdraw_pw_info</a></li>
+<li><a href='#L244' title='Defined at 244.'>release_pw_info</a></li>
+<li><a href='#L301' title='Defined at 301.'>setup_pw_info_here</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='915.html'>vpnmd_ldp_msg.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='896.html'>vpnmd_rsvp_msg.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='902.html'>vpnm.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='911.html'>vpnm_via_ldp.h</a>"
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='914.html'>vpnm_via_mpls.h</a>"
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "<a href='904.html'>vpnm_via_brctl.h</a>"
+<a id='L7' name='L7'></a>
+<a id='L8' name='L8'></a><strong class='reserved'>int</strong> <a href='../R/9741.html' title='Multiple referred from 3 places.'>set_in_pw_info</a>(<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<strong class='reserved'>int</strong> vpn_id,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip,<strong class='reserved'>int</strong> label)<em class='brace'>{</em>
+<a id='L9' name='L9'></a>  
+<a id='L10' name='L10'></a>  <strong class='reserved'>char</strong> pw_if[20]=<em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L11' name='L11'></a>  <strong class='reserved'>char</strong> br_name[20]=<em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L12' name='L12'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw;
+<a id='L13' name='L13'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L14' name='L14'></a>        
+<a id='L15' name='L15'></a>        <strong class='reserved'>if</strong>(!vpn )<em class='brace'>{</em>
+<a id='L16' name='L16'></a>                printf("There isn't an active VPN instance .\n");
+<a id='L17' name='L17'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L18' name='L18'></a>        <em class='brace'>}</em>
+<a id='L19' name='L19'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L20' name='L20'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L21' name='L21'></a>                        printf("please firest set vpn_id :%d\n",vpn_id);
+<a id='L22' name='L22'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L23' name='L23'></a>                <em class='brace'>}</em><em class='comment'>//end if(!vpn)</em>
+<a id='L24' name='L24'></a>        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,dst_ip);
+<a id='L25' name='L25'></a>        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L26' name='L26'></a>                printf("Get PW entry fail.\n");
+<a id='L27' name='L27'></a>                <a href='../S/900.html#L495' title='Defined at 495 in vpnmd/vpnmd_process.c.'>setup_pw_info</a>(vpn,dst_ip,0);
+<a id='L28' name='L28'></a>                pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,dst_ip);
+<a id='L29' name='L29'></a>                <em class='comment'>//return -1;</em>
+<a id='L30' name='L30'></a>        <em class='brace'>}</em>
+<a id='L31' name='L31'></a>        pw-&gt;in_state = <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>;
+<a id='L32' name='L32'></a>        pw-&gt;in_pw_label = label;<em class='comment'>/*</em>
+<a id='L33' name='L33'></a><em class='comment'>        if(pw-&gt;out_state==NOT_READY){</em>
+<a id='L34' name='L34'></a><em class='comment'>                sprintf(pw_if,"mpls%d\0",label);</em>
+<a id='L35' name='L35'></a><em class='comment'>                strcpy(pw-&gt;iface,pw_if);</em>
+<a id='L36' name='L36'></a><em class='comment'>        }*/</em>
+<a id='L37' name='L37'></a>        sprintf(pw_if,"mpls%d",vpn_id);
+<a id='L38' name='L38'></a>        strcpy(pw-&gt;iface,pw_if);
+<a id='L39' name='L39'></a>        printf("ckeck the tunnel state .\n");
+<a id='L40' name='L40'></a>        <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *tunnel=<a href='../S/909.html#L116' title='Defined at 116 in vpnmd/vpnm.c.'>tunnel_get</a>();
+<a id='L41' name='L41'></a>        <strong class='reserved'>struct</strong> in_addr tmp_addr;
+<a id='L42' name='L42'></a>        <a href='../D/8246.html' title='Multiple defined in 2 places.'>nic_info</a> *nic;
+<a id='L43' name='L43'></a>        nic=<a href='../S/909.html#L132' title='Defined at 132 in vpnmd/vpnm.c.'>nic_get</a>();
+<a id='L44' name='L44'></a>        <strong class='reserved'>int</strong> retval=0;
+<a id='L45' name='L45'></a>        <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em>
+<a id='L46' name='L46'></a>                printf("There isn't an active tunnel instance.\n");
+<a id='L47' name='L47'></a>                <em class='comment'>//tigger VPN Manager to setup Tunnel </em>
+<a id='L48' name='L48'></a>                tmp_addr.s_addr=dst_ip;
+<a id='L49' name='L49'></a>                retval=<a href='../S/900.html#L282' title='Defined at 282 in vpnmd/vpnmd_process.c.'>setup_tunnel</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,nic-&gt;ip,inet_ntoa(tmp_addr),nic-&gt;lsp_id);
+<a id='L50' name='L50'></a>                <strong class='reserved'>if</strong>(retval&gt;0) 
+<a id='L51' name='L51'></a>                        <strong class='reserved'>return</strong> retval;
+<a id='L52' name='L52'></a>                <strong class='reserved'>else</strong>
+<a id='L53' name='L53'></a>                        <strong class='reserved'>return</strong> retval;
+<a id='L54' name='L54'></a>                <em class='comment'>//return -1;</em>
+<a id='L55' name='L55'></a>        <em class='brace'>}</em>
+<a id='L56' name='L56'></a>        tunnel=<a href='../S/900.html#L360' title='Defined at 360 in vpnmd/vpnmd_process.c.'>search_tunnel_node</a>(tunnel,dst_ip);
+<a id='L57' name='L57'></a>        <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em>
+<a id='L58' name='L58'></a>                <em class='comment'>//struct in_addr tmp_addr;</em>
+<a id='L59' name='L59'></a>                <em class='comment'>//tigger VPN Manager to setup Tunnel </em>
+<a id='L60' name='L60'></a>                tmp_addr.s_addr=dst_ip;
+<a id='L61' name='L61'></a>                retval=<a href='../S/900.html#L282' title='Defined at 282 in vpnmd/vpnmd_process.c.'>setup_tunnel</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,nic-&gt;ip,inet_ntoa(tmp_addr),nic-&gt;lsp_id);
+<a id='L62' name='L62'></a>                <strong class='reserved'>if</strong>(retval&gt;0) 
+<a id='L63' name='L63'></a>                        <strong class='reserved'>return</strong> retval;
+<a id='L64' name='L64'></a>                <strong class='reserved'>else</strong>
+<a id='L65' name='L65'></a>                        <strong class='reserved'>return</strong> retval;
+<a id='L66' name='L66'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L67' name='L67'></a>                <em class='comment'>//write data-plane processing code</em>
+<a id='L68' name='L68'></a>                <strong class='reserved'>if</strong>(tunnel-&gt;in_state== <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L69' name='L69'></a>                        printf("DEBUG(VPN Manager):begin to write nhlfe entry. (set_in_vclsp)\n");
+<a id='L70' name='L70'></a>                        <em class='comment'>//int set_in_vclsp(const char *pw_if,int ilabel)</em>
+<a id='L71' name='L71'></a>                        <a href='../S/913.html#L171' title='Defined at 171 in vpnmd/vpnm_via_mpls.c.'>set_in_vclsp</a>(pw-&gt;iface,pw-&gt;in_pw_label,pw-&gt;out_state);
+<a id='L72' name='L72'></a>                        printf("DEBUG(VPN Manager):Finished to write nhlfe entry. (set_in_vclsp)\n");
+<a id='L73' name='L73'></a>                        printf("vpn_id:%d\tpw-&gt;iface:%s\n",vpn_id,pw-&gt;iface);
+<a id='L74' name='L74'></a>                        sprintf(br_name,"br%d",vpn_id);
+<a id='L75' name='L75'></a>                        <a href='../S/905.html#L87' title='Defined at 87 in vpnmd/vpnm_via_brctl.c.'>add_if</a>(br_name,pw-&gt;iface);
+<a id='L76' name='L76'></a>                        <strong class='reserved'>return</strong> 0;
+<a id='L77' name='L77'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L78' name='L78'></a>                        printf("MPLS Out Tunnel LSP NOT_READY.\n");
+<a id='L79' name='L79'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L80' name='L80'></a>                <em class='brace'>}</em> 
+<a id='L81' name='L81'></a>                <em class='comment'>/*</em>
+<a id='L82' name='L82'></a><em class='comment'>                if(tunnel-&gt;in_state == READY){</em>
+<a id='L83' name='L83'></a><em class='comment'>                        printf("Add vpn %d's incoming data plane forwarding information\n",vpn_id);</em>
+<a id='L84' name='L84'></a><em class='comment'>                        return 1;//seccess</em>
+<a id='L85' name='L85'></a><em class='comment'>                }else if(tunnel-&gt;in_state == PROCESSING){</em>
+<a id='L86' name='L86'></a><em class='comment'>                        printf("The PW's tunnel is being established\nPlease wait a minute\n");</em>
+<a id='L87' name='L87'></a><em class='comment'>                        return 0;//waitting </em>
+<a id='L88' name='L88'></a><em class='comment'>                }else{</em>
+<a id='L89' name='L89'></a><em class='comment'>                        printf("There is no tunnel that can be used by this PW\nPlease trigger remote PE to establish tunnel for use\n");</em>
+<a id='L90' name='L90'></a><em class='comment'>                        return -1;</em>
+<a id='L91' name='L91'></a><em class='comment'>                }*/</em>
+<a id='L92' name='L92'></a>        <em class='brace'>}</em><em class='comment'>//end if(!tunnel)</em>
+<a id='L93' name='L93'></a><em class='brace'>}</em>
+<a id='L94' name='L94'></a>
+<a id='L95' name='L95'></a><strong class='reserved'>int</strong> <a href='../R/9758.html' title='Multiple referred from 2 places.'>set_out_pw_info</a>(<strong class='reserved'>int</strong> vpn_id,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip,<strong class='reserved'>int</strong> label)<em class='brace'>{</em>
+<a id='L96' name='L96'></a>        
+<a id='L97' name='L97'></a>        <strong class='reserved'>char</strong> pw_if[20]=<em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L98' name='L98'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw;
+<a id='L99' name='L99'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L100' name='L100'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L101' name='L101'></a>                printf("There isn't an active VPN instance.\n");
+<a id='L102' name='L102'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L103' name='L103'></a>        <em class='brace'>}</em>
+<a id='L104' name='L104'></a>        printf("DEBUG(VPN Manager):set_out_pw_info enter.\n");
+<a id='L105' name='L105'></a>        <em class='comment'>//need to check get vpn entry those code is need to write again.</em>
+<a id='L106' name='L106'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L107' name='L107'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L108' name='L108'></a>                printf("please firest set vpn_id :%d\n",vpn_id);
+<a id='L109' name='L109'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L110' name='L110'></a>        <em class='brace'>}</em><em class='comment'>//end if(!vpn)</em>
+<a id='L111' name='L111'></a>        vpn-&gt;in_use=<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>;
+<a id='L112' name='L112'></a>        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,dst_ip);
+<a id='L113' name='L113'></a>        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L114' name='L114'></a>                printf("Get PW entry fail.\n");
+<a id='L115' name='L115'></a>                <a href='../S/900.html#L495' title='Defined at 495 in vpnmd/vpnmd_process.c.'>setup_pw_info</a>(vpn,dst_ip,2);
+<a id='L116' name='L116'></a>                pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,dst_ip);
+<a id='L117' name='L117'></a>                <em class='comment'>//return -1;</em>
+<a id='L118' name='L118'></a>        <em class='brace'>}</em>
+<a id='L119' name='L119'></a>        pw-&gt;out_state = <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>;
+<a id='L120' name='L120'></a>        pw-&gt;out_pw_label = label;
+<a id='L121' name='L121'></a>        <em class='comment'>/*</em>
+<a id='L122' name='L122'></a><em class='comment'>        if(pw-&gt;in_state==NOT_READY){</em>
+<a id='L123' name='L123'></a><em class='comment'>                sprintf(pw_if,"mpls%d\0",label);</em>
+<a id='L124' name='L124'></a><em class='comment'>                strcpy(pw-&gt;iface,pw_if);</em>
+<a id='L125' name='L125'></a><em class='comment'>        }*/</em>
+<a id='L126' name='L126'></a>        sprintf(pw_if,"mpls%d",vpn_id);
+<a id='L127' name='L127'></a>        strcpy(pw-&gt;iface,pw_if);
+<a id='L128' name='L128'></a>        printf("DEBUG(VPN Manager) Pseudo-Wires :%d\t iface :%s\n",pw-&gt;out_pw_label,pw-&gt;iface);
+<a id='L129' name='L129'></a>        <em class='comment'>/*</em>
+<a id='L130' name='L130'></a><em class='comment'>        vpn-&gt;in_use=USED;</em>
+<a id='L131' name='L131'></a><em class='comment'>        //add the new pw node </em>
+<a id='L132' name='L132'></a><em class='comment'>        if(setup_pw_info(vpn,dst_ip,2)){</em>
+<a id='L133' name='L133'></a><em class='comment'>                printf("Fail to setup_pw_info .\n");</em>
+<a id='L134' name='L134'></a><em class='comment'>                return -1;</em>
+<a id='L135' name='L135'></a><em class='comment'>        }else{</em>
+<a id='L136' name='L136'></a><em class='comment'>                //set the pw informations</em>
+<a id='L137' name='L137'></a><em class='comment'>                vpn-&gt;pw_info_ptr-&gt;out_state = READY;</em>
+<a id='L138' name='L138'></a><em class='comment'>                vpn-&gt;pw_info_ptr-&gt;out_pw_label = label;</em>
+<a id='L139' name='L139'></a><em class='comment'>                if(vpn-&gt;pw_info_ptr-&gt;in_state ==NOT_READY){</em>
+<a id='L140' name='L140'></a><em class='comment'>                        //if in_state ==NOT_READY the mapping  PW interface == mpls_vpnid</em>
+<a id='L141' name='L141'></a><em class='comment'>                        sprintf(pw_if,"mpls%d",vpn_id);</em>
+<a id='L142' name='L142'></a><em class='comment'>                        strcpy(vpn-&gt;pw_info_ptr-&gt;iface,pw_if);</em>
+<a id='L143' name='L143'></a><em class='comment'>                }</em>
+<a id='L144' name='L144'></a><em class='comment'>                //vpn-&gt;pw_info_ptr-&gt;iface</em>
+<a id='L145' name='L145'></a><em class='comment'>                return 1; //need to check this return ????</em>
+<a id='L146' name='L146'></a><em class='comment'>        }*/</em>
+<a id='L147' name='L147'></a>        <em class='comment'>//need to check get tunnel entry those code is need to write again.</em>
+<a id='L148' name='L148'></a>  printf("Start and check the tunnel entry is set or not ready.\n");
+<a id='L149' name='L149'></a>  <em class='comment'>//Don't to setup tunnel ;  </em>
+<a id='L150' name='L150'></a>        <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *tunnel=<a href='../S/909.html#L116' title='Defined at 116 in vpnmd/vpnm.c.'>tunnel_get</a>();
+<a id='L151' name='L151'></a>        <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em>
+<a id='L152' name='L152'></a>                printf("There isn't an active VPN instance or tunnel instance.\n");
+<a id='L153' name='L153'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L154' name='L154'></a>        <em class='brace'>}</em>
+<a id='L155' name='L155'></a>        
+<a id='L156' name='L156'></a>        tunnel=<a href='../S/900.html#L360' title='Defined at 360 in vpnmd/vpnmd_process.c.'>search_tunnel_node</a>(tunnel,dst_ip);
+<a id='L157' name='L157'></a>        <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em>
+<a id='L158' name='L158'></a>                <em class='comment'>//printf("please firest set remote_ip :%s\n",inet_ntoa(vlx-&gt;u.pli.remote_ip));</em>
+<a id='L159' name='L159'></a>                <em class='comment'>//printf("LDP receives a label mapping message from %s\nBut there is no tunnel that can be used by this PW\nPlease use the command \"setup_tunnel\" to establish a tunnel\n", inet_ntoa(vlx-&gt;u.pli.remote_ip));</em>
+<a id='L160' name='L160'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L161' name='L161'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L162' name='L162'></a>                <strong class='reserved'>if</strong>(tunnel-&gt;out_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L163' name='L163'></a>                        printf("DEBUG(VPN Manager):begin to write nhlfe entry. (set_out_vclsp) out_state =READY\n");
+<a id='L164' name='L164'></a>                        <em class='comment'>//int set_out_vclsp(const char *pw_if,int olabel,int nhlfe_key,int pw_in_state)</em>
+<a id='L165' name='L165'></a>                        <em class='comment'>//set_out_vclsp(vpn-&gt;pw_info_ptr-&gt;iface,label,tunnel-&gt;nhlfe_key,vpn-&gt;pw_info_ptr-&gt;in_state);</em>
+<a id='L166' name='L166'></a>                        <a href='../S/913.html#L125' title='Defined at 125 in vpnmd/vpnm_via_mpls.c.'>set_out_vclsp</a>(pw-&gt;iface,label,tunnel-&gt;nhlfe_key,pw-&gt;in_state);
+<a id='L167' name='L167'></a>                        <em class='comment'>//printf("Add vpn %d's outgoing data plane forwarding information\n", vpn_id);</em>
+<a id='L168' name='L168'></a>      printf("DEBUG(VPN Manager):finished. (set_out_vclsp)");
+<a id='L169' name='L169'></a>      <strong class='reserved'>return</strong> 1;
+<a id='L170' name='L170'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong> <strong class='reserved'>if</strong>(tunnel-&gt;out_state == <a href='../S/908.html#L12' title='Defined at 12 in vpnmd/vpnmd_table.h.'>PROCESSING</a>)<em class='brace'>{</em>
+<a id='L171' name='L171'></a>                        printf("DEBUG(VPN Manager):Tunnel out_state =PROCESSING\n");
+<a id='L172' name='L172'></a>      <em class='comment'>//printf("LDP receives a label mapping message from %s\nAnd the PW's tunnel is being established\nPlease wait a minute\n", inet_ntoa(vlx-&gt;u.pli.remote_ip));</em>
+<a id='L173' name='L173'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L174' name='L174'></a>    <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L175' name='L175'></a>        printf("DEBUG(VPN Manager):Tunnel out_state =NOT_READY\n");
+<a id='L176' name='L176'></a>                        <em class='comment'>//printf("LDP receives a label mapping message from %s\nBut there is no tunnel that can be used by this PW\nPlease use the command \"setup_tunnel\" to establish a tunnel\n", inet_ntoa(vlx-&gt;u.pli.remote_ip));</em>
+<a id='L177' name='L177'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L178' name='L178'></a>                <em class='brace'>}</em><em class='comment'>//end if(tunnel-&gt;out_state == READY)</em>
+<a id='L179' name='L179'></a>        <em class='brace'>}</em><em class='comment'>//end if(!tunnel)</em>
+<a id='L180' name='L180'></a>        
+<a id='L181' name='L181'></a><em class='brace'>}</em>
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a><strong class='reserved'>int</strong> <a href='../R/10513.html' title='Multiple referred from 2 places.'>withdraw_pw_info</a>(<strong class='reserved'>int</strong> vpn_id,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip)<em class='brace'>{</em>
+<a id='L184' name='L184'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw;
+<a id='L185' name='L185'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L186' name='L186'></a>        
+<a id='L187' name='L187'></a>        <strong class='reserved'>if</strong>(!vpn )<em class='brace'>{</em>
+<a id='L188' name='L188'></a>                printf("There isn't an active VPN instance .\n");
+<a id='L189' name='L189'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L190' name='L190'></a>        <em class='brace'>}</em>
+<a id='L191' name='L191'></a>        <em class='comment'>//need to check get vpn entry those code is need to write again.</em>
+<a id='L192' name='L192'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L193' name='L193'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L194' name='L194'></a>                printf("please firest set vpn_id :%d\n",vpn_id);
+<a id='L195' name='L195'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L196' name='L196'></a>        <em class='brace'>}</em><em class='comment'>//end if(!vpn)</em>
+<a id='L197' name='L197'></a>        <strong class='reserved'>if</strong>(vpn-&gt;in_use==<a href='../S/908.html#L9' title='Defined at 9 in vpnmd/vpnmd_table.h.'>UNUSED</a>)<em class='brace'>{</em>
+<a id='L198' name='L198'></a>                        <em class='comment'>//printf("LDP receives a withdraw message from %s\nBut this VPN_ID carried in the message have not be use\n", inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L199' name='L199'></a>                        <strong class='reserved'>return</strong> -1;
+<a id='L200' name='L200'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L201' name='L201'></a>                        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,dst_ip);
+<a id='L202' name='L202'></a>                        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L203' name='L203'></a>                                <em class='comment'>//printf("LDP receive a withdraw message from %s\nBut the PW between local to %s does not exist\n", inet_ntoa(vlx-&gt;u.wpm.remote_ip), inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L204' name='L204'></a>                                <strong class='reserved'>return</strong> -1;
+<a id='L205' name='L205'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L206' name='L206'></a>                                <strong class='reserved'>if</strong> (pw-&gt;out_state == <a href='../S/908.html#L11' title='Defined at 11 in vpnmd/vpnmd_table.h.'>NOT_READY</a>)<em class='brace'>{</em>
+<a id='L207' name='L207'></a>                                        <em class='comment'>//printf("LDP receive a withdraw message from %s\nBut the PW from local to %s does not exist\n", inet_ntoa(vlx-&gt;u.wpm.remote_ip), inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L208' name='L208'></a>                                        <strong class='reserved'>return</strong> -1;
+<a id='L209' name='L209'></a>                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em> 
+<a id='L210' name='L210'></a>                                        <em class='comment'>//do not process out_state == PROCESSING, because the</em>
+<a id='L211' name='L211'></a>                                        <em class='comment'>//out_state is controlled by peer LDP. When LDP receives</em>
+<a id='L212' name='L212'></a>                                        <em class='comment'>//label mapping message sent by peer LDP, the out_state</em>
+<a id='L213' name='L213'></a>                                        <em class='comment'>//will be set with READY. Otherwise, it will be set with</em>
+<a id='L214' name='L214'></a>                                        <em class='comment'>//NOT_READY, so the state PROCESSING won't appear.</em>
+<a id='L215' name='L215'></a>                                        <strong class='reserved'>if</strong>(pw-&gt;in_state == <a href='../S/908.html#L11' title='Defined at 11 in vpnmd/vpnmd_table.h.'>NOT_READY</a>)<em class='brace'>{</em>
+<a id='L216' name='L216'></a>                                                <a href='../S/900.html#L204' title='Defined at 204 in vpnmd/vpnmd_process.c.'>del_pw_info</a>(vpn,dst_ip,<a href='../D/4539.html' title='Multiple defined in 3 places.'>WITHDRAW_DOIT</a>);
+<a id='L217' name='L217'></a>                                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L218' name='L218'></a>                                                pw-&gt;out_state = <a href='../S/908.html#L11' title='Defined at 11 in vpnmd/vpnmd_table.h.'>NOT_READY</a>;
+<a id='L219' name='L219'></a>                                                pw-&gt;out_pw_label = 0;
+<a id='L220' name='L220'></a>                                        <em class='brace'>}</em><em class='comment'>//end if(pw-&gt;in_state..</em>
+<a id='L221' name='L221'></a>                                        <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *tunnel=<a href='../S/909.html#L116' title='Defined at 116 in vpnmd/vpnm.c.'>tunnel_get</a>();
+<a id='L222' name='L222'></a>                                        <strong class='reserved'>if</strong>(!tunnel )<em class='brace'>{</em>
+<a id='L223' name='L223'></a>                                                printf("There isn't an active tunnel instance instance.\n");
+<a id='L224' name='L224'></a>                                                <strong class='reserved'>return</strong> -1;
+<a id='L225' name='L225'></a>                                        <em class='brace'>}</em>
+<a id='L226' name='L226'></a>                                        tunnel=<a href='../S/900.html#L360' title='Defined at 360 in vpnmd/vpnmd_process.c.'>search_tunnel_node</a>(tunnel,dst_ip);
+<a id='L227' name='L227'></a>                                        <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em>
+<a id='L228' name='L228'></a>                                        <em class='comment'>//printf("please firest set remote_ip :%s\n",inet_ntoa(vlx-&gt;u.pli.remote_ip));</em>
+<a id='L229' name='L229'></a>                                        <em class='comment'>//printf("LDP receives a label mapping message from %s\nBut there is no tunnel that can be used by this PW\nPlease use the command \"setup_tunnel\" to establish a tunnel\n", inet_ntoa(vlx-&gt;u.pli.remote_ip));</em>
+<a id='L230' name='L230'></a>                                        <strong class='reserved'>return</strong> -1;
+<a id='L231' name='L231'></a>                                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L232' name='L232'></a>                                                <strong class='reserved'>if</strong>(tunnel-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a>&amp;&amp;tunnel-&gt;out_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L233' name='L233'></a>                                                        printf("Delete vpn %d's outgoing data plane forwarding information\n",vpn_id);
+<a id='L234' name='L234'></a>                                                        <strong class='reserved'>return</strong> 1;
+<a id='L235' name='L235'></a>                                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L236' name='L236'></a>                                                        printf("Tunnel-&gt;in_use==UNUSED. Not deletet vpn data plane forwarding information.\n");
+<a id='L237' name='L237'></a>                                                        <strong class='reserved'>return</strong> 0;
+<a id='L238' name='L238'></a>                                                <em class='brace'>}</em><em class='comment'>//end if(tunnel-&gt;in_use...</em>
+<a id='L239' name='L239'></a>                                        <em class='brace'>}</em><em class='comment'>//end if(!tunnel)</em>
+<a id='L240' name='L240'></a>                                <em class='brace'>}</em><em class='comment'>//end if(pw-&gt;out_state == NOT_READY)</em>
+<a id='L241' name='L241'></a>                        <em class='brace'>}</em><em class='comment'>//end if(!pw)</em>
+<a id='L242' name='L242'></a>                <em class='brace'>}</em><em class='comment'>//end if(vpn-&gt;in_use==UNUSED)</em>
+<a id='L243' name='L243'></a><em class='brace'>}</em>
+<a id='L244' name='L244'></a><strong class='reserved'>int</strong> <a href='../R/8990.html' title='Multiple referred from 2 places.'>release_pw_info</a>(<strong class='reserved'>int</strong> vpn_id,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip)<em class='brace'>{</em>
+<a id='L245' name='L245'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> temp_state;
+<a id='L246' name='L246'></a>        <a href='../D/9804.html' title='Multiple defined in 2 places.'>pw_info_entry</a> *pw;
+<a id='L247' name='L247'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L248' name='L248'></a>        
+<a id='L249' name='L249'></a>        <strong class='reserved'>if</strong>(!vpn )<em class='brace'>{</em>
+<a id='L250' name='L250'></a>                printf("There isn't an active VPN instance .\n");
+<a id='L251' name='L251'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L252' name='L252'></a>        <em class='brace'>}</em>
+<a id='L253' name='L253'></a>        <em class='comment'>//need to check get vpn entry those code is need to write again.</em>
+<a id='L254' name='L254'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L255' name='L255'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L256' name='L256'></a>                printf("please firest set vpn_id :%d\n",vpn_id);
+<a id='L257' name='L257'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L258' name='L258'></a>        <em class='brace'>}</em><em class='comment'>//end if(!vpn)</em>
+<a id='L259' name='L259'></a>        <strong class='reserved'>if</strong>(vpn-&gt;in_use==<a href='../S/908.html#L9' title='Defined at 9 in vpnmd/vpnmd_table.h.'>UNUSED</a>)<em class='brace'>{</em>
+<a id='L260' name='L260'></a>                        <em class='comment'>//printf("LDP receives a release message from %s\nBut this VPN_ID carried in the message have not be use\n", inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L261' name='L261'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L262' name='L262'></a>                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L263' name='L263'></a>                        pw=<a href='../S/900.html#L471' title='Defined at 471 in vpnmd/vpnmd_process.c.'>get_pw_entry</a>(vpn,dst_ip);
+<a id='L264' name='L264'></a>                        <strong class='reserved'>if</strong>(!pw)<em class='brace'>{</em>
+<a id='L265' name='L265'></a>                                <em class='comment'>//printf("LDP receive a release message from %s\nBut the PW between local to %s does not exist\n", inet_ntoa(vlx-&gt;u.wpm.remote_ip), inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L266' name='L266'></a>                                <strong class='reserved'>return</strong> -1;
+<a id='L267' name='L267'></a>                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L268' name='L268'></a>                                <strong class='reserved'>if</strong>(pw-&gt;in_state == <a href='../S/908.html#L11' title='Defined at 11 in vpnmd/vpnmd_table.h.'>NOT_READY</a>)<em class='brace'>{</em>
+<a id='L269' name='L269'></a>                                        <em class='comment'>//printf("LDP receive a release message from %s\nBut the PW from %s to local does not exist\n", inet_ntoa(vlx-&gt;u.wpm.remote_ip), inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L270' name='L270'></a>          <strong class='reserved'>return</strong> -1;
+<a id='L271' name='L271'></a>                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L272' name='L272'></a>                                        temp_state = pw-&gt;in_state;
+<a id='L273' name='L273'></a>                                        <strong class='reserved'>if</strong>(pw-&gt;out_state == <a href='../S/908.html#L11' title='Defined at 11 in vpnmd/vpnmd_table.h.'>NOT_READY</a>)<em class='brace'>{</em>
+<a id='L274' name='L274'></a>                                                <a href='../S/900.html#L204' title='Defined at 204 in vpnmd/vpnmd_process.c.'>del_pw_info</a>(vpn,dst_ip,<a href='../D/4539.html' title='Multiple defined in 3 places.'>WITHDRAW_DOIT</a>);
+<a id='L275' name='L275'></a>                                        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L276' name='L276'></a>                                                 pw-&gt;in_state = <a href='../S/908.html#L11' title='Defined at 11 in vpnmd/vpnmd_table.h.'>NOT_READY</a>;
+<a id='L277' name='L277'></a>             pw-&gt;in_pw_label = 0;
+<a id='L278' name='L278'></a>                                        <em class='brace'>}</em><em class='comment'>//end if(pw-&gt;out_state == NOT_READY)</em>
+<a id='L279' name='L279'></a>                                        <strong class='reserved'>if</strong>(temp_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L280' name='L280'></a>                                                <a href='../D/11181.html' title='Multiple defined in 2 places.'>tunnel_entry</a> *tunnel=<a href='../S/909.html#L116' title='Defined at 116 in vpnmd/vpnm.c.'>tunnel_get</a>();
+<a id='L281' name='L281'></a>                                                <strong class='reserved'>if</strong>(!tunnel )<em class='brace'>{</em>
+<a id='L282' name='L282'></a>                                                        printf("There isn't an active tunnel instance instance.\n");
+<a id='L283' name='L283'></a>                                                        <strong class='reserved'>return</strong> -1;
+<a id='L284' name='L284'></a>                                                <em class='brace'>}</em>
+<a id='L285' name='L285'></a>                                                tunnel=<a href='../S/900.html#L360' title='Defined at 360 in vpnmd/vpnmd_process.c.'>search_tunnel_node</a>(tunnel,dst_ip);
+<a id='L286' name='L286'></a>                                                <strong class='reserved'>if</strong>(!tunnel)<em class='brace'>{</em>
+<a id='L287' name='L287'></a>                                                        <em class='comment'>//printf("please firest set remote_ip :%s\n",inet_ntoa(vlx-&gt;u.wpm.remote_ip));</em>
+<a id='L288' name='L288'></a>                                                        <strong class='reserved'>return</strong> -1;
+<a id='L289' name='L289'></a>                                                <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L290' name='L290'></a>                                                        <strong class='reserved'>if</strong>(tunnel-&gt;in_use==<a href='../S/908.html#L8' title='Defined at 8 in vpnmd/vpnmd_table.h.'>USED</a> &amp;&amp;tunnel-&gt;in_state == <a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L291' name='L291'></a>                                                                printf("Delete vpn %d's incoming data plane forwarding information\n", vpn_id);
+<a id='L292' name='L292'></a>                                                        <em class='brace'>}</em>
+<a id='L293' name='L293'></a>                                                <em class='brace'>}</em>
+<a id='L294' name='L294'></a>                                        <em class='brace'>}</em><em class='comment'>//end if(temp_state == READY)</em>
+<a id='L295' name='L295'></a>                                        <strong class='reserved'>return</strong> 1;
+<a id='L296' name='L296'></a>                                <em class='brace'>}</em><em class='comment'>//end if(pwe-&gt;in_state == NOT_READY)                           </em>
+<a id='L297' name='L297'></a>                        <em class='brace'>}</em><em class='comment'>//end if(!pw)</em>
+<a id='L298' name='L298'></a>                <em class='brace'>}</em>
+<a id='L299' name='L299'></a><em class='brace'>}</em>
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a><strong class='reserved'>int</strong> <a href='../R/9809.html' title='Multiple referred from 2 places.'>setup_pw_info_here</a>(<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,<strong class='reserved'>int</strong> vpn_id,<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> dst_ip,<strong class='reserved'>int</strong> pw_in_label)<em class='brace'>{</em>
+<a id='L302' name='L302'></a>
+<a id='L303' name='L303'></a>        <a href='../D/11266.html' title='Multiple defined in 2 places.'>vpn_entry</a> *vpn = <a href='../S/909.html#L33' title='Defined at 33 in vpnmd/vpnm.c.'>vpn_get</a>();
+<a id='L304' name='L304'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L305' name='L305'></a>                printf("There isn't an active VPN instance .Please create a new vpls instance.\n");
+<a id='L306' name='L306'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L307' name='L307'></a>        <em class='brace'>}</em>
+<a id='L308' name='L308'></a>        <em class='comment'>//need to check get vpn entry those code is need to write again.</em>
+<a id='L309' name='L309'></a>        vpn=<a href='../S/900.html#L9' title='Defined at 9 in vpnmd/vpnmd_process.c.'>search_vpn_node</a>(vpn,vpn_id);
+<a id='L310' name='L310'></a>        <strong class='reserved'>if</strong>(!vpn)<em class='brace'>{</em>
+<a id='L311' name='L311'></a>                printf("This vpn_id : %d doesn't set before.\n",vpn_id);
+<a id='L312' name='L312'></a>        <em class='brace'>}</em>
+<a id='L313' name='L313'></a>        <strong class='reserved'>if</strong>(pw_in_label&gt;0)<em class='brace'>{</em>
+<a id='L314' name='L314'></a>                <a href='../S/900.html#L495' title='Defined at 495 in vpnmd/vpnmd_process.c.'>setup_pw_info</a>(vpn,dst_ip,0);
+<a id='L315' name='L315'></a>                <a href='../S/912.html#L8' title='Defined at 8 in vpnmd/vpnm_via_ldp.c.'>set_in_pw_info</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,vpn_id,dst_ip,pw_in_label);
+<a id='L316' name='L316'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L317' name='L317'></a>                printf("Please reset the setup_pw command.\n");
+<a id='L318' name='L318'></a>        <em class='brace'>}</em>
+<a id='L319' name='L319'></a>
+<a id='L320' name='L320'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L8'>[^]</a><a href='#L301'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

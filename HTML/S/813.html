@@ -1,0 +1,1103 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_route.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_route.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L44'>[^]</a><a href='#L1001'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L44' title='Defined at 44.'>ospf_route_new</a></li>
+<li><a href='#L59' title='Defined at 59.'>ospf_route_free</a></li>
+<li><a href='#L68' title='Defined at 68.'>ospf_path_new</a></li>
+<li><a href='#L78' title='Defined at 78.'>ospf_path_dup</a></li>
+<li><a href='#L89' title='Defined at 89.'>ospf_path_free</a></li>
+<li><a href='#L95' title='Defined at 95.'>ospf_route_delete</a></li>
+<li><a href='#L112' title='Defined at 112.'>ospf_route_table_free</a></li>
+<li><a href='#L134' title='Defined at 134.'>ospf_route_exist_new_table</a></li>
+<li><a href='#L157' title='Defined at 157.'>ospf_route_match_same</a></li>
+<li><a href='#L208' title='Defined at 208.'>ospf_route_delete_same_ext</a></li>
+<li><a href='#L239' title='Defined at 239.'>ospf_route_delete_uniq</a></li>
+<li><a href='#L264' title='Defined at 264.'>ospf_route_install</a></li>
+<li><a href='#L302' title='Defined at 302.'>ospf_intra_add_router</a></li>
+<li><a href='#L394' title='Defined at 394.'>ospf_intra_add_transit</a></li>
+<li><a href='#L455' title='Defined at 455.'>ospf_intra_add_stub</a></li>
+<li><a href='#L639' title='Defined at 639.'>ospf_route_table_dump</a></li>
+<li><a href='#L685' title='Defined at 685.'>ospf_asbr_route_cmp</a></li>
+<li><a href='#L707' title='Defined at 707.'>ospf_route_cmp</a></li>
+<li><a href='#L750' title='Defined at 750.'>ospf_path_exist</a></li>
+<li><a href='#L765' title='Defined at 765.'>ospf_route_copy_nexthops_from_vertex</a></li>
+<li><a href='#L793' title='Defined at 793.'>ospf_path_lookup</a></li>
+<li><a href='#L812' title='Defined at 812.'>ospf_route_copy_nexthops</a></li>
+<li><a href='#L826' title='Defined at 826.'>ospf_route_subst_nexthops</a></li>
+<li><a href='#L834' title='Defined at 834.'>ospf_route_subst</a></li>
+<li><a href='#L846' title='Defined at 846.'>ospf_route_add</a></li>
+<li><a href='#L867' title='Defined at 867.'>ospf_prune_unreachable_networks</a></li>
+<li><a href='#L896' title='Defined at 896.'>ospf_prune_unreachable_routers</a></li>
+<li><a href='#L942' title='Defined at 942.'>ospf_add_discard_route</a></li>
+<li><a href='#L1001' title='Defined at 1001.'>ospf_delete_discard_route</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * OSPF routing table.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999, 2000 Toshiaki Takada</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='293.html'>sockunion.h</a>"
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='790.html'>ospfd/ospfd.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='791.html'>ospfd/ospf_interface.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='814.html'>ospfd/ospf_asbr.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='733.html'>ospfd/ospf_lsa.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='759.html'>ospfd/ospf_route.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='812.html'>ospfd/ospf_spf.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='762.html'>ospfd/ospf_zebra.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='776.html'>ospfd/ospf_dump.h</a>"
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *
+<a id='L44' name='L44'></a><a href='../R/8464.html' title='Multiple referred from 9 places.'>ospf_route_new</a> ()
+<a id='L45' name='L45'></a><em class='brace'>{</em>
+<a id='L46' name='L46'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *new;
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF_ROUTE, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a>));
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>  new-&gt;ctime = <a href='../S/208.html#L234' title='Defined at 234 in lib/thread.c.'>quagga_time</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L51' name='L51'></a>  new-&gt;mtime = new-&gt;ctime;
+<a id='L52' name='L52'></a>  new-&gt;paths = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L53' name='L53'></a>  new-&gt;paths-&gt;del = (<strong class='reserved'>void</strong> (*) (<strong class='reserved'>void</strong> *))<a href='../S/813.html#L89' title='Defined at 89 in ospfd/ospf_route.c.'>ospf_path_free</a>;
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>  <strong class='reserved'>return</strong> new;
+<a id='L56' name='L56'></a><em class='brace'>}</em>
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a><strong class='reserved'>void</strong>
+<a id='L59' name='L59'></a><a href='../R/8456.html' title='Multiple referred from 19 places.'>ospf_route_free</a> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or)
+<a id='L60' name='L60'></a><em class='brace'>{</em>
+<a id='L61' name='L61'></a>  <strong class='reserved'>if</strong> (or-&gt;paths)
+<a id='L62' name='L62'></a>      <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (or-&gt;paths);
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF_ROUTE, or);
+<a id='L65' name='L65'></a><em class='brace'>}</em>
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a><strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *
+<a id='L68' name='L68'></a><a href='../R/8425.html' title='Multiple referred from 4 places.'>ospf_path_new</a> ()
+<a id='L69' name='L69'></a><em class='brace'>{</em>
+<a id='L70' name='L70'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *new;
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF_PATH, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a>));
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <strong class='reserved'>return</strong> new;
+<a id='L75' name='L75'></a><em class='brace'>}</em>
+<a id='L76' name='L76'></a>
+<a id='L77' name='L77'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *
+<a id='L78' name='L78'></a><a href='../S/813.html#L822' title='Referred from 822 in ospfd/ospf_route.c.'>ospf_path_dup</a> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path)
+<a id='L79' name='L79'></a><em class='brace'>{</em>
+<a id='L80' name='L80'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *new;
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a>  new = <a href='../S/813.html#L68' title='Defined at 68 in ospfd/ospf_route.c.'>ospf_path_new</a> ();
+<a id='L83' name='L83'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (new, path, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a>));
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a>  <strong class='reserved'>return</strong> new;
+<a id='L86' name='L86'></a><em class='brace'>}</em>
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a><strong class='reserved'>void</strong>
+<a id='L89' name='L89'></a><a href='../R/8423.html' title='Multiple referred from 2 places.'>ospf_path_free</a> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *op)
+<a id='L90' name='L90'></a><em class='brace'>{</em>
+<a id='L91' name='L91'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF_PATH, op);
+<a id='L92' name='L92'></a><em class='brace'>}</em>
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a><strong class='reserved'>void</strong>
+<a id='L95' name='L95'></a><a href='../R/8452.html' title='Multiple referred from 4 places.'>ospf_route_delete</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L96' name='L96'></a><em class='brace'>{</em>
+<a id='L97' name='L97'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L98' name='L98'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L101' name='L101'></a>    <strong class='reserved'>if</strong> ((or = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L102' name='L102'></a>      <em class='brace'>{</em>
+<a id='L103' name='L103'></a>        <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>)
+<a id='L104' name='L104'></a>          <a href='../S/773.html#L426' title='Defined at 426 in ospfd/ospf_zebra.c.'>ospf_zebra_delete</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p,
+<a id='L105' name='L105'></a>                                       or);
+<a id='L106' name='L106'></a>        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L28' title='Defined at 28 in ospfd/ospf_route.h.'>OSPF_DESTINATION_DISCARD</a>)
+<a id='L107' name='L107'></a>          <a href='../S/773.html#L536' title='Defined at 536 in ospfd/ospf_zebra.c.'>ospf_zebra_delete_discard</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p);
+<a id='L108' name='L108'></a>      <em class='brace'>}</em>
+<a id='L109' name='L109'></a><em class='brace'>}</em>
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a><strong class='reserved'>void</strong>
+<a id='L112' name='L112'></a><a href='../R/8470.html' title='Multiple referred from 7 places.'>ospf_route_table_free</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L113' name='L113'></a><em class='brace'>{</em>
+<a id='L114' name='L114'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L115' name='L115'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L118' name='L118'></a>    <strong class='reserved'>if</strong> ((or = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L119' name='L119'></a>      <em class='brace'>{</em>
+<a id='L120' name='L120'></a>        <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (or);
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a>        rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L123' name='L123'></a>        <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L124' name='L124'></a>      <em class='brace'>}</em>
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a>   <a href='../S/236.html#L48' title='Defined at 48 in lib/table.c.'>route_table_finish</a> (rt);
+<a id='L127' name='L127'></a><em class='brace'>}</em>
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a><em class='comment'>/* If a prefix exists in the new routing table, then return 1,</em>
+<a id='L130' name='L130'></a><em class='comment'>   otherwise return 0. Since the ZEBRA-RIB does an implicit</em>
+<a id='L131' name='L131'></a><em class='comment'>   withdraw, it is not necessary to send a delete, an add later</em>
+<a id='L132' name='L132'></a><em class='comment'>   will act like an implicit delete. */</em>
+<a id='L133' name='L133'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L134' name='L134'></a><a href='../R/8455.html' title='Multiple referred from 2 places.'>ospf_route_exist_new_table</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)
+<a id='L135' name='L135'></a><em class='brace'>{</em>
+<a id='L136' name='L136'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (rt);
+<a id='L139' name='L139'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a>  rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L142' name='L142'></a>  <strong class='reserved'>if</strong> (!rn) <em class='brace'>{</em>
+<a id='L143' name='L143'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L144' name='L144'></a>  <em class='brace'>}</em>
+<a id='L145' name='L145'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a>  <strong class='reserved'>if</strong> (!rn-&gt;info) <em class='brace'>{</em>
+<a id='L148' name='L148'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L149' name='L149'></a>  <em class='brace'>}</em>
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L152' name='L152'></a><em class='brace'>}</em>
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a><em class='comment'>/* If a prefix and a nexthop match any route in the routing table,</em>
+<a id='L155' name='L155'></a><em class='comment'>   then return 1, otherwise return 0. */</em>
+<a id='L156' name='L156'></a><strong class='reserved'>int</strong>
+<a id='L157' name='L157'></a><a href='../R/8463.html' title='Multiple referred from 3 places.'>ospf_route_match_same</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L158' name='L158'></a>                       <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *newor)
+<a id='L159' name='L159'></a><em class='brace'>{</em>
+<a id='L160' name='L160'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L161' name='L161'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L162' name='L162'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *op;
+<a id='L163' name='L163'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *newop;
+<a id='L164' name='L164'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *n1;
+<a id='L165' name='L165'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *n2;
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a>  <strong class='reserved'>if</strong> (! rt || ! <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)
+<a id='L168' name='L168'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>   rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L171' name='L171'></a>   <strong class='reserved'>if</strong> (! rn || ! rn-&gt;info)
+<a id='L172' name='L172'></a>     <strong class='reserved'>return</strong> 0;
+<a id='L173' name='L173'></a> 
+<a id='L174' name='L174'></a>   <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L175' name='L175'></a>
+<a id='L176' name='L176'></a>   or = rn-&gt;info;
+<a id='L177' name='L177'></a>   <strong class='reserved'>if</strong> (or-&gt;type == newor-&gt;type &amp;&amp; or-&gt;cost == newor-&gt;cost)
+<a id='L178' name='L178'></a>     <em class='brace'>{</em>
+<a id='L179' name='L179'></a>       <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>)
+<a id='L180' name='L180'></a>         <em class='brace'>{</em>
+<a id='L181' name='L181'></a>           <strong class='reserved'>if</strong> (or-&gt;paths-&gt;count != newor-&gt;paths-&gt;count)
+<a id='L182' name='L182'></a>             <strong class='reserved'>return</strong> 0;
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>           <em class='comment'>/* Check each path. */</em>
+<a id='L185' name='L185'></a>           <strong class='reserved'>for</strong> (n1 = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a> (or-&gt;paths), n2 = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a> (newor-&gt;paths);
+<a id='L186' name='L186'></a>                n1 &amp;&amp; n2; n1 = <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a> (n1), n2 = <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a> (n2))
+<a id='L187' name='L187'></a>             <em class='brace'>{</em> 
+<a id='L188' name='L188'></a>               op = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a> (n1);
+<a id='L189' name='L189'></a>               newop = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a> (n2);
+<a id='L190' name='L190'></a>
+<a id='L191' name='L191'></a>               <strong class='reserved'>if</strong> (! <a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;op-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, &amp;newop-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>))
+<a id='L192' name='L192'></a>                 <strong class='reserved'>return</strong> 0;
+<a id='L193' name='L193'></a>               <strong class='reserved'>if</strong> (op-&gt;ifindex != newop-&gt;ifindex)
+<a id='L194' name='L194'></a>                 <strong class='reserved'>return</strong> 0;
+<a id='L195' name='L195'></a>             <em class='brace'>}</em>
+<a id='L196' name='L196'></a>           <strong class='reserved'>return</strong> 1;
+<a id='L197' name='L197'></a>         <em class='brace'>}</em>
+<a id='L198' name='L198'></a>       <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/250.html#L279' title='Defined at 279 in lib/prefix.c.'>prefix_same</a> (&amp;rn-&gt;p, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>))
+<a id='L199' name='L199'></a>         <strong class='reserved'>return</strong> 1;
+<a id='L200' name='L200'></a>     <em class='brace'>}</em>
+<a id='L201' name='L201'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L202' name='L202'></a><em class='brace'>}</em>
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a><em class='comment'>/* delete routes generated from AS-External routes if there is a inter/intra</em>
+<a id='L205' name='L205'></a><em class='comment'> * area route</em>
+<a id='L206' name='L206'></a><em class='comment'> */</em>
+<a id='L207' name='L207'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> 
+<a id='L208' name='L208'></a><a href='../S/813.html#L281' title='Referred from 281 in ospfd/ospf_route.c.'>ospf_route_delete_same_ext</a>(<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *external_routes,
+<a id='L209' name='L209'></a>                     <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *routes)
+<a id='L210' name='L210'></a><em class='brace'>{</em>
+<a id='L211' name='L211'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn,
+<a id='L212' name='L212'></a>                    *ext_rn;
+<a id='L213' name='L213'></a>  
+<a id='L214' name='L214'></a>  <strong class='reserved'>if</strong> ( (external_routes == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) || (routes == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) )
+<a id='L215' name='L215'></a>    <strong class='reserved'>return</strong>;
+<a id='L216' name='L216'></a>  
+<a id='L217' name='L217'></a>  <em class='comment'>/* Remove deleted routes */</em>
+<a id='L218' name='L218'></a>  <strong class='reserved'>for</strong> ( rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (routes); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn) )
+<a id='L219' name='L219'></a>    <em class='brace'>{</em>
+<a id='L220' name='L220'></a>      <strong class='reserved'>if</strong> (rn &amp;&amp; rn-&gt;info)
+<a id='L221' name='L221'></a>        <em class='brace'>{</em>
+<a id='L222' name='L222'></a>          <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p = (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *)(&amp;rn-&gt;p);
+<a id='L223' name='L223'></a>          <strong class='reserved'>if</strong> ( (ext_rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (external_routes, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *)p)) )
+<a id='L224' name='L224'></a>            <em class='brace'>{</em>
+<a id='L225' name='L225'></a>              <strong class='reserved'>if</strong> (ext_rn-&gt;info)
+<a id='L226' name='L226'></a>                <em class='brace'>{</em>
+<a id='L227' name='L227'></a>                  <a href='../S/773.html#L426' title='Defined at 426 in ospfd/ospf_zebra.c.'>ospf_zebra_delete</a> (p, ext_rn-&gt;info);
+<a id='L228' name='L228'></a>                  <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a>( ext_rn-&gt;info);
+<a id='L229' name='L229'></a>                  ext_rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L230' name='L230'></a>                <em class='brace'>}</em>
+<a id='L231' name='L231'></a>              <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (ext_rn);
+<a id='L232' name='L232'></a>            <em class='brace'>}</em>
+<a id='L233' name='L233'></a>        <em class='brace'>}</em>
+<a id='L234' name='L234'></a>    <em class='brace'>}</em>
+<a id='L235' name='L235'></a><em class='brace'>}</em>
+<a id='L236' name='L236'></a>
+<a id='L237' name='L237'></a><em class='comment'>/* rt: Old, cmprt: New */</em>
+<a id='L238' name='L238'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L239' name='L239'></a><a href='../S/813.html#L279' title='Referred from 279 in ospfd/ospf_route.c.'>ospf_route_delete_uniq</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *cmprt)
+<a id='L240' name='L240'></a><em class='brace'>{</em>
+<a id='L241' name='L241'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L242' name='L242'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L245' name='L245'></a>    <strong class='reserved'>if</strong> ((or = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) 
+<a id='L246' name='L246'></a>      <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a> ||
+<a id='L247' name='L247'></a>          or-&gt;path_type == <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>)
+<a id='L248' name='L248'></a>        <em class='brace'>{</em>
+<a id='L249' name='L249'></a>          <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>)
+<a id='L250' name='L250'></a>            <em class='brace'>{</em>
+<a id='L251' name='L251'></a>              <strong class='reserved'>if</strong> (! <a href='../S/813.html#L134' title='Defined at 134 in ospfd/ospf_route.c.'>ospf_route_exist_new_table</a> (cmprt,
+<a id='L252' name='L252'></a>                                           (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p))
+<a id='L253' name='L253'></a>                <a href='../S/773.html#L426' title='Defined at 426 in ospfd/ospf_zebra.c.'>ospf_zebra_delete</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p, or);
+<a id='L254' name='L254'></a>            <em class='brace'>}</em>
+<a id='L255' name='L255'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L28' title='Defined at 28 in ospfd/ospf_route.h.'>OSPF_DESTINATION_DISCARD</a>)
+<a id='L256' name='L256'></a>            <strong class='reserved'>if</strong> (! <a href='../S/813.html#L134' title='Defined at 134 in ospfd/ospf_route.c.'>ospf_route_exist_new_table</a> (cmprt,
+<a id='L257' name='L257'></a>                                         (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p))
+<a id='L258' name='L258'></a>              <a href='../S/773.html#L536' title='Defined at 536 in ospfd/ospf_zebra.c.'>ospf_zebra_delete_discard</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p);
+<a id='L259' name='L259'></a>        <em class='brace'>}</em>
+<a id='L260' name='L260'></a><em class='brace'>}</em>
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a><em class='comment'>/* Install routes to table. */</em>
+<a id='L263' name='L263'></a><strong class='reserved'>void</strong>
+<a id='L264' name='L264'></a><a href='../R/8457.html' title='Multiple referred from 2 places.'>ospf_route_install</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L265' name='L265'></a><em class='brace'>{</em>
+<a id='L266' name='L266'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L267' name='L267'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a>  <em class='comment'>/* rt contains new routing table, new_table contains an old one.</em>
+<a id='L270' name='L270'></a><em class='comment'>     updating pointers */</em>
+<a id='L271' name='L271'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table)
+<a id='L272' name='L272'></a>    <a href='../S/813.html#L112' title='Defined at 112 in ospfd/ospf_route.c.'>ospf_route_table_free</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table);
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table = <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;new_table;
+<a id='L275' name='L275'></a>  <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;new_table = rt;
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a>  <em class='comment'>/* Delete old routes. */</em>
+<a id='L278' name='L278'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table)
+<a id='L279' name='L279'></a>    <a href='../S/813.html#L239' title='Defined at 239 in ospfd/ospf_route.c.'>ospf_route_delete_uniq</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table, rt);
+<a id='L280' name='L280'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_external_route)
+<a id='L281' name='L281'></a>    <a href='../S/813.html#L208' title='Defined at 208 in ospfd/ospf_route.c.'>ospf_route_delete_same_ext</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_external_route, rt);
+<a id='L282' name='L282'></a>
+<a id='L283' name='L283'></a>  <em class='comment'>/* Install new routes. */</em>
+<a id='L284' name='L284'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L285' name='L285'></a>    <strong class='reserved'>if</strong> ((or = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L286' name='L286'></a>      <em class='brace'>{</em>
+<a id='L287' name='L287'></a>        <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>)
+<a id='L288' name='L288'></a>          <em class='brace'>{</em>
+<a id='L289' name='L289'></a>            <strong class='reserved'>if</strong> (! <a href='../S/813.html#L157' title='Defined at 157 in ospfd/ospf_route.c.'>ospf_route_match_same</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table,
+<a id='L290' name='L290'></a>                                         (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *)&amp;rn-&gt;p, or))
+<a id='L291' name='L291'></a>              <a href='../S/773.html#L328' title='Defined at 328 in ospfd/ospf_zebra.c.'>ospf_zebra_add</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p, or);
+<a id='L292' name='L292'></a>          <em class='brace'>}</em>
+<a id='L293' name='L293'></a>        <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L28' title='Defined at 28 in ospfd/ospf_route.h.'>OSPF_DESTINATION_DISCARD</a>)
+<a id='L294' name='L294'></a>          <strong class='reserved'>if</strong> (! <a href='../S/813.html#L157' title='Defined at 157 in ospfd/ospf_route.c.'>ospf_route_match_same</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;old_table,
+<a id='L295' name='L295'></a>                                       (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p, or))
+<a id='L296' name='L296'></a>            <a href='../S/773.html#L513' title='Defined at 513 in ospfd/ospf_zebra.c.'>ospf_zebra_add_discard</a> ((<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *) &amp;rn-&gt;p);
+<a id='L297' name='L297'></a>      <em class='brace'>}</em>
+<a id='L298' name='L298'></a><em class='brace'>}</em>
+<a id='L299' name='L299'></a>
+<a id='L300' name='L300'></a><em class='comment'>/* RFC2328 16.1. (4). For "router". */</em>
+<a id='L301' name='L301'></a><strong class='reserved'>void</strong>
+<a id='L302' name='L302'></a><a href='../R/8170.html' title='Multiple referred from 2 places.'>ospf_intra_add_router</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v,
+<a id='L303' name='L303'></a>                       <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area)
+<a id='L304' name='L304'></a><em class='brace'>{</em>
+<a id='L305' name='L305'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L306' name='L306'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L307' name='L307'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L308' name='L308'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *lsa;
+<a id='L309' name='L309'></a>
+<a id='L310' name='L310'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L311' name='L311'></a>    zlog_debug ("ospf_intra_add_router: Start");
+<a id='L312' name='L312'></a>
+<a id='L313' name='L313'></a>  lsa = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *) v-&gt;lsa;
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L316' name='L316'></a>    zlog_debug ("ospf_intra_add_router: LS ID: %s",
+<a id='L317' name='L317'></a>               inet_ntoa (lsa-&gt;header.id));
+<a id='L318' name='L318'></a>  
+<a id='L319' name='L319'></a>  <strong class='reserved'>if</strong> (!<a href='../S/790.html#L500' title='Defined at 500 in ospfd/ospfd.h.'>OSPF_IS_AREA_BACKBONE</a>(area))
+<a id='L320' name='L320'></a>    <a href='../S/788.html#L1092' title='Defined at 1092 in ospfd/ospf_interface.c.'>ospf_vl_up_check</a> (area, lsa-&gt;header.id, v);
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a>  <strong class='reserved'>if</strong> (!<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/733.html#L134' title='Defined at 134 in ospfd/ospf_lsa.h.'>ROUTER_LSA_SHORTCUT</a>))
+<a id='L323' name='L323'></a>    area-&gt;shortcut_capability = 0;
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a>  <em class='comment'>/* If the newly added vertex is an area border router or AS boundary</em>
+<a id='L326' name='L326'></a><em class='comment'>     router, a routing table entry is added whose destination type is</em>
+<a id='L327' name='L327'></a><em class='comment'>     "router". */</em>
+<a id='L328' name='L328'></a>  <strong class='reserved'>if</strong> (! <a href='../S/733.html#L138' title='Defined at 138 in ospfd/ospf_lsa.h.'>IS_ROUTER_LSA_BORDER</a> (lsa) &amp;&amp; ! <a href='../S/733.html#L137' title='Defined at 137 in ospfd/ospf_lsa.h.'>IS_ROUTER_LSA_EXTERNAL</a> (lsa))
+<a id='L329' name='L329'></a>    <em class='brace'>{</em>
+<a id='L330' name='L330'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L331' name='L331'></a>        zlog_debug ("ospf_intra_add_router: "
+<a id='L332' name='L332'></a>                   "this router is neither ASBR nor ABR, skipping it");
+<a id='L333' name='L333'></a>      <strong class='reserved'>return</strong>;
+<a id='L334' name='L334'></a>    <em class='brace'>}</em>
+<a id='L335' name='L335'></a>
+<a id='L336' name='L336'></a>  <em class='comment'>/* Update ABR and ASBR count in this area. */</em>
+<a id='L337' name='L337'></a>  <strong class='reserved'>if</strong> (<a href='../S/733.html#L138' title='Defined at 138 in ospfd/ospf_lsa.h.'>IS_ROUTER_LSA_BORDER</a> (lsa))
+<a id='L338' name='L338'></a>    area-&gt;abr_count++;
+<a id='L339' name='L339'></a>  <strong class='reserved'>if</strong> (<a href='../S/733.html#L137' title='Defined at 137 in ospfd/ospf_lsa.h.'>IS_ROUTER_LSA_EXTERNAL</a> (lsa))
+<a id='L340' name='L340'></a>    area-&gt;asbr_count++;
+<a id='L341' name='L341'></a>
+<a id='L342' name='L342'></a>  <em class='comment'>/* The Options field found in the associated router-LSA is copied</em>
+<a id='L343' name='L343'></a><em class='comment'>     into the routing table entry's Optional capabilities field. Call</em>
+<a id='L344' name='L344'></a><em class='comment'>     the newly added vertex Router X. */</em>
+<a id='L345' name='L345'></a>  or = <a href='../S/813.html#L44' title='Defined at 44 in ospfd/ospf_route.c.'>ospf_route_new</a> ();
+<a id='L346' name='L346'></a>
+<a id='L347' name='L347'></a>  or-&gt;id = v-&gt;id;
+<a id='L348' name='L348'></a>  or-&gt;u.std.area_id = area-&gt;area_id;
+<a id='L349' name='L349'></a>  or-&gt;u.std.external_routing = area-&gt;external_routing;
+<a id='L350' name='L350'></a>  or-&gt;path_type = <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>;
+<a id='L351' name='L351'></a>  or-&gt;cost = v-&gt;distance;
+<a id='L352' name='L352'></a>  or-&gt;type = <a href='../S/759.html#L26' title='Defined at 26 in ospfd/ospf_route.h.'>OSPF_DESTINATION_ROUTER</a>;
+<a id='L353' name='L353'></a>  or-&gt;u.std.origin = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *) lsa;
+<a id='L354' name='L354'></a>  or-&gt;u.std.options = lsa-&gt;header.options;
+<a id='L355' name='L355'></a>  or-&gt;u.std.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = lsa-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a>  <em class='comment'>/* If Router X is the endpoint of one of the calculating router's</em>
+<a id='L358' name='L358'></a><em class='comment'>     virtual links, and the virtual link uses Area A as Transit area:</em>
+<a id='L359' name='L359'></a><em class='comment'>     the virtual link is declared up, the IP address of the virtual</em>
+<a id='L360' name='L360'></a><em class='comment'>     interface is set to the IP address of the outgoing interface</em>
+<a id='L361' name='L361'></a><em class='comment'>     calculated above for Router X, and the virtual neighbor's IP</em>
+<a id='L362' name='L362'></a><em class='comment'>     address is set to Router X's interface address (contained in</em>
+<a id='L363' name='L363'></a><em class='comment'>     Router X's router-LSA) that points back to the root of the</em>
+<a id='L364' name='L364'></a><em class='comment'>     shortest- path tree; equivalently, this is the interface that</em>
+<a id='L365' name='L365'></a><em class='comment'>     points back to Router X's parent vertex on the shortest-path tree</em>
+<a id='L366' name='L366'></a><em class='comment'>     (similar to the calculation in Section 16.1.1). */</em>
+<a id='L367' name='L367'></a>
+<a id='L368' name='L368'></a>  p.family = AF_INET;
+<a id='L369' name='L369'></a>  p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = v-&gt;id;
+<a id='L370' name='L370'></a>  p.prefixlen = <a href='../S/249.html#L106' title='Defined at 106 in lib/prefix.h.'>IPV4_MAX_BITLEN</a>;
+<a id='L371' name='L371'></a>
+<a id='L372' name='L372'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L373' name='L373'></a>    zlog_debug ("ospf_intra_add_router: talking about %s/%d",
+<a id='L374' name='L374'></a>               inet_ntoa (p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p.prefixlen);
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a>  rn = <a href='../S/236.html#L321' title='Defined at 321 in lib/table.c.'>route_node_get</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L377' name='L377'></a>
+<a id='L378' name='L378'></a>  <em class='comment'>/* Note that we keep all routes to ABRs and ASBRs, not only the best */</em>
+<a id='L379' name='L379'></a>  <strong class='reserved'>if</strong> (rn-&gt;info == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L380' name='L380'></a>    rn-&gt;info = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a> ();
+<a id='L381' name='L381'></a>  <strong class='reserved'>else</strong>
+<a id='L382' name='L382'></a>    <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L383' name='L383'></a>
+<a id='L384' name='L384'></a>  <a href='../S/813.html#L765' title='Defined at 765 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops_from_vertex</a> (or, v);
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a>  <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (rn-&gt;info, or);
+<a id='L387' name='L387'></a>
+<a id='L388' name='L388'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L389' name='L389'></a>    zlog_debug ("ospf_intra_add_router: Stop");
+<a id='L390' name='L390'></a><em class='brace'>}</em>
+<a id='L391' name='L391'></a>
+<a id='L392' name='L392'></a><em class='comment'>/* RFC2328 16.1. (4).  For transit network. */</em>
+<a id='L393' name='L393'></a><strong class='reserved'>void</strong>
+<a id='L394' name='L394'></a><a href='../R/8172.html' title='Multiple referred from 2 places.'>ospf_intra_add_transit</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v,
+<a id='L395' name='L395'></a>                        <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area)
+<a id='L396' name='L396'></a><em class='brace'>{</em>
+<a id='L397' name='L397'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L398' name='L398'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L399' name='L399'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L400' name='L400'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L182' title='Defined at 182 in ospfd/ospf_lsa.h.'>network_lsa</a> *lsa;
+<a id='L401' name='L401'></a>
+<a id='L402' name='L402'></a>  lsa = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L182' title='Defined at 182 in ospfd/ospf_lsa.h.'>network_lsa</a>*) v-&gt;lsa;
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a>  <em class='comment'>/* If the newly added vertex is a transit network, the routing table</em>
+<a id='L405' name='L405'></a><em class='comment'>     entry for the network is located.  The entry's Destination ID is</em>
+<a id='L406' name='L406'></a><em class='comment'>     the IP network number, which can be obtained by masking the</em>
+<a id='L407' name='L407'></a><em class='comment'>     Vertex ID (Link State ID) with its associated subnet mask (found</em>
+<a id='L408' name='L408'></a><em class='comment'>     in the body of the associated network-LSA). */</em>
+<a id='L409' name='L409'></a>  p.family = AF_INET;
+<a id='L410' name='L410'></a>  p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = v-&gt;id;
+<a id='L411' name='L411'></a>  p.prefixlen = <a href='../S/250.html#L471' title='Defined at 471 in lib/prefix.c.'>ip_masklen</a> (lsa-&gt;mask);
+<a id='L412' name='L412'></a>  <a href='../S/250.html#L484' title='Defined at 484 in lib/prefix.c.'>apply_mask_ipv4</a> (&amp;p);
+<a id='L413' name='L413'></a>
+<a id='L414' name='L414'></a>  rn = <a href='../S/236.html#L321' title='Defined at 321 in lib/table.c.'>route_node_get</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L415' name='L415'></a>
+<a id='L416' name='L416'></a>  <em class='comment'>/* If the routing table entry already exists (i.e., there is already</em>
+<a id='L417' name='L417'></a><em class='comment'>     an intra-area route to the destination installed in the routing</em>
+<a id='L418' name='L418'></a><em class='comment'>     table), multiple vertices have mapped to the same IP network.</em>
+<a id='L419' name='L419'></a><em class='comment'>     For example, this can occur when a new Designated Router is being</em>
+<a id='L420' name='L420'></a><em class='comment'>     established.  In this case, the current routing table entry</em>
+<a id='L421' name='L421'></a><em class='comment'>     should be overwritten if and only if the newly found path is just</em>
+<a id='L422' name='L422'></a><em class='comment'>     as short and the current routing table entry's Link State Origin</em>
+<a id='L423' name='L423'></a><em class='comment'>     has a smaller Link State ID than the newly added vertex' LSA. */</em>
+<a id='L424' name='L424'></a>  <strong class='reserved'>if</strong> (rn-&gt;info)
+<a id='L425' name='L425'></a>    <em class='brace'>{</em>
+<a id='L426' name='L426'></a>      <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *cur_or;
+<a id='L427' name='L427'></a>
+<a id='L428' name='L428'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L429' name='L429'></a>      cur_or = rn-&gt;info;
+<a id='L430' name='L430'></a>
+<a id='L431' name='L431'></a>      <strong class='reserved'>if</strong> (v-&gt;distance &gt; cur_or-&gt;cost ||
+<a id='L432' name='L432'></a>          <a href='../S/249.html#L108' title='Defined at 108 in lib/prefix.h.'>IPV4_ADDR_CMP</a> (&amp;cur_or-&gt;u.std.origin-&gt;id, &amp;lsa-&gt;header.id) &gt; 0)
+<a id='L433' name='L433'></a>        <strong class='reserved'>return</strong>;
+<a id='L434' name='L434'></a>      
+<a id='L435' name='L435'></a>      <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (rn-&gt;info);
+<a id='L436' name='L436'></a>    <em class='brace'>}</em>
+<a id='L437' name='L437'></a>
+<a id='L438' name='L438'></a>  or = <a href='../S/813.html#L44' title='Defined at 44 in ospfd/ospf_route.c.'>ospf_route_new</a> ();
+<a id='L439' name='L439'></a>
+<a id='L440' name='L440'></a>  or-&gt;id = v-&gt;id;
+<a id='L441' name='L441'></a>  or-&gt;u.std.area_id = area-&gt;area_id;
+<a id='L442' name='L442'></a>  or-&gt;u.std.external_routing = area-&gt;external_routing;
+<a id='L443' name='L443'></a>  or-&gt;path_type = <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>;
+<a id='L444' name='L444'></a>  or-&gt;cost = v-&gt;distance;
+<a id='L445' name='L445'></a>  or-&gt;type = <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>;
+<a id='L446' name='L446'></a>  or-&gt;u.std.origin = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *) lsa;
+<a id='L447' name='L447'></a>
+<a id='L448' name='L448'></a>  <a href='../S/813.html#L765' title='Defined at 765 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops_from_vertex</a> (or, v);
+<a id='L449' name='L449'></a>  
+<a id='L450' name='L450'></a>  rn-&gt;info = or;
+<a id='L451' name='L451'></a><em class='brace'>}</em>
+<a id='L452' name='L452'></a>
+<a id='L453' name='L453'></a><em class='comment'>/* RFC2328 16.1. second stage. */</em>
+<a id='L454' name='L454'></a><strong class='reserved'>void</strong>
+<a id='L455' name='L455'></a><a href='../R/8171.html' title='Multiple referred from 2 places.'>ospf_intra_add_stub</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/733.html#L143' title='Defined at 143 in ospfd/ospf_lsa.h.'>router_lsa_link</a> *link,
+<a id='L456' name='L456'></a>                     <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v, <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area,
+<a id='L457' name='L457'></a>                     <strong class='reserved'>int</strong> parent_is_root, <strong class='reserved'>int</strong> lsa_pos)
+<a id='L458' name='L458'></a><em class='brace'>{</em>
+<a id='L459' name='L459'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> cost;
+<a id='L460' name='L460'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L461' name='L461'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L462' name='L462'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L463' name='L463'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *lsa;
+<a id='L464' name='L464'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L465' name='L465'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L466' name='L466'></a>
+<a id='L467' name='L467'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L468' name='L468'></a>    zlog_debug ("ospf_intra_add_stub(): Start");
+<a id='L469' name='L469'></a>
+<a id='L470' name='L470'></a>  lsa = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> *) v-&gt;lsa;
+<a id='L471' name='L471'></a>
+<a id='L472' name='L472'></a>  p.family = AF_INET;
+<a id='L473' name='L473'></a>  p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = link-&gt;link_id;
+<a id='L474' name='L474'></a>  p.prefixlen = <a href='../S/250.html#L471' title='Defined at 471 in lib/prefix.c.'>ip_masklen</a> (link-&gt;link_data);
+<a id='L475' name='L475'></a>  <a href='../S/250.html#L484' title='Defined at 484 in lib/prefix.c.'>apply_mask_ipv4</a> (&amp;p);
+<a id='L476' name='L476'></a>
+<a id='L477' name='L477'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L478' name='L478'></a>    zlog_debug ("ospf_intra_add_stub(): processing route to %s/%d",  
+<a id='L479' name='L479'></a>               inet_ntoa (p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p.prefixlen);
+<a id='L480' name='L480'></a>
+<a id='L481' name='L481'></a>  <em class='comment'>/* (1) Calculate the distance D of stub network from the root.  D is</em>
+<a id='L482' name='L482'></a><em class='comment'>     equal to the distance from the root to the router vertex</em>
+<a id='L483' name='L483'></a><em class='comment'>     (calculated in stage 1), plus the stub network link's advertised</em>
+<a id='L484' name='L484'></a><em class='comment'>     cost. */</em>
+<a id='L485' name='L485'></a>  cost = v-&gt;distance + ntohs (link-&gt;m[0].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L486' name='L486'></a>
+<a id='L487' name='L487'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L488' name='L488'></a>    zlog_debug ("ospf_intra_add_stub(): calculated cost is %d + %d = %d", 
+<a id='L489' name='L489'></a>               v-&gt;distance, ntohs(link-&gt;m[0].<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>), cost);
+<a id='L490' name='L490'></a>  
+<a id='L491' name='L491'></a>  <em class='comment'>/* PtP links with /32 masks adds host routes to remote, directly</em>
+<a id='L492' name='L492'></a><em class='comment'>   * connected hosts, see RFC 2328, 12.4.1.1, Option 1.</em>
+<a id='L493' name='L493'></a><em class='comment'>   * Such routes can just be ignored for the sake of tidyness.</em>
+<a id='L494' name='L494'></a><em class='comment'>   */</em>
+<a id='L495' name='L495'></a>  <strong class='reserved'>if</strong> (parent_is_root &amp;&amp; link-&gt;link_data.s_addr == 0xffffffff &amp;&amp;
+<a id='L496' name='L496'></a>      <a href='../S/788.html#L411' title='Defined at 411 in ospfd/ospf_interface.c.'>ospf_if_lookup_by_local_addr</a> (area-&gt;<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, link-&gt;link_id))
+<a id='L497' name='L497'></a>    <em class='brace'>{</em>
+<a id='L498' name='L498'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L499' name='L499'></a>        zlog_debug ("%s: ignoring host route %s/32 to self.",
+<a id='L500' name='L500'></a>                    __func__, inet_ntoa (link-&gt;link_id));
+<a id='L501' name='L501'></a>      <strong class='reserved'>return</strong>;
+<a id='L502' name='L502'></a>    <em class='brace'>}</em>
+<a id='L503' name='L503'></a>  
+<a id='L504' name='L504'></a>  rn = <a href='../S/236.html#L321' title='Defined at 321 in lib/table.c.'>route_node_get</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L505' name='L505'></a>
+<a id='L506' name='L506'></a>  <em class='comment'>/* Lookup current routing table. */</em>
+<a id='L507' name='L507'></a>  <strong class='reserved'>if</strong> (rn-&gt;info)
+<a id='L508' name='L508'></a>    <em class='brace'>{</em>
+<a id='L509' name='L509'></a>      <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *cur_or;
+<a id='L510' name='L510'></a>
+<a id='L511' name='L511'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L512' name='L512'></a>
+<a id='L513' name='L513'></a>      cur_or = rn-&gt;info;
+<a id='L514' name='L514'></a>
+<a id='L515' name='L515'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L516' name='L516'></a>        zlog_debug ("ospf_intra_add_stub(): "
+<a id='L517' name='L517'></a>                   "another route to the same prefix found with cost %u",
+<a id='L518' name='L518'></a>                   cur_or-&gt;cost);
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a>      <em class='comment'>/* Compare this distance to the current best cost to the stub</em>
+<a id='L521' name='L521'></a><em class='comment'>         network.  This is done by looking up the stub network's</em>
+<a id='L522' name='L522'></a><em class='comment'>         current routing table entry.  If the calculated distance D is</em>
+<a id='L523' name='L523'></a><em class='comment'>         larger, go on to examine the next stub network link in the</em>
+<a id='L524' name='L524'></a><em class='comment'>         LSA. */</em>
+<a id='L525' name='L525'></a>      <strong class='reserved'>if</strong> (cost &gt; cur_or-&gt;cost)
+<a id='L526' name='L526'></a>        <em class='brace'>{</em>
+<a id='L527' name='L527'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L528' name='L528'></a>            zlog_debug ("ospf_intra_add_stub(): old route is better, exit");
+<a id='L529' name='L529'></a>          <strong class='reserved'>return</strong>;
+<a id='L530' name='L530'></a>        <em class='brace'>}</em>
+<a id='L531' name='L531'></a>
+<a id='L532' name='L532'></a>      <em class='comment'>/* (2) If this step is reached, the stub network's routing table</em>
+<a id='L533' name='L533'></a><em class='comment'>         entry must be updated.  Calculate the set of next hops that</em>
+<a id='L534' name='L534'></a><em class='comment'>         would result from using the stub network link.  This</em>
+<a id='L535' name='L535'></a><em class='comment'>         calculation is shown in Section 16.1.1; input to this</em>
+<a id='L536' name='L536'></a><em class='comment'>         calculation is the destination (the stub network) and the</em>
+<a id='L537' name='L537'></a><em class='comment'>         parent vertex (the router vertex). If the distance D is the</em>
+<a id='L538' name='L538'></a><em class='comment'>         same as the current routing table cost, simply add this set</em>
+<a id='L539' name='L539'></a><em class='comment'>         of next hops to the routing table entry's list of next hops.</em>
+<a id='L540' name='L540'></a><em class='comment'>         In this case, the routing table already has a Link State</em>
+<a id='L541' name='L541'></a><em class='comment'>         Origin.  If this Link State Origin is a router-LSA whose Link</em>
+<a id='L542' name='L542'></a><em class='comment'>         State ID is smaller than V's Router ID, reset the Link State</em>
+<a id='L543' name='L543'></a><em class='comment'>         Origin to V's router-LSA. */</em>
+<a id='L544' name='L544'></a>
+<a id='L545' name='L545'></a>      <strong class='reserved'>if</strong> (cost == cur_or-&gt;cost)
+<a id='L546' name='L546'></a>        <em class='brace'>{</em>
+<a id='L547' name='L547'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L548' name='L548'></a>            zlog_debug ("ospf_intra_add_stub(): routes are equal, merge");
+<a id='L549' name='L549'></a>
+<a id='L550' name='L550'></a>          <a href='../S/813.html#L765' title='Defined at 765 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops_from_vertex</a> (cur_or, v);
+<a id='L551' name='L551'></a>
+<a id='L552' name='L552'></a>          <strong class='reserved'>if</strong> (<a href='../S/249.html#L108' title='Defined at 108 in lib/prefix.h.'>IPV4_ADDR_CMP</a> (&amp;cur_or-&gt;u.std.origin-&gt;id, &amp;lsa-&gt;header.id) &lt; 0)
+<a id='L553' name='L553'></a>            cur_or-&gt;u.std.origin = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *) lsa;
+<a id='L554' name='L554'></a>          <strong class='reserved'>return</strong>;
+<a id='L555' name='L555'></a>        <em class='brace'>}</em>
+<a id='L556' name='L556'></a>
+<a id='L557' name='L557'></a>      <em class='comment'>/* Otherwise D is smaller than the routing table cost.</em>
+<a id='L558' name='L558'></a><em class='comment'>         Overwrite the current routing table entry by setting the</em>
+<a id='L559' name='L559'></a><em class='comment'>         routing table entry's cost to D, and by setting the entry's</em>
+<a id='L560' name='L560'></a><em class='comment'>         list of next hops to the newly calculated set.  Set the</em>
+<a id='L561' name='L561'></a><em class='comment'>         routing table entry's Link State Origin to V's router-LSA.</em>
+<a id='L562' name='L562'></a><em class='comment'>         Then go on to examine the next stub network link. */</em>
+<a id='L563' name='L563'></a>
+<a id='L564' name='L564'></a>      <strong class='reserved'>if</strong> (cost &lt; cur_or-&gt;cost)
+<a id='L565' name='L565'></a>        <em class='brace'>{</em>
+<a id='L566' name='L566'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L567' name='L567'></a>            zlog_debug ("ospf_intra_add_stub(): new route is better, set it");
+<a id='L568' name='L568'></a>
+<a id='L569' name='L569'></a>          cur_or-&gt;cost = cost;
+<a id='L570' name='L570'></a>
+<a id='L571' name='L571'></a>          <a href='../S/243.html#L207' title='Defined at 207 in lib/linklist.c.'>list_delete_all_node</a> (cur_or-&gt;paths);
+<a id='L572' name='L572'></a>
+<a id='L573' name='L573'></a>          <a href='../S/813.html#L765' title='Defined at 765 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops_from_vertex</a> (cur_or, v);
+<a id='L574' name='L574'></a>
+<a id='L575' name='L575'></a>          cur_or-&gt;u.std.origin = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *) lsa;
+<a id='L576' name='L576'></a>          <strong class='reserved'>return</strong>;
+<a id='L577' name='L577'></a>        <em class='brace'>}</em>
+<a id='L578' name='L578'></a>    <em class='brace'>}</em>
+<a id='L579' name='L579'></a>
+<a id='L580' name='L580'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L581' name='L581'></a>    zlog_debug ("ospf_intra_add_stub(): installing new route");
+<a id='L582' name='L582'></a>
+<a id='L583' name='L583'></a>  or = <a href='../S/813.html#L44' title='Defined at 44 in ospfd/ospf_route.c.'>ospf_route_new</a> ();
+<a id='L584' name='L584'></a>
+<a id='L585' name='L585'></a>  or-&gt;id = v-&gt;id;
+<a id='L586' name='L586'></a>  or-&gt;u.std.area_id = area-&gt;area_id;
+<a id='L587' name='L587'></a>  or-&gt;u.std.external_routing = area-&gt;external_routing;
+<a id='L588' name='L588'></a>  or-&gt;path_type = <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>;
+<a id='L589' name='L589'></a>  or-&gt;cost = cost;
+<a id='L590' name='L590'></a>  or-&gt;type = <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>;
+<a id='L591' name='L591'></a>  or-&gt;u.std.origin = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *) lsa;
+<a id='L592' name='L592'></a>
+<a id='L593' name='L593'></a>  <em class='comment'>/* Nexthop is depend on connection type. */</em>
+<a id='L594' name='L594'></a>  <strong class='reserved'>if</strong> (v != area-&gt;spf)
+<a id='L595' name='L595'></a>    <em class='brace'>{</em>
+<a id='L596' name='L596'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L597' name='L597'></a>        zlog_debug ("ospf_intra_add_stub(): this network is on remote router");
+<a id='L598' name='L598'></a>      <a href='../S/813.html#L765' title='Defined at 765 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops_from_vertex</a> (or, v);
+<a id='L599' name='L599'></a>    <em class='brace'>}</em>
+<a id='L600' name='L600'></a>  <strong class='reserved'>else</strong>
+<a id='L601' name='L601'></a>    <em class='brace'>{</em>
+<a id='L602' name='L602'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L603' name='L603'></a>        zlog_debug ("ospf_intra_add_stub(): this network is on this router");
+<a id='L604' name='L604'></a>
+<a id='L605' name='L605'></a>      <strong class='reserved'>if</strong> ((oi = <a href='../S/788.html#L397' title='Defined at 397 in ospfd/ospf_interface.c.'>ospf_if_lookup_by_lsa_pos</a> (area, lsa_pos)))
+<a id='L606' name='L606'></a>        <em class='brace'>{</em>
+<a id='L607' name='L607'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L608' name='L608'></a>            zlog_debug ("ospf_intra_add_stub(): the interface is %s",
+<a id='L609' name='L609'></a>                       <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a> (oi));
+<a id='L610' name='L610'></a>
+<a id='L611' name='L611'></a>          path = <a href='../S/813.html#L68' title='Defined at 68 in ospfd/ospf_route.c.'>ospf_path_new</a> ();
+<a id='L612' name='L612'></a>          path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.s_addr = 0;
+<a id='L613' name='L613'></a>          path-&gt;ifindex = oi-&gt;ifp-&gt;ifindex;
+<a id='L614' name='L614'></a>          <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (or-&gt;paths, path);
+<a id='L615' name='L615'></a>        <em class='brace'>}</em>
+<a id='L616' name='L616'></a>      <strong class='reserved'>else</strong>
+<a id='L617' name='L617'></a>        <em class='brace'>{</em>
+<a id='L618' name='L618'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L619' name='L619'></a>            zlog_debug ("ospf_intra_add_stub(): where's the interface ?");
+<a id='L620' name='L620'></a>        <em class='brace'>}</em>
+<a id='L621' name='L621'></a>    <em class='brace'>}</em>
+<a id='L622' name='L622'></a>
+<a id='L623' name='L623'></a>  rn-&gt;info = or;
+<a id='L624' name='L624'></a>
+<a id='L625' name='L625'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L626' name='L626'></a>    zlog_debug("ospf_intra_add_stub(): Stop");
+<a id='L627' name='L627'></a><em class='brace'>}</em>
+<a id='L628' name='L628'></a>
+<a id='L629' name='L629'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ospf_path_type_str[] =
+<a id='L630' name='L630'></a><em class='brace'>{</em>
+<a id='L631' name='L631'></a>  "unknown-type",
+<a id='L632' name='L632'></a>  "intra-area",
+<a id='L633' name='L633'></a>  "inter-area",
+<a id='L634' name='L634'></a>  "type1-external",
+<a id='L635' name='L635'></a>  "type2-external"
+<a id='L636' name='L636'></a><em class='brace'>}</em>;
+<a id='L637' name='L637'></a>
+<a id='L638' name='L638'></a><strong class='reserved'>void</strong>
+<a id='L639' name='L639'></a><a href='../R/8469.html' title='Multiple referred from 2 places.'>ospf_route_table_dump</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L640' name='L640'></a><em class='brace'>{</em>
+<a id='L641' name='L641'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L642' name='L642'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L643' name='L643'></a>  <strong class='reserved'>char</strong> buf1[BUFSIZ];
+<a id='L644' name='L644'></a>  <strong class='reserved'>char</strong> buf2[BUFSIZ];
+<a id='L645' name='L645'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *pnode;
+<a id='L646' name='L646'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L647' name='L647'></a>
+<a id='L648' name='L648'></a><em class='sharp'>#if</em> 0
+<a id='L649' name='L649'></a>  zlog_debug ("Type   Dest   Area   Path         Type    Cost   Next     Adv.");
+<a id='L650' name='L650'></a>  zlog_debug ("                                 Hop(s)   Router(s)");
+<a id='L651' name='L651'></a><em class='sharp'>#endif</em> <em class='comment'>/* 0 */</em>
+<a id='L652' name='L652'></a>
+<a id='L653' name='L653'></a>  zlog_debug ("========== OSPF routing table ==========");
+<a id='L654' name='L654'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L655' name='L655'></a>    <strong class='reserved'>if</strong> ((or = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L656' name='L656'></a>      <em class='brace'>{</em>
+<a id='L657' name='L657'></a>        <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L27' title='Defined at 27 in ospfd/ospf_route.h.'>OSPF_DESTINATION_NETWORK</a>)
+<a id='L658' name='L658'></a>          <em class='brace'>{</em>
+<a id='L659' name='L659'></a>            zlog_debug ("N %s/%d\t%s\t%s\t%d", 
+<a id='L660' name='L660'></a>                       <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;rn-&gt;p.u.prefix4, buf1, BUFSIZ),
+<a id='L661' name='L661'></a>                       rn-&gt;p.prefixlen,
+<a id='L662' name='L662'></a>                       <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;or-&gt;u.std.area_id, buf2,
+<a id='L663' name='L663'></a>                                  BUFSIZ),
+<a id='L664' name='L664'></a>                       ospf_path_type_str[or-&gt;path_type],
+<a id='L665' name='L665'></a>                       or-&gt;cost);
+<a id='L666' name='L666'></a>            <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (or-&gt;paths, pnode, path))
+<a id='L667' name='L667'></a>              zlog_debug ("  -&gt; %s", inet_ntoa (path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>));
+<a id='L668' name='L668'></a>          <em class='brace'>}</em>
+<a id='L669' name='L669'></a>        <strong class='reserved'>else</strong>
+<a id='L670' name='L670'></a>          zlog_debug ("R %s\t%s\t%s\t%d", 
+<a id='L671' name='L671'></a>                     <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;rn-&gt;p.u.prefix4, buf1, BUFSIZ),
+<a id='L672' name='L672'></a>                     <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;or-&gt;u.std.area_id, buf2,
+<a id='L673' name='L673'></a>                                BUFSIZ),
+<a id='L674' name='L674'></a>                     ospf_path_type_str[or-&gt;path_type],
+<a id='L675' name='L675'></a>                     or-&gt;cost);
+<a id='L676' name='L676'></a>      <em class='brace'>}</em>
+<a id='L677' name='L677'></a>  zlog_debug ("========================================");
+<a id='L678' name='L678'></a><em class='brace'>}</em>
+<a id='L679' name='L679'></a>
+<a id='L680' name='L680'></a><em class='comment'>/* This is 16.4.1 implementation.</em>
+<a id='L681' name='L681'></a><em class='comment'>   o Intra-area paths using non-backbone areas are always the most preferred.</em>
+<a id='L682' name='L682'></a><em class='comment'>   o The other paths, intra-area backbone paths and inter-area paths,</em>
+<a id='L683' name='L683'></a><em class='comment'>     are of equal preference. */</em>
+<a id='L684' name='L684'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L685' name='L685'></a><a href='../R/7991.html' title='Multiple referred from 2 places.'>ospf_asbr_route_cmp</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *r1,
+<a id='L686' name='L686'></a>                     <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *r2)
+<a id='L687' name='L687'></a><em class='brace'>{</em>
+<a id='L688' name='L688'></a>  u_char r1_type, r2_type;
+<a id='L689' name='L689'></a>
+<a id='L690' name='L690'></a>  r1_type = r1-&gt;path_type;
+<a id='L691' name='L691'></a>  r2_type = r2-&gt;path_type;
+<a id='L692' name='L692'></a>
+<a id='L693' name='L693'></a>  <em class='comment'>/* r1/r2 itself is backbone, and it's Inter-area path. */</em>
+<a id='L694' name='L694'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L499' title='Defined at 499 in ospfd/ospfd.h.'>OSPF_IS_AREA_ID_BACKBONE</a> (r1-&gt;u.std.area_id))
+<a id='L695' name='L695'></a>    r1_type = <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>;
+<a id='L696' name='L696'></a>  <strong class='reserved'>if</strong> (<a href='../S/790.html#L499' title='Defined at 499 in ospfd/ospfd.h.'>OSPF_IS_AREA_ID_BACKBONE</a> (r2-&gt;u.std.area_id))
+<a id='L697' name='L697'></a>    r2_type = <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>;
+<a id='L698' name='L698'></a>
+<a id='L699' name='L699'></a>  <strong class='reserved'>return</strong> (r1_type - r2_type);
+<a id='L700' name='L700'></a><em class='brace'>}</em>
+<a id='L701' name='L701'></a>
+<a id='L702' name='L702'></a><em class='comment'>/* Compare two routes.</em>
+<a id='L703' name='L703'></a><em class='comment'> ret &lt;  0 -- r1 is better.</em>
+<a id='L704' name='L704'></a><em class='comment'> ret == 0 -- r1 and r2 are the same.</em>
+<a id='L705' name='L705'></a><em class='comment'> ret &gt;  0 -- r2 is better. */</em>
+<a id='L706' name='L706'></a><strong class='reserved'>int</strong>
+<a id='L707' name='L707'></a><a href='../R/8449.html' title='Multiple referred from 4 places.'>ospf_route_cmp</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *r1,
+<a id='L708' name='L708'></a>                <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *r2)
+<a id='L709' name='L709'></a><em class='brace'>{</em>
+<a id='L710' name='L710'></a>  <strong class='reserved'>int</strong> ret = 0;
+<a id='L711' name='L711'></a>
+<a id='L712' name='L712'></a>  <em class='comment'>/* Path types of r1 and r2 are not the same. */</em>
+<a id='L713' name='L713'></a>  <strong class='reserved'>if</strong> ((ret = (r1-&gt;path_type - r2-&gt;path_type)))
+<a id='L714' name='L714'></a>    <strong class='reserved'>return</strong> ret;
+<a id='L715' name='L715'></a>
+<a id='L716' name='L716'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L717' name='L717'></a>    zlog_debug ("Route[Compare]: Path types are the same.");
+<a id='L718' name='L718'></a>  <em class='comment'>/* Path types are the same, compare any cost. */</em>
+<a id='L719' name='L719'></a>  <strong class='reserved'>switch</strong> (r1-&gt;path_type)
+<a id='L720' name='L720'></a>    <em class='brace'>{</em>
+<a id='L721' name='L721'></a>    <strong class='reserved'>case</strong> <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>:
+<a id='L722' name='L722'></a>    <strong class='reserved'>case</strong> <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>:
+<a id='L723' name='L723'></a>      <strong class='reserved'>break</strong>;
+<a id='L724' name='L724'></a>    <strong class='reserved'>case</strong> <a href='../S/759.html#L33' title='Defined at 33 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE1_EXTERNAL</a>:
+<a id='L725' name='L725'></a>      <strong class='reserved'>if</strong> (!<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <a href='../S/790.html#L180' title='Defined at 180 in ospfd/ospfd.h.'>OSPF_RFC1583_COMPATIBLE</a>))
+<a id='L726' name='L726'></a>        <em class='brace'>{</em>
+<a id='L727' name='L727'></a>          ret = <a href='../S/813.html#L685' title='Defined at 685 in ospfd/ospf_route.c.'>ospf_asbr_route_cmp</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, r1-&gt;u.ext.asbr, r2-&gt;u.ext.asbr);
+<a id='L728' name='L728'></a>          <strong class='reserved'>if</strong> (ret != 0)
+<a id='L729' name='L729'></a>            <strong class='reserved'>return</strong> ret;
+<a id='L730' name='L730'></a>        <em class='brace'>}</em>
+<a id='L731' name='L731'></a>      <strong class='reserved'>break</strong>;
+<a id='L732' name='L732'></a>    <strong class='reserved'>case</strong> <a href='../S/759.html#L34' title='Defined at 34 in ospfd/ospf_route.h.'>OSPF_PATH_TYPE2_EXTERNAL</a>:
+<a id='L733' name='L733'></a>      <strong class='reserved'>if</strong> ((ret = (r1-&gt;u.ext.type2_cost - r2-&gt;u.ext.type2_cost)))
+<a id='L734' name='L734'></a>        <strong class='reserved'>return</strong> ret;
+<a id='L735' name='L735'></a>
+<a id='L736' name='L736'></a>      <strong class='reserved'>if</strong> (!<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <a href='../S/790.html#L180' title='Defined at 180 in ospfd/ospfd.h.'>OSPF_RFC1583_COMPATIBLE</a>))
+<a id='L737' name='L737'></a>        <em class='brace'>{</em>
+<a id='L738' name='L738'></a>          ret = <a href='../S/813.html#L685' title='Defined at 685 in ospfd/ospf_route.c.'>ospf_asbr_route_cmp</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, r1-&gt;u.ext.asbr, r2-&gt;u.ext.asbr);
+<a id='L739' name='L739'></a>          <strong class='reserved'>if</strong> (ret != 0)
+<a id='L740' name='L740'></a>            <strong class='reserved'>return</strong> ret;
+<a id='L741' name='L741'></a>        <em class='brace'>}</em>
+<a id='L742' name='L742'></a>      <strong class='reserved'>break</strong>;
+<a id='L743' name='L743'></a>    <em class='brace'>}</em>      
+<a id='L744' name='L744'></a>
+<a id='L745' name='L745'></a>  <em class='comment'>/* Anyway, compare the costs. */</em>
+<a id='L746' name='L746'></a>  <strong class='reserved'>return</strong> (r1-&gt;cost - r2-&gt;cost);
+<a id='L747' name='L747'></a><em class='brace'>}</em>
+<a id='L748' name='L748'></a>
+<a id='L749' name='L749'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L750' name='L750'></a><a href='../S/813.html#L781' title='Referred from 781 in ospfd/ospf_route.c.'>ospf_path_exist</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *plist, <strong class='reserved'>struct</strong> in_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L751' name='L751'></a>                 <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi)
+<a id='L752' name='L752'></a><em class='brace'>{</em>
+<a id='L753' name='L753'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L754' name='L754'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L755' name='L755'></a>
+<a id='L756' name='L756'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (plist, node, nnode, path))
+<a id='L757' name='L757'></a>    <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>) &amp;&amp;
+<a id='L758' name='L758'></a>        path-&gt;ifindex == oi-&gt;ifp-&gt;ifindex)
+<a id='L759' name='L759'></a>      <strong class='reserved'>return</strong> 1;
+<a id='L760' name='L760'></a>
+<a id='L761' name='L761'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L762' name='L762'></a><em class='brace'>}</em>
+<a id='L763' name='L763'></a>
+<a id='L764' name='L764'></a><strong class='reserved'>void</strong>
+<a id='L765' name='L765'></a><a href='../R/8451.html' title='Multiple referred from 6 places.'>ospf_route_copy_nexthops_from_vertex</a> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *to,
+<a id='L766' name='L766'></a>                                      <strong class='reserved'>struct</strong> <a href='../S/812.html#L36' title='Defined at 36 in ospfd/ospf_spf.h.'>vertex</a> *v)
+<a id='L767' name='L767'></a><em class='brace'>{</em>
+<a id='L768' name='L768'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L769' name='L769'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L770' name='L770'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L49' title='Defined at 49 in ospfd/ospf_spf.h.'>vertex_nexthop</a> *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L771' name='L771'></a>  <strong class='reserved'>struct</strong> <a href='../S/812.html#L55' title='Defined at 55 in ospfd/ospf_spf.h.'>vertex_parent</a> *vp;
+<a id='L772' name='L772'></a>
+<a id='L773' name='L773'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (to-&gt;paths);
+<a id='L774' name='L774'></a>
+<a id='L775' name='L775'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (v-&gt;parents, node, vp))
+<a id='L776' name='L776'></a>    <em class='brace'>{</em>
+<a id='L777' name='L777'></a>      <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = vp-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L778' name='L778'></a>      
+<a id='L779' name='L779'></a>      <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) 
+<a id='L780' name='L780'></a>        <em class='brace'>{</em>
+<a id='L781' name='L781'></a>          <strong class='reserved'>if</strong> (! <a href='../S/813.html#L750' title='Defined at 750 in ospfd/ospf_route.c.'>ospf_path_exist</a> (to-&gt;paths, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;router, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi))
+<a id='L782' name='L782'></a>            <em class='brace'>{</em>
+<a id='L783' name='L783'></a>              path = <a href='../S/813.html#L68' title='Defined at 68 in ospfd/ospf_route.c.'>ospf_path_new</a> ();
+<a id='L784' name='L784'></a>              path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;router;
+<a id='L785' name='L785'></a>              path-&gt;ifindex = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;oi-&gt;ifp-&gt;ifindex;
+<a id='L786' name='L786'></a>              <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (to-&gt;paths, path);
+<a id='L787' name='L787'></a>            <em class='brace'>}</em>
+<a id='L788' name='L788'></a>        <em class='brace'>}</em>
+<a id='L789' name='L789'></a>    <em class='brace'>}</em>
+<a id='L790' name='L790'></a><em class='brace'>}</em>
+<a id='L791' name='L791'></a>
+<a id='L792' name='L792'></a><strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *
+<a id='L793' name='L793'></a><a href='../R/8424.html' title='Multiple referred from 2 places.'>ospf_path_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *plist, <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path)
+<a id='L794' name='L794'></a><em class='brace'>{</em>
+<a id='L795' name='L795'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L796' name='L796'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *op;
+<a id='L797' name='L797'></a>
+<a id='L798' name='L798'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (plist, node, op))
+<a id='L799' name='L799'></a>  <em class='brace'>{</em>
+<a id='L800' name='L800'></a>    <strong class='reserved'>if</strong> (!<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;op-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, &amp;path-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>))
+<a id='L801' name='L801'></a>      <strong class='reserved'>continue</strong>;
+<a id='L802' name='L802'></a>    <strong class='reserved'>if</strong> (!<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;op-&gt;adv_router, &amp;path-&gt;adv_router))
+<a id='L803' name='L803'></a>      <strong class='reserved'>continue</strong>;
+<a id='L804' name='L804'></a>    <strong class='reserved'>if</strong> (op-&gt;ifindex != path-&gt;ifindex)
+<a id='L805' name='L805'></a>      <strong class='reserved'>continue</strong>;
+<a id='L806' name='L806'></a>    <strong class='reserved'>return</strong> op;
+<a id='L807' name='L807'></a>  <em class='brace'>}</em>
+<a id='L808' name='L808'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L809' name='L809'></a><em class='brace'>}</em>
+<a id='L810' name='L810'></a>
+<a id='L811' name='L811'></a><strong class='reserved'>void</strong>
+<a id='L812' name='L812'></a><a href='../R/8450.html' title='Multiple referred from 10 places.'>ospf_route_copy_nexthops</a> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *to, <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *from)
+<a id='L813' name='L813'></a><em class='brace'>{</em>
+<a id='L814' name='L814'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L815' name='L815'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L38' title='Defined at 38 in ospfd/ospf_route.h.'>ospf_path</a> *path;
+<a id='L816' name='L816'></a>
+<a id='L817' name='L817'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (to-&gt;paths);
+<a id='L818' name='L818'></a>
+<a id='L819' name='L819'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (from, node, nnode, path))
+<a id='L820' name='L820'></a>    <em class='comment'>/* The same routes are just discarded. */</em>
+<a id='L821' name='L821'></a>    <strong class='reserved'>if</strong> (!<a href='../S/813.html#L793' title='Defined at 793 in ospfd/ospf_route.c.'>ospf_path_lookup</a> (to-&gt;paths, path))
+<a id='L822' name='L822'></a>      <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (to-&gt;paths, <a href='../S/813.html#L78' title='Defined at 78 in ospfd/ospf_route.c.'>ospf_path_dup</a> (path));
+<a id='L823' name='L823'></a><em class='brace'>}</em>
+<a id='L824' name='L824'></a>
+<a id='L825' name='L825'></a><strong class='reserved'>void</strong>
+<a id='L826' name='L826'></a><a href='../R/8468.html' title='Multiple referred from 3 places.'>ospf_route_subst_nexthops</a> (<strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *to, <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *from)
+<a id='L827' name='L827'></a><em class='brace'>{</em>
+<a id='L828' name='L828'></a>
+<a id='L829' name='L829'></a>  <a href='../S/243.html#L207' title='Defined at 207 in lib/linklist.c.'>list_delete_all_node</a> (to-&gt;paths);
+<a id='L830' name='L830'></a>  <a href='../S/813.html#L812' title='Defined at 812 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops</a> (to, from);
+<a id='L831' name='L831'></a><em class='brace'>}</em>
+<a id='L832' name='L832'></a>
+<a id='L833' name='L833'></a><strong class='reserved'>void</strong>
+<a id='L834' name='L834'></a><a href='../R/8467.html' title='Multiple referred from 3 places.'>ospf_route_subst</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *new_or,
+<a id='L835' name='L835'></a>                  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *over)
+<a id='L836' name='L836'></a><em class='brace'>{</em>
+<a id='L837' name='L837'></a>  <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (rn);
+<a id='L838' name='L838'></a>  <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (rn-&gt;info);
+<a id='L839' name='L839'></a>
+<a id='L840' name='L840'></a>  <a href='../S/813.html#L812' title='Defined at 812 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops</a> (new_or, over-&gt;paths);
+<a id='L841' name='L841'></a>  rn-&gt;info = new_or;
+<a id='L842' name='L842'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L843' name='L843'></a><em class='brace'>}</em>
+<a id='L844' name='L844'></a>
+<a id='L845' name='L845'></a><strong class='reserved'>void</strong>
+<a id='L846' name='L846'></a><a href='../R/8448.html' title='Multiple referred from 4 places.'>ospf_route_add</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p,
+<a id='L847' name='L847'></a>                <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *new_or, <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *over)
+<a id='L848' name='L848'></a><em class='brace'>{</em>
+<a id='L849' name='L849'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L850' name='L850'></a>
+<a id='L851' name='L851'></a>  rn = <a href='../S/236.html#L321' title='Defined at 321 in lib/table.c.'>route_node_get</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) p);
+<a id='L852' name='L852'></a>
+<a id='L853' name='L853'></a>  <a href='../S/813.html#L812' title='Defined at 812 in ospfd/ospf_route.c.'>ospf_route_copy_nexthops</a> (new_or, over-&gt;paths);
+<a id='L854' name='L854'></a>
+<a id='L855' name='L855'></a>  <strong class='reserved'>if</strong> (rn-&gt;info)
+<a id='L856' name='L856'></a>    <em class='brace'>{</em>
+<a id='L857' name='L857'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L858' name='L858'></a>        zlog_debug ("ospf_route_add(): something's wrong !");
+<a id='L859' name='L859'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L860' name='L860'></a>      <strong class='reserved'>return</strong>;
+<a id='L861' name='L861'></a>    <em class='brace'>}</em>
+<a id='L862' name='L862'></a>
+<a id='L863' name='L863'></a>  rn-&gt;info = new_or;
+<a id='L864' name='L864'></a><em class='brace'>}</em>
+<a id='L865' name='L865'></a>
+<a id='L866' name='L866'></a><strong class='reserved'>void</strong>
+<a id='L867' name='L867'></a><a href='../R/8430.html' title='Multiple referred from 2 places.'>ospf_prune_unreachable_networks</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L868' name='L868'></a><em class='brace'>{</em>
+<a id='L869' name='L869'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn, *next;
+<a id='L870' name='L870'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L871' name='L871'></a>
+<a id='L872' name='L872'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L873' name='L873'></a>    zlog_debug ("Pruning unreachable networks");
+<a id='L874' name='L874'></a>
+<a id='L875' name='L875'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rt); rn; rn = next)
+<a id='L876' name='L876'></a>    <em class='brace'>{</em>
+<a id='L877' name='L877'></a>      next = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn);
+<a id='L878' name='L878'></a>      <strong class='reserved'>if</strong> (rn-&gt;info != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L879' name='L879'></a>        <em class='brace'>{</em>
+<a id='L880' name='L880'></a>          or = rn-&gt;info;
+<a id='L881' name='L881'></a>          <strong class='reserved'>if</strong> (<a href='../S/262.html#L60' title='Defined at 60 in lib/linklist.h.'>listcount</a> (or-&gt;paths) == 0)
+<a id='L882' name='L882'></a>            <em class='brace'>{</em>
+<a id='L883' name='L883'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L884' name='L884'></a>                zlog_debug ("Pruning route to %s/%d",
+<a id='L885' name='L885'></a>                           inet_ntoa (rn-&gt;p.u.prefix4), rn-&gt;p.prefixlen);
+<a id='L886' name='L886'></a>
+<a id='L887' name='L887'></a>              <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (or);
+<a id='L888' name='L888'></a>              rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L889' name='L889'></a>              <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L890' name='L890'></a>            <em class='brace'>}</em>
+<a id='L891' name='L891'></a>        <em class='brace'>}</em>
+<a id='L892' name='L892'></a>    <em class='brace'>}</em>
+<a id='L893' name='L893'></a><em class='brace'>}</em>
+<a id='L894' name='L894'></a>
+<a id='L895' name='L895'></a><strong class='reserved'>void</strong>
+<a id='L896' name='L896'></a><a href='../R/8431.html' title='Multiple referred from 2 places.'>ospf_prune_unreachable_routers</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rtrs)
+<a id='L897' name='L897'></a><em class='brace'>{</em>
+<a id='L898' name='L898'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn, *next;
+<a id='L899' name='L899'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L900' name='L900'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L901' name='L901'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a> *paths;
+<a id='L902' name='L902'></a>
+<a id='L903' name='L903'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L904' name='L904'></a>    zlog_debug ("Pruning unreachable routers");
+<a id='L905' name='L905'></a>
+<a id='L906' name='L906'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (rtrs); rn; rn = next)
+<a id='L907' name='L907'></a>    <em class='brace'>{</em>
+<a id='L908' name='L908'></a>      next = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn);
+<a id='L909' name='L909'></a>      <strong class='reserved'>if</strong> ((paths = rn-&gt;info) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L910' name='L910'></a>        <strong class='reserved'>continue</strong>;
+<a id='L911' name='L911'></a>
+<a id='L912' name='L912'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (paths, node, nnode, or))
+<a id='L913' name='L913'></a>        <em class='brace'>{</em>
+<a id='L914' name='L914'></a>          <strong class='reserved'>if</strong> (<a href='../S/262.html#L60' title='Defined at 60 in lib/linklist.h.'>listcount</a> (or-&gt;paths) == 0)
+<a id='L915' name='L915'></a>            <em class='brace'>{</em>
+<a id='L916' name='L916'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L917' name='L917'></a>                <em class='brace'>{</em>
+<a id='L918' name='L918'></a>                  zlog_debug ("Pruning route to rtr %s",
+<a id='L919' name='L919'></a>                             inet_ntoa (rn-&gt;p.u.prefix4));
+<a id='L920' name='L920'></a>                  zlog_debug ("               via area %s",
+<a id='L921' name='L921'></a>                             inet_ntoa (or-&gt;u.std.area_id));
+<a id='L922' name='L922'></a>                <em class='brace'>}</em>
+<a id='L923' name='L923'></a>
+<a id='L924' name='L924'></a>              <a href='../S/243.html#L165' title='Defined at 165 in lib/linklist.c.'>listnode_delete</a> (paths, or);
+<a id='L925' name='L925'></a>              <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (or);
+<a id='L926' name='L926'></a>            <em class='brace'>}</em>
+<a id='L927' name='L927'></a>        <em class='brace'>}</em>
+<a id='L928' name='L928'></a>
+<a id='L929' name='L929'></a>      <strong class='reserved'>if</strong> (<a href='../S/262.html#L60' title='Defined at 60 in lib/linklist.h.'>listcount</a> (paths) == 0)
+<a id='L930' name='L930'></a>        <em class='brace'>{</em>
+<a id='L931' name='L931'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L932' name='L932'></a>            zlog_debug ("Pruning router node %s", inet_ntoa (rn-&gt;p.u.prefix4));
+<a id='L933' name='L933'></a>
+<a id='L934' name='L934'></a>          <a href='../S/243.html#L226' title='Defined at 226 in lib/linklist.c.'>list_delete</a> (paths);
+<a id='L935' name='L935'></a>          rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L936' name='L936'></a>          <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L937' name='L937'></a>        <em class='brace'>}</em>
+<a id='L938' name='L938'></a>    <em class='brace'>}</em>
+<a id='L939' name='L939'></a><em class='brace'>}</em>
+<a id='L940' name='L940'></a>
+<a id='L941' name='L941'></a><strong class='reserved'>int</strong>
+<a id='L942' name='L942'></a><a href='../R/7863.html' title='Multiple referred from 2 places.'>ospf_add_discard_route</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area,
+<a id='L943' name='L943'></a>                        <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p)
+<a id='L944' name='L944'></a><em class='brace'>{</em>
+<a id='L945' name='L945'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L946' name='L946'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or, *new_or;
+<a id='L947' name='L947'></a>
+<a id='L948' name='L948'></a>  rn = <a href='../S/236.html#L321' title='Defined at 321 in lib/table.c.'>route_node_get</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) p);
+<a id='L949' name='L949'></a>
+<a id='L950' name='L950'></a>  <strong class='reserved'>if</strong> (rn == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L951' name='L951'></a>    <em class='brace'>{</em>
+<a id='L952' name='L952'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L953' name='L953'></a>        zlog_debug ("ospf_add_discard_route(): router installation error");
+<a id='L954' name='L954'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L955' name='L955'></a>    <em class='brace'>}</em>
+<a id='L956' name='L956'></a>
+<a id='L957' name='L957'></a>  <strong class='reserved'>if</strong> (rn-&gt;info) <em class='comment'>/* If the route to the same destination is found */</em>
+<a id='L958' name='L958'></a>    <em class='brace'>{</em>
+<a id='L959' name='L959'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L960' name='L960'></a>
+<a id='L961' name='L961'></a>      or = rn-&gt;info;
+<a id='L962' name='L962'></a>
+<a id='L963' name='L963'></a>      <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>)
+<a id='L964' name='L964'></a>        <em class='brace'>{</em>
+<a id='L965' name='L965'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L966' name='L966'></a>            zlog_debug ("ospf_add_discard_route(): "
+<a id='L967' name='L967'></a>                       "an intra-area route exists");
+<a id='L968' name='L968'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L969' name='L969'></a>        <em class='brace'>}</em>
+<a id='L970' name='L970'></a>
+<a id='L971' name='L971'></a>      <strong class='reserved'>if</strong> (or-&gt;type == <a href='../S/759.html#L28' title='Defined at 28 in ospfd/ospf_route.h.'>OSPF_DESTINATION_DISCARD</a>)
+<a id='L972' name='L972'></a>        <em class='brace'>{</em>
+<a id='L973' name='L973'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L974' name='L974'></a>            zlog_debug ("ospf_add_discard_route(): "
+<a id='L975' name='L975'></a>                       "discard entry already installed");
+<a id='L976' name='L976'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L977' name='L977'></a>        <em class='brace'>}</em>
+<a id='L978' name='L978'></a>
+<a id='L979' name='L979'></a>      <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (rn-&gt;info);
+<a id='L980' name='L980'></a>  <em class='brace'>}</em>
+<a id='L981' name='L981'></a>
+<a id='L982' name='L982'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L983' name='L983'></a>    zlog_debug ("ospf_add_discard_route(): "
+<a id='L984' name='L984'></a>                "adding %s/%d", inet_ntoa (p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p-&gt;prefixlen);
+<a id='L985' name='L985'></a>
+<a id='L986' name='L986'></a>  new_or = <a href='../S/813.html#L44' title='Defined at 44 in ospfd/ospf_route.c.'>ospf_route_new</a> ();
+<a id='L987' name='L987'></a>  new_or-&gt;type = <a href='../S/759.html#L28' title='Defined at 28 in ospfd/ospf_route.h.'>OSPF_DESTINATION_DISCARD</a>;
+<a id='L988' name='L988'></a>  new_or-&gt;id.s_addr = 0;
+<a id='L989' name='L989'></a>  new_or-&gt;cost = 0;
+<a id='L990' name='L990'></a>  new_or-&gt;u.std.area_id = area-&gt;area_id;
+<a id='L991' name='L991'></a>  new_or-&gt;u.std.external_routing = area-&gt;external_routing;
+<a id='L992' name='L992'></a>  new_or-&gt;path_type = <a href='../S/759.html#L32' title='Defined at 32 in ospfd/ospf_route.h.'>OSPF_PATH_INTER_AREA</a>;
+<a id='L993' name='L993'></a>  rn-&gt;info = new_or;
+<a id='L994' name='L994'></a>
+<a id='L995' name='L995'></a>  <a href='../S/773.html#L513' title='Defined at 513 in ospfd/ospf_zebra.c.'>ospf_zebra_add_discard</a> (p);
+<a id='L996' name='L996'></a>
+<a id='L997' name='L997'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L998' name='L998'></a><em class='brace'>}</em>
+<a id='L999' name='L999'></a>
+<a id='L1000' name='L1000'></a><strong class='reserved'>void</strong>
+<a id='L1001' name='L1001'></a><a href='../R/8042.html' title='Multiple referred from 3 places.'>ospf_delete_discard_route</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt, <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *p)
+<a id='L1002' name='L1002'></a><em class='brace'>{</em>
+<a id='L1003' name='L1003'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L1004' name='L1004'></a>  <strong class='reserved'>struct</strong> <a href='../S/759.html#L90' title='Defined at 90 in ospfd/ospf_route.h.'>ospf_route</a> *or;
+<a id='L1005' name='L1005'></a>
+<a id='L1006' name='L1006'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1007' name='L1007'></a>    zlog_debug ("ospf_delete_discard_route(): "
+<a id='L1008' name='L1008'></a>                "deleting %s/%d", inet_ntoa (p-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), p-&gt;prefixlen);
+<a id='L1009' name='L1009'></a>
+<a id='L1010' name='L1010'></a>  rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (rt, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>*)p);
+<a id='L1011' name='L1011'></a>
+<a id='L1012' name='L1012'></a>  <strong class='reserved'>if</strong> (rn == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L1013' name='L1013'></a>    <em class='brace'>{</em>
+<a id='L1014' name='L1014'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1015' name='L1015'></a>        zlog_debug("ospf_delete_discard_route(): no route found");
+<a id='L1016' name='L1016'></a>      <strong class='reserved'>return</strong>;
+<a id='L1017' name='L1017'></a>    <em class='brace'>}</em>
+<a id='L1018' name='L1018'></a>
+<a id='L1019' name='L1019'></a>  or = rn-&gt;info;
+<a id='L1020' name='L1020'></a>
+<a id='L1021' name='L1021'></a>  <strong class='reserved'>if</strong> (or-&gt;path_type == <a href='../S/759.html#L31' title='Defined at 31 in ospfd/ospf_route.h.'>OSPF_PATH_INTRA_AREA</a>)
+<a id='L1022' name='L1022'></a>    <em class='brace'>{</em>
+<a id='L1023' name='L1023'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1024' name='L1024'></a>        zlog_debug ("ospf_delete_discard_route(): "
+<a id='L1025' name='L1025'></a>                    "an intra-area route exists");
+<a id='L1026' name='L1026'></a>      <strong class='reserved'>return</strong>;
+<a id='L1027' name='L1027'></a>    <em class='brace'>}</em>
+<a id='L1028' name='L1028'></a>
+<a id='L1029' name='L1029'></a>  <strong class='reserved'>if</strong> (or-&gt;type != <a href='../S/759.html#L28' title='Defined at 28 in ospfd/ospf_route.h.'>OSPF_DESTINATION_DISCARD</a>)
+<a id='L1030' name='L1030'></a>    <em class='brace'>{</em>
+<a id='L1031' name='L1031'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L1032' name='L1032'></a>        zlog_debug ("ospf_delete_discard_route(): "
+<a id='L1033' name='L1033'></a>                    "not a discard entry");
+<a id='L1034' name='L1034'></a>      <strong class='reserved'>return</strong>;
+<a id='L1035' name='L1035'></a>    <em class='brace'>}</em>
+<a id='L1036' name='L1036'></a>
+<a id='L1037' name='L1037'></a>  <em class='comment'>/* free the route entry and the route node */</em>
+<a id='L1038' name='L1038'></a>  <a href='../S/813.html#L59' title='Defined at 59 in ospfd/ospf_route.c.'>ospf_route_free</a> (rn-&gt;info);
+<a id='L1039' name='L1039'></a>
+<a id='L1040' name='L1040'></a>  rn-&gt;info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L1041' name='L1041'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1042' name='L1042'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L1043' name='L1043'></a>
+<a id='L1044' name='L1044'></a>  <em class='comment'>/* remove the discard entry from the rib */</em>
+<a id='L1045' name='L1045'></a>  <a href='../S/773.html#L536' title='Defined at 536 in ospfd/ospf_zebra.c.'>ospf_zebra_delete_discard</a>(p);
+<a id='L1046' name='L1046'></a>
+<a id='L1047' name='L1047'></a>  <strong class='reserved'>return</strong>;
+<a id='L1048' name='L1048'></a><em class='brace'>}</em>
+<a id='L1049' name='L1049'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L44'>[^]</a><a href='#L1001'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

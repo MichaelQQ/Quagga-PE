@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vpnmd/vpnmd_rsvp_msg.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1035.html'>vpnmd</a>/vpnmd_rsvp_msg.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/559.html' title='Multiple included from 5 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;sys/types.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;netinet/in.h&gt;
+<a id='L4' name='L4'></a>
+<a id='L5' name='L5'></a><em class='comment'>//used by SETUP_TUNNEL, WITHDRAW_TUNNEL, RELEASE_TUNNEL, RCV_PATHTEAR_MSG, RCV_RESVTEAR_MSG</em>
+<a id='L6' name='L6'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> remote_pe_id<em class='brace'>{</em>
+<a id='L7' name='L7'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L8' name='L8'></a><em class='brace'>}</em> remote_pe_id;
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='comment'>//when RESV is transmitted</em>
+<a id='L11' name='L11'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/6005.html' title='Multiple referred from 9 places.'>in_tunnel_label</a><em class='brace'>{</em>
+<a id='L12' name='L12'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L13' name='L13'></a>        u_long label;
+<a id='L14' name='L14'></a>        u_char in_if[8];
+<a id='L15' name='L15'></a><em class='brace'>}</em> <a href='../R/6005.html' title='Multiple referred from 9 places.'>in_tunnel_label</a>;
+<a id='L16' name='L16'></a>
+<a id='L17' name='L17'></a><em class='comment'>//when RESV is received</em>
+<a id='L18' name='L18'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> <a href='../R/8588.html' title='Multiple referred from 9 places.'>out_tunnel_label</a><em class='brace'>{</em>
+<a id='L19' name='L19'></a>        <strong class='reserved'>struct</strong> in_addr remote_ip;
+<a id='L20' name='L20'></a>        u_long label;
+<a id='L21' name='L21'></a>        u_char out_if[8];
+<a id='L22' name='L22'></a>        <strong class='reserved'>struct</strong> in_addr next_hop_ip;
+<a id='L23' name='L23'></a><em class='brace'>}</em> <a href='../R/8588.html' title='Multiple referred from 9 places.'>out_tunnel_label</a>;
+<a id='L24' name='L24'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

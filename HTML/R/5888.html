@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>hostname</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/506.html#L94'>hostname</a>           94 isisd/isis_dynhn.c dynhn_find_by_name (const char *hostname)</span>
+<span class='curline'><a href='../S/506.html#L100'>hostname</a>          100 isisd/isis_dynhn.c     if (strncmp ((char *)dyn-&gt;name.name, hostname, 255) == 0)</span>
+<span class='curline'><a href='../S/506.html#L107'>hostname</a>          107 isisd/isis_dynhn.c isis_dynhn_insert (u_char * id, struct hostname *hostname, int level)</span>
+<span class='curline'><a href='../S/506.html#L114'>hostname</a>          114 isisd/isis_dynhn.c       memcpy (&amp;dyn-&gt;name, hostname, hostname-&gt;namelen + 1);</span>
+<span class='curline'><a href='../S/506.html#L127'>hostname</a>          127 isisd/isis_dynhn.c   memcpy (&amp;dyn-&gt;name, hostname, hostname-&gt;namelen + 1);</span>
+<span class='curline'><a href='../S/520.html#L29'>hostname</a>           29 isisd/isis_dynhn.h   struct hostname name;</span>
+<span class='curline'><a href='../S/520.html#L35'>hostname</a>           35 isisd/isis_dynhn.h void isis_dynhn_insert (u_char * id, struct hostname *hostname, int level);</span>
+<span class='curline'><a href='../S/520.html#L38'>hostname</a>           38 isisd/isis_dynhn.h struct isis_dynhn *dynhn_find_by_name (const char *hostname);</span>
+<span class='curline'><a href='../S/511.html#L115'>hostname</a>          115 isisd/isis_lsp.c   if (lsp-&gt;tlv_data.hostname)</span>
+<span class='curline'><a href='../S/511.html#L122'>hostname</a>          122 isisd/isis_lsp.c       if (lsp-&gt;tlv_data.hostname)</span>
+<span class='curline'><a href='../S/511.html#L123'>hostname</a>          123 isisd/isis_lsp.c         XFREE (MTYPE_ISIS_TLV, lsp-&gt;tlv_data.hostname);</span>
+<span class='curline'><a href='../S/511.html#L555'>hostname</a>          555 isisd/isis_lsp.c       isis_dynhn_insert (lsp-&gt;lsp_header-&gt;lsp_id, lsp-&gt;tlv_data.hostname,</span>
+<span class='curline'><a href='../S/511.html#L880'>hostname</a>          880 isisd/isis_lsp.c   u_char hostname[255];</span>
+<span class='curline'><a href='../S/511.html#L917'>hostname</a>          917 isisd/isis_lsp.c   if (lsp-&gt;tlv_data.hostname)</span>
+<span class='curline'><a href='../S/511.html#L919'>hostname</a>          919 isisd/isis_lsp.c       bzero (hostname, sizeof (hostname));</span>
+<span class='curline'><a href='../S/511.html#L920'>hostname</a>          920 isisd/isis_lsp.c       memcpy (hostname, lsp-&gt;tlv_data.hostname-&gt;name,</span>
+<span class='curline'><a href='../S/511.html#L921'>hostname</a>          921 isisd/isis_lsp.c 	      lsp-&gt;tlv_data.hostname-&gt;namelen);</span>
+<span class='curline'><a href='../S/511.html#L922'>hostname</a>          922 isisd/isis_lsp.c       vty_out (vty, "  Hostname    : %s%s", hostname, VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/511.html#L1272'>hostname</a>         1272 isisd/isis_lsp.c       lsp-&gt;tlv_data.hostname = XMALLOC (MTYPE_ISIS_TLV,</span>
+<span class='curline'><a href='../S/511.html#L1273'>hostname</a>         1273 isisd/isis_lsp.c 					sizeof (struct hostname));</span>
+<span class='curline'><a href='../S/511.html#L1275'>hostname</a>         1275 isisd/isis_lsp.c       memcpy (lsp-&gt;tlv_data.hostname-&gt;name, unix_hostname (),</span>
+<span class='curline'><a href='../S/511.html#L1277'>hostname</a>         1277 isisd/isis_lsp.c       lsp-&gt;tlv_data.hostname-&gt;namelen = strlen (unix_hostname ());</span>
+<span class='curline'><a href='../S/511.html#L1278'>hostname</a>         1278 isisd/isis_lsp.c       tlv_add_dynamic_hostname (lsp-&gt;tlv_data.hostname, lsp-&gt;pdu);</span>
+<span class='curline'><a href='../S/511.html#L2510'>hostname</a>         2510 isisd/isis_lsp.c   isis_dynhn_insert (lsp-&gt;lsp_header-&gt;lsp_id, lsp-&gt;tlv_data.hostname,</span>
+<span class='curline'><a href='../S/511.html#L2565'>hostname</a>         2565 isisd/isis_lsp.c       isis_dynhn_insert (lspid, lsp-&gt;tlv_data.hostname, IS_LEVEL_1);</span>
+<span class='curline'><a href='../S/511.html#L2620'>hostname</a>         2620 isisd/isis_lsp.c       lsp-&gt;tlv_data.hostname = XMALLOC (MTYPE_ISIS_TLV,</span>
+<span class='curline'><a href='../S/511.html#L2621'>hostname</a>         2621 isisd/isis_lsp.c 					sizeof (struct hostname));</span>
+<span class='curline'><a href='../S/511.html#L2625'>hostname</a>         2625 isisd/isis_lsp.c       memcpy (lsp-&gt;tlv_data.hostname-&gt;name, buff, strlen (buff));</span>
+<span class='curline'><a href='../S/511.html#L2626'>hostname</a>         2626 isisd/isis_lsp.c       lsp-&gt;tlv_data.hostname-&gt;namelen = strlen (buff);</span>
+<span class='curline'><a href='../S/511.html#L2631'>hostname</a>         2631 isisd/isis_lsp.c   if (lsp-&gt;tlv_data.hostname)</span>
+<span class='curline'><a href='../S/511.html#L2632'>hostname</a>         2632 isisd/isis_lsp.c     tlv_add_dynamic_hostname (lsp-&gt;tlv_data.hostname, lsp-&gt;pdu);</span>
+<span class='curline'><a href='../S/526.html#L570'>hostname</a>          570 isisd/isis_misc.c   const char *hostname;</span>
+<span class='curline'><a href='../S/526.html#L572'>hostname</a>          572 isisd/isis_misc.c   hostname = host.name;</span>
+<span class='curline'><a href='../S/526.html#L573'>hostname</a>          573 isisd/isis_misc.c   if (!hostname)</span>
+<span class='curline'><a href='../S/526.html#L576'>hostname</a>          576 isisd/isis_misc.c       hostname = names.nodename;</span>
+<span class='curline'><a href='../S/526.html#L579'>hostname</a>          579 isisd/isis_misc.c   return hostname;</span>
+<span class='curline'><a href='../S/479.html#L479'>hostname</a>          479 isisd/isis_tlv.c 	      tlvs-&gt;hostname = (struct hostname *) (pnt - 1);</span>
+<span class='curline'><a href='../S/479.html#L983'>hostname</a>          983 isisd/isis_tlv.c tlv_add_dynamic_hostname (struct hostname *hostname, struct stream *stream)</span>
+<span class='curline'><a href='../S/479.html#L985'>hostname</a>          985 isisd/isis_tlv.c   return add_tlv (DYNAMIC_HOSTNAME, hostname-&gt;namelen, hostname-&gt;name,</span>
+<span class='curline'><a href='../S/483.html#L553'>hostname</a>          553 isisd/isis_tlv.h   struct hostname *hostname;</span>
+<span class='curline'><a href='../S/483.html#L627'>hostname</a>          627 isisd/isis_tlv.h int tlv_add_dynamic_hostname (struct hostname *hostname,</span>
+<span class='curline'><a href='../S/200.html#L261'>hostname</a>          261 lib/vty.c        const char*hostname;</span>
+<span class='curline'><a href='../S/200.html#L265'>hostname</a>          265 lib/vty.c            hostname = host.name;</span>
+<span class='curline'><a href='../S/200.html#L266'>hostname</a>          266 lib/vty.c            if (!hostname)</span>
+<span class='curline'><a href='../S/200.html#L269'>hostname</a>          269 lib/vty.c      	  hostname = names.nodename;</span>
+<span class='curline'><a href='../S/200.html#L271'>hostname</a>          271 lib/vty.c            vty_out (vty, cmd_prompt (vty-&gt;node), hostname);</span>
+<span class='curline'><a href='../S/200.html#L1778'>hostname</a>         1778 lib/vty.c      vty_serv_sock_addrinfo (const char *hostname, unsigned short port)</span>
+<span class='curline'><a href='../S/200.html#L1794'>hostname</a>         1794 lib/vty.c        ret = getaddrinfo (hostname, port_str, &amp;req, &amp;ainfo);</span>
+<span class='curline'><a href='../S/58.html#L2227'>hostname</a>         2227 vtysh/vtysh.c    const char*hostname;</span>
+<span class='curline'><a href='../S/58.html#L2230'>hostname</a>         2230 vtysh/vtysh.c    hostname = host.name;</span>
+<span class='curline'><a href='../S/58.html#L2232'>hostname</a>         2232 vtysh/vtysh.c    if (!hostname)</span>
+<span class='curline'><a href='../S/58.html#L2236'>hostname</a>         2236 vtysh/vtysh.c        hostname = names.nodename;</span>
+<span class='curline'><a href='../S/58.html#L2239'>hostname</a>         2239 vtysh/vtysh.c    snprintf (buf, sizeof buf, cmd_prompt (vty-&gt;node), hostname);</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vector</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/164.html#L74'>vector</a>             74 babeld/babel_interface.c static vector babel_enable_if;                 /* enable interfaces (by cmd). */</span>
+<span class='curline'><a href='../S/264.html#L36'>vector</a>             36 lib/command.c  vector cmdvec = NULL;</span>
+<span class='curline'><a href='../S/264.html#L224'>vector</a>            224 lib/command.c    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L230'>vector</a>            230 lib/command.c  	vector cmd_vector = cnode-&gt;cmd_vector;</span>
+<span class='curline'><a href='../S/264.html#L249'>vector</a>            249 lib/command.c  vector</span>
+<span class='curline'><a href='../S/264.html#L255'>vector</a>            255 lib/command.c    vector strvec;</span>
+<span class='curline'><a href='../S/264.html#L300'>vector</a>            300 lib/command.c  cmd_free_strvec (vector v)</span>
+<span class='curline'><a href='../S/264.html#L352'>vector</a>            352 lib/command.c  static vector</span>
+<span class='curline'><a href='../S/264.html#L361'>vector</a>            361 lib/command.c    vector allvec;</span>
+<span class='curline'><a href='../S/264.html#L362'>vector</a>            362 lib/command.c    vector strvec = NULL;</span>
+<span class='curline'><a href='../S/264.html#L446'>vector</a>            446 lib/command.c  cmd_cmdsize (vector strvec)</span>
+<span class='curline'><a href='../S/264.html#L450'>vector</a>            450 lib/command.c    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L629'>vector</a>            629 lib/command.c  static vector</span>
+<span class='curline'><a href='../S/264.html#L630'>vector</a>            630 lib/command.c  cmd_node_vector (vector v, enum node_type ntype)</span>
+<span class='curline'><a href='../S/264.html#L1061'>vector</a>           1061 lib/command.c  cmd_filter_by_completion (char *command, vector v, unsigned int index)</span>
+<span class='curline'><a href='../S/264.html#L1067'>vector</a>           1067 lib/command.c    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L1176'>vector</a>           1176 lib/command.c  cmd_filter_by_string (char *command, vector v, unsigned int index)</span>
+<span class='curline'><a href='../S/264.html#L1182'>vector</a>           1182 lib/command.c    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L1284'>vector</a>           1284 lib/command.c  is_cmd_ambiguous (char *command, vector v, int index, enum match_type type)</span>
+<span class='curline'><a href='../S/264.html#L1291'>vector</a>           1291 lib/command.c    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L1467'>vector</a>           1467 lib/command.c  cmd_unique_string (vector v, const char *str)</span>
+<span class='curline'><a href='../S/264.html#L1482'>vector</a>           1482 lib/command.c  desc_unique_string (vector v, const char *str)</span>
+<span class='curline'><a href='../S/264.html#L1508'>vector</a>           1508 lib/command.c  static vector</span>
+<span class='curline'><a href='../S/264.html#L1509'>vector</a>           1509 lib/command.c  cmd_describe_command_real (vector vline, struct vty *vty, int *status)</span>
+<span class='curline'><a href='../S/264.html#L1512'>vector</a>           1512 lib/command.c    vector cmd_vector;</span>
+<span class='curline'><a href='../S/264.html#L1514'>vector</a>           1514 lib/command.c    vector matchvec;</span>
+<span class='curline'><a href='../S/264.html#L1546'>vector</a>           1546 lib/command.c  	    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L1596'>vector</a>           1596 lib/command.c  	vector strvec = cmd_element-&gt;strvec;</span>
+<span class='curline'><a href='../S/264.html#L1612'>vector</a>           1612 lib/command.c  		vector descvec = vector_slot (strvec, index);</span>
+<span class='curline'><a href='../S/264.html#L1644'>vector</a>           1644 lib/command.c  vector</span>
+<span class='curline'><a href='../S/264.html#L1645'>vector</a>           1645 lib/command.c  cmd_describe_command (vector vline, struct vty *vty, int *status)</span>
+<span class='curline'><a href='../S/264.html#L1647'>vector</a>           1647 lib/command.c    vector ret;</span>
+<span class='curline'><a href='../S/264.html#L1652'>vector</a>           1652 lib/command.c        vector shifted_vline;</span>
+<span class='curline'><a href='../S/264.html#L1713'>vector</a>           1713 lib/command.c  cmd_complete_command_real (vector vline, struct vty *vty, int *status)</span>
+<span class='curline'><a href='../S/264.html#L1716'>vector</a>           1716 lib/command.c    vector cmd_vector = vector_copy (cmd_node_vector (cmdvec, vty-&gt;node));</span>
+<span class='curline'><a href='../S/264.html#L1718'>vector</a>           1718 lib/command.c    vector matchvec;</span>
+<span class='curline'><a href='../S/264.html#L1723'>vector</a>           1723 lib/command.c    vector descvec;</span>
+<span class='curline'><a href='../S/264.html#L1772'>vector</a>           1772 lib/command.c  	vector strvec = cmd_element-&gt;strvec;</span>
+<span class='curline'><a href='../S/264.html#L1868'>vector</a>           1868 lib/command.c  cmd_complete_command (vector vline, struct vty *vty, int *status)</span>
+<span class='curline'><a href='../S/264.html#L1875'>vector</a>           1875 lib/command.c        vector shifted_vline;</span>
+<span class='curline'><a href='../S/264.html#L1930'>vector</a>           1930 lib/command.c  cmd_execute_command_real (vector vline, struct vty *vty,</span>
+<span class='curline'><a href='../S/264.html#L1935'>vector</a>           1935 lib/command.c    vector cmd_vector;</span>
+<span class='curline'><a href='../S/264.html#L2019'>vector</a>           2019 lib/command.c  	  vector descvec = vector_slot (matched_element-&gt;strvec, i);</span>
+<span class='curline'><a href='../S/264.html#L2051'>vector</a>           2051 lib/command.c  cmd_execute_command (vector vline, struct vty *vty, struct cmd_element **cmd,</span>
+<span class='curline'><a href='../S/264.html#L2060'>vector</a>           2060 lib/command.c        vector shifted_vline;</span>
+<span class='curline'><a href='../S/264.html#L2109'>vector</a>           2109 lib/command.c  cmd_execute_command_strict (vector vline, struct vty *vty,</span>
+<span class='curline'><a href='../S/264.html#L2114'>vector</a>           2114 lib/command.c    vector cmd_vector;</span>
+<span class='curline'><a href='../S/264.html#L2195'>vector</a>           2195 lib/command.c  	  vector descvec = vector_slot (matched_element-&gt;strvec, i);</span>
+<span class='curline'><a href='../S/264.html#L2231'>vector</a>           2231 lib/command.c    vector vline;</span>
+<span class='curline'><a href='../S/264.html#L3594'>vector</a>           3594 lib/command.c    vector cmd_node_v, cmd_element_v, desc_v;</span>
+<span class='curline'><a href='../S/214.html#L134'>vector</a>            134 lib/command.h    vector cmd_vector;	</span>
+<span class='curline'><a href='../S/214.html#L150'>vector</a>            150 lib/command.h    vector strvec;		/* Pointing out each description vector. */</span>
+<span class='curline'><a href='../S/214.html#L153'>vector</a>            153 lib/command.h    vector subconfig;		/* Sub configuration string */</span>
+<span class='curline'><a href='../S/214.html#L353'>vector</a>            353 lib/command.h  extern vector cmd_make_strvec (const char *);</span>
+<span class='curline'><a href='../S/214.html#L354'>vector</a>            354 lib/command.h  extern void cmd_free_strvec (vector);</span>
+<span class='curline'><a href='../S/214.html#L355'>vector</a>            355 lib/command.h  extern vector cmd_describe_command (vector, struct vty *, int *status);</span>
+<span class='curline'><a href='../S/214.html#L356'>vector</a>            356 lib/command.h  extern char **cmd_complete_command (vector, struct vty *, int *status);</span>
+<span class='curline'><a href='../S/214.html#L360'>vector</a>            360 lib/command.h  extern int cmd_execute_command (vector, struct vty *, struct cmd_element **, int);</span>
+<span class='curline'><a href='../S/214.html#L361'>vector</a>            361 lib/command.h  extern int cmd_execute_command_strict (vector, struct vty *, struct cmd_element **);</span>
+<span class='curline'><a href='../S/259.html#L33'>vector</a>             33 lib/routemap.c static vector route_match_vec;</span>
+<span class='curline'><a href='../S/259.html#L36'>vector</a>             36 lib/routemap.c static vector route_set_vec;</span>
+<span class='curline'><a href='../S/204.html#L28'>vector</a>             28 lib/vector.c   vector</span>
+<span class='curline'><a href='../S/204.html#L31'>vector</a>             31 lib/vector.c     vector v = XCALLOC (MTYPE_VECTOR, sizeof (struct _vector));</span>
+<span class='curline'><a href='../S/204.html#L44'>vector</a>             44 lib/vector.c   vector_only_wrapper_free (vector v)</span>
+<span class='curline'><a href='../S/204.html#L56'>vector</a>             56 lib/vector.c   vector_free (vector v)</span>
+<span class='curline'><a href='../S/204.html#L62'>vector</a>             62 lib/vector.c   vector</span>
+<span class='curline'><a href='../S/204.html#L63'>vector</a>             63 lib/vector.c   vector_copy (vector v)</span>
+<span class='curline'><a href='../S/204.html#L66'>vector</a>             66 lib/vector.c     vector new = XCALLOC (MTYPE_VECTOR, sizeof (struct _vector));</span>
+<span class='curline'><a href='../S/204.html#L80'>vector</a>             80 lib/vector.c   vector_ensure (vector v, unsigned int num)</span>
+<span class='curline'><a href='../S/204.html#L98'>vector</a>             98 lib/vector.c   vector_empty_slot (vector v)</span>
+<span class='curline'><a href='../S/204.html#L114'>vector</a>            114 lib/vector.c   vector_set (vector v, void *val)</span>
+<span class='curline'><a href='../S/204.html#L131'>vector</a>            131 lib/vector.c   vector_set_index (vector v, unsigned int i, void *val)</span>
+<span class='curline'><a href='../S/204.html#L145'>vector</a>            145 lib/vector.c   vector_lookup (vector v, unsigned int i)</span>
+<span class='curline'><a href='../S/204.html#L154'>vector</a>            154 lib/vector.c   vector_lookup_ensure (vector v, unsigned int i)</span>
+<span class='curline'><a href='../S/204.html#L162'>vector</a>            162 lib/vector.c   vector_unset (vector v, unsigned int i)</span>
+<span class='curline'><a href='../S/204.html#L179'>vector</a>            179 lib/vector.c   vector_count (vector v)</span>
+<span class='curline'><a href='../S/253.html#L33'>vector</a>             33 lib/vector.h   typedef struct _vector *vector;</span>
+<span class='curline'><a href='../S/253.html#L48'>vector</a>             48 lib/vector.h   extern vector vector_init (unsigned int size);</span>
+<span class='curline'><a href='../S/253.html#L49'>vector</a>             49 lib/vector.h   extern void vector_ensure (vector v, unsigned int num);</span>
+<span class='curline'><a href='../S/253.html#L50'>vector</a>             50 lib/vector.h   extern int vector_empty_slot (vector v);</span>
+<span class='curline'><a href='../S/253.html#L51'>vector</a>             51 lib/vector.h   extern int vector_set (vector v, void *val);</span>
+<span class='curline'><a href='../S/253.html#L52'>vector</a>             52 lib/vector.h   extern int vector_set_index (vector v, unsigned int i, void *val);</span>
+<span class='curline'><a href='../S/253.html#L53'>vector</a>             53 lib/vector.h   extern void vector_unset (vector v, unsigned int i);</span>
+<span class='curline'><a href='../S/253.html#L54'>vector</a>             54 lib/vector.h   extern unsigned int vector_count (vector v);</span>
+<span class='curline'><a href='../S/253.html#L55'>vector</a>             55 lib/vector.h   extern void vector_only_wrapper_free (vector v);</span>
+<span class='curline'><a href='../S/253.html#L57'>vector</a>             57 lib/vector.h   extern void vector_free (vector v);</span>
+<span class='curline'><a href='../S/253.html#L58'>vector</a>             58 lib/vector.h   extern vector vector_copy (vector v);</span>
+<span class='curline'><a href='../S/253.html#L60'>vector</a>             60 lib/vector.h   extern void *vector_lookup (vector, unsigned int);</span>
+<span class='curline'><a href='../S/253.html#L61'>vector</a>             61 lib/vector.h   extern void *vector_lookup_ensure (vector, unsigned int);</span>
+<span class='curline'><a href='../S/200.html#L62'>vector</a>             62 lib/vty.c      static vector vtyvec;</span>
+<span class='curline'><a href='../S/200.html#L74'>vector</a>             74 lib/vty.c      static vector Vvty_serv_thread;</span>
+<span class='curline'><a href='../S/200.html#L401'>vector</a>            401 lib/vty.c        vector vline;</span>
+<span class='curline'><a href='../S/200.html#L861'>vector</a>            861 lib/vty.c        vector vline;</span>
+<span class='curline'><a href='../S/200.html#L976'>vector</a>            976 lib/vty.c        vector vline;</span>
+<span class='curline'><a href='../S/200.html#L977'>vector</a>            977 lib/vty.c        vector describe;</span>
+<span class='curline'><a href='../S/14.html#L47'>vector</a>             47 ospf6d/ospf6_lsa.c vector ospf6_lsa_handler_vector;</span>
+<span class='curline'><a href='../S/594.html#L63'>vector</a>             63 ripd/rip_interface.c vector rip_enable_interface;</span>
+<span class='curline'><a href='../S/594.html#L70'>vector</a>             70 ripd/rip_interface.c vector Vrip_passive_nondefault;</span>
+<span class='curline'><a href='../S/102.html#L510'>vector</a>            510 ripngd/ripng_interface.c vector ripng_enable_if;</span>
+<span class='curline'><a href='../S/102.html#L840'>vector</a>            840 ripngd/ripng_interface.c vector Vripng_passive_interface;</span>
+<span class='curline'><a href='../S/58.html#L280'>vector</a>            280 vtysh/vtysh.c    vector vline;</span>
+<span class='curline'><a href='../S/58.html#L459'>vector</a>            459 vtysh/vtysh.c    vector vline;</span>
+<span class='curline'><a href='../S/58.html#L554'>vector</a>            554 vtysh/vtysh.c    vector vline;</span>
+<span class='curline'><a href='../S/58.html#L555'>vector</a>            555 vtysh/vtysh.c    vector describe;</span>
+<span class='curline'><a href='../S/58.html#L642'>vector</a>            642 vtysh/vtysh.c    vector vline;</span>
+<span class='curline'><a href='../S/58.html#L693'>vector</a>            693 vtysh/vtysh.c    vector vline;</span>
+<span class='curline'><a href='../S/54.html#L29'>vector</a>             29 vtysh/vtysh_config.c vector configvec;</span>
+<span class='curline'><a href='../S/940.html#L76'>vector</a>             76 zebra/zebra_rib.c static vector vrf_vector;</span>
+</pre>
+</body>
+</html>

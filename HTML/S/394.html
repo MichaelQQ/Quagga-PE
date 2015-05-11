@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L21'>[^]</a><a href='#L247'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L21' title='Defined at 21.'>ldp_shutdown</a></li>
+<li><a href='#L28' title='Defined at 28.'>ldp_startup</a></li>
+<li><a href='#L35' title='Defined at 35.'>ldp_admin_state_start</a></li>
+<li><a href='#L42' title='Defined at 42.'>ldp_admin_state_finish</a></li>
+<li><a href='#L49' title='Defined at 49.'>do_ldp_router_id_update</a></li>
+<li><a href='#L59' title='Defined at 59.'>ldp_router_id_update</a></li>
+<li><a href='#L76' title='Defined at 76.'>ldp_new</a></li>
+<li><a href='#L144' title='Defined at 144.'>ldp_get</a></li>
+<li><a href='#L151' title='Defined at 151.'>ldp_finish</a></li>
+<li><a href='#L197' title='Defined at 197.'>ldp_add_ipv4</a></li>
+<li><a href='#L217' title='Defined at 217.'>ldp_delete_ipv4</a></li>
+<li><a href='#L239' title='Defined at 239.'>mpls_access_list_update</a></li>
+<li><a href='#L243' title='Defined at 243.'>mpls_prefix_list_update</a></li>
+<li><a href='#L247' title='Defined at 247.'>ldp_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L2' name='L2'></a>
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L7' name='L7'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L8' name='L8'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L9' name='L9'></a><em class='sharp'>#include</em> "<a href='199.html'>filter.h</a>"
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L11' name='L11'></a><em class='sharp'>#include</em> "<a href='302.html'>plist.h</a>"
+<a id='L12' name='L12'></a>
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='389.html'>ldp.h</a>"
+<a id='L14' name='L14'></a><em class='sharp'>#include</em> "<a href='345.html'>ldp_cfg.h</a>"
+<a id='L15' name='L15'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L16' name='L16'></a><em class='sharp'>#include</em> "<a href='451.html'>ldp_interface.h</a>"
+<a id='L17' name='L17'></a><em class='sharp'>#include</em> "<a href='400.html'>ldp_zebra.h</a>"
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><em class='sharp'>#include</em> "<a href='349.html'>impl_fib.h</a>"
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><strong class='reserved'>int</strong> <a href='../S/394.html#L37' title='Referred from 37 in ldpd/ldp.c.'>ldp_shutdown</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L22' name='L22'></a>  <a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> g;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a>  g.admin_state = <a href='../S/383.html#L54' title='Defined at 54 in ldpd/mpls_struct.h.'>MPLS_ADMIN_DISABLE</a>;
+<a id='L25' name='L25'></a>  <strong class='reserved'>return</strong> <a href='../S/446.html#L158' title='Defined at 158 in ldpd/ldp_cfg.c.'>ldp_cfg_global_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h,&amp;g,<a href='../S/345.html#L20' title='Defined at 20 in ldpd/ldp_cfg.h.'>LDP_GLOBAL_CFG_ADMIN_STATE</a>);
+<a id='L26' name='L26'></a><em class='brace'>}</em>
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><strong class='reserved'>int</strong> <a href='../S/394.html#L44' title='Referred from 44 in ldpd/ldp.c.'>ldp_startup</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L29' name='L29'></a>  <a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> g;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a>  g.admin_state = <a href='../S/383.html#L53' title='Defined at 53 in ldpd/mpls_struct.h.'>MPLS_ADMIN_ENABLE</a>;
+<a id='L32' name='L32'></a>  <strong class='reserved'>return</strong> <a href='../S/446.html#L158' title='Defined at 158 in ldpd/ldp_cfg.c.'>ldp_cfg_global_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h,&amp;g,<a href='../S/345.html#L20' title='Defined at 20 in ldpd/ldp_cfg.h.'>LDP_GLOBAL_CFG_ADMIN_STATE</a>);
+<a id='L33' name='L33'></a><em class='brace'>}</em>
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><strong class='reserved'>int</strong> <a href='../R/6378.html' title='Multiple referred from 17 places.'>ldp_admin_state_start</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L36' name='L36'></a>  <strong class='reserved'>if</strong> (<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;admin_up == <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>) <em class='brace'>{</em>
+<a id='L37' name='L37'></a>    <strong class='reserved'>return</strong> <a href='../S/394.html#L21' title='Defined at 21 in ldpd/ldp.c.'>ldp_shutdown</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>);
+<a id='L38' name='L38'></a>  <em class='brace'>}</em>
+<a id='L39' name='L39'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L40' name='L40'></a><em class='brace'>}</em>
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><strong class='reserved'>int</strong> <a href='../R/6377.html' title='Multiple referred from 16 places.'>ldp_admin_state_finish</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L43' name='L43'></a>  <strong class='reserved'>if</strong> (<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;admin_up == <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>) <em class='brace'>{</em>
+<a id='L44' name='L44'></a>    <strong class='reserved'>return</strong> <a href='../S/394.html#L28' title='Defined at 28 in ldpd/ldp.c.'>ldp_startup</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>);
+<a id='L45' name='L45'></a>  <em class='brace'>}</em>
+<a id='L46' name='L46'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L47' name='L47'></a><em class='brace'>}</em>
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><strong class='reserved'>int</strong> <a href='../R/5635.html' title='Multiple referred from 5 places.'>do_ldp_router_id_update</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> router_id) <em class='brace'>{</em>
+<a id='L50' name='L50'></a>    <a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> g;
+<a id='L51' name='L51'></a>    g.lsr_identifier.type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L52' name='L52'></a>    g.lsr_identifier.u.ipv4 = router_id;
+<a id='L53' name='L53'></a>    g.transport_address.type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L54' name='L54'></a>    g.transport_address.u.ipv4 = router_id;
+<a id='L55' name='L55'></a>    <strong class='reserved'>return</strong> <a href='../S/446.html#L158' title='Defined at 158 in ldpd/ldp_cfg.c.'>ldp_cfg_global_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h,&amp;g,
+<a id='L56' name='L56'></a>        <a href='../S/345.html#L30' title='Defined at 30 in ldpd/ldp_cfg.h.'>LDP_GLOBAL_CFG_LSR_IDENTIFIER</a>|<a href='../S/345.html#L31' title='Defined at 31 in ldpd/ldp_cfg.h.'>LDP_GLOBAL_CFG_TRANS_ADDR</a>);
+<a id='L57' name='L57'></a><em class='brace'>}</em>
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><strong class='reserved'>int</strong> <a href='../R/6712.html' title='Multiple referred from 2 places.'>ldp_router_id_update</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *router_id) <em class='brace'>{</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>  zlog_info("router-id update %s", inet_ntoa(router_id-&gt;u.prefix4));
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a>  <strong class='reserved'>if</strong> (!<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;lsr_id_is_static) <em class='brace'>{</em>
+<a id='L64' name='L64'></a>    <a href='../S/394.html#L35' title='Defined at 35 in ldpd/ldp.c.'>ldp_admin_state_start</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>);
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>    <a href='../S/394.html#L49' title='Defined at 49 in ldpd/ldp.c.'>do_ldp_router_id_update</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>, ntohl(router_id-&gt;u.prefix4.s_addr));
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>    <a href='../S/394.html#L42' title='Defined at 42 in ldpd/ldp.c.'>ldp_admin_state_finish</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>);
+<a id='L69' name='L69'></a>  <em class='brace'>}</em>
+<a id='L70' name='L70'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L71' name='L71'></a><em class='brace'>}</em>
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a><em class='comment'>/* LDP instance top. */</em>
+<a id='L74' name='L74'></a><strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *ldp_top = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../R/6650.html' title='Multiple referred from 2 places.'>ldp_new</a>(<strong class='reserved'>void</strong>) <em class='brace'>{</em>
+<a id='L77' name='L77'></a>    <strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *new = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_LDP, <strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>));
+<a id='L78' name='L78'></a>    <a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> g;
+<a id='L79' name='L79'></a>    <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L82' name='L82'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *c;
+<a id='L83' name='L83'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *cnode;
+<a id='L84' name='L84'></a>    <strong class='reserved'>struct</strong> <a href='../S/451.html#L14' title='Defined at 14 in ldpd/ldp_interface.h.'>ldp_interface</a> *li;
+<a id='L85' name='L85'></a>    <strong class='reserved'>struct</strong> <a href='../D/7132.html' title='Multiple defined in 2 places.'>ldp_addr</a> addr;
+<a id='L86' name='L86'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p;
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a>    memset(new,0,<strong class='reserved'>sizeof</strong>(*new));
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a>    new-&gt;h = <a href='../S/446.html#L30' title='Defined at 30 in ldpd/ldp_cfg.c.'>ldp_cfg_open</a>(new);
+<a id='L91' name='L91'></a>    new-&gt;admin_up = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L92' name='L92'></a>    new-&gt;lsr_id_is_static = 0;
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>    new-&gt;egress = <a href='../S/389.html#L19' title='Defined at 19 in ldpd/ldp.h.'>LDP_EGRESS_CONNECTED</a>;
+<a id='L95' name='L95'></a>    new-&gt;address = <a href='../S/389.html#L23' title='Defined at 23 in ldpd/ldp.h.'>LDP_ADDRESS_ALL</a>;
+<a id='L96' name='L96'></a>    new-&gt;peer_list = <a href='../S/243.html#L29' title='Defined at 29 in lib/linklist.c.'>list_new</a>();
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a>    ldp_top = new;
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a>    <a href='../S/394.html#L49' title='Defined at 49 in ldpd/ldp.c.'>do_ldp_router_id_update</a>(new, ntohl(router_id.u.prefix4.s_addr));
+<a id='L101' name='L101'></a>    g.admin_state = <a href='../S/383.html#L53' title='Defined at 53 in ldpd/mpls_struct.h.'>MPLS_ADMIN_ENABLE</a>;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>    <a href='../S/446.html#L158' title='Defined at 158 in ldpd/ldp_cfg.c.'>ldp_cfg_global_set</a>(new-&gt;h,&amp;g, <a href='../S/345.html#L36' title='Defined at 36 in ldpd/ldp_cfg.h.'>LDP_GLOBAL_CFG_LSR_HANDLE</a>|
+<a id='L104' name='L104'></a>        <a href='../S/345.html#L20' title='Defined at 20 in ldpd/ldp_cfg.h.'>LDP_GLOBAL_CFG_ADMIN_STATE</a>);
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>    <strong class='reserved'>for</strong> (node = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a>(iflist); node; <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a>(node)) <em class='brace'>{</em>
+<a id='L107' name='L107'></a>        ifp = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a>(node);
+<a id='L108' name='L108'></a>        <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(ifp-&gt;info);
+<a id='L109' name='L109'></a>        li = ifp-&gt;info;
+<a id='L110' name='L110'></a>
+<a id='L111' name='L111'></a>        <a href='../S/458.html#L38' title='Defined at 38 in ldpd/ldp_interface.c.'>ldp_interface_create</a>(li);
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>        <strong class='reserved'>for</strong> (cnode = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a> (ifp-&gt;<a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a>); cnode; <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a> (cnode)) <em class='brace'>{</em>
+<a id='L114' name='L114'></a>            c = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a> (cnode);
+<a id='L115' name='L115'></a>            p = c-&gt;address;
+<a id='L116' name='L116'></a>            <strong class='reserved'>if</strong> (p-&gt;family == AF_INET) <em class='brace'>{</em>
+<a id='L117' name='L117'></a>                <a href='../S/439.html#L157' title='Defined at 157 in ldpd/ldp_zebra.c.'>prefix2mpls_inet_addr</a>(p, &amp;addr.address);
+<a id='L118' name='L118'></a>                <a href='../S/446.html#L1705' title='Defined at 1705 in ldpd/ldp_cfg.c.'>ldp_cfg_if_addr_set</a>(new-&gt;h, &amp;li-&gt;iff, &amp;addr, <a href='../S/345.html#L17' title='Defined at 17 in ldpd/ldp_cfg.h.'>LDP_CFG_ADD</a>);
+<a id='L119' name='L119'></a>            <em class='brace'>}</em>
+<a id='L120' name='L120'></a>        <em class='brace'>}</em>
+<a id='L121' name='L121'></a>    <em class='brace'>}</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>    rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a>(table);
+<a id='L124' name='L124'></a>    <strong class='reserved'>while</strong> (rn) <em class='brace'>{</em>
+<a id='L125' name='L125'></a>      <strong class='reserved'>if</strong> (rn-&gt;info) <em class='brace'>{</em>
+<a id='L126' name='L126'></a>        <strong class='reserved'>struct</strong> <a href='../S/349.html#L9' title='Defined at 9 in ldpd/impl_fib.h.'>mpls_node</a> *mn;
+<a id='L127' name='L127'></a>        <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a>* ln;
+<a id='L128' name='L128'></a>        <strong class='reserved'>struct</strong> <a href='../S/349.html#L14' title='Defined at 14 in ldpd/impl_fib.h.'>mpls_nh</a> *nh;
+<a id='L129' name='L129'></a>        <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> fec;
+<a id='L130' name='L130'></a>
+<a id='L131' name='L131'></a>        <a href='../S/439.html#L163' title='Defined at 163 in ldpd/ldp_zebra.c.'>zebra_prefix2mpls_fec</a>(&amp;rn-&gt;p, &amp;fec);
+<a id='L132' name='L132'></a>        mn = rn-&gt;info;
+<a id='L133' name='L133'></a>        <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (mn-&gt;<a href='../S/262.html#L37' title='Defined at 37 in lib/linklist.h.'>list</a>, ln, nh)) <em class='brace'>{</em>
+<a id='L134' name='L134'></a>          <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a> <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L135' name='L135'></a>          <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(&amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>, &amp;nh-&gt;info, <strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a>));
+<a id='L136' name='L136'></a>          <a href='../S/394.html#L197' title='Defined at 197 in ldpd/ldp.c.'>ldp_add_ipv4</a>(new, &amp;fec, &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L137' name='L137'></a>        <em class='brace'>}</em>
+<a id='L138' name='L138'></a>      <em class='brace'>}</em>
+<a id='L139' name='L139'></a>      rn = <a href='../S/236.html#L474' title='Defined at 474 in lib/table.c.'>route_next2</a>(rn);
+<a id='L140' name='L140'></a>    <em class='brace'>}</em>
+<a id='L141' name='L141'></a>    <strong class='reserved'>return</strong> new;
+<a id='L142' name='L142'></a><em class='brace'>}</em>
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a><strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../R/6519.html' title='Multiple referred from 39 places.'>ldp_get</a>() <em class='brace'>{</em>
+<a id='L145' name='L145'></a>    <strong class='reserved'>if</strong> (ldp_top) <em class='brace'>{</em>
+<a id='L146' name='L146'></a>        <strong class='reserved'>return</strong> ldp_top;
+<a id='L147' name='L147'></a>    <em class='brace'>}</em>
+<a id='L148' name='L148'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L149' name='L149'></a><em class='brace'>}</em>
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a><strong class='reserved'>void</strong> <a href='../R/6517.html' title='Multiple referred from 2 places.'>ldp_finish</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L152' name='L152'></a>    <strong class='reserved'>struct</strong> <a href='../S/451.html#L14' title='Defined at 14 in ldpd/ldp_interface.h.'>ldp_interface</a> *li;
+<a id='L153' name='L153'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L154' name='L154'></a>    <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L155' name='L155'></a>
+<a id='L156' name='L156'></a>    <a href='../S/394.html#L35' title='Defined at 35 in ldpd/ldp.c.'>ldp_admin_state_start</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>);
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a><em class='sharp'>#if</em> 0
+<a id='L159' name='L159'></a>    rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a>(table);
+<a id='L160' name='L160'></a>    <strong class='reserved'>while</strong> (rn) <em class='brace'>{</em>
+<a id='L161' name='L161'></a>      <strong class='reserved'>if</strong> (rn-&gt;info) <em class='brace'>{</em>
+<a id='L162' name='L162'></a>        <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> fec;
+<a id='L163' name='L163'></a>                                                                                
+<a id='L164' name='L164'></a>        <a href='../S/439.html#L163' title='Defined at 163 in ldpd/ldp_zebra.c.'>zebra_prefix2mpls_fec</a>(&amp;rn-&gt;p, &amp;fec);
+<a id='L165' name='L165'></a>        <a href='../S/446.html#L1214' title='Defined at 1214 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_get</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, &amp;fec, 0);
+<a id='L166' name='L166'></a>        <a href='../S/446.html#L1296' title='Defined at 1296 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, &amp;fec, <a href='../S/345.html#L76' title='Defined at 76 in ldpd/ldp_cfg.h.'>LDP_FEC_CFG_BY_INDEX</a>|<a href='../S/345.html#L18' title='Defined at 18 in ldpd/ldp_cfg.h.'>LDP_CFG_DEL</a>);
+<a id='L167' name='L167'></a>      <em class='brace'>}</em>
+<a id='L168' name='L168'></a>      rn = <a href='../S/236.html#L474' title='Defined at 474 in lib/table.c.'>route_next2</a>(rn);
+<a id='L169' name='L169'></a>    <em class='brace'>}</em>
+<a id='L170' name='L170'></a><em class='sharp'>#endif</em>
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>    <a href='../S/446.html#L40' title='Defined at 40 in ldpd/ldp_cfg.c.'>ldp_cfg_close</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h);
+<a id='L173' name='L173'></a>    <a href='../S/243.html#L36' title='Defined at 36 in lib/linklist.c.'>list_free</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;peer_list);
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a>(MTYPE_LDP,<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>);
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a>    ldp_top = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L178' name='L178'></a>
+<a id='L179' name='L179'></a>    <em class='comment'>/* it is key that ldp_interface_delete is called _after_ we</em>
+<a id='L180' name='L180'></a><em class='comment'>     * set ldp_top to NULL.  This is so the check for ldp fails</em>
+<a id='L181' name='L181'></a><em class='comment'>     * and we do not try and send config changes into ldp */</em>
+<a id='L182' name='L182'></a>    <strong class='reserved'>for</strong> (node = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a>(iflist); node; <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a>(node)) <em class='brace'>{</em>
+<a id='L183' name='L183'></a>        ifp = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a>(node);
+<a id='L184' name='L184'></a>        li = (<strong class='reserved'>struct</strong> <a href='../S/451.html#L14' title='Defined at 14 in ldpd/ldp_interface.h.'>ldp_interface</a>*)ifp-&gt;info;
+<a id='L185' name='L185'></a>        <strong class='reserved'>if</strong> (li) <em class='brace'>{</em>
+<a id='L186' name='L186'></a>            <a href='../S/458.html#L79' title='Defined at 79 in ldpd/ldp_interface.c.'>ldp_interface_delete</a>(li);
+<a id='L187' name='L187'></a>        <em class='brace'>}</em>
+<a id='L188' name='L188'></a><em class='sharp'>#if</em> 0
+<a id='L189' name='L189'></a>        <strong class='reserved'>if</strong> (li-&gt;l2cc &amp;&amp; li-&gt;l2cc-&gt;l2cc.index) <em class='brace'>{</em>
+<a id='L190' name='L190'></a>            <a href='../S/364.html#L38' title='Defined at 38 in ldpd/l2cc_interface.c.'>l2cc_interface_delete</a>(li);
+<a id='L191' name='L191'></a>        <em class='brace'>}</em>
+<a id='L192' name='L192'></a><em class='sharp'>#endif</em>
+<a id='L193' name='L193'></a>    <em class='brace'>}</em>
+<a id='L194' name='L194'></a>
+<a id='L195' name='L195'></a><em class='brace'>}</em>
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a><strong class='reserved'>int</strong> <a href='../R/6350.html' title='Multiple referred from 3 places.'>ldp_add_ipv4</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>, <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> *fec,
+<a id='L198' name='L198'></a>    <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a> *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>) <em class='brace'>{</em>
+<a id='L199' name='L199'></a>    <strong class='reserved'>if</strong> (<a href='../S/446.html#L1214' title='Defined at 1214 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_get</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, 0) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L200' name='L200'></a>        <strong class='reserved'>if</strong> (<a href='../S/446.html#L1296' title='Defined at 1296 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, <a href='../S/345.html#L17' title='Defined at 17 in ldpd/ldp_cfg.h.'>LDP_CFG_ADD</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L201' name='L201'></a>            <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L202' name='L202'></a>        <em class='brace'>}</em>
+<a id='L203' name='L203'></a>    <em class='brace'>}</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a>    <strong class='reserved'>if</strong> (<a href='../S/446.html#L1348' title='Defined at 1348 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_nexthop_get</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L206' name='L206'></a>        <a href='../S/345.html#L76' title='Defined at 76 in ldpd/ldp_cfg.h.'>LDP_FEC_CFG_BY_INDEX</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L207' name='L207'></a>        <strong class='reserved'>if</strong> (<a href='../S/446.html#L1452' title='Defined at 1452 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_nexthop_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L208' name='L208'></a>            <a href='../S/345.html#L17' title='Defined at 17 in ldpd/ldp_cfg.h.'>LDP_CFG_ADD</a>|<a href='../S/345.html#L76' title='Defined at 76 in ldpd/ldp_cfg.h.'>LDP_FEC_CFG_BY_INDEX</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L209' name='L209'></a>            <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L210' name='L210'></a>        <em class='brace'>}</em>
+<a id='L211' name='L211'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L212' name='L212'></a>        <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L213' name='L213'></a>    <em class='brace'>}</em>
+<a id='L214' name='L214'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L215' name='L215'></a><em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a><strong class='reserved'>int</strong> <a href='../R/6480.html' title='Multiple referred from 2 places.'>ldp_delete_ipv4</a>(<strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>, <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> *fec,
+<a id='L218' name='L218'></a>    <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a> *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>) <em class='brace'>{</em>
+<a id='L219' name='L219'></a>    <strong class='reserved'>if</strong> (<a href='../S/446.html#L1214' title='Defined at 1214 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_get</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, 0) == <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L220' name='L220'></a>        <strong class='reserved'>if</strong> (<a href='../S/446.html#L1348' title='Defined at 1348 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_nexthop_get</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L221' name='L221'></a>            <a href='../S/345.html#L76' title='Defined at 76 in ldpd/ldp_cfg.h.'>LDP_FEC_CFG_BY_INDEX</a>) == <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L222' name='L222'></a>            <strong class='reserved'>if</strong> (<a href='../S/446.html#L1452' title='Defined at 1452 in ldpd/ldp_cfg.c.'>ldp_cfg_fec_nexthop_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, fec, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,
+<a id='L223' name='L223'></a>                <a href='../S/345.html#L76' title='Defined at 76 in ldpd/ldp_cfg.h.'>LDP_FEC_CFG_BY_INDEX</a>|<a href='../S/345.html#L18' title='Defined at 18 in ldpd/ldp_cfg.h.'>LDP_CFG_DEL</a>|
+<a id='L224' name='L224'></a>                <a href='../S/345.html#L77' title='Defined at 77 in ldpd/ldp_cfg.h.'>LDP_FEC_NEXTHOP_CFG_BY_INDEX</a>) != <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>) <em class='brace'>{</em>
+<a id='L225' name='L225'></a>                <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L226' name='L226'></a>            <em class='brace'>}</em>
+<a id='L227' name='L227'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L228' name='L228'></a>            <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L229' name='L229'></a>        <em class='brace'>}</em>
+<a id='L230' name='L230'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L231' name='L231'></a>        <em class='comment'>//MPLS_ASSERT(0); //mark by here</em>
+<a id='L232' name='L232'></a>        <strong class='reserved'>return</strong> 0;<em class='comment'>//add by here</em>
+<a id='L233' name='L233'></a>    <em class='brace'>}</em>
+<a id='L234' name='L234'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L235' name='L235'></a><em class='brace'>}</em>
+<a id='L236' name='L236'></a>
+<a id='L237' name='L237'></a><em class='sharp'>#if</em> 0
+<a id='L238' name='L238'></a><em class='comment'>/* Update access-list list. */</em>
+<a id='L239' name='L239'></a><strong class='reserved'>void</strong> <a href='../R/7052.html' title='Multiple referred from 2 places.'>mpls_access_list_update</a>(<strong class='reserved'>struct</strong> <a href='../S/199.html#L43' title='Defined at 43 in lib/filter.h.'>access_list</a> *access) <em class='brace'>{</em>
+<a id='L240' name='L240'></a><em class='brace'>}</em>
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a><em class='comment'>/* Update prefix-list list. */</em>
+<a id='L243' name='L243'></a><strong class='reserved'>void</strong> mpls_prefix_list_update(<strong class='reserved'>struct</strong> <a href='../S/302.html#L40' title='Defined at 40 in lib/plist.h.'>prefix_list</a> *plist) <em class='brace'>{</em>
+<a id='L244' name='L244'></a><em class='brace'>}</em>
+<a id='L245' name='L245'></a><em class='sharp'>#endif</em>
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a><strong class='reserved'>void</strong> <a href='../R/6576.html' title='Multiple referred from 2 places.'>ldp_init</a>() <em class='brace'>{</em>
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a><em class='sharp'>#if</em> 0
+<a id='L250' name='L250'></a>    <a href='../S/203.html#L2021' title='Defined at 2021 in lib/filter.c.'>access_list_init</a>();
+<a id='L251' name='L251'></a>    <a href='../S/203.html#L429' title='Defined at 429 in lib/filter.c.'>access_list_add_hook</a>(<a href='../S/394.html#L239' title='Defined at 239 in ldpd/ldp.c.'>mpls_access_list_update</a>);
+<a id='L252' name='L252'></a>    <a href='../S/203.html#L439' title='Defined at 439 in lib/filter.c.'>access_list_delete_hook</a>(<a href='../S/394.html#L239' title='Defined at 239 in ldpd/ldp.c.'>mpls_access_list_update</a>);
+<a id='L253' name='L253'></a><em class='sharp'>#endif</em>
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L21'>[^]</a><a href='#L247'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

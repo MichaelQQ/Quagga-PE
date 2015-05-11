@@ -1,0 +1,916 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospf6d/ospf6_abr.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1027.html'>ospf6d</a>/ospf6_abr.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L55'>[^]</a><a href='#L869'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L55' title='Defined at 55.'>ospf6_is_router_abr</a></li>
+<li><a href='#L71' title='Defined at 71.'>ospf6_abr_enable_area</a></li>
+<li><a href='#L106' title='Defined at 106.'>ospf6_abr_disable_area</a></li>
+<li><a href='#L143' title='Defined at 143.'>ospf6_abr_originate_summary_to_area</a></li>
+<li><a href='#L476' title='Defined at 476.'>ospf6_abr_range_update</a></li>
+<li><a href='#L506' title='Defined at 506.'>ospf6_abr_originate_summary</a></li>
+<li><a href='#L526' title='Defined at 526.'>ospf6_abr_examin_summary</a></li>
+<li><a href='#L726' title='Defined at 726.'>ospf6_abr_examin_brouter</a></li>
+<li><a href='#L748' title='Defined at 748.'>ospf6_abr_reimport</a></li>
+<li><a href='#L768' title='Defined at 768.'>ospf6_inter_area_prefix_lsa_show</a></li>
+<li><a href='#L793' title='Defined at 793.'>ospf6_inter_area_router_lsa_show</a></li>
+<li><a href='#L812' title='Defined at 812.'>DEFUN</a></li>
+<li><a href='#L824' title='Defined at 824.'>DEFUN</a></li>
+<li><a href='#L838' title='Defined at 838.'>config_write_ospf6_debug_abr</a></li>
+<li><a href='#L846' title='Defined at 846.'>install_element_ospf6_debug_abr</a></li>
+<li><a href='#L869' title='Defined at 869.'>ospf6_abr_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Area Border Router function.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 2004 Yasuhiro Ohara</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the </em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330, </em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='302.html'>plist.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='199.html'>filter.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='30.html'>ospf6_proto.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='44.html'>ospf6_route.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='4.html'>ospf6_lsa.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='44.html'>ospf6_route.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='31.html'>ospf6_lsdb.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='26.html'>ospf6_message.h</a>"
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='7.html'>ospf6_top.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='35.html'>ospf6_area.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='41.html'>ospf6_interface.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='36.html'>ospf6_neighbor.h</a>"
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='43.html'>ospf6_flood.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='32.html'>ospf6_intra.h</a>"
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='39.html'>ospf6_abr.h</a>"
+<a id='L50' name='L50'></a><em class='sharp'>#include</em> "<a href='23.html'>ospf6d.h</a>"
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> conf_debug_ospf6_abr;
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a><strong class='reserved'>int</strong>
+<a id='L55' name='L55'></a><a href='../R/7575.html' title='Multiple referred from 4 places.'>ospf6_is_router_abr</a> (<strong class='reserved'>struct</strong> <a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a> *o)
+<a id='L56' name='L56'></a><em class='brace'>{</em>
+<a id='L57' name='L57'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L58' name='L58'></a>  <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa;
+<a id='L59' name='L59'></a>  <strong class='reserved'>int</strong> area_count = 0;
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (o-&gt;area_list, node, oa))
+<a id='L62' name='L62'></a>    <strong class='reserved'>if</strong> (<a href='../S/35.html#L110' title='Defined at 110 in ospf6d/ospf6_area.h.'>IS_AREA_ENABLED</a> (oa))
+<a id='L63' name='L63'></a>      area_count++;
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a>  <strong class='reserved'>if</strong> (area_count &gt; 1)
+<a id='L66' name='L66'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L67' name='L67'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L68' name='L68'></a><em class='brace'>}</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a><strong class='reserved'>void</strong>
+<a id='L71' name='L71'></a><a href='../R/7461.html' title='Multiple referred from 6 places.'>ospf6_abr_enable_area</a> (<strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *area)
+<a id='L72' name='L72'></a><em class='brace'>{</em>
+<a id='L73' name='L73'></a>  <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa;
+<a id='L74' name='L74'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *ro;
+<a id='L75' name='L75'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L76' name='L76'></a>
+<a id='L77' name='L77'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;area_list, node, nnode, oa))
+<a id='L78' name='L78'></a>    <em class='brace'>{</em>
+<a id='L79' name='L79'></a>      <em class='comment'>/* update B bit for each area */</em>
+<a id='L80' name='L80'></a>      <a href='../S/32.html#L150' title='Defined at 150 in ospf6d/ospf6_intra.h.'>OSPF6_ROUTER_LSA_SCHEDULE</a> (oa);
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a>      <em class='comment'>/* install other area's configured address range */</em>
+<a id='L83' name='L83'></a>      <strong class='reserved'>if</strong> (oa != area)
+<a id='L84' name='L84'></a>        <em class='brace'>{</em>
+<a id='L85' name='L85'></a>          <strong class='reserved'>for</strong> (ro = <a href='../S/22.html#L639' title='Defined at 639 in ospf6d/ospf6_route.c.'>ospf6_route_head</a> (oa-&gt;range_table); ro;
+<a id='L86' name='L86'></a>               ro = <a href='../S/22.html#L671' title='Defined at 671 in ospf6d/ospf6_route.c.'>ospf6_route_next</a> (ro))
+<a id='L87' name='L87'></a>            <em class='brace'>{</em>
+<a id='L88' name='L88'></a>              <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (ro-&gt;flag, <a href='../S/44.html#L160' title='Defined at 160 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_ACTIVE_SUMMARY</a>))
+<a id='L89' name='L89'></a>                <a href='../S/38.html#L143' title='Defined at 143 in ospf6d/ospf6_abr.c.'>ospf6_abr_originate_summary_to_area</a> (ro, area);
+<a id='L90' name='L90'></a>            <em class='brace'>}</em>
+<a id='L91' name='L91'></a>        <em class='brace'>}</em>
+<a id='L92' name='L92'></a>    <em class='brace'>}</em>
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <em class='comment'>/* install calculated routes to border routers */</em>
+<a id='L95' name='L95'></a>  <strong class='reserved'>for</strong> (ro = <a href='../S/22.html#L639' title='Defined at 639 in ospf6d/ospf6_route.c.'>ospf6_route_head</a> (area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;brouter_table); ro;
+<a id='L96' name='L96'></a>       ro = <a href='../S/22.html#L671' title='Defined at 671 in ospf6d/ospf6_route.c.'>ospf6_route_next</a> (ro))
+<a id='L97' name='L97'></a>    <a href='../S/38.html#L143' title='Defined at 143 in ospf6d/ospf6_abr.c.'>ospf6_abr_originate_summary_to_area</a> (ro, area);
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a>  <em class='comment'>/* install calculated routes to network (may be rejected by ranges) */</em>
+<a id='L100' name='L100'></a>  <strong class='reserved'>for</strong> (ro = <a href='../S/22.html#L639' title='Defined at 639 in ospf6d/ospf6_route.c.'>ospf6_route_head</a> (area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;<a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a>); ro;
+<a id='L101' name='L101'></a>       ro = <a href='../S/22.html#L671' title='Defined at 671 in ospf6d/ospf6_route.c.'>ospf6_route_next</a> (ro))
+<a id='L102' name='L102'></a>    <a href='../S/38.html#L143' title='Defined at 143 in ospf6d/ospf6_abr.c.'>ospf6_abr_originate_summary_to_area</a> (ro, area);
+<a id='L103' name='L103'></a><em class='brace'>}</em>
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a><strong class='reserved'>void</strong>
+<a id='L106' name='L106'></a><a href='../R/7460.html' title='Multiple referred from 2 places.'>ospf6_abr_disable_area</a> (<strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *area)
+<a id='L107' name='L107'></a><em class='brace'>{</em>
+<a id='L108' name='L108'></a>  <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa;
+<a id='L109' name='L109'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *ro;
+<a id='L110' name='L110'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *old;
+<a id='L111' name='L111'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>  <em class='comment'>/* Withdraw all summary prefixes previously originated */</em>
+<a id='L114' name='L114'></a>  <strong class='reserved'>for</strong> (ro = <a href='../S/22.html#L639' title='Defined at 639 in ospf6d/ospf6_route.c.'>ospf6_route_head</a> (area-&gt;summary_prefix); ro;
+<a id='L115' name='L115'></a>       ro = <a href='../S/22.html#L671' title='Defined at 671 in ospf6d/ospf6_route.c.'>ospf6_route_next</a> (ro))
+<a id='L116' name='L116'></a>    <em class='brace'>{</em>
+<a id='L117' name='L117'></a>      old = <a href='../S/6.html#L241' title='Defined at 241 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_lookup</a> (ro-&gt;path.origin.type, ro-&gt;path.origin.id,
+<a id='L118' name='L118'></a>                               area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;router_id, area-&gt;lsdb);
+<a id='L119' name='L119'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L120' name='L120'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L121' name='L121'></a>      <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (ro, area-&gt;summary_prefix);
+<a id='L122' name='L122'></a>    <em class='brace'>}</em>
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a>  <em class='comment'>/* Withdraw all summary router-routes previously originated */</em>
+<a id='L125' name='L125'></a>  <strong class='reserved'>for</strong> (ro = <a href='../S/22.html#L639' title='Defined at 639 in ospf6d/ospf6_route.c.'>ospf6_route_head</a> (area-&gt;summary_router); ro;
+<a id='L126' name='L126'></a>       ro = <a href='../S/22.html#L671' title='Defined at 671 in ospf6d/ospf6_route.c.'>ospf6_route_next</a> (ro))
+<a id='L127' name='L127'></a>    <em class='brace'>{</em>
+<a id='L128' name='L128'></a>      old = <a href='../S/6.html#L241' title='Defined at 241 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_lookup</a> (ro-&gt;path.origin.type, ro-&gt;path.origin.id,
+<a id='L129' name='L129'></a>                               area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;router_id, area-&gt;lsdb);
+<a id='L130' name='L130'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L131' name='L131'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L132' name='L132'></a>      <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (ro, area-&gt;summary_router);
+<a id='L133' name='L133'></a>    <em class='brace'>}</em>
+<a id='L134' name='L134'></a>
+<a id='L135' name='L135'></a>  <em class='comment'>/* Schedule Router-LSA for each area (ABR status may change) */</em>
+<a id='L136' name='L136'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;area_list, node, nnode, oa))
+<a id='L137' name='L137'></a>    <em class='comment'>/* update B bit for each area */</em>
+<a id='L138' name='L138'></a>    <a href='../S/32.html#L150' title='Defined at 150 in ospf6d/ospf6_intra.h.'>OSPF6_ROUTER_LSA_SCHEDULE</a> (oa);
+<a id='L139' name='L139'></a><em class='brace'>}</em>
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a><em class='comment'>/* RFC 2328 12.4.3. Summary-LSAs */</em>
+<a id='L142' name='L142'></a><strong class='reserved'>void</strong>
+<a id='L143' name='L143'></a><a href='../R/7466.html' title='Multiple referred from 6 places.'>ospf6_abr_originate_summary_to_area</a> (<strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *route,
+<a id='L144' name='L144'></a>                                     <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *area)
+<a id='L145' name='L145'></a><em class='brace'>{</em>
+<a id='L146' name='L146'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa, *old = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L147' name='L147'></a>  <strong class='reserved'>struct</strong> <a href='../S/41.html#L37' title='Defined at 37 in ospf6d/ospf6_interface.h.'>ospf6_interface</a> *oi;
+<a id='L148' name='L148'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *summary, *range = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L149' name='L149'></a>  <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *route_area;
+<a id='L150' name='L150'></a>  <strong class='reserved'>char</strong> <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>[<a href='../S/4.html#L51' title='Defined at 51 in ospf6d/ospf6_lsa.h.'>OSPF6_MAX_LSASIZE</a>];
+<a id='L151' name='L151'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>;
+<a id='L152' name='L152'></a>  caddr_t p;
+<a id='L153' name='L153'></a>  <strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a> *prefix_lsa;
+<a id='L154' name='L154'></a>  <strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a> *<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>;
+<a id='L155' name='L155'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L164' title='Defined at 164 in ospf6d/ospf6_route.h.'>ospf6_route_table</a> *summary_table = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L156' name='L156'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L157' name='L157'></a>  <strong class='reserved'>char</strong> buf[64];
+<a id='L158' name='L158'></a>  <strong class='reserved'>int</strong> is_debug = 0;
+<a id='L159' name='L159'></a>
+<a id='L160' name='L160'></a>  <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L149' title='Defined at 149 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_ROUTER</a>)
+<a id='L161' name='L161'></a>    <em class='brace'>{</em>
+<a id='L162' name='L162'></a>      <strong class='reserved'>if</strong> (<a href='../S/39.html#L34' title='Defined at 34 in ospf6d/ospf6_abr.h.'>IS_OSPF6_DEBUG_ABR</a> || <a href='../S/4.html#L34' title='Defined at 34 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_ORIGINATE</a> (INTER_ROUTER))
+<a id='L163' name='L163'></a>        <em class='brace'>{</em>
+<a id='L164' name='L164'></a>          is_debug++;
+<a id='L165' name='L165'></a>          <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;(<a href='../S/44.html#L243' title='Defined at 243 in ospf6d/ospf6_route.h.'>ADV_ROUTER_IN_PREFIX</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)),
+<a id='L166' name='L166'></a>                     buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L167' name='L167'></a>          zlog_debug ("Originating summary in area %s for ASBR %s",
+<a id='L168' name='L168'></a>                      area-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, buf);
+<a id='L169' name='L169'></a>        <em class='brace'>}</em>
+<a id='L170' name='L170'></a>      summary_table = area-&gt;summary_router;
+<a id='L171' name='L171'></a>    <em class='brace'>}</em>
+<a id='L172' name='L172'></a>  <strong class='reserved'>else</strong>
+<a id='L173' name='L173'></a>    <em class='brace'>{</em>
+<a id='L174' name='L174'></a>      <strong class='reserved'>if</strong> (<a href='../S/39.html#L34' title='Defined at 34 in ospf6d/ospf6_abr.h.'>IS_OSPF6_DEBUG_ABR</a> || <a href='../S/4.html#L34' title='Defined at 34 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_ORIGINATE</a> (INTER_PREFIX))
+<a id='L175' name='L175'></a>        <em class='brace'>{</em>
+<a id='L176' name='L176'></a>          is_debug++;
+<a id='L177' name='L177'></a>          <a href='../S/250.html#L764' title='Defined at 764 in lib/prefix.c.'>prefix2str</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L178' name='L178'></a>          zlog_debug ("Originating summary in area %s for %s",
+<a id='L179' name='L179'></a>                      area-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, buf);
+<a id='L180' name='L180'></a>        <em class='brace'>}</em>
+<a id='L181' name='L181'></a>      summary_table = area-&gt;summary_prefix;
+<a id='L182' name='L182'></a>    <em class='brace'>}</em>
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>  summary = <a href='../S/22.html#L262' title='Defined at 262 in ospf6d/ospf6_route.c.'>ospf6_route_lookup</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, summary_table);
+<a id='L185' name='L185'></a>  <strong class='reserved'>if</strong> (summary)
+<a id='L186' name='L186'></a>    old = <a href='../S/6.html#L241' title='Defined at 241 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_lookup</a> (summary-&gt;path.origin.type,
+<a id='L187' name='L187'></a>                             summary-&gt;path.origin.id,
+<a id='L188' name='L188'></a>                             area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;router_id, area-&gt;lsdb);
+<a id='L189' name='L189'></a>
+<a id='L190' name='L190'></a>  <em class='comment'>/* if this route has just removed, remove corresponding LSA */</em>
+<a id='L191' name='L191'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (route-&gt;flag, <a href='../S/44.html#L158' title='Defined at 158 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_REMOVE</a>))
+<a id='L192' name='L192'></a>    <em class='brace'>{</em>
+<a id='L193' name='L193'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L194' name='L194'></a>        zlog_debug ("The route has just removed, purge previous LSA");
+<a id='L195' name='L195'></a>      <strong class='reserved'>if</strong> (summary)
+<a id='L196' name='L196'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L197' name='L197'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L198' name='L198'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L199' name='L199'></a>      <strong class='reserved'>return</strong>;
+<a id='L200' name='L200'></a>    <em class='brace'>}</em>
+<a id='L201' name='L201'></a>
+<a id='L202' name='L202'></a>  <em class='comment'>/* Only destination type network, range or ASBR are considered */</em>
+<a id='L203' name='L203'></a>  <strong class='reserved'>if</strong> (route-&gt;type != <a href='../S/44.html#L150' title='Defined at 150 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_NETWORK</a> &amp;&amp;
+<a id='L204' name='L204'></a>      route-&gt;type != <a href='../S/44.html#L153' title='Defined at 153 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_RANGE</a> &amp;&amp;
+<a id='L205' name='L205'></a>      (route-&gt;type != <a href='../S/44.html#L149' title='Defined at 149 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_ROUTER</a> ||
+<a id='L206' name='L206'></a>       ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (route-&gt;path.router_bits, <a href='../S/30.html#L58' title='Defined at 58 in ospf6d/ospf6_proto.h.'>OSPF6_ROUTER_BIT_E</a>)))
+<a id='L207' name='L207'></a>    <em class='brace'>{</em>
+<a id='L208' name='L208'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L209' name='L209'></a>        zlog_debug ("Route type is none of network, range nor ASBR, withdraw");
+<a id='L210' name='L210'></a>      <strong class='reserved'>if</strong> (summary)
+<a id='L211' name='L211'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L212' name='L212'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L213' name='L213'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L214' name='L214'></a>      <strong class='reserved'>return</strong>;
+<a id='L215' name='L215'></a>    <em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  <em class='comment'>/* AS External routes are never considered */</em>
+<a id='L218' name='L218'></a>  <strong class='reserved'>if</strong> (route-&gt;path.type == <a href='../S/44.html#L105' title='Defined at 105 in ospf6d/ospf6_route.h.'>OSPF6_PATH_TYPE_EXTERNAL1</a> ||
+<a id='L219' name='L219'></a>      route-&gt;path.type == <a href='../S/44.html#L106' title='Defined at 106 in ospf6d/ospf6_route.h.'>OSPF6_PATH_TYPE_EXTERNAL2</a>)
+<a id='L220' name='L220'></a>    <em class='brace'>{</em>
+<a id='L221' name='L221'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L222' name='L222'></a>        zlog_debug ("Path type is external, withdraw");
+<a id='L223' name='L223'></a>      <strong class='reserved'>if</strong> (summary)
+<a id='L224' name='L224'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L225' name='L225'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L226' name='L226'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L227' name='L227'></a>      <strong class='reserved'>return</strong>;
+<a id='L228' name='L228'></a>    <em class='brace'>}</em>
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a>  <em class='comment'>/* do not generate if the path's area is the same as target area */</em>
+<a id='L231' name='L231'></a>  <strong class='reserved'>if</strong> (route-&gt;path.area_id == area-&gt;area_id)
+<a id='L232' name='L232'></a>    <em class='brace'>{</em>
+<a id='L233' name='L233'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L234' name='L234'></a>        zlog_debug ("The route is in the area itself, ignore");
+<a id='L235' name='L235'></a>      <strong class='reserved'>if</strong> (summary)
+<a id='L236' name='L236'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L237' name='L237'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L238' name='L238'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L239' name='L239'></a>      <strong class='reserved'>return</strong>;
+<a id='L240' name='L240'></a>    <em class='brace'>}</em>
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>  <em class='comment'>/* do not generate if the nexthops belongs to the target area */</em>
+<a id='L243' name='L243'></a>  oi = <a href='../S/28.html#L61' title='Defined at 61 in ospf6d/ospf6_interface.c.'>ospf6_interface_lookup_by_ifindex</a> (route-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>[0].ifindex);
+<a id='L244' name='L244'></a>  <strong class='reserved'>if</strong> (oi &amp;&amp; oi-&gt;area &amp;&amp; oi-&gt;area == area)
+<a id='L245' name='L245'></a>    <em class='brace'>{</em>
+<a id='L246' name='L246'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L247' name='L247'></a>        zlog_debug ("The route's nexthop is in the same area, ignore");
+<a id='L248' name='L248'></a>      <strong class='reserved'>if</strong> (summary)
+<a id='L249' name='L249'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L250' name='L250'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L251' name='L251'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L252' name='L252'></a>      <strong class='reserved'>return</strong>;
+<a id='L253' name='L253'></a>    <em class='brace'>}</em>
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a>  <em class='comment'>/* do not generate if the route cost is greater or equal to LSInfinity */</em>
+<a id='L256' name='L256'></a>  <strong class='reserved'>if</strong> (route-&gt;path.cost &gt;= <a href='../S/30.html#L44' title='Defined at 44 in ospf6d/ospf6_proto.h.'>LS_INFINITY</a>)
+<a id='L257' name='L257'></a>    <em class='brace'>{</em>
+<a id='L258' name='L258'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L259' name='L259'></a>        zlog_debug ("The cost exceeds LSInfinity, withdraw");
+<a id='L260' name='L260'></a>      <strong class='reserved'>if</strong> (summary)
+<a id='L261' name='L261'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L262' name='L262'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L263' name='L263'></a>        <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L264' name='L264'></a>      <strong class='reserved'>return</strong>;
+<a id='L265' name='L265'></a>    <em class='brace'>}</em>
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a>  <em class='comment'>/* if this is a route to ASBR */</em>
+<a id='L268' name='L268'></a>  <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L149' title='Defined at 149 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_ROUTER</a>)
+<a id='L269' name='L269'></a>    <em class='brace'>{</em>
+<a id='L270' name='L270'></a>      <em class='comment'>/* Only the prefered best path is considered */</em>
+<a id='L271' name='L271'></a>      <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (route-&gt;flag, <a href='../S/44.html#L159' title='Defined at 159 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_BEST</a>))
+<a id='L272' name='L272'></a>        <em class='brace'>{</em>
+<a id='L273' name='L273'></a>          <strong class='reserved'>if</strong> (is_debug)
+<a id='L274' name='L274'></a>            zlog_debug ("This is the secondary path to the ASBR, ignore");
+<a id='L275' name='L275'></a>          <strong class='reserved'>if</strong> (summary)
+<a id='L276' name='L276'></a>            <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L277' name='L277'></a>          <strong class='reserved'>if</strong> (old)
+<a id='L278' name='L278'></a>            <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L279' name='L279'></a>          <strong class='reserved'>return</strong>;
+<a id='L280' name='L280'></a>        <em class='brace'>}</em>
+<a id='L281' name='L281'></a>
+<a id='L282' name='L282'></a>      <em class='comment'>/* Do not generate if the area is stub */</em>
+<a id='L283' name='L283'></a>      <em class='comment'>/* XXX */</em>
+<a id='L284' name='L284'></a>    <em class='brace'>}</em>
+<a id='L285' name='L285'></a>
+<a id='L286' name='L286'></a>  <em class='comment'>/* if this is an intra-area route, this may be suppressed by aggregation */</em>
+<a id='L287' name='L287'></a>  <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L150' title='Defined at 150 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_NETWORK</a> &amp;&amp;
+<a id='L288' name='L288'></a>      route-&gt;path.type == <a href='../S/44.html#L103' title='Defined at 103 in ospf6d/ospf6_route.h.'>OSPF6_PATH_TYPE_INTRA</a>)
+<a id='L289' name='L289'></a>    <em class='brace'>{</em>
+<a id='L290' name='L290'></a>      <em class='comment'>/* search for configured address range for the route's area */</em>
+<a id='L291' name='L291'></a>      route_area = <a href='../S/2.html#L217' title='Defined at 217 in ospf6d/ospf6_area.c.'>ospf6_area_lookup</a> (route-&gt;path.area_id, area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>);
+<a id='L292' name='L292'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (route_area);
+<a id='L293' name='L293'></a>      range = <a href='../S/22.html#L292' title='Defined at 292 in ospf6d/ospf6_route.c.'>ospf6_route_lookup_bestmatch</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L294' name='L294'></a>                                            route_area-&gt;range_table);
+<a id='L295' name='L295'></a>
+<a id='L296' name='L296'></a>      <em class='comment'>/* ranges are ignored when originate backbone routes to transit area.</em>
+<a id='L297' name='L297'></a><em class='comment'>         Otherwise, if ranges are configured, the route is suppressed. */</em>
+<a id='L298' name='L298'></a>      <strong class='reserved'>if</strong> (range &amp;&amp; ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (range-&gt;flag, <a href='../S/44.html#L158' title='Defined at 158 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_REMOVE</a>) &amp;&amp;
+<a id='L299' name='L299'></a>          (route-&gt;path.area_id != <a href='../S/35.html#L108' title='Defined at 108 in ospf6d/ospf6_area.h.'>BACKBONE_AREA_ID</a> ||
+<a id='L300' name='L300'></a>           ! <a href='../S/35.html#L112' title='Defined at 112 in ospf6d/ospf6_area.h.'>IS_AREA_TRANSIT</a> (area)))
+<a id='L301' name='L301'></a>        <em class='brace'>{</em>
+<a id='L302' name='L302'></a>          <strong class='reserved'>if</strong> (is_debug)
+<a id='L303' name='L303'></a>            <em class='brace'>{</em>
+<a id='L304' name='L304'></a>              <a href='../S/250.html#L764' title='Defined at 764 in lib/prefix.c.'>prefix2str</a> (&amp;range-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L305' name='L305'></a>              zlog_debug ("Suppressed by range %s of area %s",
+<a id='L306' name='L306'></a>                         buf, route_area-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L307' name='L307'></a>            <em class='brace'>}</em>
+<a id='L308' name='L308'></a>
+<a id='L309' name='L309'></a>          <strong class='reserved'>if</strong> (summary)
+<a id='L310' name='L310'></a>            <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L311' name='L311'></a>          <strong class='reserved'>if</strong> (old)
+<a id='L312' name='L312'></a>            <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L313' name='L313'></a>          <strong class='reserved'>return</strong>;
+<a id='L314' name='L314'></a>        <em class='brace'>}</em>
+<a id='L315' name='L315'></a>    <em class='brace'>}</em>
+<a id='L316' name='L316'></a>
+<a id='L317' name='L317'></a>  <em class='comment'>/* If this is a configured address range */</em>
+<a id='L318' name='L318'></a>  <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L153' title='Defined at 153 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_RANGE</a>)
+<a id='L319' name='L319'></a>    <em class='brace'>{</em>
+<a id='L320' name='L320'></a>      <em class='comment'>/* If DoNotAdvertise is set */</em>
+<a id='L321' name='L321'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (route-&gt;flag, <a href='../S/44.html#L161' title='Defined at 161 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_DO_NOT_ADVERTISE</a>))
+<a id='L322' name='L322'></a>        <em class='brace'>{</em>
+<a id='L323' name='L323'></a>          <strong class='reserved'>if</strong> (is_debug)
+<a id='L324' name='L324'></a>            zlog_debug ("This is the range with DoNotAdvertise set. ignore");
+<a id='L325' name='L325'></a>          <strong class='reserved'>if</strong> (summary)
+<a id='L326' name='L326'></a>            <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L327' name='L327'></a>          <strong class='reserved'>if</strong> (old)
+<a id='L328' name='L328'></a>            <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L329' name='L329'></a>          <strong class='reserved'>return</strong>;
+<a id='L330' name='L330'></a>        <em class='brace'>}</em>
+<a id='L331' name='L331'></a>
+<a id='L332' name='L332'></a>      <em class='comment'>/* Whether the route have active longer prefix */</em>
+<a id='L333' name='L333'></a>      <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (route-&gt;flag, <a href='../S/44.html#L160' title='Defined at 160 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_ACTIVE_SUMMARY</a>))
+<a id='L334' name='L334'></a>        <em class='brace'>{</em>
+<a id='L335' name='L335'></a>          <strong class='reserved'>if</strong> (is_debug)
+<a id='L336' name='L336'></a>            zlog_debug ("The range is not active. withdraw");
+<a id='L337' name='L337'></a>          <strong class='reserved'>if</strong> (summary)
+<a id='L338' name='L338'></a>            <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (summary, summary_table);
+<a id='L339' name='L339'></a>          <strong class='reserved'>if</strong> (old)
+<a id='L340' name='L340'></a>            <a href='../S/33.html#L156' title='Defined at 156 in ospf6d/ospf6_flood.c.'>ospf6_lsa_purge</a> (old);
+<a id='L341' name='L341'></a>          <strong class='reserved'>return</strong>;
+<a id='L342' name='L342'></a>        <em class='brace'>}</em>
+<a id='L343' name='L343'></a>    <em class='brace'>}</em>
+<a id='L344' name='L344'></a>
+<a id='L345' name='L345'></a>  <em class='comment'>/* Check export list */</em>
+<a id='L346' name='L346'></a>  <strong class='reserved'>if</strong> (<a href='../D/837.html' title='Multiple defined in 2 places.'>EXPORT_NAME</a> (area))
+<a id='L347' name='L347'></a>    <em class='brace'>{</em>
+<a id='L348' name='L348'></a>      <strong class='reserved'>if</strong> (<a href='../D/836.html' title='Multiple defined in 2 places.'>EXPORT_LIST</a> (area) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L349' name='L349'></a>        <a href='../D/836.html' title='Multiple defined in 2 places.'>EXPORT_LIST</a> (area) =
+<a id='L350' name='L350'></a>          <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../D/837.html' title='Multiple defined in 2 places.'>EXPORT_NAME</a> (area));
+<a id='L351' name='L351'></a>
+<a id='L352' name='L352'></a>      <strong class='reserved'>if</strong> (<a href='../D/836.html' title='Multiple defined in 2 places.'>EXPORT_LIST</a> (area))
+<a id='L353' name='L353'></a>        <strong class='reserved'>if</strong> (<a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (<a href='../D/836.html' title='Multiple defined in 2 places.'>EXPORT_LIST</a> (area),
+<a id='L354' name='L354'></a>                               &amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>) == FILTER_DENY)
+<a id='L355' name='L355'></a>          <em class='brace'>{</em>
+<a id='L356' name='L356'></a>            <strong class='reserved'>if</strong> (is_debug)
+<a id='L357' name='L357'></a>              <em class='brace'>{</em>
+<a id='L358' name='L358'></a>                <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;(<a href='../S/44.html#L243' title='Defined at 243 in ospf6d/ospf6_route.h.'>ADV_ROUTER_IN_PREFIX</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)),
+<a id='L359' name='L359'></a>                           buf, <strong class='reserved'>sizeof</strong>(buf));
+<a id='L360' name='L360'></a>                zlog_debug ("prefix %s was denied by export list", buf);
+<a id='L361' name='L361'></a>              <em class='brace'>}</em>
+<a id='L362' name='L362'></a>            <strong class='reserved'>return</strong>;
+<a id='L363' name='L363'></a>          <em class='brace'>}</em>
+<a id='L364' name='L364'></a>    <em class='brace'>}</em>
+<a id='L365' name='L365'></a>
+<a id='L366' name='L366'></a>  <em class='comment'>/* Check filter-list */</em>
+<a id='L367' name='L367'></a>  <strong class='reserved'>if</strong> (<a href='../D/3526.html' title='Multiple defined in 2 places.'>PREFIX_NAME_OUT</a> (area))
+<a id='L368' name='L368'></a>    <em class='brace'>{</em>
+<a id='L369' name='L369'></a>      <strong class='reserved'>if</strong> (<a href='../D/3522.html' title='Multiple defined in 3 places.'>PREFIX_LIST_OUT</a> (area) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L370' name='L370'></a>        <a href='../D/3522.html' title='Multiple defined in 3 places.'>PREFIX_LIST_OUT</a> (area) =
+<a id='L371' name='L371'></a>          <a href='../S/181.html#L130' title='Defined at 130 in lib/plist.c.'>prefix_list_lookup</a>(<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../D/3526.html' title='Multiple defined in 2 places.'>PREFIX_NAME_OUT</a> (area));
+<a id='L372' name='L372'></a>
+<a id='L373' name='L373'></a>      <strong class='reserved'>if</strong> (<a href='../D/3522.html' title='Multiple defined in 3 places.'>PREFIX_LIST_OUT</a> (area))
+<a id='L374' name='L374'></a>         <strong class='reserved'>if</strong> (<a href='../S/181.html#L564' title='Defined at 564 in lib/plist.c.'>prefix_list_apply</a> (<a href='../D/3522.html' title='Multiple defined in 3 places.'>PREFIX_LIST_OUT</a> (area), 
+<a id='L375' name='L375'></a>                                &amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>) != PREFIX_PERMIT) 
+<a id='L376' name='L376'></a>           <em class='brace'>{</em>
+<a id='L377' name='L377'></a>             <strong class='reserved'>if</strong> (is_debug)
+<a id='L378' name='L378'></a>               <em class='brace'>{</em>
+<a id='L379' name='L379'></a>                 <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;(<a href='../S/44.html#L243' title='Defined at 243 in ospf6d/ospf6_route.h.'>ADV_ROUTER_IN_PREFIX</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)),
+<a id='L380' name='L380'></a>                            buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L381' name='L381'></a>                 zlog_debug ("prefix %s was denied by filter-list out", buf);
+<a id='L382' name='L382'></a>               <em class='brace'>}</em>
+<a id='L383' name='L383'></a>             <strong class='reserved'>return</strong>;
+<a id='L384' name='L384'></a>           <em class='brace'>}</em>
+<a id='L385' name='L385'></a>    <em class='brace'>}</em>
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a>  <em class='comment'>/* the route is going to be originated. store it in area's summary_table */</em>
+<a id='L388' name='L388'></a>  <strong class='reserved'>if</strong> (summary == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L389' name='L389'></a>    <em class='brace'>{</em>
+<a id='L390' name='L390'></a>      summary = <a href='../S/22.html#L191' title='Defined at 191 in ospf6d/ospf6_route.c.'>ospf6_route_copy</a> (route);
+<a id='L391' name='L391'></a>      <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L150' title='Defined at 150 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_NETWORK</a> ||
+<a id='L392' name='L392'></a>          route-&gt;type == <a href='../S/44.html#L153' title='Defined at 153 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_RANGE</a>)
+<a id='L393' name='L393'></a>        summary-&gt;path.origin.type = htons (<a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>);
+<a id='L394' name='L394'></a>      <strong class='reserved'>else</strong>
+<a id='L395' name='L395'></a>        summary-&gt;path.origin.type = htons (<a href='../S/4.html#L58' title='Defined at 58 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_ROUTER</a>);
+<a id='L396' name='L396'></a>      summary-&gt;path.origin.adv_router = area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;router_id;
+<a id='L397' name='L397'></a>      summary-&gt;path.origin.id =
+<a id='L398' name='L398'></a>        <a href='../S/6.html#L541' title='Defined at 541 in ospf6d/ospf6_lsdb.c.'>ospf6_new_ls_id</a> (summary-&gt;path.origin.type,
+<a id='L399' name='L399'></a>                         summary-&gt;path.origin.adv_router, area-&gt;lsdb);
+<a id='L400' name='L400'></a>      summary = <a href='../S/22.html#L356' title='Defined at 356 in ospf6d/ospf6_route.c.'>ospf6_route_add</a> (summary, summary_table);
+<a id='L401' name='L401'></a>    <em class='brace'>}</em>
+<a id='L402' name='L402'></a>  <strong class='reserved'>else</strong>
+<a id='L403' name='L403'></a>    <em class='brace'>{</em>
+<a id='L404' name='L404'></a>      summary-&gt;type = route-&gt;type;
+<a id='L405' name='L405'></a>      <a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a> (<a href='../S/279.html#L106' title='Defined at 106 in lib/thread.h.'>QUAGGA_CLK_MONOTONIC</a>, &amp;summary-&gt;changed);
+<a id='L406' name='L406'></a>    <em class='brace'>}</em>
+<a id='L407' name='L407'></a>
+<a id='L408' name='L408'></a>  summary-&gt;path.router_bits = route-&gt;path.router_bits;
+<a id='L409' name='L409'></a>  summary-&gt;path.options[0] = route-&gt;path.options[0];
+<a id='L410' name='L410'></a>  summary-&gt;path.options[1] = route-&gt;path.options[1];
+<a id='L411' name='L411'></a>  summary-&gt;path.options[2] = route-&gt;path.options[2];
+<a id='L412' name='L412'></a>  summary-&gt;path.prefix_options = route-&gt;path.prefix_options;
+<a id='L413' name='L413'></a>  summary-&gt;path.area_id = area-&gt;area_id;
+<a id='L414' name='L414'></a>  summary-&gt;path.type = <a href='../S/44.html#L104' title='Defined at 104 in ospf6d/ospf6_route.h.'>OSPF6_PATH_TYPE_INTER</a>;
+<a id='L415' name='L415'></a>  summary-&gt;path.cost = route-&gt;path.cost;
+<a id='L416' name='L416'></a>  summary-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>[0] = route-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>[0];
+<a id='L417' name='L417'></a>
+<a id='L418' name='L418'></a>  <em class='comment'>/* prepare buffer */</em>
+<a id='L419' name='L419'></a>  memset (<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>, 0, <strong class='reserved'>sizeof</strong> (<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>));
+<a id='L420' name='L420'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *) <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>;
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a>  <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L149' title='Defined at 149 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_ROUTER</a>)
+<a id='L423' name='L423'></a>    <em class='brace'>{</em>
+<a id='L424' name='L424'></a>      <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> = (<strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a> *)
+<a id='L425' name='L425'></a>        ((caddr_t) <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> + <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>));
+<a id='L426' name='L426'></a>      p = (caddr_t) <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> + <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a>);
+<a id='L427' name='L427'></a>
+<a id='L428' name='L428'></a>      <em class='comment'>/* Fill Inter-Area-Router-LSA */</em>
+<a id='L429' name='L429'></a>      <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options[0] = route-&gt;path.options[0];
+<a id='L430' name='L430'></a>      <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options[1] = route-&gt;path.options[1];
+<a id='L431' name='L431'></a>      <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options[2] = route-&gt;path.options[2];
+<a id='L432' name='L432'></a>      <a href='../S/39.html#L56' title='Defined at 56 in ospf6d/ospf6_abr.h.'>OSPF6_ABR_SUMMARY_METRIC_SET</a> (<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>, route-&gt;path.cost);
+<a id='L433' name='L433'></a>      <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;router_id = <a href='../S/44.html#L243' title='Defined at 243 in ospf6d/ospf6_route.h.'>ADV_ROUTER_IN_PREFIX</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L434' name='L434'></a>      type = htons (<a href='../S/4.html#L58' title='Defined at 58 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_ROUTER</a>);
+<a id='L435' name='L435'></a>    <em class='brace'>}</em>
+<a id='L436' name='L436'></a>  <strong class='reserved'>else</strong>
+<a id='L437' name='L437'></a>    <em class='brace'>{</em>
+<a id='L438' name='L438'></a>      prefix_lsa = (<strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a> *)
+<a id='L439' name='L439'></a>        ((caddr_t) <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> + <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>));
+<a id='L440' name='L440'></a>      p = (caddr_t) prefix_lsa + <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a>);
+<a id='L441' name='L441'></a>
+<a id='L442' name='L442'></a>      <em class='comment'>/* Fill Inter-Area-Prefix-LSA */</em>
+<a id='L443' name='L443'></a>      <a href='../S/39.html#L56' title='Defined at 56 in ospf6d/ospf6_abr.h.'>OSPF6_ABR_SUMMARY_METRIC_SET</a> (prefix_lsa, route-&gt;path.cost);
+<a id='L444' name='L444'></a>      prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefix_length = route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen;
+<a id='L445' name='L445'></a>      prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefix_options = route-&gt;path.prefix_options;
+<a id='L446' name='L446'></a>
+<a id='L447' name='L447'></a>      <em class='comment'>/* set Prefix */</em>
+<a id='L448' name='L448'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (p, &amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.u.prefix6,
+<a id='L449' name='L449'></a>              <a href='../S/30.html#L99' title='Defined at 99 in ospf6d/ospf6_proto.h.'>OSPF6_PREFIX_SPACE</a> (route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen));
+<a id='L450' name='L450'></a>      <a href='../S/27.html#L29' title='Defined at 29 in ospf6d/ospf6_proto.c.'>ospf6_prefix_apply_mask</a> (&amp;prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L451' name='L451'></a>      p += <a href='../S/30.html#L99' title='Defined at 99 in ospf6d/ospf6_proto.h.'>OSPF6_PREFIX_SPACE</a> (route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen);
+<a id='L452' name='L452'></a>      type = htons (<a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>);
+<a id='L453' name='L453'></a>    <em class='brace'>}</em>
+<a id='L454' name='L454'></a>
+<a id='L455' name='L455'></a>  <em class='comment'>/* Fill LSA Header */</em>
+<a id='L456' name='L456'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;age = 0;
+<a id='L457' name='L457'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;type = type;
+<a id='L458' name='L458'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;id = summary-&gt;path.origin.id;
+<a id='L459' name='L459'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;adv_router = area-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;router_id;
+<a id='L460' name='L460'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;seqnum =
+<a id='L461' name='L461'></a>    <a href='../S/6.html#L566' title='Defined at 566 in ospf6d/ospf6_lsdb.c.'>ospf6_new_ls_seqnum</a> (<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;type, <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;id,
+<a id='L462' name='L462'></a>                         <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;adv_router, area-&gt;lsdb);
+<a id='L463' name='L463'></a>  <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;length = htons ((caddr_t) p - (caddr_t) <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>);
+<a id='L464' name='L464'></a>
+<a id='L465' name='L465'></a>  <em class='comment'>/* LSA checksum */</em>
+<a id='L466' name='L466'></a>  <a href='../S/14.html#L681' title='Defined at 681 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_checksum</a> (<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>);
+<a id='L467' name='L467'></a>
+<a id='L468' name='L468'></a>  <em class='comment'>/* create LSA */</em>
+<a id='L469' name='L469'></a>  lsa = <a href='../S/14.html#L468' title='Defined at 468 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_create</a> (<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>);
+<a id='L470' name='L470'></a>
+<a id='L471' name='L471'></a>  <em class='comment'>/* Originate */</em>
+<a id='L472' name='L472'></a>  <a href='../S/33.html#L140' title='Defined at 140 in ospf6d/ospf6_flood.c.'>ospf6_lsa_originate_area</a> (lsa, area);
+<a id='L473' name='L473'></a><em class='brace'>}</em>
+<a id='L474' name='L474'></a>
+<a id='L475' name='L475'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L476' name='L476'></a><a href='../S/38.html#L517' title='Referred from 517 in ospf6d/ospf6_abr.c.'>ospf6_abr_range_update</a> (<strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *range)
+<a id='L477' name='L477'></a><em class='brace'>{</em>
+<a id='L478' name='L478'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> cost = 0;
+<a id='L479' name='L479'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *ro;
+<a id='L480' name='L480'></a>
+<a id='L481' name='L481'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (range-&gt;type == <a href='../S/44.html#L153' title='Defined at 153 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_RANGE</a>);
+<a id='L482' name='L482'></a>
+<a id='L483' name='L483'></a>  <em class='comment'>/* update range's cost and active flag */</em>
+<a id='L484' name='L484'></a>  <strong class='reserved'>for</strong> (ro = <a href='../S/22.html#L711' title='Defined at 711 in ospf6d/ospf6_route.c.'>ospf6_route_match_head</a> (&amp;range-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, <a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;<a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a>);
+<a id='L485' name='L485'></a>       ro; ro = <a href='../S/22.html#L740' title='Defined at 740 in ospf6d/ospf6_route.c.'>ospf6_route_match_next</a> (&amp;range-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, ro))
+<a id='L486' name='L486'></a>    <em class='brace'>{</em>
+<a id='L487' name='L487'></a>      <strong class='reserved'>if</strong> (ro-&gt;path.area_id == range-&gt;path.area_id &amp;&amp;
+<a id='L488' name='L488'></a>          ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (ro-&gt;flag, <a href='../S/44.html#L158' title='Defined at 158 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_REMOVE</a>))
+<a id='L489' name='L489'></a>        cost = <a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a> (cost, ro-&gt;path.cost);
+<a id='L490' name='L490'></a>    <em class='brace'>}</em>
+<a id='L491' name='L491'></a>
+<a id='L492' name='L492'></a>  <strong class='reserved'>if</strong> (range-&gt;path.cost != cost)
+<a id='L493' name='L493'></a>    <em class='brace'>{</em>
+<a id='L494' name='L494'></a>      range-&gt;path.cost = cost;
+<a id='L495' name='L495'></a>
+<a id='L496' name='L496'></a>      <strong class='reserved'>if</strong> (range-&gt;path.cost)
+<a id='L497' name='L497'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (range-&gt;flag, <a href='../S/44.html#L160' title='Defined at 160 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_ACTIVE_SUMMARY</a>);
+<a id='L498' name='L498'></a>      <strong class='reserved'>else</strong>
+<a id='L499' name='L499'></a>        <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (range-&gt;flag, <a href='../S/44.html#L160' title='Defined at 160 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_ACTIVE_SUMMARY</a>);
+<a id='L500' name='L500'></a>
+<a id='L501' name='L501'></a>      <a href='../S/38.html#L506' title='Defined at 506 in ospf6d/ospf6_abr.c.'>ospf6_abr_originate_summary</a> (range);
+<a id='L502' name='L502'></a>    <em class='brace'>}</em>
+<a id='L503' name='L503'></a><em class='brace'>}</em>
+<a id='L504' name='L504'></a>
+<a id='L505' name='L505'></a><strong class='reserved'>void</strong>
+<a id='L506' name='L506'></a><a href='../R/7465.html' title='Multiple referred from 6 places.'>ospf6_abr_originate_summary</a> (<strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *route)
+<a id='L507' name='L507'></a><em class='brace'>{</em>
+<a id='L508' name='L508'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L509' name='L509'></a>  <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa;
+<a id='L510' name='L510'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *range = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L511' name='L511'></a>
+<a id='L512' name='L512'></a>  <strong class='reserved'>if</strong> (route-&gt;type == <a href='../S/44.html#L150' title='Defined at 150 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_NETWORK</a>)
+<a id='L513' name='L513'></a>    <em class='brace'>{</em>
+<a id='L514' name='L514'></a>      oa = <a href='../S/2.html#L217' title='Defined at 217 in ospf6d/ospf6_area.c.'>ospf6_area_lookup</a> (route-&gt;path.area_id, <a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>);
+<a id='L515' name='L515'></a>      range = <a href='../S/22.html#L292' title='Defined at 292 in ospf6d/ospf6_route.c.'>ospf6_route_lookup_bestmatch</a> (&amp;route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, oa-&gt;range_table);
+<a id='L516' name='L516'></a>      <strong class='reserved'>if</strong> (range)
+<a id='L517' name='L517'></a>        <a href='../S/38.html#L476' title='Defined at 476 in ospf6d/ospf6_abr.c.'>ospf6_abr_range_update</a> (range);
+<a id='L518' name='L518'></a>    <em class='brace'>}</em>
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;area_list, node, nnode, oa))
+<a id='L521' name='L521'></a>    <a href='../S/38.html#L143' title='Defined at 143 in ospf6d/ospf6_abr.c.'>ospf6_abr_originate_summary_to_area</a> (route, oa);
+<a id='L522' name='L522'></a><em class='brace'>}</em>
+<a id='L523' name='L523'></a>
+<a id='L524' name='L524'></a><em class='comment'>/* RFC 2328 16.2. Calculating the inter-area routes */</em>
+<a id='L525' name='L525'></a><strong class='reserved'>void</strong>
+<a id='L526' name='L526'></a><a href='../R/7463.html' title='Multiple referred from 7 places.'>ospf6_abr_examin_summary</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa, <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa)
+<a id='L527' name='L527'></a><em class='brace'>{</em>
+<a id='L528' name='L528'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, abr_prefix;
+<a id='L529' name='L529'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L164' title='Defined at 164 in ospf6d/ospf6_route.h.'>ospf6_route_table</a> *table = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L530' name='L530'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *range, *route, *old = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L531' name='L531'></a>  <strong class='reserved'>struct</strong> <a href='../S/44.html#L113' title='Defined at 113 in ospf6d/ospf6_route.h.'>ospf6_route</a> *abr_entry;
+<a id='L532' name='L532'></a>  u_char type = 0;
+<a id='L533' name='L533'></a>  <strong class='reserved'>char</strong> options[3] = <em class='brace'>{</em>0, 0, 0<em class='brace'>}</em>;
+<a id='L534' name='L534'></a>  <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> prefix_options = 0;
+<a id='L535' name='L535'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> cost = 0;
+<a id='L536' name='L536'></a>  u_char router_bits = 0;
+<a id='L537' name='L537'></a>  <strong class='reserved'>int</strong> i;
+<a id='L538' name='L538'></a>  <strong class='reserved'>char</strong> buf[64];
+<a id='L539' name='L539'></a>  <strong class='reserved'>int</strong> is_debug = 0;
+<a id='L540' name='L540'></a>
+<a id='L541' name='L541'></a>  memset (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, 0, <strong class='reserved'>sizeof</strong> (<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>));
+<a id='L542' name='L542'></a>
+<a id='L543' name='L543'></a>  <strong class='reserved'>if</strong> (lsa-&gt;header-&gt;type == htons (<a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>))
+<a id='L544' name='L544'></a>    <em class='brace'>{</em>
+<a id='L545' name='L545'></a>      <strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a> *prefix_lsa;
+<a id='L546' name='L546'></a>
+<a id='L547' name='L547'></a>      <strong class='reserved'>if</strong> (<a href='../S/4.html#L37' title='Defined at 37 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_EXAMIN</a> (INTER_PREFIX))
+<a id='L548' name='L548'></a>        <em class='brace'>{</em>
+<a id='L549' name='L549'></a>          is_debug++;
+<a id='L550' name='L550'></a>          zlog_debug ("Examin %s in area %s", lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, oa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L551' name='L551'></a>        <em class='brace'>}</em>
+<a id='L552' name='L552'></a>
+<a id='L553' name='L553'></a>      prefix_lsa = (<strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a> *)
+<a id='L554' name='L554'></a>        <a href='../S/4.html#L94' title='Defined at 94 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADER_END</a> (lsa-&gt;header);
+<a id='L555' name='L555'></a>      <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.family = AF_INET6;
+<a id='L556' name='L556'></a>      <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen = prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefix_length;
+<a id='L557' name='L557'></a>      <a href='../S/30.html#L109' title='Defined at 109 in ospf6d/ospf6_proto.h.'>ospf6_prefix_in6_addr</a> (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.u.prefix6, &amp;prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L558' name='L558'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L559' name='L559'></a>        <a href='../S/250.html#L764' title='Defined at 764 in lib/prefix.c.'>prefix2str</a> (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L560' name='L560'></a>      table = oa-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;<a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a>;
+<a id='L561' name='L561'></a>      type = <a href='../S/44.html#L150' title='Defined at 150 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_NETWORK</a>;
+<a id='L562' name='L562'></a>      prefix_options = prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefix_options;
+<a id='L563' name='L563'></a>      cost = <a href='../S/39.html#L55' title='Defined at 55 in ospf6d/ospf6_abr.h.'>OSPF6_ABR_SUMMARY_METRIC</a> (prefix_lsa);
+<a id='L564' name='L564'></a>    <em class='brace'>}</em>
+<a id='L565' name='L565'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (lsa-&gt;header-&gt;type == htons (<a href='../S/4.html#L58' title='Defined at 58 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_ROUTER</a>))
+<a id='L566' name='L566'></a>    <em class='brace'>{</em>
+<a id='L567' name='L567'></a>      <strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a> *<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>;
+<a id='L568' name='L568'></a>
+<a id='L569' name='L569'></a>      <strong class='reserved'>if</strong> (<a href='../S/4.html#L37' title='Defined at 37 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_EXAMIN</a> (INTER_ROUTER))
+<a id='L570' name='L570'></a>        <em class='brace'>{</em>
+<a id='L571' name='L571'></a>          is_debug++;
+<a id='L572' name='L572'></a>          zlog_debug ("Examin %s in area %s", lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, oa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L573' name='L573'></a>        <em class='brace'>}</em>
+<a id='L574' name='L574'></a>
+<a id='L575' name='L575'></a>      <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> = (<strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a> *)
+<a id='L576' name='L576'></a>        <a href='../S/4.html#L94' title='Defined at 94 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADER_END</a> (lsa-&gt;header);
+<a id='L577' name='L577'></a>      <a href='../S/22.html#L137' title='Defined at 137 in ospf6d/ospf6_route.c.'>ospf6_linkstate_prefix</a> (<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;router_id, htonl (0), &amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L578' name='L578'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L579' name='L579'></a>        <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;router_id, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L580' name='L580'></a>      table = oa-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;brouter_table;
+<a id='L581' name='L581'></a>      type = <a href='../S/44.html#L149' title='Defined at 149 in ospf6d/ospf6_route.h.'>OSPF6_DEST_TYPE_ROUTER</a>;
+<a id='L582' name='L582'></a>      options[0] = <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options[0];
+<a id='L583' name='L583'></a>      options[1] = <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options[1];
+<a id='L584' name='L584'></a>      options[2] = <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options[2];
+<a id='L585' name='L585'></a>      cost = <a href='../S/39.html#L55' title='Defined at 55 in ospf6d/ospf6_abr.h.'>OSPF6_ABR_SUMMARY_METRIC</a> (<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>);
+<a id='L586' name='L586'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (router_bits, <a href='../S/30.html#L58' title='Defined at 58 in ospf6d/ospf6_proto.h.'>OSPF6_ROUTER_BIT_E</a>);
+<a id='L587' name='L587'></a>    <em class='brace'>}</em>
+<a id='L588' name='L588'></a>  <strong class='reserved'>else</strong>
+<a id='L589' name='L589'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (0);
+<a id='L590' name='L590'></a>
+<a id='L591' name='L591'></a>  <em class='comment'>/* Find existing route */</em>
+<a id='L592' name='L592'></a>  route = <a href='../S/22.html#L262' title='Defined at 262 in ospf6d/ospf6_route.c.'>ospf6_route_lookup</a> (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, table);
+<a id='L593' name='L593'></a>  <strong class='reserved'>if</strong> (route)
+<a id='L594' name='L594'></a>    <a href='../S/22.html#L206' title='Defined at 206 in ospf6d/ospf6_route.c.'>ospf6_route_lock</a> (route);
+<a id='L595' name='L595'></a>  <strong class='reserved'>while</strong> (route &amp;&amp; <a href='../S/44.html#L222' title='Defined at 222 in ospf6d/ospf6_route.h.'>ospf6_route_is_prefix</a> (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, route))
+<a id='L596' name='L596'></a>    <em class='brace'>{</em>
+<a id='L597' name='L597'></a>      <strong class='reserved'>if</strong> (route-&gt;path.area_id == oa-&gt;area_id &amp;&amp;
+<a id='L598' name='L598'></a>          route-&gt;path.origin.type == lsa-&gt;header-&gt;type &amp;&amp;
+<a id='L599' name='L599'></a>          route-&gt;path.origin.id == lsa-&gt;header-&gt;id &amp;&amp;
+<a id='L600' name='L600'></a>          route-&gt;path.origin.adv_router == lsa-&gt;header-&gt;adv_router &amp;&amp;
+<a id='L601' name='L601'></a>          ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (route-&gt;flag, <a href='../S/44.html#L162' title='Defined at 162 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_WAS_REMOVED</a>))
+<a id='L602' name='L602'></a>        old = route;
+<a id='L603' name='L603'></a>      route = <a href='../S/22.html#L671' title='Defined at 671 in ospf6d/ospf6_route.c.'>ospf6_route_next</a> (route);
+<a id='L604' name='L604'></a>    <em class='brace'>}</em>
+<a id='L605' name='L605'></a>
+<a id='L606' name='L606'></a>  <em class='comment'>/* (1) if cost == LSInfinity or if the LSA is MaxAge */</em>
+<a id='L607' name='L607'></a>  <strong class='reserved'>if</strong> (cost == <a href='../S/30.html#L44' title='Defined at 44 in ospf6d/ospf6_proto.h.'>LS_INFINITY</a>)
+<a id='L608' name='L608'></a>    <em class='brace'>{</em>
+<a id='L609' name='L609'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L610' name='L610'></a>        zlog_debug ("cost is LS_INFINITY, ignore");
+<a id='L611' name='L611'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L612' name='L612'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L613' name='L613'></a>      <strong class='reserved'>return</strong>;
+<a id='L614' name='L614'></a>    <em class='brace'>}</em>
+<a id='L615' name='L615'></a>  <strong class='reserved'>if</strong> (<a href='../S/4.html#L110' title='Defined at 110 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_MAXAGE</a> (lsa))
+<a id='L616' name='L616'></a>    <em class='brace'>{</em>
+<a id='L617' name='L617'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L618' name='L618'></a>        zlog_debug ("LSA is MaxAge, ignore");
+<a id='L619' name='L619'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L620' name='L620'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L621' name='L621'></a>      <strong class='reserved'>return</strong>;
+<a id='L622' name='L622'></a>    <em class='brace'>}</em>
+<a id='L623' name='L623'></a>
+<a id='L624' name='L624'></a>  <em class='comment'>/* (2) if the LSA is self-originated, ignore */</em>
+<a id='L625' name='L625'></a>  <strong class='reserved'>if</strong> (lsa-&gt;header-&gt;adv_router == oa-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;router_id)
+<a id='L626' name='L626'></a>    <em class='brace'>{</em>
+<a id='L627' name='L627'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L628' name='L628'></a>        zlog_debug ("LSA is self-originated, ignore");
+<a id='L629' name='L629'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L630' name='L630'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L631' name='L631'></a>      <strong class='reserved'>return</strong>;
+<a id='L632' name='L632'></a>    <em class='brace'>}</em>
+<a id='L633' name='L633'></a>
+<a id='L634' name='L634'></a>  <em class='comment'>/* (3) if the prefix is equal to an active configured address range */</em>
+<a id='L635' name='L635'></a>  <strong class='reserved'>if</strong> (lsa-&gt;header-&gt;type == htons (<a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>))
+<a id='L636' name='L636'></a>    <em class='brace'>{</em>
+<a id='L637' name='L637'></a>      range = <a href='../S/22.html#L262' title='Defined at 262 in ospf6d/ospf6_route.c.'>ospf6_route_lookup</a> (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, oa-&gt;range_table);
+<a id='L638' name='L638'></a>      <strong class='reserved'>if</strong> (range)
+<a id='L639' name='L639'></a>        <em class='brace'>{</em>
+<a id='L640' name='L640'></a>          <strong class='reserved'>if</strong> (is_debug)
+<a id='L641' name='L641'></a>            zlog_debug ("Prefix is equal to address range, ignore");
+<a id='L642' name='L642'></a>          <strong class='reserved'>if</strong> (old)
+<a id='L643' name='L643'></a>            <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L644' name='L644'></a>          <strong class='reserved'>return</strong>;
+<a id='L645' name='L645'></a>        <em class='brace'>}</em>
+<a id='L646' name='L646'></a>    <em class='brace'>}</em>
+<a id='L647' name='L647'></a>
+<a id='L648' name='L648'></a>  <em class='comment'>/* (4) if the routing table entry for the ABR does not exist */</em>
+<a id='L649' name='L649'></a>  <a href='../S/22.html#L137' title='Defined at 137 in ospf6d/ospf6_route.c.'>ospf6_linkstate_prefix</a> (lsa-&gt;header-&gt;adv_router, htonl (0), &amp;abr_prefix);
+<a id='L650' name='L650'></a>  abr_entry = <a href='../S/22.html#L262' title='Defined at 262 in ospf6d/ospf6_route.c.'>ospf6_route_lookup</a> (&amp;abr_prefix, oa-&gt;<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;brouter_table);
+<a id='L651' name='L651'></a>  <strong class='reserved'>if</strong> (abr_entry == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || abr_entry-&gt;path.area_id != oa-&gt;area_id ||
+<a id='L652' name='L652'></a>      <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (abr_entry-&gt;flag, <a href='../S/44.html#L158' title='Defined at 158 in ospf6d/ospf6_route.h.'>OSPF6_ROUTE_REMOVE</a>) ||
+<a id='L653' name='L653'></a>      ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (abr_entry-&gt;path.router_bits, <a href='../S/30.html#L59' title='Defined at 59 in ospf6d/ospf6_proto.h.'>OSPF6_ROUTER_BIT_B</a>))
+<a id='L654' name='L654'></a>    <em class='brace'>{</em>
+<a id='L655' name='L655'></a>      <strong class='reserved'>if</strong> (is_debug)
+<a id='L656' name='L656'></a>        zlog_debug ("ABR router entry does not exist, ignore");
+<a id='L657' name='L657'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L658' name='L658'></a>        <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L659' name='L659'></a>      <strong class='reserved'>return</strong>;
+<a id='L660' name='L660'></a>    <em class='brace'>}</em>
+<a id='L661' name='L661'></a>
+<a id='L662' name='L662'></a>  <em class='comment'>/* Check import list */</em>
+<a id='L663' name='L663'></a>  <strong class='reserved'>if</strong> (<a href='../D/1094.html' title='Multiple defined in 2 places.'>IMPORT_NAME</a> (oa))
+<a id='L664' name='L664'></a>    <em class='brace'>{</em>
+<a id='L665' name='L665'></a>      <strong class='reserved'>if</strong> (<a href='../D/1093.html' title='Multiple defined in 2 places.'>IMPORT_LIST</a> (oa) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L666' name='L666'></a>        <a href='../D/1093.html' title='Multiple defined in 2 places.'>IMPORT_LIST</a> (oa) = <a href='../S/203.html#L362' title='Defined at 362 in lib/filter.c.'>access_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../D/1094.html' title='Multiple defined in 2 places.'>IMPORT_NAME</a> (oa));
+<a id='L667' name='L667'></a>
+<a id='L668' name='L668'></a>      <strong class='reserved'>if</strong> (<a href='../D/1093.html' title='Multiple defined in 2 places.'>IMPORT_LIST</a> (oa))
+<a id='L669' name='L669'></a>        <strong class='reserved'>if</strong> (<a href='../S/203.html#L400' title='Defined at 400 in lib/filter.c.'>access_list_apply</a> (<a href='../D/1093.html' title='Multiple defined in 2 places.'>IMPORT_LIST</a> (oa), &amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>) == FILTER_DENY)
+<a id='L670' name='L670'></a>          <em class='brace'>{</em>
+<a id='L671' name='L671'></a>            <strong class='reserved'>if</strong> (is_debug)
+<a id='L672' name='L672'></a>              zlog_debug ("Prefix was denied by import-list");
+<a id='L673' name='L673'></a>            <strong class='reserved'>if</strong> (old)
+<a id='L674' name='L674'></a>              <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L675' name='L675'></a>            <strong class='reserved'>return</strong>;
+<a id='L676' name='L676'></a>          <em class='brace'>}</em>
+<a id='L677' name='L677'></a>    <em class='brace'>}</em>
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a>  <em class='comment'>/* Check input prefix-list */</em>
+<a id='L680' name='L680'></a>  <strong class='reserved'>if</strong> (<a href='../D/3525.html' title='Multiple defined in 2 places.'>PREFIX_NAME_IN</a> (oa))
+<a id='L681' name='L681'></a>    <em class='brace'>{</em>
+<a id='L682' name='L682'></a>      <strong class='reserved'>if</strong> (<a href='../D/3520.html' title='Multiple defined in 3 places.'>PREFIX_LIST_IN</a> (oa) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L683' name='L683'></a>        <a href='../D/3520.html' title='Multiple defined in 3 places.'>PREFIX_LIST_IN</a> (oa) = <a href='../S/181.html#L130' title='Defined at 130 in lib/plist.c.'>prefix_list_lookup</a> (<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../D/3525.html' title='Multiple defined in 2 places.'>PREFIX_NAME_IN</a> (oa));
+<a id='L684' name='L684'></a>
+<a id='L685' name='L685'></a>      <strong class='reserved'>if</strong> (<a href='../D/3520.html' title='Multiple defined in 3 places.'>PREFIX_LIST_IN</a> (oa))
+<a id='L686' name='L686'></a>        <strong class='reserved'>if</strong> (<a href='../S/181.html#L564' title='Defined at 564 in lib/plist.c.'>prefix_list_apply</a> (<a href='../D/3520.html' title='Multiple defined in 3 places.'>PREFIX_LIST_IN</a> (oa), &amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>) != PREFIX_PERMIT)
+<a id='L687' name='L687'></a>          <em class='brace'>{</em>
+<a id='L688' name='L688'></a>            <strong class='reserved'>if</strong> (is_debug)
+<a id='L689' name='L689'></a>              zlog_debug ("Prefix was denied by prefix-list");
+<a id='L690' name='L690'></a>            <strong class='reserved'>if</strong> (old)
+<a id='L691' name='L691'></a>              <a href='../S/22.html#L578' title='Defined at 578 in ospf6d/ospf6_route.c.'>ospf6_route_remove</a> (old, table);
+<a id='L692' name='L692'></a>            <strong class='reserved'>return</strong>;
+<a id='L693' name='L693'></a>          <em class='brace'>}</em>
+<a id='L694' name='L694'></a>    <em class='brace'>}</em>
+<a id='L695' name='L695'></a>
+<a id='L696' name='L696'></a>  <em class='comment'>/* (5),(6),(7) the path preference is handled by the sorting</em>
+<a id='L697' name='L697'></a><em class='comment'>     in the routing table. Always install the path by substituting</em>
+<a id='L698' name='L698'></a><em class='comment'>     old route (if any). */</em>
+<a id='L699' name='L699'></a>  <strong class='reserved'>if</strong> (old)
+<a id='L700' name='L700'></a>    route = <a href='../S/22.html#L191' title='Defined at 191 in ospf6d/ospf6_route.c.'>ospf6_route_copy</a> (old);
+<a id='L701' name='L701'></a>  <strong class='reserved'>else</strong>
+<a id='L702' name='L702'></a>    route = <a href='../S/22.html#L177' title='Defined at 177 in ospf6d/ospf6_route.c.'>ospf6_route_create</a> ();
+<a id='L703' name='L703'></a>
+<a id='L704' name='L704'></a>  route-&gt;type = type;
+<a id='L705' name='L705'></a>  route-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L706' name='L706'></a>  route-&gt;path.origin.type = lsa-&gt;header-&gt;type;
+<a id='L707' name='L707'></a>  route-&gt;path.origin.id = lsa-&gt;header-&gt;id;
+<a id='L708' name='L708'></a>  route-&gt;path.origin.adv_router = lsa-&gt;header-&gt;adv_router;
+<a id='L709' name='L709'></a>  route-&gt;path.router_bits = router_bits;
+<a id='L710' name='L710'></a>  route-&gt;path.options[0] = options[0];
+<a id='L711' name='L711'></a>  route-&gt;path.options[1] = options[1];
+<a id='L712' name='L712'></a>  route-&gt;path.options[2] = options[2];
+<a id='L713' name='L713'></a>  route-&gt;path.prefix_options = prefix_options;
+<a id='L714' name='L714'></a>  route-&gt;path.area_id = oa-&gt;area_id;
+<a id='L715' name='L715'></a>  route-&gt;path.type = <a href='../S/44.html#L104' title='Defined at 104 in ospf6d/ospf6_route.h.'>OSPF6_PATH_TYPE_INTER</a>;
+<a id='L716' name='L716'></a>  route-&gt;path.cost = abr_entry-&gt;path.cost + cost;
+<a id='L717' name='L717'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/44.html#L25' title='Defined at 25 in ospf6d/ospf6_route.h.'>OSPF6_MULTI_PATH_LIMIT</a>; i++)
+<a id='L718' name='L718'></a>    route-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>[i] = abr_entry-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>[i];
+<a id='L719' name='L719'></a>
+<a id='L720' name='L720'></a>  <strong class='reserved'>if</strong> (is_debug)
+<a id='L721' name='L721'></a>    zlog_debug ("Install route: %s", buf);
+<a id='L722' name='L722'></a>  <a href='../S/22.html#L356' title='Defined at 356 in ospf6d/ospf6_route.c.'>ospf6_route_add</a> (route, table);
+<a id='L723' name='L723'></a><em class='brace'>}</em>
+<a id='L724' name='L724'></a>
+<a id='L725' name='L725'></a><strong class='reserved'>void</strong>
+<a id='L726' name='L726'></a><a href='../R/7462.html' title='Multiple referred from 3 places.'>ospf6_abr_examin_brouter</a> (<a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> router_id)
+<a id='L727' name='L727'></a><em class='brace'>{</em>
+<a id='L728' name='L728'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa;
+<a id='L729' name='L729'></a>  <strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa;
+<a id='L730' name='L730'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L731' name='L731'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L732' name='L732'></a>
+<a id='L733' name='L733'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>-&gt;area_list, node, nnode, oa))
+<a id='L734' name='L734'></a>    <em class='brace'>{</em>
+<a id='L735' name='L735'></a>      type = htons (<a href='../S/4.html#L58' title='Defined at 58 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_ROUTER</a>);
+<a id='L736' name='L736'></a>      <strong class='reserved'>for</strong> (lsa = <a href='../S/6.html#L368' title='Defined at 368 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_router_head</a> (type, router_id, oa-&gt;lsdb); lsa;
+<a id='L737' name='L737'></a>           lsa = <a href='../S/6.html#L406' title='Defined at 406 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_router_next</a> (type, router_id, lsa))
+<a id='L738' name='L738'></a>        <a href='../S/38.html#L526' title='Defined at 526 in ospf6d/ospf6_abr.c.'>ospf6_abr_examin_summary</a> (lsa, oa);
+<a id='L739' name='L739'></a>
+<a id='L740' name='L740'></a>      type = htons (<a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>);
+<a id='L741' name='L741'></a>      <strong class='reserved'>for</strong> (lsa = <a href='../S/6.html#L368' title='Defined at 368 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_router_head</a> (type, router_id, oa-&gt;lsdb); lsa;
+<a id='L742' name='L742'></a>           lsa = <a href='../S/6.html#L406' title='Defined at 406 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_router_next</a> (type, router_id, lsa))
+<a id='L743' name='L743'></a>        <a href='../S/38.html#L526' title='Defined at 526 in ospf6d/ospf6_abr.c.'>ospf6_abr_examin_summary</a> (lsa, oa);
+<a id='L744' name='L744'></a>    <em class='brace'>}</em>
+<a id='L745' name='L745'></a><em class='brace'>}</em>
+<a id='L746' name='L746'></a>
+<a id='L747' name='L747'></a><strong class='reserved'>void</strong>
+<a id='L748' name='L748'></a><a href='../R/7468.html' title='Multiple referred from 5 places.'>ospf6_abr_reimport</a> (<strong class='reserved'>struct</strong> <a href='../S/35.html#L27' title='Defined at 27 in ospf6d/ospf6_area.h.'>ospf6_area</a> *oa)
+<a id='L749' name='L749'></a><em class='brace'>{</em>
+<a id='L750' name='L750'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa;
+<a id='L751' name='L751'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type;
+<a id='L752' name='L752'></a>
+<a id='L753' name='L753'></a>  type = htons (<a href='../S/4.html#L58' title='Defined at 58 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_ROUTER</a>);
+<a id='L754' name='L754'></a>  <strong class='reserved'>for</strong> (lsa = <a href='../S/6.html#L425' title='Defined at 425 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_head</a> (type, oa-&gt;lsdb); lsa;
+<a id='L755' name='L755'></a>       lsa = <a href='../S/6.html#L460' title='Defined at 460 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_next</a> (type, lsa))
+<a id='L756' name='L756'></a>    <a href='../S/38.html#L526' title='Defined at 526 in ospf6d/ospf6_abr.c.'>ospf6_abr_examin_summary</a> (lsa, oa);
+<a id='L757' name='L757'></a>
+<a id='L758' name='L758'></a>  type = htons (<a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>);
+<a id='L759' name='L759'></a>  <strong class='reserved'>for</strong> (lsa = <a href='../S/6.html#L425' title='Defined at 425 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_head</a> (type, oa-&gt;lsdb); lsa;
+<a id='L760' name='L760'></a>       lsa = <a href='../S/6.html#L460' title='Defined at 460 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_type_next</a> (type, lsa))
+<a id='L761' name='L761'></a>    <a href='../S/38.html#L526' title='Defined at 526 in ospf6d/ospf6_abr.c.'>ospf6_abr_examin_summary</a> (lsa, oa);
+<a id='L762' name='L762'></a><em class='brace'>}</em>
+<a id='L763' name='L763'></a>
+<a id='L764' name='L764'></a>
+<a id='L765' name='L765'></a>
+<a id='L766' name='L766'></a><em class='comment'>/* Display functions */</em>
+<a id='L767' name='L767'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L768' name='L768'></a><a href='../S/38.html#L858' title='Referred from 858 in ospf6d/ospf6_abr.c.'>ospf6_inter_area_prefix_lsa_show</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L769' name='L769'></a><em class='brace'>{</em>
+<a id='L770' name='L770'></a>  <strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a> *prefix_lsa;
+<a id='L771' name='L771'></a>  <strong class='reserved'>struct</strong> in6_addr in6;
+<a id='L772' name='L772'></a>  <strong class='reserved'>char</strong> buf[64];
+<a id='L773' name='L773'></a>
+<a id='L774' name='L774'></a>  prefix_lsa = (<strong class='reserved'>struct</strong> <a href='../S/39.html#L39' title='Defined at 39 in ospf6d/ospf6_abr.h.'>ospf6_inter_prefix_lsa</a> *)
+<a id='L775' name='L775'></a>    <a href='../S/4.html#L94' title='Defined at 94 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADER_END</a> (lsa-&gt;header);
+<a id='L776' name='L776'></a>
+<a id='L777' name='L777'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "     Metric: %lu%s",
+<a id='L778' name='L778'></a>           (u_long) <a href='../S/39.html#L55' title='Defined at 55 in ospf6d/ospf6_abr.h.'>OSPF6_ABR_SUMMARY_METRIC</a> (prefix_lsa), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L779' name='L779'></a>
+<a id='L780' name='L780'></a>  <a href='../S/27.html#L55' title='Defined at 55 in ospf6d/ospf6_proto.c.'>ospf6_prefix_options_printbuf</a> (prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefix_options,
+<a id='L781' name='L781'></a>                                 buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L782' name='L782'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "     Prefix Options: %s%s", buf, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L783' name='L783'></a>
+<a id='L784' name='L784'></a>  <a href='../S/30.html#L109' title='Defined at 109 in ospf6d/ospf6_proto.h.'>ospf6_prefix_in6_addr</a> (&amp;in6, &amp;prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L785' name='L785'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET6, &amp;in6, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L786' name='L786'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "     Prefix: %s/%d%s", buf,
+<a id='L787' name='L787'></a>           prefix_lsa-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefix_length, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L788' name='L788'></a>
+<a id='L789' name='L789'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L790' name='L790'></a><em class='brace'>}</em>
+<a id='L791' name='L791'></a>
+<a id='L792' name='L792'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L793' name='L793'></a><a href='../S/38.html#L865' title='Referred from 865 in ospf6d/ospf6_abr.c.'>ospf6_inter_area_router_lsa_show</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L794' name='L794'></a><em class='brace'>{</em>
+<a id='L795' name='L795'></a>  <strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a> *<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>;
+<a id='L796' name='L796'></a>  <strong class='reserved'>char</strong> buf[64];
+<a id='L797' name='L797'></a>
+<a id='L798' name='L798'></a>  <a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a> = (<strong class='reserved'>struct</strong> <a href='../S/39.html#L47' title='Defined at 47 in ospf6d/ospf6_abr.h.'>ospf6_inter_router_lsa</a> *)
+<a id='L799' name='L799'></a>    <a href='../S/4.html#L94' title='Defined at 94 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADER_END</a> (lsa-&gt;header);
+<a id='L800' name='L800'></a>
+<a id='L801' name='L801'></a>  <a href='../S/27.html#L72' title='Defined at 72 in ospf6d/ospf6_proto.c.'>ospf6_options_printbuf</a> (<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;options, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L802' name='L802'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "     Options: %s%s", buf, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L803' name='L803'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "     Metric: %lu%s",
+<a id='L804' name='L804'></a>           (u_long) <a href='../S/39.html#L55' title='Defined at 55 in ospf6d/ospf6_abr.h.'>OSPF6_ABR_SUMMARY_METRIC</a> (<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L805' name='L805'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;<a href='../S/733.html#L164' title='Defined at 164 in ospfd/ospf_lsa.h.'>router_lsa</a>-&gt;router_id, buf, <strong class='reserved'>sizeof</strong> (buf));
+<a id='L806' name='L806'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "     Destination Router ID: %s%s", buf, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L807' name='L807'></a>
+<a id='L808' name='L808'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L809' name='L809'></a><em class='brace'>}</em>
+<a id='L810' name='L810'></a>
+<a id='L811' name='L811'></a><em class='comment'>/* Debug commands */</em>
+<a id='L812' name='L812'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (debug_ospf6_abr,
+<a id='L813' name='L813'></a>       debug_ospf6_abr_cmd,
+<a id='L814' name='L814'></a>       "debug ospf6 abr",
+<a id='L815' name='L815'></a>       <a href='../S/214.html#L293' title='Defined at 293 in lib/command.h.'>DEBUG_STR</a>
+<a id='L816' name='L816'></a>       <a href='../S/214.html#L307' title='Defined at 307 in lib/command.h.'>OSPF6_STR</a>
+<a id='L817' name='L817'></a>       "Debug OSPFv3 ABR function\n"
+<a id='L818' name='L818'></a>      )
+<a id='L819' name='L819'></a><em class='brace'>{</em>
+<a id='L820' name='L820'></a>  <a href='../S/39.html#L30' title='Defined at 30 in ospf6d/ospf6_abr.h.'>OSPF6_DEBUG_ABR_ON</a> ();
+<a id='L821' name='L821'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L822' name='L822'></a><em class='brace'>}</em>
+<a id='L823' name='L823'></a>
+<a id='L824' name='L824'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_debug_ospf6_abr,
+<a id='L825' name='L825'></a>       no_debug_ospf6_abr_cmd,
+<a id='L826' name='L826'></a>       "no debug ospf6 abr",
+<a id='L827' name='L827'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L828' name='L828'></a>       <a href='../S/214.html#L293' title='Defined at 293 in lib/command.h.'>DEBUG_STR</a>
+<a id='L829' name='L829'></a>       <a href='../S/214.html#L307' title='Defined at 307 in lib/command.h.'>OSPF6_STR</a>
+<a id='L830' name='L830'></a>       "Debug OSPFv3 ABR function\n"
+<a id='L831' name='L831'></a>      )
+<a id='L832' name='L832'></a><em class='brace'>{</em>
+<a id='L833' name='L833'></a>  <a href='../S/39.html#L32' title='Defined at 32 in ospf6d/ospf6_abr.h.'>OSPF6_DEBUG_ABR_OFF</a> ();
+<a id='L834' name='L834'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L835' name='L835'></a><em class='brace'>}</em>
+<a id='L836' name='L836'></a>
+<a id='L837' name='L837'></a><strong class='reserved'>int</strong>
+<a id='L838' name='L838'></a><a href='../R/5424.html' title='Multiple referred from 2 places.'>config_write_ospf6_debug_abr</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L839' name='L839'></a><em class='brace'>{</em>
+<a id='L840' name='L840'></a>  <strong class='reserved'>if</strong> (<a href='../S/39.html#L34' title='Defined at 34 in ospf6d/ospf6_abr.h.'>IS_OSPF6_DEBUG_ABR</a>)
+<a id='L841' name='L841'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "debug ospf6 abr%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L842' name='L842'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L843' name='L843'></a><em class='brace'>}</em>
+<a id='L844' name='L844'></a>
+<a id='L845' name='L845'></a><strong class='reserved'>void</strong>
+<a id='L846' name='L846'></a><a href='../R/6033.html' title='Multiple referred from 2 places.'>install_element_ospf6_debug_abr</a> (<strong class='reserved'>void</strong>)
+<a id='L847' name='L847'></a><em class='brace'>{</em>
+<a id='L848' name='L848'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;debug_ospf6_abr_cmd);
+<a id='L849' name='L849'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;no_debug_ospf6_abr_cmd);
+<a id='L850' name='L850'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;debug_ospf6_abr_cmd);
+<a id='L851' name='L851'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_debug_ospf6_abr_cmd);
+<a id='L852' name='L852'></a><em class='brace'>}</em>
+<a id='L853' name='L853'></a>
+<a id='L854' name='L854'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> inter_prefix_handler =
+<a id='L855' name='L855'></a><em class='brace'>{</em>
+<a id='L856' name='L856'></a>  <a href='../S/4.html#L57' title='Defined at 57 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_PREFIX</a>,
+<a id='L857' name='L857'></a>  "Inter-Prefix",
+<a id='L858' name='L858'></a>  <a href='../S/38.html#L768' title='Defined at 768 in ospf6d/ospf6_abr.c.'>ospf6_inter_area_prefix_lsa_show</a>
+<a id='L859' name='L859'></a><em class='brace'>}</em>;
+<a id='L860' name='L860'></a>
+<a id='L861' name='L861'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> inter_router_handler =
+<a id='L862' name='L862'></a><em class='brace'>{</em>
+<a id='L863' name='L863'></a>  <a href='../S/4.html#L58' title='Defined at 58 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_INTER_ROUTER</a>,
+<a id='L864' name='L864'></a>  "Inter-Router",
+<a id='L865' name='L865'></a>  <a href='../S/38.html#L793' title='Defined at 793 in ospf6d/ospf6_abr.c.'>ospf6_inter_area_router_lsa_show</a>
+<a id='L866' name='L866'></a><em class='brace'>}</em>;
+<a id='L867' name='L867'></a>
+<a id='L868' name='L868'></a><strong class='reserved'>void</strong>
+<a id='L869' name='L869'></a><a href='../R/7464.html' title='Multiple referred from 2 places.'>ospf6_abr_init</a> (<strong class='reserved'>void</strong>)
+<a id='L870' name='L870'></a><em class='brace'>{</em>
+<a id='L871' name='L871'></a>  <a href='../S/14.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.c.'>ospf6_install_lsa_handler</a> (&amp;inter_prefix_handler);
+<a id='L872' name='L872'></a>  <a href='../S/14.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.c.'>ospf6_install_lsa_handler</a> (&amp;inter_router_handler);
+<a id='L873' name='L873'></a><em class='brace'>}</em>
+<a id='L874' name='L874'></a>
+<a id='L875' name='L875'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L55'>[^]</a><a href='#L869'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

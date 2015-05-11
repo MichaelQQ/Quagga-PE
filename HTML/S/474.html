@@ -1,0 +1,525 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/topology/sprand.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/<a href='../files/1020.html'>topology</a>/sprand.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L14'>[^]</a>[v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L14' title='Defined at 14.'>main</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;values.h&gt;
+<a id='L5' name='L5'></a>
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "random.c"
+<a id='L7' name='L7'></a>
+<a id='L8' name='L8'></a><em class='sharp'>#define</em> <a href='../R/574.html' title='Multiple referred from 6 places.'>DASH</a> '-'
+<a id='L9' name='L9'></a><em class='sharp'>#define</em> <a href='../R/3754.html' title='Multiple referred from 4 places.'>VERY_FAR</a> 100000000
+<a id='L10' name='L10'></a>
+<a id='L11' name='L11'></a><em class='comment'>/* generator of random networks for the shortest paths problem;</em>
+<a id='L12' name='L12'></a><em class='comment'>   extended DIMACS format for output */</em>
+<a id='L13' name='L13'></a>
+<a id='L14' name='L14'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a> ( argc, argv )
+<a id='L15' name='L15'></a>
+<a id='L16' name='L16'></a><strong class='reserved'>int</strong> argc;
+<a id='L17' name='L17'></a><strong class='reserved'>char</strong>* argv[];
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><em class='brace'>{</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><strong class='reserved'>char</strong>   args[30];
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><strong class='reserved'>long</strong>   n,
+<a id='L24' name='L24'></a>       n0,
+<a id='L25' name='L25'></a>       <a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a>,
+<a id='L26' name='L26'></a>       i,
+<a id='L27' name='L27'></a>       i0,
+<a id='L28' name='L28'></a>       j,
+<a id='L29' name='L29'></a>       dij;
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><strong class='reserved'>long</strong>   m,
+<a id='L32' name='L32'></a>       m0,
+<a id='L33' name='L33'></a>       mc,
+<a id='L34' name='L34'></a>       k;
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><strong class='reserved'>long</strong>   *p,
+<a id='L37' name='L37'></a>       p_t,
+<a id='L38' name='L38'></a>       l,
+<a id='L39' name='L39'></a>       lx;
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><strong class='reserved'>long</strong>   seed,
+<a id='L42' name='L42'></a>       seed1,
+<a id='L43' name='L43'></a>       seed2;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><strong class='reserved'>int</strong>    ext=0;
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a>FILE   *fout;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><em class='comment'>/* variables for lengths generating */</em>
+<a id='L50' name='L50'></a><em class='comment'>/* initialized by default values */</em>
+<a id='L51' name='L51'></a><strong class='reserved'>int</strong>    l_f = 0, ll_f = 0, lm_f = 0, ln_f = 0, ls_f = 0;
+<a id='L52' name='L52'></a><strong class='reserved'>long</strong>   ll = 10000,    <em class='comment'>/* length of the interval */</em>
+<a id='L53' name='L53'></a>       lm = 0;        <em class='comment'>/* minimal bound of the interval */</em>
+<a id='L54' name='L54'></a><strong class='reserved'>double</strong> ln = 0,        <em class='comment'>/* l += ln * |i-j| */</em> 
+<a id='L55' name='L55'></a>       ls = 0;        <em class='comment'>/* l += ls * |i-j|^2 */</em>
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><em class='comment'>/* variables for connecting cycle(s) */</em>
+<a id='L58' name='L58'></a><strong class='reserved'>int</strong>    c_f = 0, cl_f = 0, ch_f = 0, c_random = 1;
+<a id='L59' name='L59'></a><strong class='reserved'>long</strong>   cl = 1;        <em class='comment'>/* length of cycle arc */</em>
+<a id='L60' name='L60'></a><strong class='reserved'>long</strong>   ch;            <em class='comment'>/* number of arcs in the cycle </em>
+<a id='L61' name='L61'></a><em class='comment'>                         n - by default */</em>
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='comment'>/* variables for artifical source */</em>
+<a id='L64' name='L64'></a><strong class='reserved'>int</strong>    s_f = 0, sl_f = 0, sm_f = 0;
+<a id='L65' name='L65'></a><strong class='reserved'>long</strong>   sl   = <a href='../D/4458.html' title='Multiple defined in 3 places.'>VERY_FAR</a>, <em class='comment'>/* upper bound of artifical arc */</em>
+<a id='L66' name='L66'></a>       sm,              <em class='comment'>/* lower bound of artifical arc */</em>
+<a id='L67' name='L67'></a>       s;  
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><em class='comment'>/* variables for potentials */</em>
+<a id='L70' name='L70'></a><strong class='reserved'>int</strong>    p_f = 0, pl_f = 0, pm_f = 0, pn_f = 0, ps_f = 0,
+<a id='L71' name='L71'></a>       pa_f = 0, pap_f = 0, pac_f = 0;
+<a id='L72' name='L72'></a><strong class='reserved'>long</strong>   pl,            <em class='comment'>/* length of the interval */</em>
+<a id='L73' name='L73'></a>       pm;            <em class='comment'>/* minimal bound of the interval */</em>
+<a id='L74' name='L74'></a><strong class='reserved'>double</strong> pn = 0,        <em class='comment'>/* l += ln * |i-j| */</em> 
+<a id='L75' name='L75'></a>       ps = 0,        <em class='comment'>/* l += ls * |i-j|^2 */</em>
+<a id='L76' name='L76'></a>       pap = 0,       <em class='comment'>/* part of nodes with alternative dustribution */</em>
+<a id='L77' name='L77'></a>       pac = -1;      <em class='comment'>/* multiplier for alternative distribution */</em>
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><strong class='reserved'>int</strong> np;               <em class='comment'>/* number of parameter parsing now */</em>
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a><em class='sharp'>#define</em> <a href='../R/3013.html' title='Multiple referred from 12 places.'>PRINT_ARC</a>( i, j, length )\
+<a id='L82' name='L82'></a><em class='brace'>{</em>\
+<a id='L83' name='L83'></a>l = length;\
+<a id='L84' name='L84'></a><strong class='reserved'>if</strong> ( p_f ) l += ( p[i] - p[j] );\
+<a id='L85' name='L85'></a>printf ("a %8ld %8ld %12ld\n", i, j, l );\
+<a id='L86' name='L86'></a><em class='brace'>}</em>
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a>  <em class='comment'>/* parsing  parameters */</em>
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><strong class='reserved'>if</strong> ( argc &lt; 2 ) <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a>np = 0;
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>strcpy ( args, argv[1] );
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  <strong class='reserved'>if</strong> ( ( args[0] == <a href='../D/657.html' title='Multiple defined in 3 places.'>DASH</a> ) &amp;&amp; ( args[1] == 'h')
+<a id='L97' name='L97'></a>     )
+<a id='L98' name='L98'></a>      <strong class='reserved'>goto</strong> <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>;
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a><strong class='reserved'>if</strong> ( argc &lt; 4 ) <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><em class='comment'>/* first parameter - number of nodes */</em>
+<a id='L103' name='L103'></a>np = 1;
+<a id='L104' name='L104'></a><strong class='reserved'>if</strong> ( ( n = atoi ( argv[1] ) )  &lt;  2  )  <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><em class='comment'>/* second parameter - number of arcs */</em>
+<a id='L107' name='L107'></a>np = 2;
+<a id='L108' name='L108'></a><strong class='reserved'>if</strong> ( ( m = atoi ( argv[2] ) )  &lt;  n  )  <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a><em class='comment'>/* third parameter - seed */</em>
+<a id='L111' name='L111'></a>np=3;
+<a id='L112' name='L112'></a><strong class='reserved'>if</strong> ( ( seed = atoi ( argv[3] ) )  &lt;=  0  )  <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a><em class='comment'>/* other parameters */</em>
+<a id='L115' name='L115'></a>
+<a id='L116' name='L116'></a><strong class='reserved'>for</strong> ( np = 4; np &lt; argc; np ++ )
+<a id='L117' name='L117'></a>  <em class='brace'>{</em>
+<a id='L118' name='L118'></a>    strcpy ( args, argv[np] );
+<a id='L119' name='L119'></a>    <strong class='reserved'>if</strong> ( args[0] != <a href='../D/657.html' title='Multiple defined in 3 places.'>DASH</a> ) <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>    <strong class='reserved'>switch</strong> ( args[1] )
+<a id='L122' name='L122'></a>      <em class='brace'>{</em>
+<a id='L123' name='L123'></a>
+<a id='L124' name='L124'></a>      <strong class='reserved'>case</strong> 'l' : <em class='comment'>/* an interval for arc length */</em>
+<a id='L125' name='L125'></a>        l_f = 1;
+<a id='L126' name='L126'></a>        <strong class='reserved'>switch</strong> ( args[2] )
+<a id='L127' name='L127'></a>          <em class='brace'>{</em> 
+<a id='L128' name='L128'></a>          <strong class='reserved'>case</strong> 'l': <em class='comment'>/* length of the interval */</em>
+<a id='L129' name='L129'></a>            ll_f = 1;
+<a id='L130' name='L130'></a>            ll  =  (<strong class='reserved'>long</strong>) atof ( &amp;args[3] );
+<a id='L131' name='L131'></a>            <strong class='reserved'>break</strong>;
+<a id='L132' name='L132'></a>          <strong class='reserved'>case</strong> 'm': <em class='comment'>/* minimal bound */</em>
+<a id='L133' name='L133'></a>            lm_f = 1;
+<a id='L134' name='L134'></a>            lm  = (<strong class='reserved'>long</strong> ) atof ( &amp;args[3] );
+<a id='L135' name='L135'></a>            <strong class='reserved'>break</strong>;
+<a id='L136' name='L136'></a>          <strong class='reserved'>case</strong> 'n': <em class='comment'>/* additional length: l*|i-j| */</em>
+<a id='L137' name='L137'></a>            ln_f = 1;
+<a id='L138' name='L138'></a>            ln  = atof ( &amp;args[3] );
+<a id='L139' name='L139'></a>            <strong class='reserved'>break</strong>;
+<a id='L140' name='L140'></a>          <strong class='reserved'>case</strong> 's': <em class='comment'>/* additional length: l*|i-j|^2 */</em>
+<a id='L141' name='L141'></a>            ls_f = 1;
+<a id='L142' name='L142'></a>            ls  = atof ( &amp;args[3] );
+<a id='L143' name='L143'></a>            <strong class='reserved'>break</strong>;
+<a id='L144' name='L144'></a>          <strong class='reserved'>default</strong>:  <em class='comment'>/* unknown switch  value */</em>
+<a id='L145' name='L145'></a>            <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L146' name='L146'></a>          <em class='brace'>}</em>
+<a id='L147' name='L147'></a>        <strong class='reserved'>break</strong>;
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>      <strong class='reserved'>case</strong> 'c' : <em class='comment'>/* connecting cycle(s) */</em>
+<a id='L150' name='L150'></a>        c_f = 1;
+<a id='L151' name='L151'></a>        <strong class='reserved'>switch</strong> ( args[2] )
+<a id='L152' name='L152'></a>          <em class='brace'>{</em> 
+<a id='L153' name='L153'></a>          <strong class='reserved'>case</strong> 'l':
+<a id='L154' name='L154'></a>            c_random = 0;
+<a id='L155' name='L155'></a>            cl_f = 1;
+<a id='L156' name='L156'></a>            cl  =  (<strong class='reserved'>long</strong>) atof ( &amp;args[3] );
+<a id='L157' name='L157'></a>            <strong class='reserved'>if</strong> ( cl &lt; 0 ) <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L158' name='L158'></a>            <strong class='reserved'>break</strong>;
+<a id='L159' name='L159'></a>          <strong class='reserved'>case</strong> 'h':
+<a id='L160' name='L160'></a>            ch_f = 1;
+<a id='L161' name='L161'></a>            ch  =  (<strong class='reserved'>long</strong>) atof ( &amp;args[3] );
+<a id='L162' name='L162'></a>            <strong class='reserved'>if</strong> ( ch &lt; 2 || ch &gt; n ) <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L163' name='L163'></a>            <strong class='reserved'>break</strong>;
+<a id='L164' name='L164'></a>          <strong class='reserved'>default</strong>:  <em class='comment'>/* unknown switch  value */</em>
+<a id='L165' name='L165'></a>            <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L166' name='L166'></a>          <em class='brace'>}</em>
+<a id='L167' name='L167'></a>        <strong class='reserved'>break</strong>;
+<a id='L168' name='L168'></a>
+<a id='L169' name='L169'></a>      <strong class='reserved'>case</strong> 's' : <em class='comment'>/* additional source */</em>
+<a id='L170' name='L170'></a>        s_f = 1;
+<a id='L171' name='L171'></a>        <strong class='reserved'>if</strong> ( strlen ( args ) &gt; 2 )
+<a id='L172' name='L172'></a>        <em class='brace'>{</em>  
+<a id='L173' name='L173'></a>        <strong class='reserved'>switch</strong> ( args[2] )
+<a id='L174' name='L174'></a>          <em class='brace'>{</em> 
+<a id='L175' name='L175'></a>          <strong class='reserved'>case</strong> 'l': <em class='comment'>/* upper bound of art. arc */</em>
+<a id='L176' name='L176'></a>            sl_f = 1;
+<a id='L177' name='L177'></a>            sl  =  (<strong class='reserved'>long</strong>) atof ( &amp;args[3] );
+<a id='L178' name='L178'></a>            <strong class='reserved'>break</strong>;
+<a id='L179' name='L179'></a>          <strong class='reserved'>case</strong> 'm': <em class='comment'>/* lower bound of art. arc */</em>
+<a id='L180' name='L180'></a>            sm_f = 1;
+<a id='L181' name='L181'></a>            sm  =  (<strong class='reserved'>long</strong>) atof ( &amp;args[3] );
+<a id='L182' name='L182'></a>            <strong class='reserved'>break</strong>;
+<a id='L183' name='L183'></a>          <strong class='reserved'>default</strong>:  <em class='comment'>/* unknown switch  value */</em>
+<a id='L184' name='L184'></a>            <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L185' name='L185'></a>          <em class='brace'>}</em>
+<a id='L186' name='L186'></a>         <em class='brace'>}</em>
+<a id='L187' name='L187'></a>        <strong class='reserved'>break</strong>;
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a>      <strong class='reserved'>case</strong> 'p' : <em class='comment'>/* potentials */</em>
+<a id='L190' name='L190'></a>        p_f = 1;
+<a id='L191' name='L191'></a>        <strong class='reserved'>if</strong> ( strlen ( args ) &gt; 2 )
+<a id='L192' name='L192'></a>        <em class='brace'>{</em>  
+<a id='L193' name='L193'></a>        <strong class='reserved'>switch</strong> ( args[2] )
+<a id='L194' name='L194'></a>          <em class='brace'>{</em> 
+<a id='L195' name='L195'></a>          <strong class='reserved'>case</strong> 'l': <em class='comment'>/* length of the interval */</em>
+<a id='L196' name='L196'></a>            pl_f = 1;
+<a id='L197' name='L197'></a>            pl  =  (<strong class='reserved'>long</strong>) atof ( &amp;args[3] );
+<a id='L198' name='L198'></a>            <strong class='reserved'>break</strong>;
+<a id='L199' name='L199'></a>          <strong class='reserved'>case</strong> 'm': <em class='comment'>/* minimal bound */</em>
+<a id='L200' name='L200'></a>            pm_f = 1;
+<a id='L201' name='L201'></a>            pm  = (<strong class='reserved'>long</strong> ) atof ( &amp;args[3] );
+<a id='L202' name='L202'></a>            <strong class='reserved'>break</strong>;
+<a id='L203' name='L203'></a>          <strong class='reserved'>case</strong> 'n': <em class='comment'>/* additional length: l*|i-j| */</em>
+<a id='L204' name='L204'></a>            pn_f = 1;
+<a id='L205' name='L205'></a>            pn  = atof ( &amp;args[3] );
+<a id='L206' name='L206'></a>            <strong class='reserved'>break</strong>;
+<a id='L207' name='L207'></a>          <strong class='reserved'>case</strong> 's': <em class='comment'>/* additional length: l*|i-j|^2 */</em>
+<a id='L208' name='L208'></a>            ps_f = 1;
+<a id='L209' name='L209'></a>            ps  = atof ( &amp;args[3] );
+<a id='L210' name='L210'></a>            <strong class='reserved'>break</strong>;
+<a id='L211' name='L211'></a>          <strong class='reserved'>case</strong> 'a': <em class='comment'>/* bipolar distribution */</em>
+<a id='L212' name='L212'></a>            pa_f = 1;
+<a id='L213' name='L213'></a>            <strong class='reserved'>switch</strong> ( args[3] )
+<a id='L214' name='L214'></a>              <em class='brace'>{</em>
+<a id='L215' name='L215'></a>              <strong class='reserved'>case</strong> 'p': <em class='comment'>/* % of alternative potentials */</em>
+<a id='L216' name='L216'></a>                pap_f = 1;
+<a id='L217' name='L217'></a>                pap  = atof ( &amp;args[4] );
+<a id='L218' name='L218'></a>                <strong class='reserved'>if</strong> ( pap &lt; 0   ) pap = 0;
+<a id='L219' name='L219'></a>                <strong class='reserved'>if</strong> ( pap &gt; 100 ) pap = 100;
+<a id='L220' name='L220'></a>                pap /= 100;
+<a id='L221' name='L221'></a>                <strong class='reserved'>break</strong>;
+<a id='L222' name='L222'></a>              <strong class='reserved'>case</strong> 'c': <em class='comment'>/* multiplier */</em>
+<a id='L223' name='L223'></a>                pac_f = 1;
+<a id='L224' name='L224'></a>                pac = atof ( &amp;args[4] );
+<a id='L225' name='L225'></a>                <strong class='reserved'>break</strong>;
+<a id='L226' name='L226'></a>              <strong class='reserved'>default</strong>: <em class='comment'>/* unknown switch value */</em>
+<a id='L227' name='L227'></a>                <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L228' name='L228'></a>              <em class='brace'>}</em>
+<a id='L229' name='L229'></a>            <strong class='reserved'>break</strong>;
+<a id='L230' name='L230'></a>          <strong class='reserved'>default</strong>:  <em class='comment'>/* unknown switch  value */</em>
+<a id='L231' name='L231'></a>            <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L232' name='L232'></a>          <em class='brace'>}</em>
+<a id='L233' name='L233'></a>      <em class='brace'>}</em>
+<a id='L234' name='L234'></a>        <strong class='reserved'>break</strong>;
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a>      <strong class='reserved'>default</strong>  : <em class='comment'>/* unknoun case */</em>
+<a id='L237' name='L237'></a>        <strong class='reserved'>goto</strong> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>;
+<a id='L238' name='L238'></a>      <em class='brace'>}</em>
+<a id='L239' name='L239'></a>  <em class='brace'>}</em>
+<a id='L240' name='L240'></a>   
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a><em class='comment'>/* ----- ajusting parameters ----- */</em>
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>n0 = n; m0 = m;
+<a id='L245' name='L245'></a>
+<a id='L246' name='L246'></a><em class='comment'>/* length parameters */</em>
+<a id='L247' name='L247'></a><strong class='reserved'>if</strong> ( ll &lt; lm ) <em class='brace'>{</em> lx = ll; ll = lm; lm = lx; <em class='brace'>}</em>
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a><em class='comment'>/* potential parameters */</em>
+<a id='L250' name='L250'></a><strong class='reserved'>if</strong> ( p_f )
+<a id='L251' name='L251'></a>  <em class='brace'>{</em>
+<a id='L252' name='L252'></a>   <strong class='reserved'>if</strong> ( ! pl_f ) pl = ll;
+<a id='L253' name='L253'></a>   <strong class='reserved'>if</strong> ( ! pm_f ) pm = lm;
+<a id='L254' name='L254'></a>   <strong class='reserved'>if</strong> ( pl &lt; pm ) <em class='brace'>{</em> lx = pl; pl = pm; pm = lx; <em class='brace'>}</em>
+<a id='L255' name='L255'></a>  <em class='brace'>}</em>
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a><em class='comment'>/* path(s) parameters */</em>
+<a id='L258' name='L258'></a><strong class='reserved'>if</strong> ( ! ch_f ) ch = n;
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a>mc = n + (n-2) / (ch-1);
+<a id='L261' name='L261'></a><strong class='reserved'>if</strong> ( mc &gt; m ) 
+<a id='L262' name='L262'></a>  <em class='brace'>{</em> fprintf ( stderr,
+<a id='L263' name='L263'></a>              "Error: not enough arcs for generating connecting cycle(s)\n" );
+<a id='L264' name='L264'></a>    exit (4);
+<a id='L265' name='L265'></a>  <em class='brace'>}</em>
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a> <em class='comment'>/* artifical source parameters */</em>
+<a id='L268' name='L268'></a><strong class='reserved'>if</strong> ( s_f )          
+<a id='L269' name='L269'></a>   <em class='brace'>{</em> m0 += n; n0 ++ ; 
+<a id='L270' name='L270'></a>     <strong class='reserved'>if</strong> ( ! sm_f ) sm = sl;
+<a id='L271' name='L271'></a>     <strong class='reserved'>if</strong> ( sl &lt; sm ) <em class='brace'>{</em> lx = sl; sl = sm; sm = lx; <em class='brace'>}</em>
+<a id='L272' name='L272'></a>   <em class='brace'>}</em>
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a><em class='comment'>/* printing title */</em>
+<a id='L275' name='L275'></a>printf ("c random network for shortest paths problem\n");
+<a id='L276' name='L276'></a>printf ("c extended DIMACS format\nc\n" );
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a><em class='comment'>/* name of the problem */</em>
+<a id='L279' name='L279'></a>printf ("t rd_%ld_%ld_%ld_", n, m, seed );
+<a id='L280' name='L280'></a><strong class='reserved'>if</strong> ( l_f )
+<a id='L281' name='L281'></a>  printf ("%c", 'l');
+<a id='L282' name='L282'></a><strong class='reserved'>if</strong> ( c_f )
+<a id='L283' name='L283'></a>  printf ("%c", 'c');
+<a id='L284' name='L284'></a><strong class='reserved'>if</strong> ( s_f )
+<a id='L285' name='L285'></a>  printf ("%c", 's');
+<a id='L286' name='L286'></a><strong class='reserved'>if</strong> ( p_f )
+<a id='L287' name='L287'></a>  printf ("%c", 'p');
+<a id='L288' name='L288'></a>printf ("\nc\n");
+<a id='L289' name='L289'></a>
+<a id='L290' name='L290'></a><em class='comment'>/* printing additional information  */</em>
+<a id='L291' name='L291'></a><strong class='reserved'>if</strong> ( l_f )
+<a id='L292' name='L292'></a>  printf ("c length -&gt; min: %ld max: %ld k1: %.2f k2: %.2f\n",
+<a id='L293' name='L293'></a>           lm, ll, ln, ls );
+<a id='L294' name='L294'></a><strong class='reserved'>if</strong> ( c_f )
+<a id='L295' name='L295'></a>  <em class='brace'>{</em>
+<a id='L296' name='L296'></a>    <strong class='reserved'>if</strong> ( c_random )
+<a id='L297' name='L297'></a>      printf ("c cycle -&gt; number of arcs: %ld  arc length: random\n", ch);
+<a id='L298' name='L298'></a>    <strong class='reserved'>else</strong>
+<a id='L299' name='L299'></a>      printf ("c cycle -&gt; number of arcs: %ld  arc length: %ld\n",
+<a id='L300' name='L300'></a>               ch, cl );
+<a id='L301' name='L301'></a>  <em class='brace'>}</em>
+<a id='L302' name='L302'></a><strong class='reserved'>if</strong> ( s_f )
+<a id='L303' name='L303'></a>  printf ("c length of arcs from artifical source -&gt; min: %ld max: %ld\n",
+<a id='L304' name='L304'></a>           sm, sl );
+<a id='L305' name='L305'></a><strong class='reserved'>if</strong> ( p_f )
+<a id='L306' name='L306'></a>  <em class='brace'>{</em>
+<a id='L307' name='L307'></a>  printf ("c potentials -&gt; min: %ld max: %ld k1: %.2f k2: %.2f\n",
+<a id='L308' name='L308'></a>          pm, pl, pn, ps );
+<a id='L309' name='L309'></a>  <strong class='reserved'>if</strong> ( pa_f )
+<a id='L310' name='L310'></a>  printf ("c potentials -&gt; part of alternative distribution: %.2f k: %.2f\n",
+<a id='L311' name='L311'></a>          pap, pac );
+<a id='L312' name='L312'></a>  <em class='brace'>}</em>
+<a id='L313' name='L313'></a>printf ("c\n" );
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a>
+<a id='L316' name='L316'></a>printf ("p sp %8ld %8ld\nc\n", n0, m0 );
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a><a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a> = ( s_f ) ? n0 : 1;
+<a id='L319' name='L319'></a>printf ("n %8ld\nc\n", <a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a> );
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a><strong class='reserved'>if</strong> ( p_f ) <em class='comment'>/* generating potentials */</em>
+<a id='L322' name='L322'></a>  <em class='brace'>{</em>
+<a id='L323' name='L323'></a>    p = (<strong class='reserved'>long</strong>*) calloc ( n+2, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>long</strong>) );
+<a id='L324' name='L324'></a>    seed1 = 2*seed + 1;
+<a id='L325' name='L325'></a>    <a href='../S/469.html#L58' title='Defined at 58 in isisd/topology/random.c.'>init_rand</a> ( seed1);
+<a id='L326' name='L326'></a>    pl = pl - pm + 1;
+<a id='L327' name='L327'></a>
+<a id='L328' name='L328'></a>    <strong class='reserved'>for</strong> ( i = 0; i &lt;= n; i ++ )
+<a id='L329' name='L329'></a>      <em class='brace'>{</em>
+<a id='L330' name='L330'></a>        p_t = pm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( pl );
+<a id='L331' name='L331'></a>        <strong class='reserved'>if</strong> ( pn_f ) p_t += (<strong class='reserved'>long</strong>) ( i * pn );
+<a id='L332' name='L332'></a>        <strong class='reserved'>if</strong> ( ps_f ) p_t += (<strong class='reserved'>long</strong>) ( i * ( i * ps ));
+<a id='L333' name='L333'></a>        <strong class='reserved'>if</strong> ( pap_f )
+<a id='L334' name='L334'></a>            <strong class='reserved'>if</strong> ( <a href='../S/469.html#L125' title='Defined at 125 in isisd/topology/random.c.'>rand01</a>() &lt; pap )
+<a id='L335' name='L335'></a>                p_t = (<strong class='reserved'>long</strong>) ( p_t * pac );
+<a id='L336' name='L336'></a>        p[i] = p_t;
+<a id='L337' name='L337'></a>      <em class='brace'>}</em>
+<a id='L338' name='L338'></a>    p[n+1] = 0;
+<a id='L339' name='L339'></a>  <em class='brace'>}</em>
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a>
+<a id='L342' name='L342'></a><strong class='reserved'>if</strong> ( s_f ) <em class='comment'>/* additional arcs from artifical source */</em>
+<a id='L343' name='L343'></a>  <em class='brace'>{</em>
+<a id='L344' name='L344'></a>    seed2 = 3*seed + 1;
+<a id='L345' name='L345'></a>    <a href='../S/469.html#L58' title='Defined at 58 in isisd/topology/random.c.'>init_rand</a> ( seed2 );
+<a id='L346' name='L346'></a>    sl = sl - sm + 1;
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a>    <strong class='reserved'>for</strong> ( i = n; i &gt; 1; i -- )
+<a id='L349' name='L349'></a>      <em class='brace'>{</em>
+<a id='L350' name='L350'></a>        s = sm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( sl );
+<a id='L351' name='L351'></a>        <a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( n0, i, s ) 
+<a id='L352' name='L352'></a>      <em class='brace'>}</em>
+<a id='L353' name='L353'></a>
+<a id='L354' name='L354'></a>    <a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( n0, 1, 0 )
+<a id='L355' name='L355'></a>  <em class='brace'>}</em>
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a><em class='comment'>/* initialize random number generator */</em>
+<a id='L358' name='L358'></a><a href='../S/469.html#L58' title='Defined at 58 in isisd/topology/random.c.'>init_rand</a> ( seed );
+<a id='L359' name='L359'></a>ll = ll - lm + 1;
+<a id='L360' name='L360'></a>
+<a id='L361' name='L361'></a><em class='comment'>/* generating connecting cycle(s) */</em>
+<a id='L362' name='L362'></a><strong class='reserved'>if</strong> (c_random)
+<a id='L363' name='L363'></a>  cl = lm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( ll );
+<a id='L364' name='L364'></a><a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( 1, 2, cl )
+<a id='L365' name='L365'></a><strong class='reserved'>if</strong> (c_random)
+<a id='L366' name='L366'></a>  cl = lm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( ll );
+<a id='L367' name='L367'></a><a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( n, 1, cl )
+<a id='L368' name='L368'></a>
+<a id='L369' name='L369'></a><strong class='reserved'>for</strong> ( i = 2; i &lt; n; i ++ )
+<a id='L370' name='L370'></a>  <em class='brace'>{</em>
+<a id='L371' name='L371'></a>    <strong class='reserved'>if</strong> (c_random)
+<a id='L372' name='L372'></a>      cl = lm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( ll );
+<a id='L373' name='L373'></a>
+<a id='L374' name='L374'></a>    <strong class='reserved'>if</strong> ( ( (i-1) % (ch-1) ) != 0 )
+<a id='L375' name='L375'></a>        <a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( i, i+1, cl )
+<a id='L376' name='L376'></a>    <strong class='reserved'>else</strong>
+<a id='L377' name='L377'></a>      <em class='brace'>{</em> <a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( i,   1, cl )
+<a id='L378' name='L378'></a>        <strong class='reserved'>if</strong> (c_random)
+<a id='L379' name='L379'></a>          cl = lm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( ll );
+<a id='L380' name='L380'></a>        <a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( 1, i+1, cl )
+<a id='L381' name='L381'></a>      <em class='brace'>}</em>
+<a id='L382' name='L382'></a>  <em class='brace'>}</em>
+<a id='L383' name='L383'></a>
+<a id='L384' name='L384'></a><em class='comment'>/* generating random arcs */</em>
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a><strong class='reserved'>for</strong> ( k = 1; k &lt;= m - mc; k ++ )
+<a id='L387' name='L387'></a>  <em class='brace'>{</em>
+<a id='L388' name='L388'></a>    i = 1 + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( n );
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a>    <strong class='reserved'>do</strong>
+<a id='L391' name='L391'></a>    j = 1 + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( n );
+<a id='L392' name='L392'></a>    <strong class='reserved'>while</strong> ( j == i );
+<a id='L393' name='L393'></a>
+<a id='L394' name='L394'></a>    dij = ( i &gt; j ) ? ( i - j ) : ( j - i );
+<a id='L395' name='L395'></a>    l = lm + <a href='../S/469.html#L150' title='Defined at 150 in isisd/topology/random.c.'>nrand</a> ( ll );
+<a id='L396' name='L396'></a>    <strong class='reserved'>if</strong> ( ln_f ) l += (<strong class='reserved'>long</strong>) ( dij * ln );
+<a id='L397' name='L397'></a>    <strong class='reserved'>if</strong> ( ls_f ) l += (<strong class='reserved'>long</strong>) ( dij * ( dij * ls ) );
+<a id='L398' name='L398'></a>    <a href='../D/3530.html' title='Multiple defined in 2 places.'>PRINT_ARC</a> ( i, j, l );
+<a id='L399' name='L399'></a>  <em class='brace'>}</em>
+<a id='L400' name='L400'></a>
+<a id='L401' name='L401'></a><em class='comment'>/* all is done */</em>
+<a id='L402' name='L402'></a>exit (ext);
+<a id='L403' name='L403'></a>
+<a id='L404' name='L404'></a><em class='comment'>/* ----- wrong usage ----- */</em>
+<a id='L405' name='L405'></a>
+<a id='L406' name='L406'></a> <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a>:
+<a id='L407' name='L407'></a>fprintf ( stderr,
+<a id='L408' name='L408'></a>"\nusage: %s  n  m  seed  [ -ll#i -lm#i -cl#i -p -pl#i -pm#i ... ]\n\
+<a id='L409' name='L409'></a>help:  %s -h\n\n", argv[0], argv[0] );
+<a id='L410' name='L410'></a>
+<a id='L411' name='L411'></a><strong class='reserved'>if</strong> ( np &gt; 0 )
+<a id='L412' name='L412'></a>  fprintf ( stderr, "error in parameter # %d\n\n", np );   
+<a id='L413' name='L413'></a>exit (4);
+<a id='L414' name='L414'></a>
+<a id='L415' name='L415'></a><em class='comment'>/* ---- help ---- */</em>
+<a id='L416' name='L416'></a>
+<a id='L417' name='L417'></a> <a href='../D/6653.html' title='Multiple defined in 2 places.'>help</a>:
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a><strong class='reserved'>if</strong> ( args[2] == 'h') <strong class='reserved'>goto</strong> <a href='../S/475.html#L173' title='Defined at 173 in isisd/topology/spgrid.c.'>hhelp</a>;
+<a id='L420' name='L420'></a>
+<a id='L421' name='L421'></a>fprintf ( stderr, 
+<a id='L422' name='L422'></a>"\n'%s' - random network generator for shortest paths problem.\n\
+<a id='L423' name='L423'></a>Generates problems in extended DIMACS format.\n\
+<a id='L424' name='L424'></a>\n\
+<a id='L425' name='L425'></a>   %s  n m seed [ -ll#i -lm#i -cl#i -p -pl#i -pm#i ... ]\n\
+<a id='L426' name='L426'></a>   %s -hh\n\
+<a id='L427' name='L427'></a>\n\
+<a id='L428' name='L428'></a>                        #i - integer number   #f - real number\n\
+<a id='L429' name='L429'></a>\n\
+<a id='L430' name='L430'></a>-ll#i  - #i is the upper bound on arc lengths          (default 10000)\n\
+<a id='L431' name='L431'></a>-lm#i  - #i is the lower bound on arc lengths          (default 0)\n\
+<a id='L432' name='L432'></a>-cl#i  - #i is length of arcs in connecting cycle(s)   (default random)\n\
+<a id='L433' name='L433'></a>-p     - generate potentials \n\
+<a id='L434' name='L434'></a>-pl#i  - #i is the upper bound on potentials           (default ll)\n\
+<a id='L435' name='L435'></a>-pm#i  - #i is the lower bound on potentials           (default lm)\n\
+<a id='L436' name='L436'></a>\n\
+<a id='L437' name='L437'></a>-hh    - extended help \n\n",
+<a id='L438' name='L438'></a>argv[0], argv[0], argv[0] );
+<a id='L439' name='L439'></a>
+<a id='L440' name='L440'></a>exit (0);
+<a id='L441' name='L441'></a>
+<a id='L442' name='L442'></a><em class='comment'>/* --------- sophisticated help ------------ */</em>
+<a id='L443' name='L443'></a> <a href='../S/475.html#L173' title='Defined at 173 in isisd/topology/spgrid.c.'>hhelp</a>:
+<a id='L444' name='L444'></a>
+<a id='L445' name='L445'></a><strong class='reserved'>if</strong> ( argc &lt; 3 )
+<a id='L446' name='L446'></a>     fout = stderr;
+<a id='L447' name='L447'></a><strong class='reserved'>else</strong>
+<a id='L448' name='L448'></a>     fout = fopen ( argv[2], "w" );
+<a id='L449' name='L449'></a>
+<a id='L450' name='L450'></a><strong class='reserved'>if</strong> ( fout == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> )
+<a id='L451' name='L451'></a><em class='brace'>{</em> fprintf ( stderr, "\nCan't open file  '%s' for writing help\n\n", argv[2] );
+<a id='L452' name='L452'></a>  exit ( 2 );
+<a id='L453' name='L453'></a><em class='brace'>}</em>
+<a id='L454' name='L454'></a>
+<a id='L455' name='L455'></a>fprintf (fout, 
+<a id='L456' name='L456'></a>"\n'%s' - random network generator for shortest paths problem.\n\
+<a id='L457' name='L457'></a>Generates problems in extended DIMACS format.\n\
+<a id='L458' name='L458'></a>\n\
+<a id='L459' name='L459'></a>   %s  n m seed [ -ll#i -lm#i -ln#f -ls#f\n\
+<a id='L460' name='L460'></a>                      -p  -pl#i -pm#i -pn#f -ps#f -pap#i -pac#f\n\
+<a id='L461' name='L461'></a>                      -cl#i -ch#i\n\
+<a id='L462' name='L462'></a>                      -s -sl#i -sm#i\n\
+<a id='L463' name='L463'></a>                    ]\n\
+<a id='L464' name='L464'></a>   %s -hh file_name\n\
+<a id='L465' name='L465'></a>\n\
+<a id='L466' name='L466'></a>                        #i - integer number   #f - real number\n\
+<a id='L467' name='L467'></a>\n\
+<a id='L468' name='L468'></a>      Arc length parameters:\n\
+<a id='L469' name='L469'></a>-ll#i  - #i is the upper bound on arc lengths          (default 10000)\n\
+<a id='L470' name='L470'></a>-lm#i  - #i is the lower bound on arc lengths          (default 0)\n\
+<a id='L471' name='L471'></a>-ln#f  - multipliy l(i, j) by #f * |i-j|               (default 0)\n\
+<a id='L472' name='L472'></a>-ls#f  - multipliy l(i, j) by #f * |i-j|^2             (default 0)\n\
+<a id='L473' name='L473'></a>\n\
+<a id='L474' name='L474'></a>      Potential parameters:\n\
+<a id='L475' name='L475'></a>-p     - generate potentials \n\
+<a id='L476' name='L476'></a>-pl#i  - #i is the upper bound on potentials           (default ll)\n\
+<a id='L477' name='L477'></a>-pm#i  - #i is the lower bound on potentials           (default lm)\n\
+<a id='L478' name='L478'></a>-pn#f  - multiply p(i) by #f * i                       (default 0)\n\
+<a id='L479' name='L479'></a>-ps#f  - multiply p(i) by #f * i^2                     (default 0)\n\
+<a id='L480' name='L480'></a>-pap#i - percentage of alternative potential nodes     (default 0)\n\
+<a id='L481' name='L481'></a>-pac#f - if i is alternative, multiply  p(i) by #f     (default -1)\n\
+<a id='L482' name='L482'></a>\n\
+<a id='L483' name='L483'></a>      Connecting cycle(s) parameters:\n\
+<a id='L484' name='L484'></a>-cl#i  - #i is length of arcs in connecting cycle(s)   (default random)\n\
+<a id='L485' name='L485'></a>-ch#i  - #i is length of connecting cycles             (default n)\n\
+<a id='L486' name='L486'></a>\n\
+<a id='L487' name='L487'></a>      Artificial source parameters:\n\
+<a id='L488' name='L488'></a>-s     - generate artificial source with default connecting arc lengths\n\
+<a id='L489' name='L489'></a>-sl#i  - #i is the upper bound on art. arc lengths    (default 100000000)\n\
+<a id='L490' name='L490'></a>-sm#i  - #i is the lower bound on art. arc lengths    (default sl)\n\
+<a id='L491' name='L491'></a>\n\
+<a id='L492' name='L492'></a>-hh file_name  - save this help in the file 'file_name'\n\n",
+<a id='L493' name='L493'></a>argv[0], argv[0], argv[0] );
+<a id='L494' name='L494'></a>
+<a id='L495' name='L495'></a>exit (0);
+<a id='L496' name='L496'></a><em class='brace'>}</em>
+<a id='L497' name='L497'></a>
+<a id='L498' name='L498'></a>
+<a id='L499' name='L499'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^]<a href='#L14'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

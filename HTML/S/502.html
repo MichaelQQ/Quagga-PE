@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/include-netbsd/esis.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/<a href='../files/1019.html'>include-netbsd</a>/esis.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*      $NetBSD: esis.h,v 1.11 1997/11/03 15:01:19 is Exp $     */</em>
+<a id='L2' name='L2'></a>
+<a id='L3' name='L3'></a><em class='comment'>/*-</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (c) 1991, 1993</em>
+<a id='L5' name='L5'></a><em class='comment'> *      The Regents of the University of California.  All rights reserved.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * Redistribution and use in source and binary forms, with or without</em>
+<a id='L8' name='L8'></a><em class='comment'> * modification, are permitted provided that the following conditions</em>
+<a id='L9' name='L9'></a><em class='comment'> * are met:</em>
+<a id='L10' name='L10'></a><em class='comment'> * 1. Redistributions of source code must retain the above copyright</em>
+<a id='L11' name='L11'></a><em class='comment'> *    notice, this list of conditions and the following disclaimer.</em>
+<a id='L12' name='L12'></a><em class='comment'> * 2. Redistributions in binary form must reproduce the above copyright</em>
+<a id='L13' name='L13'></a><em class='comment'> *    notice, this list of conditions and the following disclaimer in the</em>
+<a id='L14' name='L14'></a><em class='comment'> *    documentation and/or other materials provided with the distribution.</em>
+<a id='L15' name='L15'></a><em class='comment'> * 3. All advertising materials mentioning features or use of this software</em>
+<a id='L16' name='L16'></a><em class='comment'> *    must display the following acknowledgement:</em>
+<a id='L17' name='L17'></a><em class='comment'> *      This product includes software developed by the University of</em>
+<a id='L18' name='L18'></a><em class='comment'> *      California, Berkeley and its contributors.</em>
+<a id='L19' name='L19'></a><em class='comment'> * 4. Neither the name of the University nor the names of its contributors</em>
+<a id='L20' name='L20'></a><em class='comment'> *    may be used to endorse or promote products derived from this software</em>
+<a id='L21' name='L21'></a><em class='comment'> *    without specific prior written permission.</em>
+<a id='L22' name='L22'></a><em class='comment'> *</em>
+<a id='L23' name='L23'></a><em class='comment'> * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND</em>
+<a id='L24' name='L24'></a><em class='comment'> * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</em>
+<a id='L25' name='L25'></a><em class='comment'> * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</em>
+<a id='L26' name='L26'></a><em class='comment'> * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE</em>
+<a id='L27' name='L27'></a><em class='comment'> * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</em>
+<a id='L28' name='L28'></a><em class='comment'> * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS</em>
+<a id='L29' name='L29'></a><em class='comment'> * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</em>
+<a id='L30' name='L30'></a><em class='comment'> * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</em>
+<a id='L31' name='L31'></a><em class='comment'> * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY</em>
+<a id='L32' name='L32'></a><em class='comment'> * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF</em>
+<a id='L33' name='L33'></a><em class='comment'> * SUCH DAMAGE.</em>
+<a id='L34' name='L34'></a><em class='comment'> *</em>
+<a id='L35' name='L35'></a><em class='comment'> *      @(#)esis.h      8.1 (Berkeley) 6/10/93</em>
+<a id='L36' name='L36'></a><em class='comment'> */</em>
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><em class='comment'>/***********************************************************</em>
+<a id='L39' name='L39'></a><em class='comment'>                Copyright IBM Corporation 1987</em>
+<a id='L40' name='L40'></a><em class='comment'></em>
+<a id='L41' name='L41'></a><em class='comment'>                      All Rights Reserved</em>
+<a id='L42' name='L42'></a><em class='comment'></em>
+<a id='L43' name='L43'></a><em class='comment'>Permission to use, copy, modify, and distribute this software and its</em>
+<a id='L44' name='L44'></a><em class='comment'>documentation for any purpose and without fee is hereby granted,</em>
+<a id='L45' name='L45'></a><em class='comment'>provided that the above copyright notice appear in all copies and that</em>
+<a id='L46' name='L46'></a><em class='comment'>both that copyright notice and this permission notice appear in</em>
+<a id='L47' name='L47'></a><em class='comment'>supporting documentation, and that the name of IBM not be</em>
+<a id='L48' name='L48'></a><em class='comment'>used in advertising or publicity pertaining to distribution of the</em>
+<a id='L49' name='L49'></a><em class='comment'>software without specific, written prior permission.</em>
+<a id='L50' name='L50'></a><em class='comment'></em>
+<a id='L51' name='L51'></a><em class='comment'>IBM DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING</em>
+<a id='L52' name='L52'></a><em class='comment'>ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL</em>
+<a id='L53' name='L53'></a><em class='comment'>IBM BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR</em>
+<a id='L54' name='L54'></a><em class='comment'>ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,</em>
+<a id='L55' name='L55'></a><em class='comment'>WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,</em>
+<a id='L56' name='L56'></a><em class='comment'>ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS</em>
+<a id='L57' name='L57'></a><em class='comment'>SOFTWARE.</em>
+<a id='L58' name='L58'></a><em class='comment'></em>
+<a id='L59' name='L59'></a><em class='comment'>******************************************************************/</em>
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='comment'>/*</em>
+<a id='L62' name='L62'></a><em class='comment'> * ARGO Project, Computer Sciences Dept., University of Wisconsin - Madison</em>
+<a id='L63' name='L63'></a><em class='comment'> */</em>
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a><em class='sharp'>#include</em> &lt;machine/endian.h&gt;
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a><em class='sharp'>#define</em> SNPAC_AGE               60      <em class='comment'>/* seconds */</em>
+<a id='L68' name='L68'></a><em class='sharp'>#define</em> <a href='../S/502.html#L69' title='Referred from 69 in isisd/include-netbsd/esis.h.'>ESIS_CONFIG</a>             60      <em class='comment'>/* seconds */</em>
+<a id='L69' name='L69'></a><em class='sharp'>#define</em> ESIS_HT                 (<a href='../S/502.html#L68' title='Defined at 68 in isisd/include-netbsd/esis.h.'>ESIS_CONFIG</a> * 2)
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a><em class='comment'>/*</em>
+<a id='L72' name='L72'></a><em class='comment'> *      Fixed part of an ESIS header</em>
+<a id='L73' name='L73'></a><em class='comment'> */</em>
+<a id='L74' name='L74'></a><strong class='reserved'>struct</strong> esis_fixed <em class='brace'>{</em>
+<a id='L75' name='L75'></a>        u_char          esis_proto_id;  <em class='comment'>/* network layer protocol identifier */</em>
+<a id='L76' name='L76'></a>        u_char          esis_hdr_len;   <em class='comment'>/* length indicator (octets) */</em>
+<a id='L77' name='L77'></a>        u_char          esis_vers;      <em class='comment'>/* version/protocol identifier</em>
+<a id='L78' name='L78'></a><em class='comment'>                                         * extension */</em>
+<a id='L79' name='L79'></a>        u_char          esis_res1;      <em class='comment'>/* reserved */</em>
+<a id='L80' name='L80'></a>        u_char          esis_type;      <em class='comment'>/* type code */</em>
+<a id='L81' name='L81'></a>        <em class='comment'>/* technically, type should be &amp;='d 0x1f */</em>
+<a id='L82' name='L82'></a><em class='sharp'>#define</em> ESIS_ESH        0x02    <em class='comment'>/* End System Hello */</em>
+<a id='L83' name='L83'></a><em class='sharp'>#define</em> ESIS_ISH        0x04    <em class='comment'>/* Intermediate System Hello */</em>
+<a id='L84' name='L84'></a><em class='sharp'>#define</em> ESIS_RD         0x06    <em class='comment'>/* Redirect */</em>
+<a id='L85' name='L85'></a>        u_char          esis_ht_msb;    <em class='comment'>/* holding time (seconds) high byte */</em>
+<a id='L86' name='L86'></a>        u_char          esis_ht_lsb;    <em class='comment'>/* holding time (seconds) low byte */</em>
+<a id='L87' name='L87'></a>        u_char          esis_cksum_msb; <em class='comment'>/* checksum high byte */</em>
+<a id='L88' name='L88'></a>        u_char          esis_cksum_lsb; <em class='comment'>/* checksum low byte */</em>
+<a id='L89' name='L89'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong>((packed));
+<a id='L90' name='L90'></a><em class='comment'>/*</em>
+<a id='L91' name='L91'></a><em class='comment'> * Values for ESIS datagram options</em>
+<a id='L92' name='L92'></a><em class='comment'> */</em>
+<a id='L93' name='L93'></a><em class='sharp'>#define</em> ESISOVAL_NETMASK        0xe1    <em class='comment'>/* address mask option, RD PDU only */</em>
+<a id='L94' name='L94'></a><em class='sharp'>#define</em> ESISOVAL_SNPAMASK       0xe2    <em class='comment'>/* snpa mask option, RD PDU only */</em>
+<a id='L95' name='L95'></a><em class='sharp'>#define</em> ESISOVAL_ESCT           0xc6    <em class='comment'>/* end system conf. timer, ISH PDU</em>
+<a id='L96' name='L96'></a><em class='comment'>                                         * only */</em>
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><em class='sharp'>#define</em> ESIS_CKSUM_OFF          0x07
+<a id='L100' name='L100'></a><em class='sharp'>#define</em> ESIS_CKSUM_REQUIRED(pdu)\
+<a id='L101' name='L101'></a>        ((pdu-&gt;esis_cksum_msb != 0) || (pdu-&gt;esis_cksum_lsb != 0))
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><em class='sharp'>#define</em> ESIS_VERSION    1
+<a id='L104' name='L104'></a>
+<a id='L105' name='L105'></a><strong class='reserved'>struct</strong> <a href='../S/502.html#L120' title='Referred from 120 in isisd/include-netbsd/esis.h.'>esis_stat</a> <em class='brace'>{</em>
+<a id='L106' name='L106'></a>        u_short         es_nomem;       <em class='comment'>/* insufficient memory to send hello */</em>
+<a id='L107' name='L107'></a>        u_short         es_badcsum;     <em class='comment'>/* incorrect checksum */</em>
+<a id='L108' name='L108'></a>        u_short         es_badvers;     <em class='comment'>/* incorrect version number */</em>
+<a id='L109' name='L109'></a>        u_short         es_badtype;     <em class='comment'>/* unknown pdu type field */</em>
+<a id='L110' name='L110'></a>        u_short         es_toosmall;    <em class='comment'>/* packet too small */</em>
+<a id='L111' name='L111'></a>        u_short         es_eshsent;     <em class='comment'>/* ESH sent */</em>
+<a id='L112' name='L112'></a>        u_short         es_eshrcvd;     <em class='comment'>/* ESH rcvd */</em>
+<a id='L113' name='L113'></a>        u_short         es_ishsent;     <em class='comment'>/* ISH sent */</em>
+<a id='L114' name='L114'></a>        u_short         es_ishrcvd;     <em class='comment'>/* ISH rcvd */</em>
+<a id='L115' name='L115'></a>        u_short         es_rdsent;      <em class='comment'>/* RD sent */</em>
+<a id='L116' name='L116'></a>        u_short         es_rdrcvd;      <em class='comment'>/* RD rcvd */</em>
+<a id='L117' name='L117'></a><em class='brace'>}</em>;
+<a id='L118' name='L118'></a>
+<a id='L119' name='L119'></a><em class='sharp'>#ifdef</em>  _KERNEL
+<a id='L120' name='L120'></a><strong class='reserved'>struct</strong> <a href='../S/502.html#L105' title='Defined at 105 in isisd/include-netbsd/esis.h.'>esis_stat</a> <a href='../S/502.html#L105' title='Defined at 105 in isisd/include-netbsd/esis.h.'>esis_stat</a>;
+<a id='L121' name='L121'></a><strong class='reserved'>struct</strong> socket;
+<a id='L122' name='L122'></a><strong class='reserved'>struct</strong> mbuf;
+<a id='L123' name='L123'></a><strong class='reserved'>struct</strong> snpa_hdr;
+<a id='L124' name='L124'></a><strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a>;
+<a id='L125' name='L125'></a><strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a>;
+<a id='L126' name='L126'></a><strong class='reserved'>struct</strong> <a href='../S/992.html#L62' title='Defined at 62 in zebra/rt_ioctl.c.'>rtentry</a>;
+<a id='L127' name='L127'></a><strong class='reserved'>struct</strong> sockaddr_dl;
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a><strong class='reserved'>void</strong> esis_init <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong>));
+<a id='L130' name='L130'></a><strong class='reserved'>int</strong> esis_usrreq <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> socket *, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> mbuf *,
+<a id='L131' name='L131'></a>                     <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> proc *));
+<a id='L132' name='L132'></a><strong class='reserved'>void</strong> esis_input <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L133' name='L133'></a><strong class='reserved'>void</strong> esis_rdoutput <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> snpa_hdr *, <strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> <a href='../S/503.html#L180' title='Defined at 180 in isisd/include-netbsd/clnp.h.'>clnp_optidx</a> *,
+<a id='L134' name='L134'></a>                        <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, <strong class='reserved'>struct</strong> <a href='../S/992.html#L62' title='Defined at 62 in zebra/rt_ioctl.c.'>rtentry</a> *));
+<a id='L135' name='L135'></a><strong class='reserved'>int</strong> esis_insert_addr <strong class='reserved'>__P</strong>((caddr_t *, <strong class='reserved'>int</strong> *, <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *, <strong class='reserved'>struct</strong> mbuf *,
+<a id='L136' name='L136'></a>                          <strong class='reserved'>int</strong>));
+<a id='L137' name='L137'></a><strong class='reserved'>void</strong> esis_eshinput <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> snpa_hdr *));
+<a id='L138' name='L138'></a><strong class='reserved'>void</strong> esis_ishinput <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> snpa_hdr *));
+<a id='L139' name='L139'></a><strong class='reserved'>void</strong> esis_rdinput <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, <strong class='reserved'>struct</strong> snpa_hdr *));
+<a id='L140' name='L140'></a><strong class='reserved'>void</strong> esis_config <strong class='reserved'>__P</strong>((<strong class='reserved'>void</strong> *));
+<a id='L141' name='L141'></a><strong class='reserved'>void</strong> esis_shoutput <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> ifnet *, <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, caddr_t, <strong class='reserved'>int</strong>,
+<a id='L142' name='L142'></a>                       <strong class='reserved'>struct</strong> <a href='../S/504.html#L151' title='Defined at 151 in isisd/include-netbsd/iso.h.'>iso_addr</a> *));
+<a id='L143' name='L143'></a><strong class='reserved'>void</strong> isis_input <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L144' name='L144'></a><strong class='reserved'>int</strong> isis_output <strong class='reserved'>__P</strong>((<strong class='reserved'>struct</strong> mbuf *, ...));
+<a id='L145' name='L145'></a><strong class='reserved'>void</strong> *esis_ctlinput <strong class='reserved'>__P</strong>((<strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> sockaddr *, <strong class='reserved'>void</strong> *));
+<a id='L146' name='L146'></a><em class='sharp'>#endif</em> <em class='comment'>/* _KERNEL */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

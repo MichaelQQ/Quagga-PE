@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>mplsadmd/libnetlink.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1024.html'>mplsadmd</a>/libnetlink.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/375.html' title='Multiple included from 4 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#ifndef</em> <a href='../S/848.html#L2' title='Defined at 2 in mplsadmd/libnetlink.h.'>__LIBNETLINK_H__</a>
+<a id='L2' name='L2'></a><em class='sharp'>#define</em> <a href='../S/848.html#L1' title='Referred from 1 in mplsadmd/libnetlink.h.'>__LIBNETLINK_H__</a> 1
+<a id='L3' name='L3'></a>
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;asm/types.h&gt;
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> &lt;<a href='../I/157.html'>linux/netlink.h</a>&gt;
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> &lt;linux/rtnetlink.h&gt;
+<a id='L7' name='L7'></a>
+<a id='L8' name='L8'></a><strong class='reserved'>struct</strong> <a href='../R/9669.html' title='Multiple referred from 24 places.'>rtnl_handle</a>
+<a id='L9' name='L9'></a><em class='brace'>{</em>
+<a id='L10' name='L10'></a>        <strong class='reserved'>int</strong>                     fd;
+<a id='L11' name='L11'></a>        <strong class='reserved'>struct</strong> <a href='../S/839.html#L27' title='Defined at 27 in mplsadmd/netlink.h.'>sockaddr_nl</a>      local;
+<a id='L12' name='L12'></a>        <strong class='reserved'>struct</strong> <a href='../S/839.html#L27' title='Defined at 27 in mplsadmd/netlink.h.'>sockaddr_nl</a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L13' name='L13'></a>        __u32                   seq;
+<a id='L14' name='L14'></a>        __u32                   dump;
+<a id='L15' name='L15'></a><em class='brace'>}</em>;
+<a id='L16' name='L16'></a>
+<a id='L17' name='L17'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L82' title='Defined at 82 in mplsadmd/libnetlink.c.'>rtnl_open</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth, <strong class='reserved'>unsigned</strong> subscriptions);
+<a id='L18' name='L18'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L33' title='Defined at 33 in mplsadmd/libnetlink.c.'>rtnl_open_byproto</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth, <strong class='reserved'>unsigned</strong> subscriptions, <strong class='reserved'>int</strong> protocol);
+<a id='L19' name='L19'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/850.html#L28' title='Defined at 28 in mplsadmd/libnetlink.c.'>rtnl_close</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth);
+<a id='L20' name='L20'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L87' title='Defined at 87 in mplsadmd/libnetlink.c.'>rtnl_wilddump_request</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth, <strong class='reserved'>int</strong> fam, <strong class='reserved'>int</strong> type);
+<a id='L21' name='L21'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L118' title='Defined at 118 in mplsadmd/libnetlink.c.'>rtnl_dump_request</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth, <strong class='reserved'>int</strong> type, <strong class='reserved'>void</strong> *req, <strong class='reserved'>int</strong> len);
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>int</strong> (*rtnl_filter_t)(<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/839.html#L27' title='Defined at 27 in mplsadmd/netlink.h.'>sockaddr_nl</a> *, 
+<a id='L24' name='L24'></a>                             <strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> *n, <strong class='reserved'>void</strong> *);
+<a id='L25' name='L25'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L142' title='Defined at 142 in mplsadmd/libnetlink.c.'>rtnl_dump_filter</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth, rtnl_filter_t <a href='../S/203.html#L52' title='Defined at 52 in lib/filter.c.'>filter</a>,
+<a id='L26' name='L26'></a>                            <strong class='reserved'>void</strong> *arg1,
+<a id='L27' name='L27'></a>                            rtnl_filter_t junk,
+<a id='L28' name='L28'></a>                            <strong class='reserved'>void</strong> *arg2);
+<a id='L29' name='L29'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L225' title='Defined at 225 in mplsadmd/libnetlink.c.'>rtnl_talk</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rtnl, <strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> *n, pid_t <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>,
+<a id='L30' name='L30'></a>                     <strong class='reserved'>unsigned</strong> groups, <strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> *answer,
+<a id='L31' name='L31'></a>                     rtnl_filter_t junk,
+<a id='L32' name='L32'></a>                     <strong class='reserved'>void</strong> *jarg);
+<a id='L33' name='L33'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L108' title='Defined at 108 in mplsadmd/libnetlink.c.'>rtnl_send</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *rth, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *buf, <strong class='reserved'>int</strong>);
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/5134.html' title='Multiple defined in 2 places.'>addattr32</a>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> *n, <strong class='reserved'>int</strong> maxlen, <strong class='reserved'>int</strong> type, __u32 <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L37' name='L37'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/5135.html' title='Multiple defined in 2 places.'>addattr_l</a>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> *n, <strong class='reserved'>int</strong> maxlen, <strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, <strong class='reserved'>int</strong> alen);
+<a id='L38' name='L38'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L506' title='Defined at 506 in mplsadmd/libnetlink.c.'>addraw_l</a>(<strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> *n, <strong class='reserved'>int</strong> maxlen, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, <strong class='reserved'>int</strong> len);
+<a id='L39' name='L39'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L519' title='Defined at 519 in mplsadmd/libnetlink.c.'>rta_addattr32</a>(<strong class='reserved'>struct</strong> rtattr *rta, <strong class='reserved'>int</strong> maxlen, <strong class='reserved'>int</strong> type, __u32 <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L40' name='L40'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../D/10540.html' title='Multiple defined in 2 places.'>rta_addattr_l</a>(<strong class='reserved'>struct</strong> rtattr *rta, <strong class='reserved'>int</strong> maxlen, <strong class='reserved'>int</strong> type, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, <strong class='reserved'>int</strong> alen);
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L554' title='Defined at 554 in mplsadmd/libnetlink.c.'>parse_rtattr</a>(<strong class='reserved'>struct</strong> rtattr *tb[], <strong class='reserved'>int</strong> max, <strong class='reserved'>struct</strong> rtattr *rta, <strong class='reserved'>int</strong> len);
+<a id='L43' name='L43'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L567' title='Defined at 567 in mplsadmd/libnetlink.c.'>parse_rtattr_byindex</a>(<strong class='reserved'>struct</strong> rtattr *tb[], <strong class='reserved'>int</strong> max, <strong class='reserved'>struct</strong> rtattr *rta, <strong class='reserved'>int</strong> len);
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='sharp'>#define</em> parse_rtattr_nested(tb, max, rta) \
+<a id='L46' name='L46'></a>        (<a href='../S/850.html#L554' title='Defined at 554 in mplsadmd/libnetlink.c.'>parse_rtattr</a>((tb), (max), RTA_DATA(rta), RTA_PAYLOAD(rta)))
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L343' title='Defined at 343 in mplsadmd/libnetlink.c.'>rtnl_listen</a>(<strong class='reserved'>struct</strong> <a href='../S/848.html#L8' title='Defined at 8 in mplsadmd/libnetlink.h.'>rtnl_handle</a> *, rtnl_filter_t handler, 
+<a id='L49' name='L49'></a>                       <strong class='reserved'>void</strong> *jarg);
+<a id='L50' name='L50'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/850.html#L417' title='Defined at 417 in mplsadmd/libnetlink.c.'>rtnl_from_file</a>(FILE *, rtnl_filter_t handler,
+<a id='L51' name='L51'></a>                       <strong class='reserved'>void</strong> *jarg);
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><em class='sharp'>#define</em> <a href='../R/2065.html' title='Multiple referred from 4 places.'>NLMSG_TAIL</a>(nmsg) \
+<a id='L54' name='L54'></a>        ((<strong class='reserved'>struct</strong> rtattr *) (((<strong class='reserved'>void</strong> *) (nmsg)) + <a href='../S/839.html#L73' title='Defined at 73 in mplsadmd/netlink.h.'>NLMSG_ALIGN</a>((nmsg)-&gt;nlmsg_len)))
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><em class='sharp'>#endif</em> <em class='comment'>/* __LIBNETLINK_H__ */</em>
+<a id='L57' name='L57'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

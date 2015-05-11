@@ -1,0 +1,1012 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/log.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/log.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L76'>[^]</a><a href='#L913'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L76' title='Defined at 76.'>quagga_timestamp</a></li>
+<li><a href='#L138' title='Defined at 138.'>time_print</a></li>
+<li><a href='#L151' title='Defined at 151.'>vzlog</a></li>
+<li><a href='#L221' title='Defined at 221.'>str_append</a></li>
+<li><a href='#L229' title='Defined at 229.'>num_append</a></li>
+<li><a href='#L247' title='Defined at 247.'>hex_append</a></li>
+<li><a href='#L267' title='Defined at 267.'>syslog_connect</a></li>
+<li><a href='#L297' title='Defined at 297.'>syslog_sigsafe</a></li>
+<li><a href='#L326' title='Defined at 326.'>open_crashlog</a></li>
+<li><a href='#L359' title='Defined at 359.'>zlog_signal</a></li>
+<li><a href='#L435' title='Defined at 435.'>zlog_backtrace_sigsafe</a></li>
+<li><a href='#L520' title='Defined at 520.'>zlog_backtrace</a></li>
+<li><a href='#L554' title='Defined at 554.'>zlog</a></li>
+<li><a href='#L573' title='Defined at 573.'>ZLOG_FUNC</a></li>
+<li><a href='#L595' title='Defined at 595.'>PLOG_FUNC</a></li>
+<li><a href='#L625' title='Defined at 625.'>openzlog</a></li>
+<li><a href='#L650' title='Defined at 650.'>closezlog</a></li>
+<li><a href='#L665' title='Defined at 665.'>zlog_set_level</a></li>
+<li><a href='#L674' title='Defined at 674.'>zlog_set_file</a></li>
+<li><a href='#L704' title='Defined at 704.'>zlog_reset_file</a></li>
+<li><a href='#L724' title='Defined at 724.'>zlog_rotate</a></li>
+<li><a href='#L762' title='Defined at 762.'>lookup</a></li>
+<li><a href='#L780' title='Defined at 780.'>mes_lookup</a></li>
+<li><a href='#L817' title='Defined at 817.'>safe_strerror</a></li>
+<li><a href='#L854' title='Defined at 854.'>zroute_lookup</a></li>
+<li><a href='#L879' title='Defined at 879.'>zebra_route_string</a></li>
+<li><a href='#L885' title='Defined at 885.'>zebra_route_char</a></li>
+<li><a href='#L891' title='Defined at 891.'>zserv_command_string</a></li>
+<li><a href='#L902' title='Defined at 902.'>proto_name2num</a></li>
+<li><a href='#L913' title='Defined at 913.'>proto_redistnum</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Logging of zebra</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1997, 1998, 1999 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#define</em> <a href='../S/280.html#L638' title='Referred from 638 in lib/route_types.h.'>QUAGGA_DEFINE_DESC_TABLE</a>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#ifndef</em> SUNOS_5
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> &lt;sys/un.h&gt;
+<a id='L32' name='L32'></a><em class='sharp'>#endif</em>
+<a id='L33' name='L33'></a><em class='comment'>/* for printstack on solaris */</em>
+<a id='L34' name='L34'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L552' title='Defined at 552 in config.h.'>HAVE_UCONTEXT_H</a>
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> &lt;ucontext.h&gt;
+<a id='L36' name='L36'></a><em class='sharp'>#endif</em>
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> logfile_fd = -1;     <em class='comment'>/* Used in signal handler. */</em>
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zlog_default = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *zlog_proto_names[] = 
+<a id='L43' name='L43'></a><em class='brace'>{</em>
+<a id='L44' name='L44'></a>  "NONE",
+<a id='L45' name='L45'></a>  "DEFAULT",
+<a id='L46' name='L46'></a>  "ZEBRA",
+<a id='L47' name='L47'></a>  "RIP",
+<a id='L48' name='L48'></a>  "BGP",
+<a id='L49' name='L49'></a>  "OSPF",
+<a id='L50' name='L50'></a>  "RIPNG",
+<a id='L51' name='L51'></a>  "BABEL",
+<a id='L52' name='L52'></a>  "OSPF6",
+<a id='L53' name='L53'></a>  "ISIS",
+<a id='L54' name='L54'></a>  "MASC",
+<a id='L55' name='L55'></a>  <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>,
+<a id='L56' name='L56'></a><em class='brace'>}</em>;
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *zlog_priority[] =
+<a id='L59' name='L59'></a><em class='brace'>{</em>
+<a id='L60' name='L60'></a>  "emergencies",
+<a id='L61' name='L61'></a>  "alerts",
+<a id='L62' name='L62'></a>  "critical",
+<a id='L63' name='L63'></a>  "errors",
+<a id='L64' name='L64'></a>  "warnings",
+<a id='L65' name='L65'></a>  "notifications",
+<a id='L66' name='L66'></a>  "informational",
+<a id='L67' name='L67'></a>  "debugging",
+<a id='L68' name='L68'></a>  <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>,
+<a id='L69' name='L69'></a><em class='brace'>}</em>;
+<a id='L70' name='L70'></a>  
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>
+<a id='L73' name='L73'></a><em class='comment'>/* For time string format. */</em>
+<a id='L74' name='L74'></a>
+<a id='L75' name='L75'></a>size_t
+<a id='L76' name='L76'></a><a href='../R/8932.html' title='Multiple referred from 4 places.'>quagga_timestamp</a>(<strong class='reserved'>int</strong> timestamp_precision, <strong class='reserved'>char</strong> *buf, size_t buflen)
+<a id='L77' name='L77'></a><em class='brace'>{</em>
+<a id='L78' name='L78'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <em class='brace'>{</em>
+<a id='L79' name='L79'></a>    time_t last;
+<a id='L80' name='L80'></a>    size_t len;
+<a id='L81' name='L81'></a>    <strong class='reserved'>char</strong> buf[28];
+<a id='L82' name='L82'></a>  <em class='brace'>}</em> cache;
+<a id='L83' name='L83'></a>  <strong class='reserved'>struct</strong> timeval clock;
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a>  <em class='comment'>/* would it be sufficient to use global 'recent_time' here?  I fear not... */</em>
+<a id='L86' name='L86'></a>  gettimeofday(&amp;clock, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a>  <em class='comment'>/* first, we update the cache if the time has changed */</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>if</strong> (cache.last != clock.tv_sec)
+<a id='L90' name='L90'></a>    <em class='brace'>{</em>
+<a id='L91' name='L91'></a>      <strong class='reserved'>struct</strong> tm *tm;
+<a id='L92' name='L92'></a>      cache.last = clock.tv_sec;
+<a id='L93' name='L93'></a>      tm = localtime(&amp;cache.last);
+<a id='L94' name='L94'></a>      cache.len = strftime(cache.buf, <strong class='reserved'>sizeof</strong>(cache.buf),
+<a id='L95' name='L95'></a>                           "%Y/%m/%d %H:%M:%S", tm);
+<a id='L96' name='L96'></a>    <em class='brace'>}</em>
+<a id='L97' name='L97'></a>  <em class='comment'>/* note: it's not worth caching the subsecond part, because</em>
+<a id='L98' name='L98'></a><em class='comment'>     chances are that back-to-back calls are not sufficiently close together</em>
+<a id='L99' name='L99'></a><em class='comment'>     for the clock not to have ticked forward */</em>
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a>  <strong class='reserved'>if</strong> (buflen &gt; cache.len)
+<a id='L102' name='L102'></a>    <em class='brace'>{</em>
+<a id='L103' name='L103'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a>(buf, cache.buf, cache.len);
+<a id='L104' name='L104'></a>      <strong class='reserved'>if</strong> ((timestamp_precision &gt; 0) &amp;&amp;
+<a id='L105' name='L105'></a>          (buflen &gt; cache.len+1+timestamp_precision))
+<a id='L106' name='L106'></a>        <em class='brace'>{</em>
+<a id='L107' name='L107'></a>          <em class='comment'>/* should we worry about locale issues? */</em>
+<a id='L108' name='L108'></a>          <strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>int</strong> divisor[] = <em class='brace'>{</em>0, 100000, 10000, 1000, 100, 10, 1<em class='brace'>}</em>;
+<a id='L109' name='L109'></a>          <strong class='reserved'>int</strong> prec;
+<a id='L110' name='L110'></a>          <strong class='reserved'>char</strong> *p = buf+cache.len+1+(prec = timestamp_precision);
+<a id='L111' name='L111'></a>          *p-- = '\0';
+<a id='L112' name='L112'></a>          <strong class='reserved'>while</strong> (prec &gt; 6)
+<a id='L113' name='L113'></a>            <em class='comment'>/* this is unlikely to happen, but protect anyway */</em>
+<a id='L114' name='L114'></a>            <em class='brace'>{</em>
+<a id='L115' name='L115'></a>              *p-- = '0';
+<a id='L116' name='L116'></a>              prec--;
+<a id='L117' name='L117'></a>            <em class='brace'>}</em>
+<a id='L118' name='L118'></a>          clock.tv_usec /= divisor[prec];
+<a id='L119' name='L119'></a>          <strong class='reserved'>do</strong>
+<a id='L120' name='L120'></a>            <em class='brace'>{</em>
+<a id='L121' name='L121'></a>              *p-- = '0'+(clock.tv_usec % 10);
+<a id='L122' name='L122'></a>              clock.tv_usec /= 10;
+<a id='L123' name='L123'></a>            <em class='brace'>}</em>
+<a id='L124' name='L124'></a>          <strong class='reserved'>while</strong> (--prec &gt; 0);
+<a id='L125' name='L125'></a>          *p = '.';
+<a id='L126' name='L126'></a>          <strong class='reserved'>return</strong> cache.len+1+timestamp_precision;
+<a id='L127' name='L127'></a>        <em class='brace'>}</em>
+<a id='L128' name='L128'></a>      buf[cache.len] = '\0';
+<a id='L129' name='L129'></a>      <strong class='reserved'>return</strong> cache.len;
+<a id='L130' name='L130'></a>    <em class='brace'>}</em>
+<a id='L131' name='L131'></a>  <strong class='reserved'>if</strong> (buflen &gt; 0)
+<a id='L132' name='L132'></a>    buf[0] = '\0';
+<a id='L133' name='L133'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L134' name='L134'></a><em class='brace'>}</em>
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><em class='comment'>/* Utility routine for current time printing. */</em>
+<a id='L137' name='L137'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L138' name='L138'></a><a href='../R/10157.html' title='Multiple referred from 3 places.'>time_print</a>(FILE *fp, <strong class='reserved'>struct</strong> timestamp_control *ctl)
+<a id='L139' name='L139'></a><em class='brace'>{</em>
+<a id='L140' name='L140'></a>  <strong class='reserved'>if</strong> (!ctl-&gt;already_rendered)
+<a id='L141' name='L141'></a>    <em class='brace'>{</em>
+<a id='L142' name='L142'></a>      ctl-&gt;len = <a href='../S/205.html#L76' title='Defined at 76 in lib/log.c.'>quagga_timestamp</a>(ctl-&gt;precision, ctl-&gt;buf, <strong class='reserved'>sizeof</strong>(ctl-&gt;buf));
+<a id='L143' name='L143'></a>      ctl-&gt;already_rendered = 1;
+<a id='L144' name='L144'></a>    <em class='brace'>}</em>
+<a id='L145' name='L145'></a>  fprintf(fp, "%s ", ctl-&gt;buf);
+<a id='L146' name='L146'></a><em class='brace'>}</em>
+<a id='L147' name='L147'></a>  
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a><em class='comment'>/* va_list version of zlog. */</em>
+<a id='L150' name='L150'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L151' name='L151'></a><a href='../R/10500.html' title='Multiple referred from 3 places.'>vzlog</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl, <strong class='reserved'>int</strong> priority, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *format, va_list args)
+<a id='L152' name='L152'></a><em class='brace'>{</em>
+<a id='L153' name='L153'></a>  <strong class='reserved'>struct</strong> timestamp_control tsctl;
+<a id='L154' name='L154'></a>  tsctl.already_rendered = 0;
+<a id='L155' name='L155'></a>
+<a id='L156' name='L156'></a>  <em class='comment'>/* If zlog is not specified, use default one. */</em>
+<a id='L157' name='L157'></a>  <strong class='reserved'>if</strong> (zl == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L158' name='L158'></a>    zl = zlog_default;
+<a id='L159' name='L159'></a>
+<a id='L160' name='L160'></a>  <em class='comment'>/* When zlog_default is also NULL, use stderr for logging. */</em>
+<a id='L161' name='L161'></a>  <strong class='reserved'>if</strong> (zl == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L162' name='L162'></a>    <em class='brace'>{</em>
+<a id='L163' name='L163'></a>      tsctl.precision = 0;
+<a id='L164' name='L164'></a>      <a href='../S/205.html#L138' title='Defined at 138 in lib/log.c.'>time_print</a>(stderr, &amp;tsctl);
+<a id='L165' name='L165'></a>      fprintf (stderr, "%s: ", "unknown");
+<a id='L166' name='L166'></a>      vfprintf (stderr, format, args);
+<a id='L167' name='L167'></a>      fprintf (stderr, "\n");
+<a id='L168' name='L168'></a>      fflush (stderr);
+<a id='L169' name='L169'></a>
+<a id='L170' name='L170'></a>      <em class='comment'>/* In this case we return at here. */</em>
+<a id='L171' name='L171'></a>      <strong class='reserved'>return</strong>;
+<a id='L172' name='L172'></a>    <em class='brace'>}</em>
+<a id='L173' name='L173'></a>  tsctl.precision = zl-&gt;timestamp_precision;
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a>  <em class='comment'>/* Syslog output */</em>
+<a id='L176' name='L176'></a>  <strong class='reserved'>if</strong> (priority &lt;= zl-&gt;maxlvl[<a href='../S/263.html#L71' title='Defined at 71 in lib/log.h.'>ZLOG_DEST_SYSLOG</a>])
+<a id='L177' name='L177'></a>    <em class='brace'>{</em>
+<a id='L178' name='L178'></a>      va_list ac;
+<a id='L179' name='L179'></a>      <a href='../D/11226.html' title='Multiple defined in 2 places.'>va_copy</a>(ac, args);
+<a id='L180' name='L180'></a>      vsyslog (priority|zlog_default-&gt;facility, format, ac);
+<a id='L181' name='L181'></a>      va_end(ac);
+<a id='L182' name='L182'></a>    <em class='brace'>}</em>
+<a id='L183' name='L183'></a>
+<a id='L184' name='L184'></a>  <em class='comment'>/* File output. */</em>
+<a id='L185' name='L185'></a>  <strong class='reserved'>if</strong> ((priority &lt;= zl-&gt;maxlvl[ZLOG_DEST_FILE]) &amp;&amp; zl-&gt;fp)
+<a id='L186' name='L186'></a>    <em class='brace'>{</em>
+<a id='L187' name='L187'></a>      va_list ac;
+<a id='L188' name='L188'></a>      <a href='../S/205.html#L138' title='Defined at 138 in lib/log.c.'>time_print</a> (zl-&gt;fp, &amp;tsctl);
+<a id='L189' name='L189'></a>      <strong class='reserved'>if</strong> (zl-&gt;record_priority)
+<a id='L190' name='L190'></a>        fprintf (zl-&gt;fp, "%s: ", zlog_priority[priority]);
+<a id='L191' name='L191'></a>      fprintf (zl-&gt;fp, "%s: ", zlog_proto_names[zl-&gt;protocol]);
+<a id='L192' name='L192'></a>      <a href='../D/11226.html' title='Multiple defined in 2 places.'>va_copy</a>(ac, args);
+<a id='L193' name='L193'></a>      vfprintf (zl-&gt;fp, format, ac);
+<a id='L194' name='L194'></a>      va_end(ac);
+<a id='L195' name='L195'></a>      fprintf (zl-&gt;fp, "\n");
+<a id='L196' name='L196'></a>      fflush (zl-&gt;fp);
+<a id='L197' name='L197'></a>    <em class='brace'>}</em>
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>  <em class='comment'>/* stdout output. */</em>
+<a id='L200' name='L200'></a>  <strong class='reserved'>if</strong> (priority &lt;= zl-&gt;maxlvl[<a href='../S/263.html#L72' title='Defined at 72 in lib/log.h.'>ZLOG_DEST_STDOUT</a>])
+<a id='L201' name='L201'></a>    <em class='brace'>{</em>
+<a id='L202' name='L202'></a>      va_list ac;
+<a id='L203' name='L203'></a>      <a href='../S/205.html#L138' title='Defined at 138 in lib/log.c.'>time_print</a> (stdout, &amp;tsctl);
+<a id='L204' name='L204'></a>      <strong class='reserved'>if</strong> (zl-&gt;record_priority)
+<a id='L205' name='L205'></a>        fprintf (stdout, "%s: ", zlog_priority[priority]);
+<a id='L206' name='L206'></a>      fprintf (stdout, "%s: ", zlog_proto_names[zl-&gt;protocol]);
+<a id='L207' name='L207'></a>      <a href='../D/11226.html' title='Multiple defined in 2 places.'>va_copy</a>(ac, args);
+<a id='L208' name='L208'></a>      vfprintf (stdout, format, ac);
+<a id='L209' name='L209'></a>      va_end(ac);
+<a id='L210' name='L210'></a>      fprintf (stdout, "\n");
+<a id='L211' name='L211'></a>      fflush (stdout);
+<a id='L212' name='L212'></a>    <em class='brace'>}</em>
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a>  <em class='comment'>/* Terminal monitor. */</em>
+<a id='L215' name='L215'></a>  <strong class='reserved'>if</strong> (priority &lt;= zl-&gt;maxlvl[<a href='../S/263.html#L73' title='Defined at 73 in lib/log.h.'>ZLOG_DEST_MONITOR</a>])
+<a id='L216' name='L216'></a>    <a href='../S/200.html#L2428' title='Defined at 2428 in lib/vty.c.'>vty_log</a> ((zl-&gt;record_priority ? zlog_priority[priority] : <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>),
+<a id='L217' name='L217'></a>             zlog_proto_names[zl-&gt;protocol], format, &amp;tsctl, args);
+<a id='L218' name='L218'></a><em class='brace'>}</em>
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *
+<a id='L221' name='L221'></a><a href='../R/10006.html' title='Multiple referred from 29 places.'>str_append</a>(<strong class='reserved'>char</strong> *dst, <strong class='reserved'>int</strong> len, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *src)
+<a id='L222' name='L222'></a><em class='brace'>{</em>
+<a id='L223' name='L223'></a>  <strong class='reserved'>while</strong> ((len-- &gt; 0) &amp;&amp; *src)
+<a id='L224' name='L224'></a>    *dst++ = *src++;
+<a id='L225' name='L225'></a>  <strong class='reserved'>return</strong> dst;
+<a id='L226' name='L226'></a><em class='brace'>}</em>
+<a id='L227' name='L227'></a>
+<a id='L228' name='L228'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *
+<a id='L229' name='L229'></a><a href='../R/7421.html' title='Multiple referred from 6 places.'>num_append</a>(<strong class='reserved'>char</strong> *s, <strong class='reserved'>int</strong> len, u_long <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>)
+<a id='L230' name='L230'></a><em class='brace'>{</em>
+<a id='L231' name='L231'></a>  <strong class='reserved'>char</strong> buf[30];
+<a id='L232' name='L232'></a>  <strong class='reserved'>char</strong> *t;
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a>  <strong class='reserved'>if</strong> (!<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>)
+<a id='L235' name='L235'></a>    <strong class='reserved'>return</strong> <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(s,len,"0");
+<a id='L236' name='L236'></a>  *(t = &amp;buf[<strong class='reserved'>sizeof</strong>(buf)-1]) = '\0';
+<a id='L237' name='L237'></a>  <strong class='reserved'>while</strong> (<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> &amp;&amp; (t &gt; buf))
+<a id='L238' name='L238'></a>    <em class='brace'>{</em>
+<a id='L239' name='L239'></a>      *--t = '0'+(<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> % 10);
+<a id='L240' name='L240'></a>      <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> /= 10;
+<a id='L241' name='L241'></a>    <em class='brace'>}</em>
+<a id='L242' name='L242'></a>  <strong class='reserved'>return</strong> <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(s,len,t);
+<a id='L243' name='L243'></a><em class='brace'>}</em>
+<a id='L244' name='L244'></a>
+<a id='L245' name='L245'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong>(SA_SIGINFO) || <strong class='reserved'>defined</strong>(<a href='../S/665.html#L330' title='Defined at 330 in config.h.'>HAVE_STACK_TRACE</a>)
+<a id='L246' name='L246'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *
+<a id='L247' name='L247'></a><a href='../R/5881.html' title='Multiple referred from 3 places.'>hex_append</a>(<strong class='reserved'>char</strong> *s, <strong class='reserved'>int</strong> len, u_long <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>)
+<a id='L248' name='L248'></a><em class='brace'>{</em>
+<a id='L249' name='L249'></a>  <strong class='reserved'>char</strong> buf[30];
+<a id='L250' name='L250'></a>  <strong class='reserved'>char</strong> *t;
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a>  <strong class='reserved'>if</strong> (!<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>)
+<a id='L253' name='L253'></a>    <strong class='reserved'>return</strong> <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(s,len,"0");
+<a id='L254' name='L254'></a>  *(t = &amp;buf[<strong class='reserved'>sizeof</strong>(buf)-1]) = '\0';
+<a id='L255' name='L255'></a>  <strong class='reserved'>while</strong> (<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> &amp;&amp; (t &gt; buf))
+<a id='L256' name='L256'></a>    <em class='brace'>{</em>
+<a id='L257' name='L257'></a>      u_int cc = (<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> % 16);
+<a id='L258' name='L258'></a>      *--t = ((cc &lt; 10) ? ('0'+cc) : ('a'+cc-10));
+<a id='L259' name='L259'></a>      <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> /= 16;
+<a id='L260' name='L260'></a>    <em class='brace'>}</em>
+<a id='L261' name='L261'></a>  <strong class='reserved'>return</strong> <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(s,len,t);
+<a id='L262' name='L262'></a><em class='brace'>}</em>
+<a id='L263' name='L263'></a><em class='sharp'>#endif</em>
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a><em class='comment'>/* Needs to be enhanced to support Solaris. */</em>
+<a id='L266' name='L266'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L267' name='L267'></a><a href='../S/205.html#L303' title='Referred from 303 in lib/log.c.'>syslog_connect</a>(<strong class='reserved'>void</strong>)
+<a id='L268' name='L268'></a><em class='brace'>{</em>
+<a id='L269' name='L269'></a><em class='sharp'>#ifdef</em> SUNOS_5
+<a id='L270' name='L270'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L271' name='L271'></a><em class='sharp'>#else</em>
+<a id='L272' name='L272'></a>  <strong class='reserved'>int</strong> fd;
+<a id='L273' name='L273'></a>  <strong class='reserved'>char</strong> *s;
+<a id='L274' name='L274'></a>  <strong class='reserved'>struct</strong> sockaddr_un addr;
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>  <strong class='reserved'>if</strong> ((fd = socket(AF_UNIX,SOCK_DGRAM,0)) &lt; 0)
+<a id='L277' name='L277'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L278' name='L278'></a>  addr.sun_family = AF_UNIX;
+<a id='L279' name='L279'></a><em class='sharp'>#ifdef</em> _PATH_LOG
+<a id='L280' name='L280'></a><em class='sharp'>#define</em> <a href='../S/205.html#L284' title='Referred from 284 in lib/log.c.'>SYSLOG_SOCKET_PATH</a> _PATH_LOG
+<a id='L281' name='L281'></a><em class='sharp'>#else</em>
+<a id='L282' name='L282'></a><em class='sharp'>#define</em> <a href='../S/205.html#L284' title='Referred from 284 in lib/log.c.'>SYSLOG_SOCKET_PATH</a> "/dev/log"
+<a id='L283' name='L283'></a><em class='sharp'>#endif</em>
+<a id='L284' name='L284'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(addr.sun_path,<strong class='reserved'>sizeof</strong>(addr.sun_path),<a href='../D/4227.html' title='Multiple defined in 3 places.'>SYSLOG_SOCKET_PATH</a>);
+<a id='L285' name='L285'></a><em class='sharp'>#undef</em> <a href='../S/205.html#L284' title='Referred from 284 in lib/log.c.'>SYSLOG_SOCKET_PATH</a>
+<a id='L286' name='L286'></a>  *s = '\0';
+<a id='L287' name='L287'></a>  <strong class='reserved'>if</strong> (connect(fd,(<strong class='reserved'>struct</strong> sockaddr *)&amp;addr,<strong class='reserved'>sizeof</strong>(addr)) &lt; 0)
+<a id='L288' name='L288'></a>    <em class='brace'>{</em>
+<a id='L289' name='L289'></a>      close(fd);
+<a id='L290' name='L290'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L291' name='L291'></a>    <em class='brace'>}</em>
+<a id='L292' name='L292'></a>  <strong class='reserved'>return</strong> fd;
+<a id='L293' name='L293'></a><em class='sharp'>#endif</em>
+<a id='L294' name='L294'></a><em class='brace'>}</em>
+<a id='L295' name='L295'></a>
+<a id='L296' name='L296'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L297' name='L297'></a><a href='../R/10084.html' title='Multiple referred from 3 places.'>syslog_sigsafe</a>(<strong class='reserved'>int</strong> priority, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>, size_t msglen)
+<a id='L298' name='L298'></a><em class='brace'>{</em>
+<a id='L299' name='L299'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>int</strong> syslog_fd = -1;
+<a id='L300' name='L300'></a>  <strong class='reserved'>char</strong> buf[<strong class='reserved'>sizeof</strong>("&lt;1234567890&gt;ripngd[1234567890]: ")+msglen+50];
+<a id='L301' name='L301'></a>  <strong class='reserved'>char</strong> *s;
+<a id='L302' name='L302'></a>
+<a id='L303' name='L303'></a>  <strong class='reserved'>if</strong> ((syslog_fd &lt; 0) &amp;&amp; ((syslog_fd = <a href='../S/205.html#L267' title='Defined at 267 in lib/log.c.'>syslog_connect</a>()) &lt; 0))
+<a id='L304' name='L304'></a>    <strong class='reserved'>return</strong>;
+<a id='L305' name='L305'></a>
+<a id='L306' name='L306'></a><em class='sharp'>#define</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a> s,buf+<strong class='reserved'>sizeof</strong>(buf)-s
+<a id='L307' name='L307'></a>  s = buf;
+<a id='L308' name='L308'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"&lt;");
+<a id='L309' name='L309'></a>  s = <a href='../S/205.html#L229' title='Defined at 229 in lib/log.c.'>num_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,priority);
+<a id='L310' name='L310'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"&gt;");
+<a id='L311' name='L311'></a>  <em class='comment'>/* forget about the timestamp, too difficult in a signal handler */</em>
+<a id='L312' name='L312'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,zlog_default-&gt;ident);
+<a id='L313' name='L313'></a>  <strong class='reserved'>if</strong> (zlog_default-&gt;syslog_options &amp; LOG_PID)
+<a id='L314' name='L314'></a>    <em class='brace'>{</em>
+<a id='L315' name='L315'></a>      s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"[");
+<a id='L316' name='L316'></a>      s = <a href='../S/205.html#L229' title='Defined at 229 in lib/log.c.'>num_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,getpid());
+<a id='L317' name='L317'></a>      s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"]");
+<a id='L318' name='L318'></a>    <em class='brace'>}</em>
+<a id='L319' name='L319'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,": ");
+<a id='L320' name='L320'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,<a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L321' name='L321'></a>  write(syslog_fd,buf,s-buf);
+<a id='L322' name='L322'></a><em class='sharp'>#undef</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a>
+<a id='L323' name='L323'></a><em class='brace'>}</em>
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L326' name='L326'></a><a href='../R/7450.html' title='Multiple referred from 3 places.'>open_crashlog</a>(<strong class='reserved'>void</strong>)
+<a id='L327' name='L327'></a><em class='brace'>{</em>
+<a id='L328' name='L328'></a><em class='sharp'>#define</em> <a href='../R/550.html' title='Multiple referred from 3 places.'>CRASHLOG_PREFIX</a> "/var/tmp/quagga."
+<a id='L329' name='L329'></a><em class='sharp'>#define</em> <a href='../R/551.html' title='Multiple referred from 3 places.'>CRASHLOG_SUFFIX</a> "crashlog"
+<a id='L330' name='L330'></a>  <strong class='reserved'>if</strong> (zlog_default &amp;&amp; zlog_default-&gt;ident)
+<a id='L331' name='L331'></a>    <em class='brace'>{</em>
+<a id='L332' name='L332'></a>      <em class='comment'>/* Avoid strlen since it is not async-signal-safe. */</em>
+<a id='L333' name='L333'></a>      <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *p;
+<a id='L334' name='L334'></a>      size_t ilen;
+<a id='L335' name='L335'></a>
+<a id='L336' name='L336'></a>      <strong class='reserved'>for</strong> (p = zlog_default-&gt;ident, ilen = 0; *p; p++)
+<a id='L337' name='L337'></a>        ilen++;
+<a id='L338' name='L338'></a>      <em class='brace'>{</em>
+<a id='L339' name='L339'></a>        <strong class='reserved'>char</strong> buf[<strong class='reserved'>sizeof</strong>(<a href='../D/630.html' title='Multiple defined in 2 places.'>CRASHLOG_PREFIX</a>)+ilen+<strong class='reserved'>sizeof</strong>(<a href='../D/631.html' title='Multiple defined in 2 places.'>CRASHLOG_SUFFIX</a>)+3];
+<a id='L340' name='L340'></a>        <strong class='reserved'>char</strong> *s = buf;
+<a id='L341' name='L341'></a><em class='sharp'>#define</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a> s,buf+<strong class='reserved'>sizeof</strong>(buf)-s
+<a id='L342' name='L342'></a>        s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>, <a href='../D/630.html' title='Multiple defined in 2 places.'>CRASHLOG_PREFIX</a>);
+<a id='L343' name='L343'></a>        s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>, zlog_default-&gt;ident);
+<a id='L344' name='L344'></a>        s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>, ".");
+<a id='L345' name='L345'></a>        s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>, <a href='../D/631.html' title='Multiple defined in 2 places.'>CRASHLOG_SUFFIX</a>);
+<a id='L346' name='L346'></a><em class='sharp'>#undef</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a>
+<a id='L347' name='L347'></a>        *s = '\0';
+<a id='L348' name='L348'></a>        <strong class='reserved'>return</strong> open(buf, O_WRONLY|O_CREAT|O_EXCL, <a href='../S/665.html#L618' title='Defined at 618 in config.h.'>LOGFILE_MASK</a>);
+<a id='L349' name='L349'></a>      <em class='brace'>}</em>
+<a id='L350' name='L350'></a>    <em class='brace'>}</em>
+<a id='L351' name='L351'></a>  <strong class='reserved'>return</strong> open(<a href='../D/630.html' title='Multiple defined in 2 places.'>CRASHLOG_PREFIX</a> <a href='../D/631.html' title='Multiple defined in 2 places.'>CRASHLOG_SUFFIX</a>, O_WRONLY|O_CREAT|O_EXCL,
+<a id='L352' name='L352'></a>              <a href='../S/665.html#L618' title='Defined at 618 in config.h.'>LOGFILE_MASK</a>);
+<a id='L353' name='L353'></a><em class='sharp'>#undef</em> <a href='../R/551.html' title='Multiple referred from 3 places.'>CRASHLOG_SUFFIX</a>
+<a id='L354' name='L354'></a><em class='sharp'>#undef</em> <a href='../R/550.html' title='Multiple referred from 3 places.'>CRASHLOG_PREFIX</a>
+<a id='L355' name='L355'></a><em class='brace'>}</em>
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a><em class='comment'>/* Note: the goal here is to use only async-signal-safe functions. */</em>
+<a id='L358' name='L358'></a><strong class='reserved'>void</strong>
+<a id='L359' name='L359'></a><a href='../R/10695.html' title='Multiple referred from 3 places.'>zlog_signal</a>(<strong class='reserved'>int</strong> signo, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *action
+<a id='L360' name='L360'></a><em class='sharp'>#ifdef</em> SA_SIGINFO
+<a id='L361' name='L361'></a>            , siginfo_t *siginfo, <strong class='reserved'>void</strong> *<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>
+<a id='L362' name='L362'></a><em class='sharp'>#endif</em>
+<a id='L363' name='L363'></a>           )
+<a id='L364' name='L364'></a><em class='brace'>{</em>
+<a id='L365' name='L365'></a>  time_t now;
+<a id='L366' name='L366'></a>  <strong class='reserved'>char</strong> buf[<strong class='reserved'>sizeof</strong>("DEFAULT: Received signal S at T (si_addr 0xP, PC 0xP); aborting...")+100];
+<a id='L367' name='L367'></a>  <strong class='reserved'>char</strong> *s = buf;
+<a id='L368' name='L368'></a>  <strong class='reserved'>char</strong> *msgstart = buf;
+<a id='L369' name='L369'></a><em class='sharp'>#define</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a> s,buf+<strong class='reserved'>sizeof</strong>(buf)-s
+<a id='L370' name='L370'></a>
+<a id='L371' name='L371'></a>  time(&amp;now);
+<a id='L372' name='L372'></a>  <strong class='reserved'>if</strong> (zlog_default)
+<a id='L373' name='L373'></a>    <em class='brace'>{</em>
+<a id='L374' name='L374'></a>      s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,zlog_proto_names[zlog_default-&gt;protocol]);
+<a id='L375' name='L375'></a>      *s++ = ':';
+<a id='L376' name='L376'></a>      *s++ = ' ';
+<a id='L377' name='L377'></a>      msgstart = s;
+<a id='L378' name='L378'></a>    <em class='brace'>}</em>
+<a id='L379' name='L379'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"Received signal ");
+<a id='L380' name='L380'></a>  s = <a href='../S/205.html#L229' title='Defined at 229 in lib/log.c.'>num_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,signo);
+<a id='L381' name='L381'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>," at ");
+<a id='L382' name='L382'></a>  s = <a href='../S/205.html#L229' title='Defined at 229 in lib/log.c.'>num_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,now);
+<a id='L383' name='L383'></a><em class='sharp'>#ifdef</em> SA_SIGINFO
+<a id='L384' name='L384'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>," (si_addr 0x");
+<a id='L385' name='L385'></a>  s = <a href='../S/205.html#L247' title='Defined at 247 in lib/log.c.'>hex_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,(u_long)(siginfo-&gt;si_addr));
+<a id='L386' name='L386'></a>  <strong class='reserved'>if</strong> (<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>)
+<a id='L387' name='L387'></a>    <em class='brace'>{</em>
+<a id='L388' name='L388'></a>      s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,", PC 0x");
+<a id='L389' name='L389'></a>      s = <a href='../S/205.html#L247' title='Defined at 247 in lib/log.c.'>hex_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,(u_long)<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>);
+<a id='L390' name='L390'></a>    <em class='brace'>}</em>
+<a id='L391' name='L391'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"); ");
+<a id='L392' name='L392'></a><em class='sharp'>#else</em> <em class='comment'>/* SA_SIGINFO */</em>
+<a id='L393' name='L393'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"; ");
+<a id='L394' name='L394'></a><em class='sharp'>#endif</em> <em class='comment'>/* SA_SIGINFO */</em>
+<a id='L395' name='L395'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,action);
+<a id='L396' name='L396'></a>  <strong class='reserved'>if</strong> (s &lt; buf+<strong class='reserved'>sizeof</strong>(buf))
+<a id='L397' name='L397'></a>    *s++ = '\n';
+<a id='L398' name='L398'></a>
+<a id='L399' name='L399'></a>  <em class='comment'>/* N.B. implicit priority is most severe */</em>
+<a id='L400' name='L400'></a><em class='sharp'>#define</em> <a href='../R/3011.html' title='Multiple referred from 5 places.'>PRI</a> LOG_CRIT
+<a id='L401' name='L401'></a>
+<a id='L402' name='L402'></a><em class='sharp'>#define</em> <a href='../R/687.html' title='Multiple referred from 6 places.'>DUMP</a>(FD) write(FD, buf, s-buf);
+<a id='L403' name='L403'></a>  <em class='comment'>/* If no file logging configured, try to write to fallback log file. */</em>
+<a id='L404' name='L404'></a>  <strong class='reserved'>if</strong> ((logfile_fd &gt;= 0) || ((logfile_fd = <a href='../S/205.html#L326' title='Defined at 326 in lib/log.c.'>open_crashlog</a>()) &gt;= 0))
+<a id='L405' name='L405'></a>    <a href='../D/785.html' title='Multiple defined in 5 places.'>DUMP</a>(logfile_fd)
+<a id='L406' name='L406'></a>  <strong class='reserved'>if</strong> (!zlog_default)
+<a id='L407' name='L407'></a>    <a href='../D/785.html' title='Multiple defined in 5 places.'>DUMP</a>(STDERR_FILENO)
+<a id='L408' name='L408'></a>  <strong class='reserved'>else</strong>
+<a id='L409' name='L409'></a>    <em class='brace'>{</em>
+<a id='L410' name='L410'></a>      <strong class='reserved'>if</strong> (<a href='../D/3528.html' title='Multiple defined in 2 places.'>PRI</a> &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L72' title='Defined at 72 in lib/log.h.'>ZLOG_DEST_STDOUT</a>])
+<a id='L411' name='L411'></a>        <a href='../D/785.html' title='Multiple defined in 5 places.'>DUMP</a>(STDOUT_FILENO)
+<a id='L412' name='L412'></a>      <em class='comment'>/* Remove trailing '\n' for monitor and syslog */</em>
+<a id='L413' name='L413'></a>      *--s = '\0';
+<a id='L414' name='L414'></a>      <strong class='reserved'>if</strong> (<a href='../D/3528.html' title='Multiple defined in 2 places.'>PRI</a> &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L73' title='Defined at 73 in lib/log.h.'>ZLOG_DEST_MONITOR</a>])
+<a id='L415' name='L415'></a>        <a href='../S/200.html#L2450' title='Defined at 2450 in lib/vty.c.'>vty_log_fixed</a>(buf,s-buf);
+<a id='L416' name='L416'></a>      <strong class='reserved'>if</strong> (<a href='../D/3528.html' title='Multiple defined in 2 places.'>PRI</a> &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L71' title='Defined at 71 in lib/log.h.'>ZLOG_DEST_SYSLOG</a>])
+<a id='L417' name='L417'></a>        <a href='../S/205.html#L297' title='Defined at 297 in lib/log.c.'>syslog_sigsafe</a>(<a href='../D/3528.html' title='Multiple defined in 2 places.'>PRI</a>|zlog_default-&gt;facility,msgstart,s-msgstart);
+<a id='L418' name='L418'></a>    <em class='brace'>}</em>
+<a id='L419' name='L419'></a><em class='sharp'>#undef</em> <a href='../R/687.html' title='Multiple referred from 6 places.'>DUMP</a>
+<a id='L420' name='L420'></a>
+<a id='L421' name='L421'></a>  <a href='../S/205.html#L435' title='Defined at 435 in lib/log.c.'>zlog_backtrace_sigsafe</a>(<a href='../D/3528.html' title='Multiple defined in 2 places.'>PRI</a>,
+<a id='L422' name='L422'></a><em class='sharp'>#ifdef</em> SA_SIGINFO
+<a id='L423' name='L423'></a>                         <a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>
+<a id='L424' name='L424'></a><em class='sharp'>#else</em>
+<a id='L425' name='L425'></a>                         <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>
+<a id='L426' name='L426'></a><em class='sharp'>#endif</em>
+<a id='L427' name='L427'></a>                        );
+<a id='L428' name='L428'></a><em class='sharp'>#undef</em> <a href='../R/3011.html' title='Multiple referred from 5 places.'>PRI</a>
+<a id='L429' name='L429'></a><em class='sharp'>#undef</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a>
+<a id='L430' name='L430'></a><em class='brace'>}</em>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a><em class='comment'>/* Log a backtrace using only async-signal-safe functions.</em>
+<a id='L433' name='L433'></a><em class='comment'>   Needs to be enhanced to support syslog logging. */</em>
+<a id='L434' name='L434'></a><strong class='reserved'>void</strong>
+<a id='L435' name='L435'></a><a href='../R/10687.html' title='Multiple referred from 2 places.'>zlog_backtrace_sigsafe</a>(<strong class='reserved'>int</strong> priority, <strong class='reserved'>void</strong> *<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>)
+<a id='L436' name='L436'></a><em class='brace'>{</em>
+<a id='L437' name='L437'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L330' title='Defined at 330 in config.h.'>HAVE_STACK_TRACE</a>
+<a id='L438' name='L438'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> pclabel[] = "Program counter: ";
+<a id='L439' name='L439'></a>  <strong class='reserved'>void</strong> *array[64];
+<a id='L440' name='L440'></a>  <strong class='reserved'>int</strong> size;
+<a id='L441' name='L441'></a>  <strong class='reserved'>char</strong> buf[100];
+<a id='L442' name='L442'></a>  <strong class='reserved'>char</strong> *s, **bt = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L443' name='L443'></a><em class='sharp'>#define</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a> s,buf+<strong class='reserved'>sizeof</strong>(buf)-s
+<a id='L444' name='L444'></a>
+<a id='L445' name='L445'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L123' title='Defined at 123 in config.h.'>HAVE_GLIBC_BACKTRACE</a>
+<a id='L446' name='L446'></a>  <strong class='reserved'>if</strong> (((size = backtrace(array,<a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(array)) &lt;= 0) ||
+<a id='L447' name='L447'></a>      ((size_t)size &gt; <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(array))))
+<a id='L448' name='L448'></a>    <strong class='reserved'>return</strong>;
+<a id='L449' name='L449'></a>
+<a id='L450' name='L450'></a><em class='sharp'>#define</em> <a href='../R/687.html' title='Multiple referred from 6 places.'>DUMP</a>(FD) <em class='brace'>{</em> \
+<a id='L451' name='L451'></a>  <strong class='reserved'>if</strong> (<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>) \
+<a id='L452' name='L452'></a>    <em class='brace'>{</em> \
+<a id='L453' name='L453'></a>      write(FD, pclabel, <strong class='reserved'>sizeof</strong>(pclabel)-1); \
+<a id='L454' name='L454'></a>      backtrace_symbols_fd(&amp;<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>, 1, FD); \
+<a id='L455' name='L455'></a>    <em class='brace'>}</em> \
+<a id='L456' name='L456'></a>  write(FD, buf, s-buf);        \
+<a id='L457' name='L457'></a>  backtrace_symbols_fd(array, size, FD); \
+<a id='L458' name='L458'></a><em class='brace'>}</em>
+<a id='L459' name='L459'></a><em class='sharp'>#elif</em> <strong class='reserved'>defined</strong>(HAVE_PRINTSTACK)
+<a id='L460' name='L460'></a><em class='sharp'>#define</em> <a href='../R/687.html' title='Multiple referred from 6 places.'>DUMP</a>(FD) <em class='brace'>{</em> \
+<a id='L461' name='L461'></a>  <strong class='reserved'>if</strong> (<a href='../S/278.html#L174' title='Defined at 174 in lib/sigevent.c.'>program_counter</a>) \
+<a id='L462' name='L462'></a>    write((FD), pclabel, <strong class='reserved'>sizeof</strong>(pclabel)-1); \
+<a id='L463' name='L463'></a>  write((FD), buf, s-buf); \
+<a id='L464' name='L464'></a>  printstack((FD)); \
+<a id='L465' name='L465'></a><em class='brace'>}</em>
+<a id='L466' name='L466'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_GLIBC_BACKTRACE, HAVE_PRINTSTACK */</em>
+<a id='L467' name='L467'></a>
+<a id='L468' name='L468'></a>  s = buf;
+<a id='L469' name='L469'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"Backtrace for ");
+<a id='L470' name='L470'></a>  s = <a href='../S/205.html#L229' title='Defined at 229 in lib/log.c.'>num_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,size);
+<a id='L471' name='L471'></a>  s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>," stack frames:\n");
+<a id='L472' name='L472'></a>
+<a id='L473' name='L473'></a>  <strong class='reserved'>if</strong> ((logfile_fd &gt;= 0) || ((logfile_fd = <a href='../S/205.html#L326' title='Defined at 326 in lib/log.c.'>open_crashlog</a>()) &gt;= 0))
+<a id='L474' name='L474'></a>    <a href='../D/785.html' title='Multiple defined in 5 places.'>DUMP</a>(logfile_fd)
+<a id='L475' name='L475'></a>  <strong class='reserved'>if</strong> (!zlog_default)
+<a id='L476' name='L476'></a>    <a href='../D/785.html' title='Multiple defined in 5 places.'>DUMP</a>(STDERR_FILENO)
+<a id='L477' name='L477'></a>  <strong class='reserved'>else</strong>
+<a id='L478' name='L478'></a>    <em class='brace'>{</em>
+<a id='L479' name='L479'></a>      <strong class='reserved'>if</strong> (priority &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L72' title='Defined at 72 in lib/log.h.'>ZLOG_DEST_STDOUT</a>])
+<a id='L480' name='L480'></a>        <a href='../D/785.html' title='Multiple defined in 5 places.'>DUMP</a>(STDOUT_FILENO)
+<a id='L481' name='L481'></a>      <em class='comment'>/* Remove trailing '\n' for monitor and syslog */</em>
+<a id='L482' name='L482'></a>      *--s = '\0';
+<a id='L483' name='L483'></a>      <strong class='reserved'>if</strong> (priority &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L73' title='Defined at 73 in lib/log.h.'>ZLOG_DEST_MONITOR</a>])
+<a id='L484' name='L484'></a>        <a href='../S/200.html#L2450' title='Defined at 2450 in lib/vty.c.'>vty_log_fixed</a>(buf,s-buf);
+<a id='L485' name='L485'></a>      <strong class='reserved'>if</strong> (priority &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L71' title='Defined at 71 in lib/log.h.'>ZLOG_DEST_SYSLOG</a>])
+<a id='L486' name='L486'></a>        <a href='../S/205.html#L297' title='Defined at 297 in lib/log.c.'>syslog_sigsafe</a>(priority|zlog_default-&gt;facility,buf,s-buf);
+<a id='L487' name='L487'></a>      <em class='brace'>{</em>
+<a id='L488' name='L488'></a>        <strong class='reserved'>int</strong> i;
+<a id='L489' name='L489'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L123' title='Defined at 123 in config.h.'>HAVE_GLIBC_BACKTRACE</a>
+<a id='L490' name='L490'></a>        bt = backtrace_symbols(array, size);
+<a id='L491' name='L491'></a><em class='sharp'>#endif</em>
+<a id='L492' name='L492'></a>        <em class='comment'>/* Just print the function addresses. */</em>
+<a id='L493' name='L493'></a>        <strong class='reserved'>for</strong> (i = 0; i &lt; size; i++)
+<a id='L494' name='L494'></a>          <em class='brace'>{</em>
+<a id='L495' name='L495'></a>            s = buf;
+<a id='L496' name='L496'></a>            <strong class='reserved'>if</strong> (bt) 
+<a id='L497' name='L497'></a>              s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>, bt[i]);
+<a id='L498' name='L498'></a>            <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L499' name='L499'></a>              s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"[bt ");
+<a id='L500' name='L500'></a>              s = <a href='../S/205.html#L229' title='Defined at 229 in lib/log.c.'>num_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,i);
+<a id='L501' name='L501'></a>              s = <a href='../S/205.html#L221' title='Defined at 221 in lib/log.c.'>str_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,"] 0x");
+<a id='L502' name='L502'></a>              s = <a href='../S/205.html#L247' title='Defined at 247 in lib/log.c.'>hex_append</a>(<a href='../D/1797.html' title='Multiple defined in 8 places.'>LOC</a>,(u_long)(array[i]));
+<a id='L503' name='L503'></a>            <em class='brace'>}</em>
+<a id='L504' name='L504'></a>            *s = '\0';
+<a id='L505' name='L505'></a>            <strong class='reserved'>if</strong> (priority &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L73' title='Defined at 73 in lib/log.h.'>ZLOG_DEST_MONITOR</a>])
+<a id='L506' name='L506'></a>              <a href='../S/200.html#L2450' title='Defined at 2450 in lib/vty.c.'>vty_log_fixed</a>(buf,s-buf);
+<a id='L507' name='L507'></a>            <strong class='reserved'>if</strong> (priority &lt;= zlog_default-&gt;maxlvl[<a href='../S/263.html#L71' title='Defined at 71 in lib/log.h.'>ZLOG_DEST_SYSLOG</a>])
+<a id='L508' name='L508'></a>              <a href='../S/205.html#L297' title='Defined at 297 in lib/log.c.'>syslog_sigsafe</a>(priority|zlog_default-&gt;facility,buf,s-buf);
+<a id='L509' name='L509'></a>          <em class='brace'>}</em>
+<a id='L510' name='L510'></a>          <strong class='reserved'>if</strong> (bt)
+<a id='L511' name='L511'></a>            free(bt);
+<a id='L512' name='L512'></a>      <em class='brace'>}</em>
+<a id='L513' name='L513'></a>    <em class='brace'>}</em>
+<a id='L514' name='L514'></a><em class='sharp'>#undef</em> <a href='../R/687.html' title='Multiple referred from 6 places.'>DUMP</a>
+<a id='L515' name='L515'></a><em class='sharp'>#undef</em> <a href='../R/1514.html' title='Multiple referred from 33 places.'>LOC</a>
+<a id='L516' name='L516'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_STRACK_TRACE */</em>
+<a id='L517' name='L517'></a><em class='brace'>}</em>
+<a id='L518' name='L518'></a>
+<a id='L519' name='L519'></a><strong class='reserved'>void</strong>
+<a id='L520' name='L520'></a><a href='../R/10686.html' title='Multiple referred from 10 places.'>zlog_backtrace</a>(<strong class='reserved'>int</strong> priority)
+<a id='L521' name='L521'></a><em class='brace'>{</em>
+<a id='L522' name='L522'></a><em class='sharp'>#ifndef</em> <a href='../S/665.html#L123' title='Defined at 123 in config.h.'>HAVE_GLIBC_BACKTRACE</a>
+<a id='L523' name='L523'></a>  <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, priority, "No backtrace available on this platform.");
+<a id='L524' name='L524'></a><em class='sharp'>#else</em>
+<a id='L525' name='L525'></a>  <strong class='reserved'>void</strong> *array[20];
+<a id='L526' name='L526'></a>  <strong class='reserved'>int</strong> size, i;
+<a id='L527' name='L527'></a>  <strong class='reserved'>char</strong> **strings;
+<a id='L528' name='L528'></a>
+<a id='L529' name='L529'></a>  <strong class='reserved'>if</strong> (((size = backtrace(array,<a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(array))) &lt;= 0) ||
+<a id='L530' name='L530'></a>      ((size_t)size &gt; <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(array)))
+<a id='L531' name='L531'></a>    <em class='brace'>{</em>
+<a id='L532' name='L532'></a>      zlog_err("Cannot get backtrace, returned invalid # of frames %d "
+<a id='L533' name='L533'></a>               "(valid range is between 1 and %lu)",
+<a id='L534' name='L534'></a>               size, (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>)(<a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(array)));
+<a id='L535' name='L535'></a>      <strong class='reserved'>return</strong>;
+<a id='L536' name='L536'></a>    <em class='brace'>}</em>
+<a id='L537' name='L537'></a>  <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, priority, "Backtrace for %d stack frames:", size);
+<a id='L538' name='L538'></a>  <strong class='reserved'>if</strong> (!(strings = backtrace_symbols(array, size)))
+<a id='L539' name='L539'></a>    <em class='brace'>{</em>
+<a id='L540' name='L540'></a>      zlog_err("Cannot get backtrace symbols (out of memory?)");
+<a id='L541' name='L541'></a>      <strong class='reserved'>for</strong> (i = 0; i &lt; size; i++)
+<a id='L542' name='L542'></a>        <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, priority, "[bt %d] %p",i,array[i]);
+<a id='L543' name='L543'></a>    <em class='brace'>}</em>
+<a id='L544' name='L544'></a>  <strong class='reserved'>else</strong>
+<a id='L545' name='L545'></a>    <em class='brace'>{</em>
+<a id='L546' name='L546'></a>      <strong class='reserved'>for</strong> (i = 0; i &lt; size; i++)
+<a id='L547' name='L547'></a>        <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, priority, "[bt %d] %s",i,strings[i]);
+<a id='L548' name='L548'></a>      free(strings);
+<a id='L549' name='L549'></a>    <em class='brace'>}</em>
+<a id='L550' name='L550'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_GLIBC_BACKTRACE */</em>
+<a id='L551' name='L551'></a><em class='brace'>}</em>
+<a id='L552' name='L552'></a>
+<a id='L553' name='L553'></a><strong class='reserved'>void</strong>
+<a id='L554' name='L554'></a><a href='../R/10685.html' title='Multiple referred from 232 places.'>zlog</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl, <strong class='reserved'>int</strong> priority, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *format, ...)
+<a id='L555' name='L555'></a><em class='brace'>{</em>
+<a id='L556' name='L556'></a>  va_list args;
+<a id='L557' name='L557'></a>
+<a id='L558' name='L558'></a>  va_start(args, format);
+<a id='L559' name='L559'></a>  <a href='../S/205.html#L151' title='Defined at 151 in lib/log.c.'>vzlog</a> (zl, priority, format, args);
+<a id='L560' name='L560'></a>  va_end (args);
+<a id='L561' name='L561'></a><em class='brace'>}</em>
+<a id='L562' name='L562'></a>
+<a id='L563' name='L563'></a><em class='sharp'>#define</em> <a href='../R/3991.html' title='Multiple referred from 5 places.'>ZLOG_FUNC</a>(FUNCNAME,<a href='../S/791.html#L187' title='Defined at 187 in ospfd/ospf_interface.h.'>PRIORITY</a>) \
+<a id='L564' name='L564'></a><strong class='reserved'>void</strong> \
+<a id='L565' name='L565'></a>FUNCNAME(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *format, ...) \
+<a id='L566' name='L566'></a><em class='brace'>{</em> \
+<a id='L567' name='L567'></a>  va_list args; \
+<a id='L568' name='L568'></a>  va_start(args, format); \
+<a id='L569' name='L569'></a>  <a href='../S/205.html#L151' title='Defined at 151 in lib/log.c.'>vzlog</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/791.html#L187' title='Defined at 187 in ospfd/ospf_interface.h.'>PRIORITY</a>, format, args); \
+<a id='L570' name='L570'></a>  va_end(args); \
+<a id='L571' name='L571'></a><em class='brace'>}</em>
+<a id='L572' name='L572'></a>
+<a id='L573' name='L573'></a><a href='../R/3991.html' title='Multiple referred from 5 places.'>ZLOG_FUNC</a>(zlog_err, LOG_ERR)
+<a id='L574' name='L574'></a>
+<a id='L575' name='L575'></a><a href='../D/4717.html' title='Multiple defined in 2 places.'>ZLOG_FUNC</a>(zlog_warn, LOG_WARNING)
+<a id='L576' name='L576'></a>
+<a id='L577' name='L577'></a><a href='../D/4717.html' title='Multiple defined in 2 places.'>ZLOG_FUNC</a>(zlog_info, LOG_INFO)
+<a id='L578' name='L578'></a>
+<a id='L579' name='L579'></a><a href='../D/4717.html' title='Multiple defined in 2 places.'>ZLOG_FUNC</a>(zlog_notice, LOG_NOTICE)
+<a id='L580' name='L580'></a>
+<a id='L581' name='L581'></a><a href='../D/4717.html' title='Multiple defined in 2 places.'>ZLOG_FUNC</a>(zlog_debug, LOG_DEBUG)
+<a id='L582' name='L582'></a>
+<a id='L583' name='L583'></a><em class='sharp'>#undef</em> <a href='../D/4717.html' title='Multiple defined in 2 places.'>ZLOG_FUNC</a>
+<a id='L584' name='L584'></a>
+<a id='L585' name='L585'></a><em class='sharp'>#define</em> <a href='../S/205.html#L595' title='Defined at 595 in lib/log.c.'>PLOG_FUNC</a>(FUNCNAME,<a href='../S/791.html#L187' title='Defined at 187 in ospfd/ospf_interface.h.'>PRIORITY</a>) \
+<a id='L586' name='L586'></a><strong class='reserved'>void</strong> \
+<a id='L587' name='L587'></a>FUNCNAME(<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *format, ...) \
+<a id='L588' name='L588'></a><em class='brace'>{</em> \
+<a id='L589' name='L589'></a>  va_list args; \
+<a id='L590' name='L590'></a>  va_start(args, format); \
+<a id='L591' name='L591'></a>  <a href='../S/205.html#L151' title='Defined at 151 in lib/log.c.'>vzlog</a> (zl, <a href='../S/791.html#L187' title='Defined at 187 in ospfd/ospf_interface.h.'>PRIORITY</a>, format, args); \
+<a id='L592' name='L592'></a>  va_end(args); \
+<a id='L593' name='L593'></a><em class='brace'>}</em>
+<a id='L594' name='L594'></a>
+<a id='L595' name='L595'></a><a href='../R/2991.html' title='Multiple referred from 6 places.'>PLOG_FUNC</a>(plog_err, LOG_ERR)
+<a id='L596' name='L596'></a>
+<a id='L597' name='L597'></a><a href='../S/205.html#L595' title='Defined at 595 in lib/log.c.'>PLOG_FUNC</a>(plog_warn, LOG_WARNING)
+<a id='L598' name='L598'></a>
+<a id='L599' name='L599'></a><a href='../S/205.html#L595' title='Defined at 595 in lib/log.c.'>PLOG_FUNC</a>(plog_info, LOG_INFO)
+<a id='L600' name='L600'></a>
+<a id='L601' name='L601'></a><a href='../S/205.html#L595' title='Defined at 595 in lib/log.c.'>PLOG_FUNC</a>(plog_notice, LOG_NOTICE)
+<a id='L602' name='L602'></a>
+<a id='L603' name='L603'></a><a href='../S/205.html#L595' title='Defined at 595 in lib/log.c.'>PLOG_FUNC</a>(plog_debug, LOG_DEBUG)
+<a id='L604' name='L604'></a>
+<a id='L605' name='L605'></a><em class='sharp'>#undef</em> <a href='../S/205.html#L595' title='Defined at 595 in lib/log.c.'>PLOG_FUNC</a>
+<a id='L606' name='L606'></a>
+<a id='L607' name='L607'></a><strong class='reserved'>void</strong>
+<a id='L608' name='L608'></a>_zlog_assert_failed (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *assertion, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *file,
+<a id='L609' name='L609'></a>                     <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> line, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *function)
+<a id='L610' name='L610'></a><em class='brace'>{</em>
+<a id='L611' name='L611'></a>  <em class='comment'>/* Force fallback file logging? */</em>
+<a id='L612' name='L612'></a>  <strong class='reserved'>if</strong> (zlog_default &amp;&amp; !zlog_default-&gt;fp &amp;&amp;
+<a id='L613' name='L613'></a>      ((logfile_fd = <a href='../S/205.html#L326' title='Defined at 326 in lib/log.c.'>open_crashlog</a>()) &gt;= 0) &amp;&amp;
+<a id='L614' name='L614'></a>      ((zlog_default-&gt;fp = fdopen(logfile_fd, "w")) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>))
+<a id='L615' name='L615'></a>    zlog_default-&gt;maxlvl[ZLOG_DEST_FILE] = LOG_ERR;
+<a id='L616' name='L616'></a>  <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a>(<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, LOG_CRIT, "Assertion `%s' failed in file %s, line %u, function %s",
+<a id='L617' name='L617'></a>       assertion,file,line,(function ? function : "?"));
+<a id='L618' name='L618'></a>  <a href='../S/205.html#L520' title='Defined at 520 in lib/log.c.'>zlog_backtrace</a>(LOG_CRIT);
+<a id='L619' name='L619'></a>  abort();
+<a id='L620' name='L620'></a><em class='brace'>}</em>
+<a id='L621' name='L621'></a>
+<a id='L622' name='L622'></a>
+<a id='L623' name='L623'></a><em class='comment'>/* Open log stream */</em>
+<a id='L624' name='L624'></a><strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *
+<a id='L625' name='L625'></a><a href='../R/7453.html' title='Multiple referred from 21 places.'>openzlog</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *progname, <a href='../S/263.html#L63' title='Defined at 63 in lib/log.h.'>zlog_proto_t</a> protocol,
+<a id='L626' name='L626'></a>          <strong class='reserved'>int</strong> syslog_flags, <strong class='reserved'>int</strong> syslog_facility)
+<a id='L627' name='L627'></a><em class='brace'>{</em>
+<a id='L628' name='L628'></a>  <strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl;
+<a id='L629' name='L629'></a>  u_int i;
+<a id='L630' name='L630'></a>
+<a id='L631' name='L631'></a>  zl = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a>(MTYPE_ZLOG, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a>));
+<a id='L632' name='L632'></a>
+<a id='L633' name='L633'></a>  zl-&gt;ident = progname;
+<a id='L634' name='L634'></a>  zl-&gt;protocol = protocol;
+<a id='L635' name='L635'></a>  zl-&gt;facility = syslog_facility;
+<a id='L636' name='L636'></a>  zl-&gt;syslog_options = syslog_flags;
+<a id='L637' name='L637'></a>
+<a id='L638' name='L638'></a>  <em class='comment'>/* Set default logging levels. */</em>
+<a id='L639' name='L639'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(zl-&gt;maxlvl); i++)
+<a id='L640' name='L640'></a>    zl-&gt;maxlvl[i] = <a href='../S/263.html#L67' title='Defined at 67 in lib/log.h.'>ZLOG_DISABLED</a>;
+<a id='L641' name='L641'></a>  zl-&gt;maxlvl[<a href='../S/263.html#L73' title='Defined at 73 in lib/log.h.'>ZLOG_DEST_MONITOR</a>] = LOG_DEBUG;
+<a id='L642' name='L642'></a>  zl-&gt;default_lvl = LOG_DEBUG;
+<a id='L643' name='L643'></a>
+<a id='L644' name='L644'></a>  openlog (progname, syslog_flags, zl-&gt;facility);
+<a id='L645' name='L645'></a>  
+<a id='L646' name='L646'></a>  <strong class='reserved'>return</strong> zl;
+<a id='L647' name='L647'></a><em class='brace'>}</em>
+<a id='L648' name='L648'></a>
+<a id='L649' name='L649'></a><strong class='reserved'>void</strong>
+<a id='L650' name='L650'></a><a href='../R/5272.html' title='Multiple referred from 3 places.'>closezlog</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl)
+<a id='L651' name='L651'></a><em class='brace'>{</em>
+<a id='L652' name='L652'></a>  closelog();
+<a id='L653' name='L653'></a>
+<a id='L654' name='L654'></a>  <strong class='reserved'>if</strong> (zl-&gt;fp != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L655' name='L655'></a>    fclose (zl-&gt;fp);
+<a id='L656' name='L656'></a>
+<a id='L657' name='L657'></a>  <strong class='reserved'>if</strong> (zl-&gt;filename != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L658' name='L658'></a>    free (zl-&gt;filename);
+<a id='L659' name='L659'></a>
+<a id='L660' name='L660'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ZLOG, zl);
+<a id='L661' name='L661'></a><em class='brace'>}</em>
+<a id='L662' name='L662'></a>
+<a id='L663' name='L663'></a><em class='comment'>/* Called from command.c. */</em>
+<a id='L664' name='L664'></a><strong class='reserved'>void</strong>
+<a id='L665' name='L665'></a><a href='../R/10694.html' title='Multiple referred from 19 places.'>zlog_set_level</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl, <a href='../S/263.html#L75' title='Defined at 75 in lib/log.h.'>zlog_dest_t</a> dest, <strong class='reserved'>int</strong> log_level)
+<a id='L666' name='L666'></a><em class='brace'>{</em>
+<a id='L667' name='L667'></a>  <strong class='reserved'>if</strong> (zl == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L668' name='L668'></a>    zl = zlog_default;
+<a id='L669' name='L669'></a>
+<a id='L670' name='L670'></a>  zl-&gt;maxlvl[dest] = log_level;
+<a id='L671' name='L671'></a><em class='brace'>}</em>
+<a id='L672' name='L672'></a>
+<a id='L673' name='L673'></a><strong class='reserved'>int</strong>
+<a id='L674' name='L674'></a><a href='../R/10693.html' title='Multiple referred from 2 places.'>zlog_set_file</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *filename, <strong class='reserved'>int</strong> log_level)
+<a id='L675' name='L675'></a><em class='brace'>{</em>
+<a id='L676' name='L676'></a>  FILE *fp;
+<a id='L677' name='L677'></a>  mode_t oldumask;
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a>  <em class='comment'>/* There is opend file.  */</em>
+<a id='L680' name='L680'></a>  <a href='../S/205.html#L704' title='Defined at 704 in lib/log.c.'>zlog_reset_file</a> (zl);
+<a id='L681' name='L681'></a>
+<a id='L682' name='L682'></a>  <em class='comment'>/* Set default zl. */</em>
+<a id='L683' name='L683'></a>  <strong class='reserved'>if</strong> (zl == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L684' name='L684'></a>    zl = zlog_default;
+<a id='L685' name='L685'></a>
+<a id='L686' name='L686'></a>  <em class='comment'>/* Open file. */</em>
+<a id='L687' name='L687'></a>  oldumask = umask (0777 &amp; ~<a href='../S/665.html#L618' title='Defined at 618 in config.h.'>LOGFILE_MASK</a>);
+<a id='L688' name='L688'></a>  fp = fopen (filename, "a");
+<a id='L689' name='L689'></a>  umask(oldumask);
+<a id='L690' name='L690'></a>  <strong class='reserved'>if</strong> (fp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L691' name='L691'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L692' name='L692'></a>
+<a id='L693' name='L693'></a>  <em class='comment'>/* Set flags. */</em>
+<a id='L694' name='L694'></a>  zl-&gt;filename = strdup (filename);
+<a id='L695' name='L695'></a>  zl-&gt;maxlvl[ZLOG_DEST_FILE] = log_level;
+<a id='L696' name='L696'></a>  zl-&gt;fp = fp;
+<a id='L697' name='L697'></a>  logfile_fd = fileno(fp);
+<a id='L698' name='L698'></a>
+<a id='L699' name='L699'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L700' name='L700'></a><em class='brace'>}</em>
+<a id='L701' name='L701'></a>
+<a id='L702' name='L702'></a><em class='comment'>/* Reset opend file. */</em>
+<a id='L703' name='L703'></a><strong class='reserved'>int</strong>
+<a id='L704' name='L704'></a><a href='../R/10691.html' title='Multiple referred from 3 places.'>zlog_reset_file</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl)
+<a id='L705' name='L705'></a><em class='brace'>{</em>
+<a id='L706' name='L706'></a>  <strong class='reserved'>if</strong> (zl == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L707' name='L707'></a>    zl = zlog_default;
+<a id='L708' name='L708'></a>
+<a id='L709' name='L709'></a>  <strong class='reserved'>if</strong> (zl-&gt;fp)
+<a id='L710' name='L710'></a>    fclose (zl-&gt;fp);
+<a id='L711' name='L711'></a>  zl-&gt;fp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L712' name='L712'></a>  logfile_fd = -1;
+<a id='L713' name='L713'></a>  zl-&gt;maxlvl[ZLOG_DEST_FILE] = <a href='../S/263.html#L67' title='Defined at 67 in lib/log.h.'>ZLOG_DISABLED</a>;
+<a id='L714' name='L714'></a>
+<a id='L715' name='L715'></a>  <strong class='reserved'>if</strong> (zl-&gt;filename)
+<a id='L716' name='L716'></a>    free (zl-&gt;filename);
+<a id='L717' name='L717'></a>  zl-&gt;filename = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L718' name='L718'></a>
+<a id='L719' name='L719'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L720' name='L720'></a><em class='brace'>}</em>
+<a id='L721' name='L721'></a>
+<a id='L722' name='L722'></a><em class='comment'>/* Reopen log file. */</em>
+<a id='L723' name='L723'></a><strong class='reserved'>int</strong>
+<a id='L724' name='L724'></a><a href='../R/10692.html' title='Multiple referred from 19 places.'>zlog_rotate</a> (<strong class='reserved'>struct</strong> <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> *zl)
+<a id='L725' name='L725'></a><em class='brace'>{</em>
+<a id='L726' name='L726'></a>  <strong class='reserved'>int</strong> level;
+<a id='L727' name='L727'></a>
+<a id='L728' name='L728'></a>  <strong class='reserved'>if</strong> (zl == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L729' name='L729'></a>    zl = zlog_default;
+<a id='L730' name='L730'></a>
+<a id='L731' name='L731'></a>  <strong class='reserved'>if</strong> (zl-&gt;fp)
+<a id='L732' name='L732'></a>    fclose (zl-&gt;fp);
+<a id='L733' name='L733'></a>  zl-&gt;fp = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L734' name='L734'></a>  logfile_fd = -1;
+<a id='L735' name='L735'></a>  level = zl-&gt;maxlvl[ZLOG_DEST_FILE];
+<a id='L736' name='L736'></a>  zl-&gt;maxlvl[ZLOG_DEST_FILE] = <a href='../S/263.html#L67' title='Defined at 67 in lib/log.h.'>ZLOG_DISABLED</a>;
+<a id='L737' name='L737'></a>
+<a id='L738' name='L738'></a>  <strong class='reserved'>if</strong> (zl-&gt;filename)
+<a id='L739' name='L739'></a>    <em class='brace'>{</em>
+<a id='L740' name='L740'></a>      mode_t oldumask;
+<a id='L741' name='L741'></a>      <strong class='reserved'>int</strong> save_errno;
+<a id='L742' name='L742'></a>
+<a id='L743' name='L743'></a>      oldumask = umask (0777 &amp; ~<a href='../S/665.html#L618' title='Defined at 618 in config.h.'>LOGFILE_MASK</a>);
+<a id='L744' name='L744'></a>      zl-&gt;fp = fopen (zl-&gt;filename, "a");
+<a id='L745' name='L745'></a>      save_errno = errno;
+<a id='L746' name='L746'></a>      umask(oldumask);
+<a id='L747' name='L747'></a>      <strong class='reserved'>if</strong> (zl-&gt;fp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L748' name='L748'></a>        <em class='brace'>{</em>
+<a id='L749' name='L749'></a>          zlog_err("Log rotate failed: cannot open file %s for append: %s",
+<a id='L750' name='L750'></a>                   zl-&gt;filename, <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a>(save_errno));
+<a id='L751' name='L751'></a>          <strong class='reserved'>return</strong> -1;
+<a id='L752' name='L752'></a>        <em class='brace'>}</em>       
+<a id='L753' name='L753'></a>      logfile_fd = fileno(zl-&gt;fp);
+<a id='L754' name='L754'></a>      zl-&gt;maxlvl[ZLOG_DEST_FILE] = level;
+<a id='L755' name='L755'></a>    <em class='brace'>}</em>
+<a id='L756' name='L756'></a>
+<a id='L757' name='L757'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L758' name='L758'></a><em class='brace'>}</em>
+<a id='L759' name='L759'></a>
+<a id='L760' name='L760'></a><em class='comment'>/* Message lookup function. */</em>
+<a id='L761' name='L761'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L762' name='L762'></a><a href='../R/6817.html' title='Multiple referred from 38 places.'>lookup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> *mes, <strong class='reserved'>int</strong> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>)
+<a id='L763' name='L763'></a><em class='brace'>{</em>
+<a id='L764' name='L764'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> *pnt;
+<a id='L765' name='L765'></a>
+<a id='L766' name='L766'></a>  <strong class='reserved'>for</strong> (pnt = mes; pnt-&gt;<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> != 0; pnt++) 
+<a id='L767' name='L767'></a>    <strong class='reserved'>if</strong> (pnt-&gt;<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> == <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>) 
+<a id='L768' name='L768'></a>      <strong class='reserved'>return</strong> pnt-&gt;str;
+<a id='L769' name='L769'></a>
+<a id='L770' name='L770'></a>  <strong class='reserved'>return</strong> "";
+<a id='L771' name='L771'></a><em class='brace'>}</em>
+<a id='L772' name='L772'></a>
+<a id='L773' name='L773'></a><em class='comment'>/* Older/faster version of message lookup function, but requires caller to pass</em>
+<a id='L774' name='L774'></a><em class='comment'> * in the array size (instead of relying on a 0 key to terminate the search). </em>
+<a id='L775' name='L775'></a><em class='comment'> *</em>
+<a id='L776' name='L776'></a><em class='comment'> * The return value is the message string if found, or the 'none' pointer</em>
+<a id='L777' name='L777'></a><em class='comment'> * provided otherwise.</em>
+<a id='L778' name='L778'></a><em class='comment'> */</em>
+<a id='L779' name='L779'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L780' name='L780'></a><a href='../R/6922.html' title='Multiple referred from 2 places.'>mes_lookup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> *meslist, <strong class='reserved'>int</strong> max, <strong class='reserved'>int</strong> index,
+<a id='L781' name='L781'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *none, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *mesname)
+<a id='L782' name='L782'></a><em class='brace'>{</em>
+<a id='L783' name='L783'></a>  <strong class='reserved'>int</strong> pos = index - meslist[0].<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>;
+<a id='L784' name='L784'></a>  
+<a id='L785' name='L785'></a>  <em class='comment'>/* first check for best case: index is in range and matches the key</em>
+<a id='L786' name='L786'></a><em class='comment'>   * value in that slot.</em>
+<a id='L787' name='L787'></a><em class='comment'>   * NB: key numbering might be offset from 0. E.g. protocol constants</em>
+<a id='L788' name='L788'></a><em class='comment'>   * often start at 1.</em>
+<a id='L789' name='L789'></a><em class='comment'>   */</em>
+<a id='L790' name='L790'></a>  <strong class='reserved'>if</strong> ((pos &gt;= 0) &amp;&amp; (pos &lt; max)
+<a id='L791' name='L791'></a>      &amp;&amp; (meslist[pos].<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> == index))
+<a id='L792' name='L792'></a>    <strong class='reserved'>return</strong> meslist[pos].str;
+<a id='L793' name='L793'></a>
+<a id='L794' name='L794'></a>  <em class='comment'>/* fall back to linear search */</em>
+<a id='L795' name='L795'></a>  <em class='brace'>{</em>
+<a id='L796' name='L796'></a>    <strong class='reserved'>int</strong> i;
+<a id='L797' name='L797'></a>
+<a id='L798' name='L798'></a>    <strong class='reserved'>for</strong> (i = 0; i &lt; max; i++, meslist++)
+<a id='L799' name='L799'></a>      <em class='brace'>{</em>
+<a id='L800' name='L800'></a>        <strong class='reserved'>if</strong> (meslist-&gt;<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> == index)
+<a id='L801' name='L801'></a>          <em class='brace'>{</em>
+<a id='L802' name='L802'></a>            <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str = (meslist-&gt;str ? meslist-&gt;str : none);
+<a id='L803' name='L803'></a>            
+<a id='L804' name='L804'></a>            zlog_debug ("message index %d [%s] found in %s at position %d (max is %d)",
+<a id='L805' name='L805'></a>                      index, str, mesname, i, max);
+<a id='L806' name='L806'></a>            <strong class='reserved'>return</strong> str;
+<a id='L807' name='L807'></a>          <em class='brace'>}</em>
+<a id='L808' name='L808'></a>      <em class='brace'>}</em>
+<a id='L809' name='L809'></a>  <em class='brace'>}</em>
+<a id='L810' name='L810'></a>  zlog_err("message index %d not found in %s (max is %d)", index, mesname, max);
+<a id='L811' name='L811'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (none);
+<a id='L812' name='L812'></a>  <strong class='reserved'>return</strong> none;
+<a id='L813' name='L813'></a><em class='brace'>}</em>
+<a id='L814' name='L814'></a>
+<a id='L815' name='L815'></a><em class='comment'>/* Wrapper around strerror to handle case where it returns NULL. */</em>
+<a id='L816' name='L816'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L817' name='L817'></a><a href='../R/9686.html' title='Multiple referred from 307 places.'>safe_strerror</a>(<strong class='reserved'>int</strong> errnum)
+<a id='L818' name='L818'></a><em class='brace'>{</em>
+<a id='L819' name='L819'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s = strerror(errnum);
+<a id='L820' name='L820'></a>  <strong class='reserved'>return</strong> (s != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) ? s : "Unknown error";
+<a id='L821' name='L821'></a><em class='brace'>}</em>
+<a id='L822' name='L822'></a>
+<a id='L823' name='L823'></a><em class='sharp'>#define</em> <a href='../R/650.html' title='Multiple referred from 42 places.'>DESC_ENTRY</a>(T) [(T)] = <em class='brace'>{</em> (T), (#T), '\0' <em class='brace'>}</em>
+<a id='L824' name='L824'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/280.html#L640' title='Defined at 640 in lib/route_types.h.'>zebra_desc_table</a> command_types[] = <em class='brace'>{</em>
+<a id='L825' name='L825'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L405' title='Defined at 405 in lib/zebra.h.'>ZEBRA_INTERFACE_ADD</a>),
+<a id='L826' name='L826'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L406' title='Defined at 406 in lib/zebra.h.'>ZEBRA_INTERFACE_DELETE</a>),
+<a id='L827' name='L827'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L407' title='Defined at 407 in lib/zebra.h.'>ZEBRA_INTERFACE_ADDRESS_ADD</a>),
+<a id='L828' name='L828'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L408' title='Defined at 408 in lib/zebra.h.'>ZEBRA_INTERFACE_ADDRESS_DELETE</a>),
+<a id='L829' name='L829'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L409' title='Defined at 409 in lib/zebra.h.'>ZEBRA_INTERFACE_UP</a>),
+<a id='L830' name='L830'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L410' title='Defined at 410 in lib/zebra.h.'>ZEBRA_INTERFACE_DOWN</a>),
+<a id='L831' name='L831'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>),
+<a id='L832' name='L832'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L412' title='Defined at 412 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_DELETE</a>),
+<a id='L833' name='L833'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L413' title='Defined at 413 in lib/zebra.h.'>ZEBRA_IPV6_ROUTE_ADD</a>),
+<a id='L834' name='L834'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L414' title='Defined at 414 in lib/zebra.h.'>ZEBRA_IPV6_ROUTE_DELETE</a>),
+<a id='L835' name='L835'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L415' title='Defined at 415 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_ADD</a>),
+<a id='L836' name='L836'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L416' title='Defined at 416 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_DELETE</a>),
+<a id='L837' name='L837'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L417' title='Defined at 417 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_DEFAULT_ADD</a>),
+<a id='L838' name='L838'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L418' title='Defined at 418 in lib/zebra.h.'>ZEBRA_REDISTRIBUTE_DEFAULT_DELETE</a>),
+<a id='L839' name='L839'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L419' title='Defined at 419 in lib/zebra.h.'>ZEBRA_IPV4_NEXTHOP_LOOKUP</a>),
+<a id='L840' name='L840'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L420' title='Defined at 420 in lib/zebra.h.'>ZEBRA_IPV6_NEXTHOP_LOOKUP</a>),
+<a id='L841' name='L841'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L421' title='Defined at 421 in lib/zebra.h.'>ZEBRA_IPV4_IMPORT_LOOKUP</a>),
+<a id='L842' name='L842'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L422' title='Defined at 422 in lib/zebra.h.'>ZEBRA_IPV6_IMPORT_LOOKUP</a>),
+<a id='L843' name='L843'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L423' title='Defined at 423 in lib/zebra.h.'>ZEBRA_INTERFACE_RENAME</a>),
+<a id='L844' name='L844'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L424' title='Defined at 424 in lib/zebra.h.'>ZEBRA_ROUTER_ID_ADD</a>),
+<a id='L845' name='L845'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L425' title='Defined at 425 in lib/zebra.h.'>ZEBRA_ROUTER_ID_DELETE</a>),
+<a id='L846' name='L846'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L426' title='Defined at 426 in lib/zebra.h.'>ZEBRA_ROUTER_ID_UPDATE</a>),
+<a id='L847' name='L847'></a>  <a href='../D/740.html' title='Multiple defined in 4 places.'>DESC_ENTRY</a>    (<a href='../S/191.html#L427' title='Defined at 427 in lib/zebra.h.'>ZEBRA_HELLO</a>),
+<a id='L848' name='L848'></a><em class='brace'>}</em>;
+<a id='L849' name='L849'></a><em class='sharp'>#undef</em> <a href='../R/650.html' title='Multiple referred from 42 places.'>DESC_ENTRY</a>
+<a id='L850' name='L850'></a>
+<a id='L851' name='L851'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/280.html#L640' title='Defined at 640 in lib/route_types.h.'>zebra_desc_table</a> unknown = <em class='brace'>{</em> 0, "unknown", '?' <em class='brace'>}</em>;
+<a id='L852' name='L852'></a>
+<a id='L853' name='L853'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/280.html#L640' title='Defined at 640 in lib/route_types.h.'>zebra_desc_table</a> *
+<a id='L854' name='L854'></a><a href='../R/10727.html' title='Multiple referred from 2 places.'>zroute_lookup</a>(u_int zroute)
+<a id='L855' name='L855'></a><em class='brace'>{</em>
+<a id='L856' name='L856'></a>  u_int i;
+<a id='L857' name='L857'></a>
+<a id='L858' name='L858'></a>  <strong class='reserved'>if</strong> (zroute &gt;= <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(route_types))
+<a id='L859' name='L859'></a>    <em class='brace'>{</em>
+<a id='L860' name='L860'></a>      zlog_err("unknown zebra route type: %u", zroute);
+<a id='L861' name='L861'></a>      <strong class='reserved'>return</strong> &amp;unknown;
+<a id='L862' name='L862'></a>    <em class='brace'>}</em>
+<a id='L863' name='L863'></a>  <strong class='reserved'>if</strong> (zroute == route_types[zroute].type)
+<a id='L864' name='L864'></a>    <strong class='reserved'>return</strong> &amp;route_types[zroute];
+<a id='L865' name='L865'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(route_types); i++)
+<a id='L866' name='L866'></a>    <em class='brace'>{</em>
+<a id='L867' name='L867'></a>      <strong class='reserved'>if</strong> (zroute == route_types[i].type)
+<a id='L868' name='L868'></a>        <em class='brace'>{</em>
+<a id='L869' name='L869'></a>          zlog_warn("internal error: route type table out of order "
+<a id='L870' name='L870'></a>                    "while searching for %u, please notify developers", zroute);
+<a id='L871' name='L871'></a>          <strong class='reserved'>return</strong> &amp;route_types[i];
+<a id='L872' name='L872'></a>        <em class='brace'>}</em>
+<a id='L873' name='L873'></a>    <em class='brace'>}</em>
+<a id='L874' name='L874'></a>  zlog_err("internal error: cannot find route type %u in table!", zroute);
+<a id='L875' name='L875'></a>  <strong class='reserved'>return</strong> &amp;unknown;
+<a id='L876' name='L876'></a><em class='brace'>}</em>
+<a id='L877' name='L877'></a>
+<a id='L878' name='L878'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L879' name='L879'></a><a href='../R/10620.html' title='Multiple referred from 35 places.'>zebra_route_string</a>(u_int zroute)
+<a id='L880' name='L880'></a><em class='brace'>{</em>
+<a id='L881' name='L881'></a>  <strong class='reserved'>return</strong> <a href='../S/205.html#L854' title='Defined at 854 in lib/log.c.'>zroute_lookup</a>(zroute)-&gt;string;
+<a id='L882' name='L882'></a><em class='brace'>}</em>
+<a id='L883' name='L883'></a>
+<a id='L884' name='L884'></a><strong class='reserved'>char</strong>
+<a id='L885' name='L885'></a><a href='../R/10614.html' title='Multiple referred from 7 places.'>zebra_route_char</a>(u_int zroute)
+<a id='L886' name='L886'></a><em class='brace'>{</em>
+<a id='L887' name='L887'></a>  <strong class='reserved'>return</strong> <a href='../S/205.html#L854' title='Defined at 854 in lib/log.c.'>zroute_lookup</a>(zroute)-&gt;chr;
+<a id='L888' name='L888'></a><em class='brace'>}</em>
+<a id='L889' name='L889'></a>
+<a id='L890' name='L890'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L891' name='L891'></a><a href='../R/10738.html' title='Multiple referred from 2 places.'>zserv_command_string</a> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>)
+<a id='L892' name='L892'></a><em class='brace'>{</em>
+<a id='L893' name='L893'></a>  <strong class='reserved'>if</strong> (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a> &gt;= <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(command_types))
+<a id='L894' name='L894'></a>    <em class='brace'>{</em>
+<a id='L895' name='L895'></a>      zlog_err ("unknown zserv command type: %u", <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>);
+<a id='L896' name='L896'></a>      <strong class='reserved'>return</strong> unknown.string;
+<a id='L897' name='L897'></a>    <em class='brace'>}</em>
+<a id='L898' name='L898'></a>  <strong class='reserved'>return</strong> command_types[<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>].string;
+<a id='L899' name='L899'></a><em class='brace'>}</em>
+<a id='L900' name='L900'></a>
+<a id='L901' name='L901'></a><strong class='reserved'>int</strong>
+<a id='L902' name='L902'></a><a href='../R/8908.html' title='Multiple referred from 3 places.'>proto_name2num</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s)
+<a id='L903' name='L903'></a><em class='brace'>{</em>
+<a id='L904' name='L904'></a>   <strong class='reserved'>unsigned</strong> i;
+<a id='L905' name='L905'></a>
+<a id='L906' name='L906'></a>   <strong class='reserved'>for</strong> (i=0; i&lt;<a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(route_types); ++i)
+<a id='L907' name='L907'></a>     <strong class='reserved'>if</strong> (strcasecmp(s, route_types[i].string) == 0)
+<a id='L908' name='L908'></a>       <strong class='reserved'>return</strong> route_types[i].type;
+<a id='L909' name='L909'></a>   <strong class='reserved'>return</strong> -1;
+<a id='L910' name='L910'></a><em class='brace'>}</em>
+<a id='L911' name='L911'></a>
+<a id='L912' name='L912'></a><strong class='reserved'>int</strong>
+<a id='L913' name='L913'></a><a href='../R/8909.html' title='Multiple referred from 41 places.'>proto_redistnum</a>(<strong class='reserved'>int</strong> afi, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *s)
+<a id='L914' name='L914'></a><em class='brace'>{</em>
+<a id='L915' name='L915'></a>  <strong class='reserved'>if</strong> (! s)
+<a id='L916' name='L916'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L917' name='L917'></a>
+<a id='L918' name='L918'></a>  <strong class='reserved'>if</strong> (afi == <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>)
+<a id='L919' name='L919'></a>    <em class='brace'>{</em>
+<a id='L920' name='L920'></a>      <strong class='reserved'>if</strong> (strncmp (s, "k", 1) == 0)
+<a id='L921' name='L921'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L9' title='Defined at 9 in lib/route_types.h.'>ZEBRA_ROUTE_KERNEL</a>;
+<a id='L922' name='L922'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "c", 1) == 0)
+<a id='L923' name='L923'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L10' title='Defined at 10 in lib/route_types.h.'>ZEBRA_ROUTE_CONNECT</a>;
+<a id='L924' name='L924'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "s", 1) == 0)
+<a id='L925' name='L925'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L11' title='Defined at 11 in lib/route_types.h.'>ZEBRA_ROUTE_STATIC</a>;
+<a id='L926' name='L926'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "r", 1) == 0)
+<a id='L927' name='L927'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L12' title='Defined at 12 in lib/route_types.h.'>ZEBRA_ROUTE_RIP</a>;
+<a id='L928' name='L928'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "o", 1) == 0)
+<a id='L929' name='L929'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a>;
+<a id='L930' name='L930'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "i", 1) == 0)
+<a id='L931' name='L931'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L16' title='Defined at 16 in lib/route_types.h.'>ZEBRA_ROUTE_ISIS</a>;
+<a id='L932' name='L932'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "bg", 2) == 0)
+<a id='L933' name='L933'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L17' title='Defined at 17 in lib/route_types.h.'>ZEBRA_ROUTE_BGP</a>;
+<a id='L934' name='L934'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "ba", 2) == 0)
+<a id='L935' name='L935'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L20' title='Defined at 20 in lib/route_types.h.'>ZEBRA_ROUTE_BABEL</a>;
+<a id='L936' name='L936'></a>    <em class='brace'>}</em>
+<a id='L937' name='L937'></a>  <strong class='reserved'>if</strong> (afi == <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>)
+<a id='L938' name='L938'></a>    <em class='brace'>{</em>
+<a id='L939' name='L939'></a>      <strong class='reserved'>if</strong> (strncmp (s, "k", 1) == 0)
+<a id='L940' name='L940'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L9' title='Defined at 9 in lib/route_types.h.'>ZEBRA_ROUTE_KERNEL</a>;
+<a id='L941' name='L941'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "c", 1) == 0)
+<a id='L942' name='L942'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L10' title='Defined at 10 in lib/route_types.h.'>ZEBRA_ROUTE_CONNECT</a>;
+<a id='L943' name='L943'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "s", 1) == 0)
+<a id='L944' name='L944'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L11' title='Defined at 11 in lib/route_types.h.'>ZEBRA_ROUTE_STATIC</a>;
+<a id='L945' name='L945'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "r", 1) == 0)
+<a id='L946' name='L946'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L13' title='Defined at 13 in lib/route_types.h.'>ZEBRA_ROUTE_RIPNG</a>;
+<a id='L947' name='L947'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "o", 1) == 0)
+<a id='L948' name='L948'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L15' title='Defined at 15 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF6</a>;
+<a id='L949' name='L949'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "i", 1) == 0)
+<a id='L950' name='L950'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L16' title='Defined at 16 in lib/route_types.h.'>ZEBRA_ROUTE_ISIS</a>;
+<a id='L951' name='L951'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "bg", 2) == 0)
+<a id='L952' name='L952'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L17' title='Defined at 17 in lib/route_types.h.'>ZEBRA_ROUTE_BGP</a>;
+<a id='L953' name='L953'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (s, "ba", 2) == 0)
+<a id='L954' name='L954'></a>        <strong class='reserved'>return</strong> <a href='../S/280.html#L20' title='Defined at 20 in lib/route_types.h.'>ZEBRA_ROUTE_BABEL</a>;
+<a id='L955' name='L955'></a>    <em class='brace'>}</em>
+<a id='L956' name='L956'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L957' name='L957'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L76'>[^]</a><a href='#L913'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

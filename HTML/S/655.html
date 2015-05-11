@@ -1,0 +1,1161 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_fsm.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_fsm.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L66'>[^]</a><a href='#L1076'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L66' title='Defined at 66.'>bgp_start_jitter</a></li>
+<li><a href='#L80' title='Defined at 80.'>bgp_timer_set</a></li>
+<li><a href='#L219' title='Defined at 219.'>bgp_start_timer</a></li>
+<li><a href='#L238' title='Defined at 238.'>bgp_connect_timer</a></li>
+<li><a href='#L257' title='Defined at 257.'>bgp_holdtime_timer</a></li>
+<li><a href='#L277' title='Defined at 277.'>bgp_keepalive_timer</a></li>
+<li><a href='#L296' title='Defined at 296.'>bgp_routeadv_timer</a></li>
+<li><a href='#L347' title='Defined at 347.'>bgp_graceful_restart_timer_expire</a></li>
+<li><a href='#L377' title='Defined at 377.'>bgp_graceful_stale_timer_expire</a></li>
+<li><a href='#L401' title='Defined at 401.'>bgp_fsm_change_status</a></li>
+<li><a href='#L424' title='Defined at 424.'>bgp_clearing_completed</a></li>
+<li><a href='#L435' title='Defined at 435.'>bgp_stop</a></li>
+<li><a href='#L581' title='Defined at 581.'>bgp_stop_with_error</a></li>
+<li><a href='#L598' title='Defined at 598.'>bgp_connect_success</a></li>
+<li><a href='#L630' title='Defined at 630.'>bgp_connect_fail</a></li>
+<li><a href='#L639' title='Defined at 639.'>bgp_start</a></li>
+<li><a href='#L716' title='Defined at 716.'>bgp_reconnect</a></li>
+<li><a href='#L724' title='Defined at 724.'>bgp_fsm_open</a></li>
+<li><a href='#L737' title='Defined at 737.'>bgp_fsm_keepalive_expire</a></li>
+<li><a href='#L746' title='Defined at 746.'>bgp_fsm_holdtime_expire</a></li>
+<li><a href='#L771' title='Defined at 771.'>bgp_establish</a></li>
+<li><a href='#L883' title='Defined at 883.'>bgp_fsm_keepalive</a></li>
+<li><a href='#L894' title='Defined at 894.'>bgp_fsm_update</a></li>
+<li><a href='#L902' title='Defined at 902.'>bgp_ignore</a></li>
+<li><a href='#L1076' title='Defined at 1076.'>bgp_event</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP-4 Finite State Machine   </em>
+<a id='L2' name='L2'></a><em class='comment'>   From RFC1771 [A Border Gateway Protocol 4 (BGP-4)]</em>
+<a id='L3' name='L3'></a><em class='comment'>   Copyright (C) 1996, 97, 98 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'></em>
+<a id='L5' name='L5'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'></em>
+<a id='L7' name='L7'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'>later version.</em>
+<a id='L11' name='L11'></a><em class='comment'></em>
+<a id='L12' name='L12'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'>General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'></em>
+<a id='L17' name='L17'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='293.html'>sockunion.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='302.html'>plist.h</a>"
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='642.html'>bgpd/bgp_attr.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='662.html'>bgpd/bgp_debug.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='658.html'>bgpd/bgp_fsm.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='634.html'>bgpd/bgp_packet.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='647.html'>bgpd/bgp_network.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='609.html'>bgpd/bgp_route.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='616.html'>bgpd/bgp_dump.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='659.html'>bgpd/bgp_open.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='611.html'>bgpd/bgp_snmp.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><em class='comment'>/* BGP FSM (finite state machine) has three types of functions.  Type</em>
+<a id='L48' name='L48'></a><em class='comment'>   one is thread functions.  Type two is event functions.  Type three</em>
+<a id='L49' name='L49'></a><em class='comment'>   is FSM functions.  Timer functions are set by bgp_timer_set</em>
+<a id='L50' name='L50'></a><em class='comment'>   function. */</em>
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><em class='comment'>/* BGP event function. */</em>
+<a id='L53' name='L53'></a><strong class='reserved'>int</strong> <a href='../S/655.html#L1076' title='Defined at 1076 in bgpd/bgp_fsm.c.'>bgp_event</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='comment'>/* BGP thread functions. */</em>
+<a id='L56' name='L56'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/655.html#L219' title='Defined at 219 in bgpd/bgp_fsm.c.'>bgp_start_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L57' name='L57'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/655.html#L238' title='Defined at 238 in bgpd/bgp_fsm.c.'>bgp_connect_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L58' name='L58'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/655.html#L257' title='Defined at 257 in bgpd/bgp_fsm.c.'>bgp_holdtime_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L59' name='L59'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/655.html#L277' title='Defined at 277 in bgpd/bgp_fsm.c.'>bgp_keepalive_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a><em class='comment'>/* BGP FSM functions. */</em>
+<a id='L62' name='L62'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/655.html#L639' title='Defined at 639 in bgpd/bgp_fsm.c.'>bgp_start</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *);
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='comment'>/* BGP start timer jitter. */</em>
+<a id='L65' name='L65'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L66' name='L66'></a><a href='../S/655.html#L96' title='Referred from 96 in bgpd/bgp_fsm.c.'>bgp_start_jitter</a> (<strong class='reserved'>int</strong> time)
+<a id='L67' name='L67'></a><em class='brace'>{</em>
+<a id='L68' name='L68'></a>  <strong class='reserved'>return</strong> ((rand () % (time + 1)) - (time / 2));
+<a id='L69' name='L69'></a><em class='brace'>}</em>
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a><em class='comment'>/* Check if suppress start/restart of sessions to peer. */</em>
+<a id='L72' name='L72'></a><em class='sharp'>#define</em> <a href='../R/377.html' title='Multiple referred from 2 places.'>BGP_PEER_START_SUPPRESSED</a>(P) \
+<a id='L73' name='L73'></a>  (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> ((P)-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/608.html#L377' title='Defined at 377 in bgpd/bgpd.h.'>PEER_FLAG_SHUTDOWN</a>) \
+<a id='L74' name='L74'></a>   || <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> ((P)-&gt;sflags, <a href='../S/608.html#L422' title='Defined at 422 in bgpd/bgpd.h.'>PEER_STATUS_PREFIX_OVERFLOW</a>))
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a><em class='comment'>/* Hook function called after bgp event is occered.  And vty's</em>
+<a id='L77' name='L77'></a><em class='comment'>   neighbor command invoke this function after making neighbor</em>
+<a id='L78' name='L78'></a><em class='comment'>   structure. */</em>
+<a id='L79' name='L79'></a><strong class='reserved'>void</strong>
+<a id='L80' name='L80'></a><a href='../R/5114.html' title='Multiple referred from 8 places.'>bgp_timer_set</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a>  <strong class='reserved'>int</strong> <a href='../S/164.html#L485' title='Defined at 485 in babeld/babel_interface.c.'>jitter</a> = 0;
+<a id='L83' name='L83'></a>
+<a id='L84' name='L84'></a>  <strong class='reserved'>switch</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status)
+<a id='L85' name='L85'></a>    <em class='brace'>{</em>
+<a id='L86' name='L86'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a>:
+<a id='L87' name='L87'></a>      <em class='comment'>/* First entry point of peer's finite state machine.  In Idle</em>
+<a id='L88' name='L88'></a><em class='comment'>         status start timer is on unless peer is shutdown or peer is</em>
+<a id='L89' name='L89'></a><em class='comment'>         inactive.  All other timer must be turned off */</em>
+<a id='L90' name='L90'></a>      <strong class='reserved'>if</strong> (<a href='../S/655.html#L72' title='Defined at 72 in bgpd/bgp_fsm.c.'>BGP_PEER_START_SUPPRESSED</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>) || ! <a href='../S/610.html#L2235' title='Defined at 2235 in bgpd/bgpd.c.'>peer_active</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>))
+<a id='L91' name='L91'></a>        <em class='brace'>{</em>
+<a id='L92' name='L92'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L93' name='L93'></a>        <em class='brace'>}</em>
+<a id='L94' name='L94'></a>      <strong class='reserved'>else</strong>
+<a id='L95' name='L95'></a>        <em class='brace'>{</em>
+<a id='L96' name='L96'></a>          <a href='../S/164.html#L485' title='Defined at 485 in babeld/babel_interface.c.'>jitter</a> = <a href='../S/655.html#L66' title='Defined at 66 in bgpd/bgp_fsm.c.'>bgp_start_jitter</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_start);
+<a id='L97' name='L97'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start, <a href='../S/655.html#L219' title='Defined at 219 in bgpd/bgp_fsm.c.'>bgp_start_timer</a>,
+<a id='L98' name='L98'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_start + <a href='../S/164.html#L485' title='Defined at 485 in babeld/babel_interface.c.'>jitter</a>);
+<a id='L99' name='L99'></a>        <em class='brace'>}</em>
+<a id='L100' name='L100'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L101' name='L101'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L102' name='L102'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L103' name='L103'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L104' name='L104'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L105' name='L105'></a>      <strong class='reserved'>break</strong>;
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L706' title='Defined at 706 in bgpd/bgpd.h.'>Connect</a>:
+<a id='L108' name='L108'></a>      <em class='comment'>/* After start timer is expired, the peer moves to Connnect</em>
+<a id='L109' name='L109'></a><em class='comment'>         status.  Make sure start timer is off and connect timer is</em>
+<a id='L110' name='L110'></a><em class='comment'>         on. */</em>
+<a id='L111' name='L111'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L112' name='L112'></a>      <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect, <a href='../S/655.html#L238' title='Defined at 238 in bgpd/bgp_fsm.c.'>bgp_connect_timer</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_connect);
+<a id='L113' name='L113'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L114' name='L114'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L115' name='L115'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L116' name='L116'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L117' name='L117'></a>      <strong class='reserved'>break</strong>;
+<a id='L118' name='L118'></a>
+<a id='L119' name='L119'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a>:
+<a id='L120' name='L120'></a>      <em class='comment'>/* Active is waiting connection from remote peer.  And if</em>
+<a id='L121' name='L121'></a><em class='comment'>         connect timer is expired, change status to Connect. */</em>
+<a id='L122' name='L122'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L123' name='L123'></a>      <em class='comment'>/* If peer is passive mode, do not set connect timer. */</em>
+<a id='L124' name='L124'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/608.html#L376' title='Defined at 376 in bgpd/bgpd.h.'>PEER_FLAG_PASSIVE</a>)
+<a id='L125' name='L125'></a>          || <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L427' title='Defined at 427 in bgpd/bgpd.h.'>PEER_STATUS_NSF_WAIT</a>))
+<a id='L126' name='L126'></a>        <em class='brace'>{</em>
+<a id='L127' name='L127'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L128' name='L128'></a>        <em class='brace'>}</em>
+<a id='L129' name='L129'></a>      <strong class='reserved'>else</strong>
+<a id='L130' name='L130'></a>        <em class='brace'>{</em>
+<a id='L131' name='L131'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect, <a href='../S/655.html#L238' title='Defined at 238 in bgpd/bgp_fsm.c.'>bgp_connect_timer</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_connect);
+<a id='L132' name='L132'></a>        <em class='brace'>}</em>
+<a id='L133' name='L133'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L134' name='L134'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L135' name='L135'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L136' name='L136'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L137' name='L137'></a>      <strong class='reserved'>break</strong>;
+<a id='L138' name='L138'></a>
+<a id='L139' name='L139'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L708' title='Defined at 708 in bgpd/bgpd.h.'>OpenSent</a>:
+<a id='L140' name='L140'></a>      <em class='comment'>/* OpenSent status. */</em>
+<a id='L141' name='L141'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L142' name='L142'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L143' name='L143'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime != 0)
+<a id='L144' name='L144'></a>        <em class='brace'>{</em>
+<a id='L145' name='L145'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime, <a href='../S/655.html#L257' title='Defined at 257 in bgpd/bgp_fsm.c.'>bgp_holdtime_timer</a>, 
+<a id='L146' name='L146'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime);
+<a id='L147' name='L147'></a>        <em class='brace'>}</em>
+<a id='L148' name='L148'></a>      <strong class='reserved'>else</strong>
+<a id='L149' name='L149'></a>        <em class='brace'>{</em>
+<a id='L150' name='L150'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L151' name='L151'></a>        <em class='brace'>}</em>
+<a id='L152' name='L152'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L153' name='L153'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L154' name='L154'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L155' name='L155'></a>      <strong class='reserved'>break</strong>;
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L709' title='Defined at 709 in bgpd/bgpd.h.'>OpenConfirm</a>:
+<a id='L158' name='L158'></a>      <em class='comment'>/* OpenConfirm status. */</em>
+<a id='L159' name='L159'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L160' name='L160'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a>      <em class='comment'>/* If the negotiated Hold Time value is zero, then the Hold Time</em>
+<a id='L163' name='L163'></a><em class='comment'>         timer and KeepAlive timers are not started. */</em>
+<a id='L164' name='L164'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime == 0)
+<a id='L165' name='L165'></a>        <em class='brace'>{</em>
+<a id='L166' name='L166'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L167' name='L167'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L168' name='L168'></a>        <em class='brace'>}</em>
+<a id='L169' name='L169'></a>      <strong class='reserved'>else</strong>
+<a id='L170' name='L170'></a>        <em class='brace'>{</em>
+<a id='L171' name='L171'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime, <a href='../S/655.html#L257' title='Defined at 257 in bgpd/bgp_fsm.c.'>bgp_holdtime_timer</a>,
+<a id='L172' name='L172'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime);
+<a id='L173' name='L173'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive, <a href='../S/655.html#L277' title='Defined at 277 in bgpd/bgp_fsm.c.'>bgp_keepalive_timer</a>, 
+<a id='L174' name='L174'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_keepalive);
+<a id='L175' name='L175'></a>        <em class='brace'>}</em>
+<a id='L176' name='L176'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L177' name='L177'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L178' name='L178'></a>      <strong class='reserved'>break</strong>;
+<a id='L179' name='L179'></a>
+<a id='L180' name='L180'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a>:
+<a id='L181' name='L181'></a>      <em class='comment'>/* In Established status start and connect timer is turned</em>
+<a id='L182' name='L182'></a><em class='comment'>         off. */</em>
+<a id='L183' name='L183'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L184' name='L184'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a>      <em class='comment'>/* Same as OpenConfirm, if holdtime is zero then both holdtime</em>
+<a id='L187' name='L187'></a><em class='comment'>         and keepalive must be turned off. */</em>
+<a id='L188' name='L188'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime == 0)
+<a id='L189' name='L189'></a>        <em class='brace'>{</em>
+<a id='L190' name='L190'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L191' name='L191'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L192' name='L192'></a>        <em class='brace'>}</em>
+<a id='L193' name='L193'></a>      <strong class='reserved'>else</strong>
+<a id='L194' name='L194'></a>        <em class='brace'>{</em>
+<a id='L195' name='L195'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime, <a href='../S/655.html#L257' title='Defined at 257 in bgpd/bgp_fsm.c.'>bgp_holdtime_timer</a>,
+<a id='L196' name='L196'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime);
+<a id='L197' name='L197'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive, <a href='../S/655.html#L277' title='Defined at 277 in bgpd/bgp_fsm.c.'>bgp_keepalive_timer</a>,
+<a id='L198' name='L198'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_keepalive);
+<a id='L199' name='L199'></a>        <em class='brace'>}</em>
+<a id='L200' name='L200'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L201' name='L201'></a>      <strong class='reserved'>break</strong>;
+<a id='L202' name='L202'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a>:
+<a id='L203' name='L203'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_restart);
+<a id='L204' name='L204'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale);
+<a id='L205' name='L205'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_pmax_restart);
+<a id='L206' name='L206'></a>    <strong class='reserved'>case</strong> <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a>:
+<a id='L207' name='L207'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L208' name='L208'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L209' name='L209'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L210' name='L210'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L211' name='L211'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L212' name='L212'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L213' name='L213'></a>    <em class='brace'>}</em>
+<a id='L214' name='L214'></a><em class='brace'>}</em>
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a><em class='comment'>/* BGP start timer.  This function set BGP_Start event to thread value</em>
+<a id='L217' name='L217'></a><em class='comment'>   and process event. */</em>
+<a id='L218' name='L218'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L219' name='L219'></a><a href='../R/5079.html' title='Multiple referred from 2 places.'>bgp_start_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L220' name='L220'></a><em class='brace'>{</em>
+<a id='L221' name='L221'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L224' name='L224'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L227' name='L227'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG,
+<a id='L228' name='L228'></a>          "%s [FSM] Timer (start timer expire).", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a>  <a href='../S/279.html#L126' title='Defined at 126 in lib/thread.h.'>THREAD_VAL</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) = <a href='../S/608.html#L716' title='Defined at 716 in bgpd/bgpd.h.'>BGP_Start</a>;
+<a id='L231' name='L231'></a>  <a href='../S/655.html#L1076' title='Defined at 1076 in bgpd/bgp_fsm.c.'>bgp_event</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);  <em class='comment'>/* bgp_event unlocks peer */</em>
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L234' name='L234'></a><em class='brace'>}</em>
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a><em class='comment'>/* BGP connect retry timer. */</em>
+<a id='L237' name='L237'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L238' name='L238'></a><a href='../R/4798.html' title='Multiple referred from 3 places.'>bgp_connect_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L239' name='L239'></a><em class='brace'>{</em>
+<a id='L240' name='L240'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L243' name='L243'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L244' name='L244'></a>
+<a id='L245' name='L245'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L246' name='L246'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG, "%s [FSM] Timer (connect timer expire)",
+<a id='L247' name='L247'></a>          <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a>  <a href='../S/279.html#L126' title='Defined at 126 in lib/thread.h.'>THREAD_VAL</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) = <a href='../S/608.html#L722' title='Defined at 722 in bgpd/bgpd.h.'>ConnectRetry_timer_expired</a>;
+<a id='L250' name='L250'></a>  <a href='../S/655.html#L1076' title='Defined at 1076 in bgpd/bgp_fsm.c.'>bgp_event</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>); <em class='comment'>/* bgp_event unlocks peer */</em>
+<a id='L251' name='L251'></a>
+<a id='L252' name='L252'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L253' name='L253'></a><em class='brace'>}</em>
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a><em class='comment'>/* BGP holdtime timer. */</em>
+<a id='L256' name='L256'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L257' name='L257'></a><a href='../R/4873.html' title='Multiple referred from 4 places.'>bgp_holdtime_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L258' name='L258'></a><em class='brace'>{</em>
+<a id='L259' name='L259'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L262' name='L262'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L265' name='L265'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG,
+<a id='L266' name='L266'></a>          "%s [FSM] Timer (holdtime timer expire)",
+<a id='L267' name='L267'></a>          <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L268' name='L268'></a>
+<a id='L269' name='L269'></a>  <a href='../S/279.html#L126' title='Defined at 126 in lib/thread.h.'>THREAD_VAL</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) = <a href='../S/608.html#L723' title='Defined at 723 in bgpd/bgpd.h.'>Hold_Timer_expired</a>;
+<a id='L270' name='L270'></a>  <a href='../S/655.html#L1076' title='Defined at 1076 in bgpd/bgp_fsm.c.'>bgp_event</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>); <em class='comment'>/* bgp_event unlocks peer */</em>
+<a id='L271' name='L271'></a>
+<a id='L272' name='L272'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L273' name='L273'></a><em class='brace'>}</em>
+<a id='L274' name='L274'></a>
+<a id='L275' name='L275'></a><em class='comment'>/* BGP keepalive fire ! */</em>
+<a id='L276' name='L276'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L277' name='L277'></a><a href='../R/4922.html' title='Multiple referred from 3 places.'>bgp_keepalive_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L278' name='L278'></a><em class='brace'>{</em>
+<a id='L279' name='L279'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L282' name='L282'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L285' name='L285'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG,
+<a id='L286' name='L286'></a>          "%s [FSM] Timer (keepalive timer expire)",
+<a id='L287' name='L287'></a>          <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L288' name='L288'></a>
+<a id='L289' name='L289'></a>  <a href='../S/279.html#L126' title='Defined at 126 in lib/thread.h.'>THREAD_VAL</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) = <a href='../S/608.html#L724' title='Defined at 724 in bgpd/bgpd.h.'>KeepAlive_timer_expired</a>;
+<a id='L290' name='L290'></a>  <a href='../S/655.html#L1076' title='Defined at 1076 in bgpd/bgp_fsm.c.'>bgp_event</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>); <em class='comment'>/* bgp_event unlocks peer */</em>
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L293' name='L293'></a><em class='brace'>}</em>
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L296' name='L296'></a><a href='../R/5042.html' title='Multiple referred from 2 places.'>bgp_routeadv_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L297' name='L297'></a><em class='brace'>{</em>
+<a id='L298' name='L298'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L299' name='L299'></a>
+<a id='L300' name='L300'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L301' name='L301'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L302' name='L302'></a>
+<a id='L303' name='L303'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L304' name='L304'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG,
+<a id='L305' name='L305'></a>          "%s [FSM] Timer (routeadv timer expire)",
+<a id='L306' name='L306'></a>          <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L307' name='L307'></a>
+<a id='L308' name='L308'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;synctime = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L309' name='L309'></a>
+<a id='L310' name='L310'></a>  <a href='../S/658.html#L38' title='Defined at 38 in bgpd/bgp_fsm.h.'>BGP_WRITE_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_write, <a href='../S/622.html#L605' title='Defined at 605 in bgpd/bgp_packet.c.'>bgp_write</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a>  <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv, <a href='../S/655.html#L296' title='Defined at 296 in bgpd/bgp_fsm.c.'>bgp_routeadv_timer</a>,
+<a id='L313' name='L313'></a>                <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_routeadv);
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L316' name='L316'></a><em class='brace'>}</em>
+<a id='L317' name='L317'></a>
+<a id='L318' name='L318'></a><em class='comment'>/* BGP Peer Down Cause */</em>
+<a id='L319' name='L319'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *peer_down_str[] =
+<a id='L320' name='L320'></a><em class='brace'>{</em>
+<a id='L321' name='L321'></a>  "",
+<a id='L322' name='L322'></a>  "Router ID changed",
+<a id='L323' name='L323'></a>  "Remote AS changed",
+<a id='L324' name='L324'></a>  "Local AS change",
+<a id='L325' name='L325'></a>  "Cluster ID changed",
+<a id='L326' name='L326'></a>  "Confederation identifier changed",
+<a id='L327' name='L327'></a>  "Confederation peer changed",
+<a id='L328' name='L328'></a>  "RR client config change",
+<a id='L329' name='L329'></a>  "RS client config change",
+<a id='L330' name='L330'></a>  "Update source change",
+<a id='L331' name='L331'></a>  "Address family activated",
+<a id='L332' name='L332'></a>  "Admin. shutdown",
+<a id='L333' name='L333'></a>  "User reset",
+<a id='L334' name='L334'></a>  "BGP Notification received",
+<a id='L335' name='L335'></a>  "BGP Notification send",
+<a id='L336' name='L336'></a>  "Peer closed the session",
+<a id='L337' name='L337'></a>  "Neighbor deleted",
+<a id='L338' name='L338'></a>  "Peer-group add member",
+<a id='L339' name='L339'></a>  "Peer-group delete member",
+<a id='L340' name='L340'></a>  "Capability changed",
+<a id='L341' name='L341'></a>  "Passive config change",
+<a id='L342' name='L342'></a>  "Multihop config change",
+<a id='L343' name='L343'></a>  "NSF peer closed the session"
+<a id='L344' name='L344'></a><em class='brace'>}</em>;
+<a id='L345' name='L345'></a>
+<a id='L346' name='L346'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L347' name='L347'></a><a href='../S/655.html#L474' title='Referred from 474 in bgpd/bgp_fsm.c.'>bgp_graceful_restart_timer_expire</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L348' name='L348'></a><em class='brace'>{</em>
+<a id='L349' name='L349'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L350' name='L350'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L351' name='L351'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L354' name='L354'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_restart = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a>  <em class='comment'>/* NSF delete stale route */</em>
+<a id='L357' name='L357'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L358' name='L358'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L504' title='Defined at 504 in lib/zebra.h.'>SAFI_RESERVED_3</a> ; safi++)
+<a id='L359' name='L359'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi])
+<a id='L360' name='L360'></a>        <a href='../S/620.html#L3008' title='Defined at 3008 in bgpd/bgp_route.c.'>bgp_clear_stale_route</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, afi, safi);
+<a id='L361' name='L361'></a>
+<a id='L362' name='L362'></a>  <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L427' title='Defined at 427 in bgpd/bgpd.h.'>PEER_STATUS_NSF_WAIT</a>);
+<a id='L363' name='L363'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale);
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (events, EVENTS))
+<a id='L366' name='L366'></a>    <em class='brace'>{</em>
+<a id='L367' name='L367'></a>      zlog_debug ("%s graceful restart timer expired", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L368' name='L368'></a>      zlog_debug ("%s graceful restart stalepath timer stopped", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L369' name='L369'></a>    <em class='brace'>}</em>
+<a id='L370' name='L370'></a>
+<a id='L371' name='L371'></a>  <a href='../S/655.html#L80' title='Defined at 80 in bgpd/bgp_fsm.c.'>bgp_timer_set</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L372' name='L372'></a>
+<a id='L373' name='L373'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L374' name='L374'></a><em class='brace'>}</em>
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L377' name='L377'></a><a href='../S/655.html#L476' title='Referred from 476 in bgpd/bgp_fsm.c.'>bgp_graceful_stale_timer_expire</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L378' name='L378'></a><em class='brace'>{</em>
+<a id='L379' name='L379'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L380' name='L380'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L381' name='L381'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L382' name='L382'></a>
+<a id='L383' name='L383'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L384' name='L384'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (events, EVENTS))
+<a id='L387' name='L387'></a>    zlog_debug ("%s graceful restart stalepath timer expired", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L388' name='L388'></a>
+<a id='L389' name='L389'></a>  <em class='comment'>/* NSF delete stale route */</em>
+<a id='L390' name='L390'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L391' name='L391'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L504' title='Defined at 504 in lib/zebra.h.'>SAFI_RESERVED_3</a> ; safi++)
+<a id='L392' name='L392'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi])
+<a id='L393' name='L393'></a>        <a href='../S/620.html#L3008' title='Defined at 3008 in bgpd/bgp_route.c.'>bgp_clear_stale_route</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, afi, safi);
+<a id='L394' name='L394'></a>
+<a id='L395' name='L395'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L396' name='L396'></a><em class='brace'>}</em>
+<a id='L397' name='L397'></a>
+<a id='L398' name='L398'></a><em class='comment'>/* Called after event occured, this function change status and reset</em>
+<a id='L399' name='L399'></a><em class='comment'>   read/write and timer thread. */</em>
+<a id='L400' name='L400'></a><strong class='reserved'>void</strong>
+<a id='L401' name='L401'></a><a href='../R/4861.html' title='Multiple referred from 4 places.'>bgp_fsm_change_status</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>int</strong> status)
+<a id='L402' name='L402'></a><em class='brace'>{</em>
+<a id='L403' name='L403'></a>  <a href='../S/626.html#L465' title='Defined at 465 in bgpd/bgp_dump.c.'>bgp_dump_state</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status, status);
+<a id='L404' name='L404'></a>
+<a id='L405' name='L405'></a>  <em class='comment'>/* Transition into Clearing or Deleted must /always/ clear all routes.. </em>
+<a id='L406' name='L406'></a><em class='comment'>   * (and must do so before actually changing into Deleted..</em>
+<a id='L407' name='L407'></a><em class='comment'>   */</em>
+<a id='L408' name='L408'></a>  <strong class='reserved'>if</strong> (status &gt;= <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a>)
+<a id='L409' name='L409'></a>    <a href='../S/620.html#L2978' title='Defined at 2978 in bgpd/bgp_route.c.'>bgp_clear_route_all</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L410' name='L410'></a>  
+<a id='L411' name='L411'></a>  <em class='comment'>/* Preserve old status and change into new status. */</em>
+<a id='L412' name='L412'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ostatus = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status;
+<a id='L413' name='L413'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status = status;
+<a id='L414' name='L414'></a>  
+<a id='L415' name='L415'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (normal, NORMAL))
+<a id='L416' name='L416'></a>    zlog_debug ("%s went from %s to %s",
+<a id='L417' name='L417'></a>                <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>,
+<a id='L418' name='L418'></a>                LOOKUP (bgp_status_msg, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ostatus),
+<a id='L419' name='L419'></a>                LOOKUP (bgp_status_msg, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status));
+<a id='L420' name='L420'></a><em class='brace'>}</em>
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a><em class='comment'>/* Flush the event queue and ensure the peer is shut down */</em>
+<a id='L423' name='L423'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L424' name='L424'></a><a href='../S/655.html#L1034' title='Referred from 1034 in bgpd/bgp_fsm.c.'>bgp_clearing_completed</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L425' name='L425'></a><em class='brace'>{</em>
+<a id='L426' name='L426'></a>  <strong class='reserved'>int</strong> rc = <a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>(<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L427' name='L427'></a>  <a href='../S/658.html#L68' title='Defined at 68 in bgpd/bgp_fsm.h.'>BGP_EVENT_FLUSH</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L428' name='L428'></a>
+<a id='L429' name='L429'></a>  <strong class='reserved'>return</strong> rc;
+<a id='L430' name='L430'></a><em class='brace'>}</em>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a><em class='comment'>/* Administrative BGP peer stop event. */</em>
+<a id='L433' name='L433'></a><em class='comment'>/* May be called multiple times for the same peer */</em>
+<a id='L434' name='L434'></a><strong class='reserved'>int</strong>
+<a id='L435' name='L435'></a><a href='../R/5095.html' title='Multiple referred from 47 places.'>bgp_stop</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L436' name='L436'></a><em class='brace'>{</em>
+<a id='L437' name='L437'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L438' name='L438'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L439' name='L439'></a>  <strong class='reserved'>char</strong> orf_name[BUFSIZ];
+<a id='L440' name='L440'></a>
+<a id='L441' name='L441'></a>  <em class='comment'>/* Can't do this in Clearing; events are used for state transitions */</em>
+<a id='L442' name='L442'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status != <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a>)
+<a id='L443' name='L443'></a>    <em class='brace'>{</em>
+<a id='L444' name='L444'></a>      <em class='comment'>/* Delete all existing events of the peer */</em>
+<a id='L445' name='L445'></a>      <a href='../S/658.html#L68' title='Defined at 68 in bgpd/bgp_fsm.h.'>BGP_EVENT_FLUSH</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L446' name='L446'></a>    <em class='brace'>}</em>
+<a id='L447' name='L447'></a>
+<a id='L448' name='L448'></a>  <em class='comment'>/* Increment Dropped count. */</em>
+<a id='L449' name='L449'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status == <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a>)
+<a id='L450' name='L450'></a>    <em class='brace'>{</em>
+<a id='L451' name='L451'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;dropped++;
+<a id='L452' name='L452'></a>
+<a id='L453' name='L453'></a>      <em class='comment'>/* bgp log-neighbor-changes of neighbor Down */</em>
+<a id='L454' name='L454'></a>      <strong class='reserved'>if</strong> (<a href='../S/610.html#L135' title='Defined at 135 in bgpd/bgpd.c.'>bgp_flag_check</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, <a href='../S/608.html#L120' title='Defined at 120 in bgpd/bgpd.h.'>BGP_FLAG_LOG_NEIGHBOR_CHANGES</a>))
+<a id='L455' name='L455'></a>        zlog_info ("%%ADJCHANGE: neighbor %s Down %s", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>,
+<a id='L456' name='L456'></a>                   peer_down_str [(<strong class='reserved'>int</strong>) <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;last_reset]);
+<a id='L457' name='L457'></a>
+<a id='L458' name='L458'></a>      <em class='comment'>/* graceful restart */</em>
+<a id='L459' name='L459'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale)
+<a id='L460' name='L460'></a>        <em class='brace'>{</em>
+<a id='L461' name='L461'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale);
+<a id='L462' name='L462'></a>          <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (events, EVENTS))
+<a id='L463' name='L463'></a>            zlog_debug ("%s graceful restart stalepath timer stopped", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L464' name='L464'></a>        <em class='brace'>}</em>
+<a id='L465' name='L465'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L427' title='Defined at 427 in bgpd/bgpd.h.'>PEER_STATUS_NSF_WAIT</a>))
+<a id='L466' name='L466'></a>        <em class='brace'>{</em>
+<a id='L467' name='L467'></a>          <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (events, EVENTS))
+<a id='L468' name='L468'></a>            <em class='brace'>{</em>
+<a id='L469' name='L469'></a>              zlog_debug ("%s graceful restart timer started for %d sec",
+<a id='L470' name='L470'></a>                          <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_gr_restart);
+<a id='L471' name='L471'></a>              zlog_debug ("%s graceful restart stalepath timer started for %d sec",
+<a id='L472' name='L472'></a>                          <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;stalepath_time);
+<a id='L473' name='L473'></a>            <em class='brace'>}</em>
+<a id='L474' name='L474'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_restart, <a href='../S/655.html#L347' title='Defined at 347 in bgpd/bgp_fsm.c.'>bgp_graceful_restart_timer_expire</a>,
+<a id='L475' name='L475'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_gr_restart);
+<a id='L476' name='L476'></a>          <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale, <a href='../S/655.html#L377' title='Defined at 377 in bgpd/bgp_fsm.c.'>bgp_graceful_stale_timer_expire</a>,
+<a id='L477' name='L477'></a>                        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;stalepath_time);
+<a id='L478' name='L478'></a>        <em class='brace'>}</em>
+<a id='L479' name='L479'></a>      <strong class='reserved'>else</strong>
+<a id='L480' name='L480'></a>        <em class='brace'>{</em>
+<a id='L481' name='L481'></a>          <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L426' title='Defined at 426 in bgpd/bgpd.h.'>PEER_STATUS_NSF_MODE</a>);
+<a id='L482' name='L482'></a>
+<a id='L483' name='L483'></a>          <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L484' name='L484'></a>            <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L504' title='Defined at 504 in lib/zebra.h.'>SAFI_RESERVED_3</a> ; safi++)
+<a id='L485' name='L485'></a>              <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi] = 0;
+<a id='L486' name='L486'></a>        <em class='brace'>}</em>
+<a id='L487' name='L487'></a>
+<a id='L488' name='L488'></a>      <em class='comment'>/* set last reset time */</em>
+<a id='L489' name='L489'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;resettime = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;uptime = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L490' name='L490'></a>
+<a id='L491' name='L491'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L492' name='L492'></a>      <a href='../S/619.html#L868' title='Defined at 868 in bgpd/bgp_snmp.c.'>bgpTrapBackwardTransition</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L493' name='L493'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L494' name='L494'></a>
+<a id='L495' name='L495'></a>      <em class='comment'>/* Reset peer synctime */</em>
+<a id='L496' name='L496'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;synctime = 0;
+<a id='L497' name='L497'></a>    <em class='brace'>}</em>
+<a id='L498' name='L498'></a>
+<a id='L499' name='L499'></a>  <em class='comment'>/* Stop read and write threads when exists. */</em>
+<a id='L500' name='L500'></a>  <a href='../S/658.html#L32' title='Defined at 32 in bgpd/bgp_fsm.h.'>BGP_READ_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_read);
+<a id='L501' name='L501'></a>  <a href='../S/658.html#L44' title='Defined at 44 in bgpd/bgp_fsm.h.'>BGP_WRITE_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_write);
+<a id='L502' name='L502'></a>
+<a id='L503' name='L503'></a>  <em class='comment'>/* Stop all timers. */</em>
+<a id='L504' name='L504'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_start);
+<a id='L505' name='L505'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_connect);
+<a id='L506' name='L506'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L507' name='L507'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_keepalive);
+<a id='L508' name='L508'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_asorig);
+<a id='L509' name='L509'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv);
+<a id='L510' name='L510'></a>
+<a id='L511' name='L511'></a>  <em class='comment'>/* Stream reset. */</em>
+<a id='L512' name='L512'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;packet_size = 0;
+<a id='L513' name='L513'></a>
+<a id='L514' name='L514'></a>  <em class='comment'>/* Clear input and output buffer.  */</em>
+<a id='L515' name='L515'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ibuf)
+<a id='L516' name='L516'></a>    <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ibuf);
+<a id='L517' name='L517'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;work)
+<a id='L518' name='L518'></a>    <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;work);
+<a id='L519' name='L519'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;obuf)
+<a id='L520' name='L520'></a>    <a href='../S/296.html#L976' title='Defined at 976 in lib/stream.c.'>stream_fifo_clean</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;obuf);
+<a id='L521' name='L521'></a>
+<a id='L522' name='L522'></a>  <em class='comment'>/* Close of file descriptor. */</em>
+<a id='L523' name='L523'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd &gt;= 0)
+<a id='L524' name='L524'></a>    <em class='brace'>{</em>
+<a id='L525' name='L525'></a>      close (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L526' name='L526'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd = -1;
+<a id='L527' name='L527'></a>    <em class='brace'>}</em>
+<a id='L528' name='L528'></a>
+<a id='L529' name='L529'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L530' name='L530'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L506' title='Defined at 506 in lib/zebra.h.'>SAFI_MAX</a> ; safi++)
+<a id='L531' name='L531'></a>      <em class='brace'>{</em>
+<a id='L532' name='L532'></a>        <em class='comment'>/* Reset all negotiated variables */</em>
+<a id='L533' name='L533'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_nego[afi][safi] = 0;
+<a id='L534' name='L534'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_adv[afi][safi] = 0;
+<a id='L535' name='L535'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_recv[afi][safi] = 0;
+<a id='L536' name='L536'></a>
+<a id='L537' name='L537'></a>        <em class='comment'>/* peer address family capability flags*/</em>
+<a id='L538' name='L538'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi] = 0;
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a>        <em class='comment'>/* peer address family status flags*/</em>
+<a id='L541' name='L541'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_sflags[afi][safi] = 0;
+<a id='L542' name='L542'></a>
+<a id='L543' name='L543'></a>        <em class='comment'>/* Received ORF prefix-filter */</em>
+<a id='L544' name='L544'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;orf_plist[afi][safi] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L545' name='L545'></a>
+<a id='L546' name='L546'></a>        <em class='comment'>/* ORF received prefix-filter pnt */</em>
+<a id='L547' name='L547'></a>        sprintf (orf_name, "%s.%d.%d", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>, afi, safi);
+<a id='L548' name='L548'></a>        <a href='../S/181.html#L2545' title='Defined at 2545 in lib/plist.c.'>prefix_bgp_orf_remove_all</a> (orf_name);
+<a id='L549' name='L549'></a>      <em class='brace'>}</em>
+<a id='L550' name='L550'></a>
+<a id='L551' name='L551'></a>  <em class='comment'>/* Reset keepalive and holdtime */</em>
+<a id='L552' name='L552'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/54.html#L33' title='Defined at 33 in vtysh/vtysh_config.c.'>config</a>, <a href='../S/608.html#L442' title='Defined at 442 in bgpd/bgpd.h.'>PEER_CONFIG_TIMER</a>))
+<a id='L553' name='L553'></a>    <em class='brace'>{</em>
+<a id='L554' name='L554'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_keepalive = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;keepalive;
+<a id='L555' name='L555'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;holdtime;
+<a id='L556' name='L556'></a>    <em class='brace'>}</em>
+<a id='L557' name='L557'></a>  <strong class='reserved'>else</strong>
+<a id='L558' name='L558'></a>    <em class='brace'>{</em>
+<a id='L559' name='L559'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_keepalive = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;default_keepalive;
+<a id='L560' name='L560'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_holdtime = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;default_holdtime;
+<a id='L561' name='L561'></a>    <em class='brace'>}</em>
+<a id='L562' name='L562'></a>
+<a id='L563' name='L563'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;update_time = 0;
+<a id='L564' name='L564'></a>
+<a id='L565' name='L565'></a>  <em class='comment'>/* Until we are sure that there is no problem about prefix count</em>
+<a id='L566' name='L566'></a><em class='comment'>     this should be commented out.*/</em>
+<a id='L567' name='L567'></a><em class='sharp'>#if</em> 0
+<a id='L568' name='L568'></a>  <em class='comment'>/* Reset prefix count */</em>
+<a id='L569' name='L569'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;pcount[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>] = 0;
+<a id='L570' name='L570'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;pcount[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L503' title='Defined at 503 in lib/zebra.h.'>SAFI_MULTICAST</a>] = 0;
+<a id='L571' name='L571'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;pcount[<a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>][<a href='../S/191.html#L505' title='Defined at 505 in lib/zebra.h.'>SAFI_MPLS_VPN</a>] = 0;
+<a id='L572' name='L572'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;pcount[<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>][<a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>] = 0;
+<a id='L573' name='L573'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;pcount[<a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>][<a href='../S/191.html#L503' title='Defined at 503 in lib/zebra.h.'>SAFI_MULTICAST</a>] = 0;
+<a id='L574' name='L574'></a><em class='sharp'>#endif</em> <em class='comment'>/* 0 */</em>
+<a id='L575' name='L575'></a>
+<a id='L576' name='L576'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L577' name='L577'></a><em class='brace'>}</em>
+<a id='L578' name='L578'></a>
+<a id='L579' name='L579'></a><em class='comment'>/* BGP peer is stoped by the error. */</em>
+<a id='L580' name='L580'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L581' name='L581'></a><a href='../R/5096.html' title='Multiple referred from 4 places.'>bgp_stop_with_error</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L582' name='L582'></a><em class='brace'>{</em>
+<a id='L583' name='L583'></a>  <em class='comment'>/* Double start timer. */</em>
+<a id='L584' name='L584'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_start *= 2;
+<a id='L585' name='L585'></a>
+<a id='L586' name='L586'></a>  <em class='comment'>/* Overflow check. */</em>
+<a id='L587' name='L587'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_start &gt;= (60 * 2))
+<a id='L588' name='L588'></a>    <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_start = (60 * 2);
+<a id='L589' name='L589'></a>
+<a id='L590' name='L590'></a>  <a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L591' name='L591'></a>
+<a id='L592' name='L592'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L593' name='L593'></a><em class='brace'>}</em>
+<a id='L594' name='L594'></a>
+<a id='L595' name='L595'></a><em class='comment'>/* TCP connection open.  Next we send open message to remote peer. And</em>
+<a id='L596' name='L596'></a><em class='comment'>   add read thread for reading open message. */</em>
+<a id='L597' name='L597'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L598' name='L598'></a><a href='../R/4797.html' title='Multiple referred from 2 places.'>bgp_connect_success</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L599' name='L599'></a><em class='brace'>{</em>
+<a id='L600' name='L600'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd &lt; 0)
+<a id='L601' name='L601'></a>    <em class='brace'>{</em>
+<a id='L602' name='L602'></a>      zlog_err ("bgp_connect_success peer's fd is negative value %d",
+<a id='L603' name='L603'></a>                <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L604' name='L604'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L605' name='L605'></a>    <em class='brace'>}</em>
+<a id='L606' name='L606'></a>  <a href='../S/658.html#L26' title='Defined at 26 in bgpd/bgp_fsm.h.'>BGP_READ_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_read, <a href='../S/622.html#L2408' title='Defined at 2408 in bgpd/bgp_packet.c.'>bgp_read</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L607' name='L607'></a>
+<a id='L608' name='L608'></a>  <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L421' title='Defined at 421 in bgpd/bgpd.h.'>PEER_STATUS_ACCEPT_PEER</a>))
+<a id='L609' name='L609'></a>    <a href='../S/652.html#L356' title='Defined at 356 in bgpd/bgp_network.c.'>bgp_getsockname</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L610' name='L610'></a>
+<a id='L611' name='L611'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (normal, NORMAL))
+<a id='L612' name='L612'></a>    <em class='brace'>{</em>
+<a id='L613' name='L613'></a>      <strong class='reserved'>char</strong> buf1[<a href='../S/293.html#L65' title='Defined at 65 in lib/sockunion.h.'>SU_ADDRSTRLEN</a>];
+<a id='L614' name='L614'></a>
+<a id='L615' name='L615'></a>      <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L421' title='Defined at 421 in bgpd/bgpd.h.'>PEER_STATUS_ACCEPT_PEER</a>))
+<a id='L616' name='L616'></a>        zlog_debug ("%s open active, local address %s", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>,
+<a id='L617' name='L617'></a>                    <a href='../S/213.html#L166' title='Defined at 166 in lib/sockunion.c.'>sockunion2str</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_local, buf1, <a href='../S/293.html#L65' title='Defined at 65 in lib/sockunion.h.'>SU_ADDRSTRLEN</a>));
+<a id='L618' name='L618'></a>      <strong class='reserved'>else</strong>
+<a id='L619' name='L619'></a>        zlog_debug ("%s passive open", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L620' name='L620'></a>    <em class='brace'>}</em>
+<a id='L621' name='L621'></a>
+<a id='L622' name='L622'></a>  <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L421' title='Defined at 421 in bgpd/bgpd.h.'>PEER_STATUS_ACCEPT_PEER</a>))
+<a id='L623' name='L623'></a>    <a href='../S/622.html#L794' title='Defined at 794 in bgpd/bgp_packet.c.'>bgp_open_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L624' name='L624'></a>
+<a id='L625' name='L625'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L626' name='L626'></a><em class='brace'>}</em>
+<a id='L627' name='L627'></a>
+<a id='L628' name='L628'></a><em class='comment'>/* TCP connect fail */</em>
+<a id='L629' name='L629'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L630' name='L630'></a><a href='../R/4796.html' title='Multiple referred from 2 places.'>bgp_connect_fail</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L631' name='L631'></a><em class='brace'>{</em>
+<a id='L632' name='L632'></a>  <a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L633' name='L633'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L634' name='L634'></a><em class='brace'>}</em>
+<a id='L635' name='L635'></a>
+<a id='L636' name='L636'></a><em class='comment'>/* This function is the first starting point of all BGP connection. It</em>
+<a id='L637' name='L637'></a><em class='comment'>   try to connect to remote peer with non-blocking IO. */</em>
+<a id='L638' name='L638'></a><strong class='reserved'>int</strong>
+<a id='L639' name='L639'></a><a href='../R/5077.html' title='Multiple referred from 4 places.'>bgp_start</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L640' name='L640'></a><em class='brace'>{</em>
+<a id='L641' name='L641'></a>  <strong class='reserved'>int</strong> status;
+<a id='L642' name='L642'></a>
+<a id='L643' name='L643'></a>  <strong class='reserved'>if</strong> (<a href='../S/655.html#L72' title='Defined at 72 in bgpd/bgp_fsm.c.'>BGP_PEER_START_SUPPRESSED</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>))
+<a id='L644' name='L644'></a>    <em class='brace'>{</em>
+<a id='L645' name='L645'></a>      <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L646' name='L646'></a>        plog_err (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, "%s [FSM] Trying to start suppressed peer"
+<a id='L647' name='L647'></a>                  " - this is never supposed to happen!", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L648' name='L648'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L649' name='L649'></a>    <em class='brace'>}</em>
+<a id='L650' name='L650'></a>
+<a id='L651' name='L651'></a>  <em class='comment'>/* Scrub some information that might be left over from a previous,</em>
+<a id='L652' name='L652'></a><em class='comment'>   * session</em>
+<a id='L653' name='L653'></a><em class='comment'>   */</em>
+<a id='L654' name='L654'></a>  <em class='comment'>/* Connection information. */</em>
+<a id='L655' name='L655'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_local)
+<a id='L656' name='L656'></a>    <em class='brace'>{</em>
+<a id='L657' name='L657'></a>      <a href='../S/213.html#L766' title='Defined at 766 in lib/sockunion.c.'>sockunion_free</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_local);
+<a id='L658' name='L658'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_local = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L659' name='L659'></a>    <em class='brace'>}</em>
+<a id='L660' name='L660'></a>
+<a id='L661' name='L661'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_remote)
+<a id='L662' name='L662'></a>    <em class='brace'>{</em>
+<a id='L663' name='L663'></a>      <a href='../S/213.html#L766' title='Defined at 766 in lib/sockunion.c.'>sockunion_free</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_remote);
+<a id='L664' name='L664'></a>      <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;su_remote = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L665' name='L665'></a>    <em class='brace'>}</em>
+<a id='L666' name='L666'></a>
+<a id='L667' name='L667'></a>  <em class='comment'>/* Clear remote router-id. */</em>
+<a id='L668' name='L668'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;remote_id.s_addr = 0;
+<a id='L669' name='L669'></a>
+<a id='L670' name='L670'></a>  <em class='comment'>/* Clear peer capability flag. */</em>
+<a id='L671' name='L671'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;cap = 0;
+<a id='L672' name='L672'></a>    
+<a id='L673' name='L673'></a>  <em class='comment'>/* If the peer is passive mode, force to move to Active mode. */</em>
+<a id='L674' name='L674'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/608.html#L376' title='Defined at 376 in bgpd/bgpd.h.'>PEER_FLAG_PASSIVE</a>))
+<a id='L675' name='L675'></a>    <em class='brace'>{</em>
+<a id='L676' name='L676'></a>      <a href='../S/658.html#L62' title='Defined at 62 in bgpd/bgp_fsm.h.'>BGP_EVENT_ADD</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/608.html#L720' title='Defined at 720 in bgpd/bgpd.h.'>TCP_connection_open_failed</a>);
+<a id='L677' name='L677'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L678' name='L678'></a>    <em class='brace'>}</em>
+<a id='L679' name='L679'></a>
+<a id='L680' name='L680'></a>  status = <a href='../S/652.html#L300' title='Defined at 300 in bgpd/bgp_network.c.'>bgp_connect</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L681' name='L681'></a>
+<a id='L682' name='L682'></a>  <strong class='reserved'>switch</strong> (status)
+<a id='L683' name='L683'></a>    <em class='brace'>{</em>
+<a id='L684' name='L684'></a>    <strong class='reserved'>case</strong> connect_error:
+<a id='L685' name='L685'></a>      <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L686' name='L686'></a>        plog_debug (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, "%s [FSM] Connect error", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L687' name='L687'></a>      <a href='../S/658.html#L62' title='Defined at 62 in bgpd/bgp_fsm.h.'>BGP_EVENT_ADD</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/608.html#L720' title='Defined at 720 in bgpd/bgpd.h.'>TCP_connection_open_failed</a>);
+<a id='L688' name='L688'></a>      <strong class='reserved'>break</strong>;
+<a id='L689' name='L689'></a>    <strong class='reserved'>case</strong> connect_success:
+<a id='L690' name='L690'></a>      <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L691' name='L691'></a>        plog_debug (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, "%s [FSM] Connect immediately success",
+<a id='L692' name='L692'></a>                   <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L693' name='L693'></a>      <a href='../S/658.html#L62' title='Defined at 62 in bgpd/bgp_fsm.h.'>BGP_EVENT_ADD</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/608.html#L718' title='Defined at 718 in bgpd/bgpd.h.'>TCP_connection_open</a>);
+<a id='L694' name='L694'></a>      <strong class='reserved'>break</strong>;
+<a id='L695' name='L695'></a>    <strong class='reserved'>case</strong> connect_in_progress:
+<a id='L696' name='L696'></a>      <em class='comment'>/* To check nonblocking connect, we wait until socket is</em>
+<a id='L697' name='L697'></a><em class='comment'>         readable or writable. */</em>
+<a id='L698' name='L698'></a>      <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L699' name='L699'></a>        plog_debug (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, "%s [FSM] Non blocking connect waiting result",
+<a id='L700' name='L700'></a>                   <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L701' name='L701'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd &lt; 0)
+<a id='L702' name='L702'></a>        <em class='brace'>{</em>
+<a id='L703' name='L703'></a>          zlog_err ("bgp_start peer's fd is negative value %d",
+<a id='L704' name='L704'></a>                    <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L705' name='L705'></a>          <strong class='reserved'>return</strong> -1;
+<a id='L706' name='L706'></a>        <em class='brace'>}</em>
+<a id='L707' name='L707'></a>      <a href='../S/658.html#L26' title='Defined at 26 in bgpd/bgp_fsm.h.'>BGP_READ_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_read, <a href='../S/622.html#L2408' title='Defined at 2408 in bgpd/bgp_packet.c.'>bgp_read</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L708' name='L708'></a>      <a href='../S/658.html#L38' title='Defined at 38 in bgpd/bgp_fsm.h.'>BGP_WRITE_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_write, <a href='../S/622.html#L605' title='Defined at 605 in bgpd/bgp_packet.c.'>bgp_write</a>, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;fd);
+<a id='L709' name='L709'></a>      <strong class='reserved'>break</strong>;
+<a id='L710' name='L710'></a>    <em class='brace'>}</em>
+<a id='L711' name='L711'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L712' name='L712'></a><em class='brace'>}</em>
+<a id='L713' name='L713'></a>
+<a id='L714' name='L714'></a><em class='comment'>/* Connect retry timer is expired when the peer status is Connect. */</em>
+<a id='L715' name='L715'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L716' name='L716'></a><a href='../S/655.html#L942' title='Referred from 942 in bgpd/bgp_fsm.c.'>bgp_reconnect</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L717' name='L717'></a><em class='brace'>{</em>
+<a id='L718' name='L718'></a>  <a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L719' name='L719'></a>  <a href='../S/655.html#L639' title='Defined at 639 in bgpd/bgp_fsm.c.'>bgp_start</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L720' name='L720'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L721' name='L721'></a><em class='brace'>}</em>
+<a id='L722' name='L722'></a>
+<a id='L723' name='L723'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L724' name='L724'></a><a href='../S/655.html#L979' title='Referred from 979 in bgpd/bgp_fsm.c.'>bgp_fsm_open</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L725' name='L725'></a><em class='brace'>{</em>
+<a id='L726' name='L726'></a>  <em class='comment'>/* Send keepalive and make keepalive timer */</em>
+<a id='L727' name='L727'></a>  <a href='../S/622.html#L764' title='Defined at 764 in bgpd/bgp_packet.c.'>bgp_keepalive_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L728' name='L728'></a>
+<a id='L729' name='L729'></a>  <em class='comment'>/* Reset holdtimer value. */</em>
+<a id='L730' name='L730'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L731' name='L731'></a>
+<a id='L732' name='L732'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L733' name='L733'></a><em class='brace'>}</em>
+<a id='L734' name='L734'></a>
+<a id='L735' name='L735'></a><em class='comment'>/* Keepalive send to peer. */</em>
+<a id='L736' name='L736'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L737' name='L737'></a><a href='../S/655.html#L1012' title='Referred from 1012 in bgpd/bgp_fsm.c.'>bgp_fsm_keepalive_expire</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L738' name='L738'></a><em class='brace'>{</em>
+<a id='L739' name='L739'></a>  <a href='../S/622.html#L764' title='Defined at 764 in bgpd/bgp_packet.c.'>bgp_keepalive_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L740' name='L740'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L741' name='L741'></a><em class='brace'>}</em>
+<a id='L742' name='L742'></a>
+<a id='L743' name='L743'></a><em class='comment'>/* Hold timer expire.  This is error of BGP connection. So cut the</em>
+<a id='L744' name='L744'></a><em class='comment'>   peer and change to Idle status. */</em>
+<a id='L745' name='L745'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L746' name='L746'></a><a href='../R/4862.html' title='Multiple referred from 3 places.'>bgp_fsm_holdtime_expire</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L747' name='L747'></a><em class='brace'>{</em>
+<a id='L748' name='L748'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L749' name='L749'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG, "%s [FSM] Hold timer expire", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L750' name='L750'></a>
+<a id='L751' name='L751'></a>  <em class='comment'>/* Send notify to remote peer. */</em>
+<a id='L752' name='L752'></a>  <a href='../S/622.html#L946' title='Defined at 946 in bgpd/bgp_packet.c.'>bgp_notify_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/608.html#L649' title='Defined at 649 in bgpd/bgpd.h.'>BGP_NOTIFY_HOLD_ERR</a>, 0);
+<a id='L753' name='L753'></a>
+<a id='L754' name='L754'></a>  <em class='comment'>/* Sweep if it is temporary peer. */</em>
+<a id='L755' name='L755'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L421' title='Defined at 421 in bgpd/bgpd.h.'>PEER_STATUS_ACCEPT_PEER</a>))
+<a id='L756' name='L756'></a>    <em class='brace'>{</em>
+<a id='L757' name='L757'></a>      zlog_info ("%s [Event] Accepting BGP peer is deleted", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L758' name='L758'></a>      <a href='../S/610.html#L1191' title='Defined at 1191 in bgpd/bgpd.c.'>peer_delete</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L759' name='L759'></a>      <strong class='reserved'>return</strong> -1;
+<a id='L760' name='L760'></a>    <em class='brace'>}</em>
+<a id='L761' name='L761'></a>
+<a id='L762' name='L762'></a>  <em class='comment'>/* bgp_stop needs to be invoked while in Established state */</em>
+<a id='L763' name='L763'></a>  <a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>(<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L764' name='L764'></a>
+<a id='L765' name='L765'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L766' name='L766'></a><em class='brace'>}</em>
+<a id='L767' name='L767'></a>
+<a id='L768' name='L768'></a><em class='comment'>/* Status goes to Established.  Send keepalive packet then make first</em>
+<a id='L769' name='L769'></a><em class='comment'>   update information. */</em>
+<a id='L770' name='L770'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L771' name='L771'></a><a href='../S/655.html#L997' title='Referred from 997 in bgpd/bgp_fsm.c.'>bgp_establish</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L772' name='L772'></a><em class='brace'>{</em>
+<a id='L773' name='L773'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L191' title='Defined at 191 in bgpd/bgpd.h.'>bgp_notify</a> *notify;
+<a id='L774' name='L774'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L775' name='L775'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L776' name='L776'></a>  <strong class='reserved'>int</strong> nsf_af_count = 0;
+<a id='L777' name='L777'></a>
+<a id='L778' name='L778'></a>  <em class='comment'>/* Reset capability open status flag. */</em>
+<a id='L779' name='L779'></a>  <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L423' title='Defined at 423 in bgpd/bgpd.h.'>PEER_STATUS_CAPABILITY_OPEN</a>))
+<a id='L780' name='L780'></a>    <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L423' title='Defined at 423 in bgpd/bgpd.h.'>PEER_STATUS_CAPABILITY_OPEN</a>);
+<a id='L781' name='L781'></a>
+<a id='L782' name='L782'></a>  <em class='comment'>/* Clear last notification data. */</em>
+<a id='L783' name='L783'></a>  notify = &amp;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;notify;
+<a id='L784' name='L784'></a>  <strong class='reserved'>if</strong> (notify-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>)
+<a id='L785' name='L785'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, notify-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
+<a id='L786' name='L786'></a>  memset (notify, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L191' title='Defined at 191 in bgpd/bgpd.h.'>bgp_notify</a>));
+<a id='L787' name='L787'></a>
+<a id='L788' name='L788'></a>  <em class='comment'>/* Clear start timer value to default. */</em>
+<a id='L789' name='L789'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_start = <a href='../S/608.html#L733' title='Defined at 733 in bgpd/bgpd.h.'>BGP_INIT_START_TIMER</a>;
+<a id='L790' name='L790'></a>
+<a id='L791' name='L791'></a>  <em class='comment'>/* Increment established count. */</em>
+<a id='L792' name='L792'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;established++;
+<a id='L793' name='L793'></a>  <a href='../S/655.html#L401' title='Defined at 401 in bgpd/bgp_fsm.c.'>bgp_fsm_change_status</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a>);
+<a id='L794' name='L794'></a>
+<a id='L795' name='L795'></a>  <em class='comment'>/* bgp log-neighbor-changes of neighbor Up */</em>
+<a id='L796' name='L796'></a>  <strong class='reserved'>if</strong> (<a href='../S/610.html#L135' title='Defined at 135 in bgpd/bgpd.c.'>bgp_flag_check</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, <a href='../S/608.html#L120' title='Defined at 120 in bgpd/bgpd.h.'>BGP_FLAG_LOG_NEIGHBOR_CHANGES</a>))
+<a id='L797' name='L797'></a>    zlog_info ("%%ADJCHANGE: neighbor %s Up", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L798' name='L798'></a>
+<a id='L799' name='L799'></a>  <em class='comment'>/* graceful restart */</em>
+<a id='L800' name='L800'></a>  <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L427' title='Defined at 427 in bgpd/bgpd.h.'>PEER_STATUS_NSF_WAIT</a>);
+<a id='L801' name='L801'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L802' name='L802'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L504' title='Defined at 504 in lib/zebra.h.'>SAFI_RESERVED_3</a> ; safi++)
+<a id='L803' name='L803'></a>      <em class='brace'>{</em>
+<a id='L804' name='L804'></a>        <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_nego[afi][safi]
+<a id='L805' name='L805'></a>            &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;cap, <a href='../S/608.html#L358' title='Defined at 358 in bgpd/bgpd.h.'>PEER_CAP_RESTART_ADV</a>)
+<a id='L806' name='L806'></a>            &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L371' title='Defined at 371 in bgpd/bgpd.h.'>PEER_CAP_RESTART_AF_RCV</a>))
+<a id='L807' name='L807'></a>          <em class='brace'>{</em>
+<a id='L808' name='L808'></a>            <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi]
+<a id='L809' name='L809'></a>                &amp;&amp; ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L372' title='Defined at 372 in bgpd/bgpd.h.'>PEER_CAP_RESTART_AF_PRESERVE_RCV</a>))
+<a id='L810' name='L810'></a>              <a href='../S/620.html#L3008' title='Defined at 3008 in bgpd/bgp_route.c.'>bgp_clear_stale_route</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, afi, safi);
+<a id='L811' name='L811'></a>
+<a id='L812' name='L812'></a>            <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi] = 1;
+<a id='L813' name='L813'></a>            nsf_af_count++;
+<a id='L814' name='L814'></a>          <em class='brace'>}</em>
+<a id='L815' name='L815'></a>        <strong class='reserved'>else</strong>
+<a id='L816' name='L816'></a>          <em class='brace'>{</em>
+<a id='L817' name='L817'></a>            <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi])
+<a id='L818' name='L818'></a>              <a href='../S/620.html#L3008' title='Defined at 3008 in bgpd/bgp_route.c.'>bgp_clear_stale_route</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, afi, safi);
+<a id='L819' name='L819'></a>            <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;nsf[afi][safi] = 0;
+<a id='L820' name='L820'></a>          <em class='brace'>}</em>
+<a id='L821' name='L821'></a>      <em class='brace'>}</em>
+<a id='L822' name='L822'></a>
+<a id='L823' name='L823'></a>  <strong class='reserved'>if</strong> (nsf_af_count)
+<a id='L824' name='L824'></a>    <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L426' title='Defined at 426 in bgpd/bgpd.h.'>PEER_STATUS_NSF_MODE</a>);
+<a id='L825' name='L825'></a>  <strong class='reserved'>else</strong>
+<a id='L826' name='L826'></a>    <em class='brace'>{</em>
+<a id='L827' name='L827'></a>      <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;sflags, <a href='../S/608.html#L426' title='Defined at 426 in bgpd/bgpd.h.'>PEER_STATUS_NSF_MODE</a>);
+<a id='L828' name='L828'></a>      <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale)
+<a id='L829' name='L829'></a>        <em class='brace'>{</em>
+<a id='L830' name='L830'></a>          <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_stale);
+<a id='L831' name='L831'></a>          <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (events, EVENTS))
+<a id='L832' name='L832'></a>            zlog_debug ("%s graceful restart stalepath timer stopped", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L833' name='L833'></a>        <em class='brace'>}</em>
+<a id='L834' name='L834'></a>    <em class='brace'>}</em>
+<a id='L835' name='L835'></a>
+<a id='L836' name='L836'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_restart)
+<a id='L837' name='L837'></a>    <em class='brace'>{</em>
+<a id='L838' name='L838'></a>      <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_gr_restart);
+<a id='L839' name='L839'></a>      <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (events, EVENTS))
+<a id='L840' name='L840'></a>        zlog_debug ("%s graceful restart timer stopped", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L841' name='L841'></a>    <em class='brace'>}</em>
+<a id='L842' name='L842'></a>
+<a id='L843' name='L843'></a><em class='sharp'>#ifdef</em> HAVE_SNMP
+<a id='L844' name='L844'></a>  <a href='../S/619.html#L847' title='Defined at 847 in bgpd/bgp_snmp.c.'>bgpTrapEstablished</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L845' name='L845'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_SNMP */</em>
+<a id='L846' name='L846'></a>
+<a id='L847' name='L847'></a>  <em class='comment'>/* Reset uptime, send keepalive, send current table. */</em>
+<a id='L848' name='L848'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;uptime = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L849' name='L849'></a>
+<a id='L850' name='L850'></a>  <em class='comment'>/* Send route-refresh when ORF is enabled */</em>
+<a id='L851' name='L851'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L852' name='L852'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L506' title='Defined at 506 in lib/zebra.h.'>SAFI_MAX</a> ; safi++)
+<a id='L853' name='L853'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L365' title='Defined at 365 in bgpd/bgpd.h.'>PEER_CAP_ORF_PREFIX_SM_ADV</a>))
+<a id='L854' name='L854'></a>        <em class='brace'>{</em>
+<a id='L855' name='L855'></a>          <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L368' title='Defined at 368 in bgpd/bgpd.h.'>PEER_CAP_ORF_PREFIX_RM_RCV</a>))
+<a id='L856' name='L856'></a>            <a href='../S/622.html#L953' title='Defined at 953 in bgpd/bgp_packet.c.'>bgp_route_refresh_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, afi, safi, <a href='../S/659.html#L89' title='Defined at 89 in bgpd/bgp_open.h.'>ORF_TYPE_PREFIX</a>,
+<a id='L857' name='L857'></a>                                    <a href='../S/634.html#L30' title='Defined at 30 in bgpd/bgp_packet.h.'>REFRESH_IMMEDIATE</a>, 0);
+<a id='L858' name='L858'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L370' title='Defined at 370 in bgpd/bgpd.h.'>PEER_CAP_ORF_PREFIX_RM_OLD_RCV</a>))
+<a id='L859' name='L859'></a>            <a href='../S/622.html#L953' title='Defined at 953 in bgpd/bgp_packet.c.'>bgp_route_refresh_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, afi, safi, <a href='../S/659.html#L90' title='Defined at 90 in bgpd/bgp_open.h.'>ORF_TYPE_PREFIX_OLD</a>,
+<a id='L860' name='L860'></a>                                    <a href='../S/634.html#L30' title='Defined at 30 in bgpd/bgp_packet.h.'>REFRESH_IMMEDIATE</a>, 0);
+<a id='L861' name='L861'></a>        <em class='brace'>}</em>
+<a id='L862' name='L862'></a>
+<a id='L863' name='L863'></a>  <strong class='reserved'>if</strong> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;v_keepalive)
+<a id='L864' name='L864'></a>    <a href='../S/622.html#L764' title='Defined at 764 in bgpd/bgp_packet.c.'>bgp_keepalive_send</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L865' name='L865'></a>
+<a id='L866' name='L866'></a>  <em class='comment'>/* First update is deferred until ORF or ROUTE-REFRESH is received */</em>
+<a id='L867' name='L867'></a>  <strong class='reserved'>for</strong> (afi = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a> ; afi &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a> ; afi++)
+<a id='L868' name='L868'></a>    <strong class='reserved'>for</strong> (safi = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a> ; safi &lt; <a href='../S/191.html#L506' title='Defined at 506 in lib/zebra.h.'>SAFI_MAX</a> ; safi++)
+<a id='L869' name='L869'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L366' title='Defined at 366 in bgpd/bgpd.h.'>PEER_CAP_ORF_PREFIX_RM_ADV</a>))
+<a id='L870' name='L870'></a>        <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L367' title='Defined at 367 in bgpd/bgpd.h.'>PEER_CAP_ORF_PREFIX_SM_RCV</a>)
+<a id='L871' name='L871'></a>            || <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_cap[afi][safi], <a href='../S/608.html#L369' title='Defined at 369 in bgpd/bgpd.h.'>PEER_CAP_ORF_PREFIX_SM_OLD_RCV</a>))
+<a id='L872' name='L872'></a>          <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;af_sflags[afi][safi], <a href='../S/608.html#L432' title='Defined at 432 in bgpd/bgpd.h.'>PEER_STATUS_ORF_WAIT_REFRESH</a>);
+<a id='L873' name='L873'></a>
+<a id='L874' name='L874'></a>  <a href='../S/620.html#L2622' title='Defined at 2622 in bgpd/bgp_route.c.'>bgp_announce_route_all</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L875' name='L875'></a>
+<a id='L876' name='L876'></a>  <a href='../S/658.html#L50' title='Defined at 50 in bgpd/bgp_fsm.h.'>BGP_TIMER_ON</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_routeadv, <a href='../S/655.html#L296' title='Defined at 296 in bgpd/bgp_fsm.c.'>bgp_routeadv_timer</a>, 1);
+<a id='L877' name='L877'></a>
+<a id='L878' name='L878'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L879' name='L879'></a><em class='brace'>}</em>
+<a id='L880' name='L880'></a>
+<a id='L881' name='L881'></a><em class='comment'>/* Keepalive packet is received. */</em>
+<a id='L882' name='L882'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L883' name='L883'></a><a href='../S/655.html#L1014' title='Referred from 1014 in bgpd/bgp_fsm.c.'>bgp_fsm_keepalive</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L884' name='L884'></a><em class='brace'>{</em>
+<a id='L885' name='L885'></a>  <em class='comment'>/* peer count update */</em>
+<a id='L886' name='L886'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;keepalive_in++;
+<a id='L887' name='L887'></a>
+<a id='L888' name='L888'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L889' name='L889'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L890' name='L890'></a><em class='brace'>}</em>
+<a id='L891' name='L891'></a>
+<a id='L892' name='L892'></a><em class='comment'>/* Update packet is received. */</em>
+<a id='L893' name='L893'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L894' name='L894'></a><a href='../S/655.html#L1015' title='Referred from 1015 in bgpd/bgp_fsm.c.'>bgp_fsm_update</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L895' name='L895'></a><em class='brace'>{</em>
+<a id='L896' name='L896'></a>  <a href='../S/658.html#L56' title='Defined at 56 in bgpd/bgp_fsm.h.'>BGP_TIMER_OFF</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;t_holdtime);
+<a id='L897' name='L897'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L898' name='L898'></a><em class='brace'>}</em>
+<a id='L899' name='L899'></a>
+<a id='L900' name='L900'></a><em class='comment'>/* This is empty event. */</em>
+<a id='L901' name='L901'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L902' name='L902'></a><a href='../R/4874.html' title='Multiple referred from 54 places.'>bgp_ignore</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>)
+<a id='L903' name='L903'></a><em class='brace'>{</em>
+<a id='L904' name='L904'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM))
+<a id='L905' name='L905'></a>    <a href='../D/11619.html' title='Multiple defined in 3 places.'>zlog</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, LOG_DEBUG, "%s [FSM] bgp_ignore called", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L906' name='L906'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L907' name='L907'></a><em class='brace'>}</em>
+<a id='L908' name='L908'></a>
+<a id='L909' name='L909'></a><em class='comment'>/* Finite State Machine structure */</em>
+<a id='L910' name='L910'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <em class='brace'>{</em>
+<a id='L911' name='L911'></a>  <strong class='reserved'>int</strong> (*func) (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *);
+<a id='L912' name='L912'></a>  <strong class='reserved'>int</strong> next_state;
+<a id='L913' name='L913'></a><em class='brace'>}</em> FSM [<a href='../S/608.html#L713' title='Defined at 713 in bgpd/bgpd.h.'>BGP_STATUS_MAX</a> - 1][<a href='../S/608.html#L730' title='Defined at 730 in bgpd/bgpd.h.'>BGP_EVENTS_MAX</a> - 1] = 
+<a id='L914' name='L914'></a><em class='brace'>{</em>
+<a id='L915' name='L915'></a>  <em class='brace'>{</em>
+<a id='L916' name='L916'></a>    <em class='comment'>/* Idle state: In Idle state, all events other than BGP_Start is</em>
+<a id='L917' name='L917'></a><em class='comment'>       ignored.  With BGP_Start event, finite state machine calls</em>
+<a id='L918' name='L918'></a><em class='comment'>       bgp_start(). */</em>
+<a id='L919' name='L919'></a>    <em class='brace'>{</em><a href='../S/655.html#L639' title='Defined at 639 in bgpd/bgp_fsm.c.'>bgp_start</a>,  <a href='../S/608.html#L706' title='Defined at 706 in bgpd/bgpd.h.'>Connect</a><em class='brace'>}</em>,      <em class='comment'>/* BGP_Start                    */</em>
+<a id='L920' name='L920'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,   <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L921' name='L921'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,   <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L922' name='L922'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,   <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L923' name='L923'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L924' name='L924'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,   <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L925' name='L925'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L926' name='L926'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L927' name='L927'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L928' name='L928'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L929' name='L929'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L930' name='L930'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L931' name='L931'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L932' name='L932'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L933' name='L933'></a>  <em class='brace'>}</em>,
+<a id='L934' name='L934'></a>  <em class='brace'>{</em>
+<a id='L935' name='L935'></a>    <em class='comment'>/* Connect */</em>
+<a id='L936' name='L936'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L706' title='Defined at 706 in bgpd/bgpd.h.'>Connect</a><em class='brace'>}</em>,     <em class='comment'>/* BGP_Start                    */</em>
+<a id='L937' name='L937'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L938' name='L938'></a>    <em class='brace'>{</em><a href='../S/655.html#L598' title='Defined at 598 in bgpd/bgp_fsm.c.'>bgp_connect_success</a>, <a href='../S/608.html#L708' title='Defined at 708 in bgpd/bgpd.h.'>OpenSent</a><em class='brace'>}</em>, <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L939' name='L939'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,           <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L940' name='L940'></a>    <em class='brace'>{</em><a href='../S/655.html#L630' title='Defined at 630 in bgpd/bgp_fsm.c.'>bgp_connect_fail</a>, <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>, <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L941' name='L941'></a>    <em class='brace'>{</em><a href='../S/655.html#L630' title='Defined at 630 in bgpd/bgp_fsm.c.'>bgp_connect_fail</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,   <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L942' name='L942'></a>    <em class='brace'>{</em><a href='../S/655.html#L716' title='Defined at 716 in bgpd/bgp_fsm.c.'>bgp_reconnect</a>, <a href='../S/608.html#L706' title='Defined at 706 in bgpd/bgpd.h.'>Connect</a><em class='brace'>}</em>,   <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L943' name='L943'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L944' name='L944'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L945' name='L945'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L946' name='L946'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L947' name='L947'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L948' name='L948'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L949' name='L949'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L950' name='L950'></a>  <em class='brace'>}</em>,
+<a id='L951' name='L951'></a>  <em class='brace'>{</em>
+<a id='L952' name='L952'></a>    <em class='comment'>/* Active, */</em>
+<a id='L953' name='L953'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>,      <em class='comment'>/* BGP_Start                    */</em>
+<a id='L954' name='L954'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L955' name='L955'></a>    <em class='brace'>{</em><a href='../S/655.html#L598' title='Defined at 598 in bgpd/bgp_fsm.c.'>bgp_connect_success</a>, <a href='../S/608.html#L708' title='Defined at 708 in bgpd/bgpd.h.'>OpenSent</a><em class='brace'>}</em>, <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L956' name='L956'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L957' name='L957'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L958' name='L958'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L959' name='L959'></a>    <em class='brace'>{</em><a href='../S/655.html#L639' title='Defined at 639 in bgpd/bgp_fsm.c.'>bgp_start</a>,   <a href='../S/608.html#L706' title='Defined at 706 in bgpd/bgpd.h.'>Connect</a><em class='brace'>}</em>,     <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L960' name='L960'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L961' name='L961'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L962' name='L962'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L963' name='L963'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L964' name='L964'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L965' name='L965'></a>    <em class='brace'>{</em><a href='../S/655.html#L581' title='Defined at 581 in bgpd/bgp_fsm.c.'>bgp_stop_with_error</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>, <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L966' name='L966'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L967' name='L967'></a>  <em class='brace'>}</em>,
+<a id='L968' name='L968'></a>  <em class='brace'>{</em>
+<a id='L969' name='L969'></a>    <em class='comment'>/* OpenSent, */</em>
+<a id='L970' name='L970'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L708' title='Defined at 708 in bgpd/bgpd.h.'>OpenSent</a><em class='brace'>}</em>,    <em class='comment'>/* BGP_Start                    */</em>
+<a id='L971' name='L971'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L972' name='L972'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L973' name='L973'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L974' name='L974'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L975' name='L975'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L707' title='Defined at 707 in bgpd/bgpd.h.'>Active</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L976' name='L976'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L977' name='L977'></a>    <em class='brace'>{</em><a href='../S/655.html#L746' title='Defined at 746 in bgpd/bgp_fsm.c.'>bgp_fsm_holdtime_expire</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,    <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L978' name='L978'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L979' name='L979'></a>    <em class='brace'>{</em><a href='../S/655.html#L724' title='Defined at 724 in bgpd/bgp_fsm.c.'>bgp_fsm_open</a>,    <a href='../S/608.html#L709' title='Defined at 709 in bgpd/bgpd.h.'>OpenConfirm</a><em class='brace'>}</em>,     <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L980' name='L980'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L981' name='L981'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L982' name='L982'></a>    <em class='brace'>{</em><a href='../S/655.html#L581' title='Defined at 581 in bgpd/bgp_fsm.c.'>bgp_stop_with_error</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>, <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L983' name='L983'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L984' name='L984'></a>  <em class='brace'>}</em>,
+<a id='L985' name='L985'></a>  <em class='brace'>{</em>
+<a id='L986' name='L986'></a>    <em class='comment'>/* OpenConfirm, */</em>
+<a id='L987' name='L987'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L709' title='Defined at 709 in bgpd/bgpd.h.'>OpenConfirm</a><em class='brace'>}</em>, <em class='comment'>/* BGP_Start                    */</em>
+<a id='L988' name='L988'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L989' name='L989'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L990' name='L990'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L991' name='L991'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L992' name='L992'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L993' name='L993'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L994' name='L994'></a>    <em class='brace'>{</em><a href='../S/655.html#L746' title='Defined at 746 in bgpd/bgp_fsm.c.'>bgp_fsm_holdtime_expire</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,    <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L995' name='L995'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L709' title='Defined at 709 in bgpd/bgpd.h.'>OpenConfirm</a><em class='brace'>}</em>, <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L996' name='L996'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L997' name='L997'></a>    <em class='brace'>{</em><a href='../S/655.html#L771' title='Defined at 771 in bgpd/bgp_fsm.c.'>bgp_establish</a>, <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a><em class='brace'>}</em>, <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L998' name='L998'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,        <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L999' name='L999'></a>    <em class='brace'>{</em><a href='../S/655.html#L581' title='Defined at 581 in bgpd/bgp_fsm.c.'>bgp_stop_with_error</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>, <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L1000' name='L1000'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>, <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,         <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L1001' name='L1001'></a>  <em class='brace'>}</em>,
+<a id='L1002' name='L1002'></a>  <em class='brace'>{</em>
+<a id='L1003' name='L1003'></a>    <em class='comment'>/* Established, */</em>
+<a id='L1004' name='L1004'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,               <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a><em class='brace'>}</em>, <em class='comment'>/* BGP_Start                    */</em>
+<a id='L1005' name='L1005'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                    <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L1006' name='L1006'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                    <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L1007' name='L1007'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                    <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L1008' name='L1008'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                 <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,       <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L1009' name='L1009'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                    <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L1010' name='L1010'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                 <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,       <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L1011' name='L1011'></a>    <em class='brace'>{</em><a href='../S/655.html#L746' title='Defined at 746 in bgpd/bgp_fsm.c.'>bgp_fsm_holdtime_expire</a>,     <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L1012' name='L1012'></a>    <em class='brace'>{</em><a href='../S/655.html#L737' title='Defined at 737 in bgpd/bgp_fsm.c.'>bgp_fsm_keepalive_expire</a>, <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a><em class='brace'>}</em>, <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L1013' name='L1013'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                    <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L1014' name='L1014'></a>    <em class='brace'>{</em><a href='../S/655.html#L883' title='Defined at 883 in bgpd/bgp_fsm.c.'>bgp_fsm_keepalive</a>,        <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a><em class='brace'>}</em>, <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L1015' name='L1015'></a>    <em class='brace'>{</em><a href='../S/655.html#L894' title='Defined at 894 in bgpd/bgp_fsm.c.'>bgp_fsm_update</a>,           <a href='../S/608.html#L710' title='Defined at 710 in bgpd/bgpd.h.'>Established</a><em class='brace'>}</em>, <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L1016' name='L1016'></a>    <em class='brace'>{</em><a href='../S/655.html#L581' title='Defined at 581 in bgpd/bgp_fsm.c.'>bgp_stop_with_error</a>,         <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>, <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L1017' name='L1017'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,                      <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>, <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L1018' name='L1018'></a>  <em class='brace'>}</em>,
+<a id='L1019' name='L1019'></a>  <em class='brace'>{</em>
+<a id='L1020' name='L1020'></a>    <em class='comment'>/* Clearing, */</em>
+<a id='L1021' name='L1021'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,    <em class='comment'>/* BGP_Start                    */</em>
+<a id='L1022' name='L1022'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L1023' name='L1023'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L1024' name='L1024'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L1025' name='L1025'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L1026' name='L1026'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L1027' name='L1027'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L1028' name='L1028'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L1029' name='L1029'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L1030' name='L1030'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L1031' name='L1031'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L1032' name='L1032'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L1033' name='L1033'></a>    <em class='brace'>{</em><a href='../S/655.html#L435' title='Defined at 435 in bgpd/bgp_fsm.c.'>bgp_stop</a>,                  <a href='../S/608.html#L711' title='Defined at 711 in bgpd/bgpd.h.'>Clearing</a><em class='brace'>}</em>,      <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L1034' name='L1034'></a>    <em class='brace'>{</em><a href='../S/655.html#L424' title='Defined at 424 in bgpd/bgp_fsm.c.'>bgp_clearing_completed</a>,    <a href='../S/608.html#L705' title='Defined at 705 in bgpd/bgpd.h.'>Idle</a><em class='brace'>}</em>,          <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L1035' name='L1035'></a>  <em class='brace'>}</em>,
+<a id='L1036' name='L1036'></a>  <em class='brace'>{</em>
+<a id='L1037' name='L1037'></a>    <em class='comment'>/* Deleted, */</em>
+<a id='L1038' name='L1038'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* BGP_Start                    */</em>
+<a id='L1039' name='L1039'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* BGP_Stop                     */</em>
+<a id='L1040' name='L1040'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* TCP_connection_open          */</em>
+<a id='L1041' name='L1041'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* TCP_connection_closed        */</em>
+<a id='L1042' name='L1042'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* TCP_connection_open_failed   */</em>
+<a id='L1043' name='L1043'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* TCP_fatal_error              */</em>
+<a id='L1044' name='L1044'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* ConnectRetry_timer_expired   */</em>
+<a id='L1045' name='L1045'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* Hold_Timer_expired           */</em>
+<a id='L1046' name='L1046'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* KeepAlive_timer_expired      */</em>
+<a id='L1047' name='L1047'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* Receive_OPEN_message         */</em>
+<a id='L1048' name='L1048'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* Receive_KEEPALIVE_message    */</em>
+<a id='L1049' name='L1049'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* Receive_UPDATE_message       */</em>
+<a id='L1050' name='L1050'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* Receive_NOTIFICATION_message */</em>
+<a id='L1051' name='L1051'></a>    <em class='brace'>{</em><a href='../S/655.html#L902' title='Defined at 902 in bgpd/bgp_fsm.c.'>bgp_ignore</a>,  <a href='../S/608.html#L712' title='Defined at 712 in bgpd/bgpd.h.'>Deleted</a><em class='brace'>}</em>,     <em class='comment'>/* Clearing_Completed           */</em>
+<a id='L1052' name='L1052'></a>  <em class='brace'>}</em>,
+<a id='L1053' name='L1053'></a><em class='brace'>}</em>;
+<a id='L1054' name='L1054'></a>
+<a id='L1055' name='L1055'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *bgp_event_str[] =
+<a id='L1056' name='L1056'></a><em class='brace'>{</em>
+<a id='L1057' name='L1057'></a>  <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>,
+<a id='L1058' name='L1058'></a>  "BGP_Start",
+<a id='L1059' name='L1059'></a>  "BGP_Stop",
+<a id='L1060' name='L1060'></a>  "TCP_connection_open",
+<a id='L1061' name='L1061'></a>  "TCP_connection_closed",
+<a id='L1062' name='L1062'></a>  "TCP_connection_open_failed",
+<a id='L1063' name='L1063'></a>  "TCP_fatal_error",
+<a id='L1064' name='L1064'></a>  "ConnectRetry_timer_expired",
+<a id='L1065' name='L1065'></a>  "Hold_Timer_expired",
+<a id='L1066' name='L1066'></a>  "KeepAlive_timer_expired",
+<a id='L1067' name='L1067'></a>  "Receive_OPEN_message",
+<a id='L1068' name='L1068'></a>  "Receive_KEEPALIVE_message",
+<a id='L1069' name='L1069'></a>  "Receive_UPDATE_message",
+<a id='L1070' name='L1070'></a>  "Receive_NOTIFICATION_message",
+<a id='L1071' name='L1071'></a>  "Clearing_Completed",
+<a id='L1072' name='L1072'></a><em class='brace'>}</em>;
+<a id='L1073' name='L1073'></a>
+<a id='L1074' name='L1074'></a><em class='comment'>/* Execute event process. */</em>
+<a id='L1075' name='L1075'></a><strong class='reserved'>int</strong>
+<a id='L1076' name='L1076'></a><a href='../R/4851.html' title='Multiple referred from 7 places.'>bgp_event</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L1077' name='L1077'></a><em class='brace'>{</em>
+<a id='L1078' name='L1078'></a>  <strong class='reserved'>int</strong> ret = 0;
+<a id='L1079' name='L1079'></a>  <strong class='reserved'>int</strong> <a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a>;
+<a id='L1080' name='L1080'></a>  <strong class='reserved'>int</strong> next;
+<a id='L1081' name='L1081'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L1082' name='L1082'></a>
+<a id='L1083' name='L1083'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L1084' name='L1084'></a>  <a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a> = <a href='../S/279.html#L126' title='Defined at 126 in lib/thread.h.'>THREAD_VAL</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L1085' name='L1085'></a>
+<a id='L1086' name='L1086'></a>  <em class='comment'>/* Logging this event. */</em>
+<a id='L1087' name='L1087'></a>  next = FSM [<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status -1][<a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a> - 1].next_state;
+<a id='L1088' name='L1088'></a>
+<a id='L1089' name='L1089'></a>  <strong class='reserved'>if</strong> (<a href='../S/662.html#L117' title='Defined at 117 in bgpd/bgp_debug.h.'>BGP_DEBUG</a> (fsm, FSM) &amp;&amp; <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status != next)
+<a id='L1090' name='L1090'></a>    plog_debug (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;log, "%s [FSM] %s (%s-&gt;%s)", <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>, 
+<a id='L1091' name='L1091'></a>               bgp_event_str[<a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a>],
+<a id='L1092' name='L1092'></a>               LOOKUP (bgp_status_msg, <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status),
+<a id='L1093' name='L1093'></a>               LOOKUP (bgp_status_msg, next));
+<a id='L1094' name='L1094'></a>
+<a id='L1095' name='L1095'></a>  <em class='comment'>/* Call function. */</em>
+<a id='L1096' name='L1096'></a>  <strong class='reserved'>if</strong> (FSM [<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status -1][<a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a> - 1].func)
+<a id='L1097' name='L1097'></a>    ret = (*(FSM [<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status - 1][<a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a> - 1].func))(<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L1098' name='L1098'></a>
+<a id='L1099' name='L1099'></a>  <em class='comment'>/* When function do not want proceed next job return -1. */</em>
+<a id='L1100' name='L1100'></a>  <strong class='reserved'>if</strong> (ret &gt;= 0)
+<a id='L1101' name='L1101'></a>    <em class='brace'>{</em>
+<a id='L1102' name='L1102'></a>      <em class='comment'>/* If status is changed. */</em>
+<a id='L1103' name='L1103'></a>      <strong class='reserved'>if</strong> (next != <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;status)
+<a id='L1104' name='L1104'></a>        <a href='../S/655.html#L401' title='Defined at 401 in bgpd/bgp_fsm.c.'>bgp_fsm_change_status</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, next);
+<a id='L1105' name='L1105'></a>      
+<a id='L1106' name='L1106'></a>      <em class='comment'>/* Make sure timer is set. */</em>
+<a id='L1107' name='L1107'></a>      <a href='../S/655.html#L80' title='Defined at 80 in bgpd/bgp_fsm.c.'>bgp_timer_set</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>);
+<a id='L1108' name='L1108'></a>    <em class='brace'>}</em>
+<a id='L1109' name='L1109'></a>  
+<a id='L1110' name='L1110'></a>  <strong class='reserved'>return</strong> ret;
+<a id='L1111' name='L1111'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L66'>[^]</a><a href='#L1076'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

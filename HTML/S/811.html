@@ -1,0 +1,1077 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_flood.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_flood.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L57'>[^]</a><a href='#L997'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L57' title='Defined at 57.'>ospf_flood_delayed_lsa_ack</a></li>
+<li><a href='#L80' title='Defined at 80.'>ospf_external_info_check</a></li>
+<li><a href='#L114' title='Defined at 114.'>ospf_process_self_originated_lsa</a></li>
+<li><a href='#L234' title='Defined at 234.'>ospf_flood</a></li>
+<li><a href='#L345' title='Defined at 345.'>ospf_flood_through_interface</a></li>
+<li><a href='#L562' title='Defined at 562.'>ospf_flood_through_area</a></li>
+<li><a href='#L600' title='Defined at 600.'>ospf_flood_through_as</a></li>
+<li><a href='#L680' title='Defined at 680.'>ospf_flood_through</a></li>
+<li><a href='#L764' title='Defined at 764.'>ospf_ls_request_add</a></li>
+<li><a href='#L781' title='Defined at 781.'>ospf_ls_request_count</a></li>
+<li><a href='#L787' title='Defined at 787.'>ospf_ls_request_isempty</a></li>
+<li><a href='#L794' title='Defined at 794.'>ospf_ls_request_delete</a></li>
+<li><a href='#L812' title='Defined at 812.'>ospf_ls_request_delete_all</a></li>
+<li><a href='#L821' title='Defined at 821.'>ospf_ls_request_lookup</a></li>
+<li><a href='#L827' title='Defined at 827.'>ospf_ls_request_new</a></li>
+<li><a href='#L841' title='Defined at 841.'>ospf_ls_retransmit_count</a></li>
+<li><a href='#L847' title='Defined at 847.'>ospf_ls_retransmit_count_self</a></li>
+<li><a href='#L853' title='Defined at 853.'>ospf_ls_retransmit_isempty</a></li>
+<li><a href='#L860' title='Defined at 860.'>ospf_ls_retransmit_add</a></li>
+<li><a href='#L890' title='Defined at 890.'>ospf_ls_retransmit_delete</a></li>
+<li><a href='#L905' title='Defined at 905.'>ospf_ls_retransmit_clear</a></li>
+<li><a href='#L929' title='Defined at 929.'>ospf_ls_retransmit_lookup</a></li>
+<li><a href='#L935' title='Defined at 935.'>ospf_ls_retransmit_delete_nbr_if</a></li>
+<li><a href='#L956' title='Defined at 956.'>ospf_ls_retransmit_delete_nbr_area</a></li>
+<li><a href='#L967' title='Defined at 967.'>ospf_ls_retransmit_delete_nbr_as</a></li>
+<li><a href='#L981' title='Defined at 981.'>ospf_lsa_flush_area</a></li>
+<li><a href='#L989' title='Defined at 989.'>ospf_lsa_flush_as</a></li>
+<li><a href='#L997' title='Defined at 997.'>ospf_lsa_flush</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * OSPF Flooding -- RFC2328 Section 13.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999, 2000 Toshiaki Takada</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> * </em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify</em>
+<a id='L8' name='L8'></a><em class='comment'> * it under the terms of the GNU General Public License as published</em>
+<a id='L9' name='L9'></a><em class='comment'> * by the Free Software Foundation; either version 2, or (at your</em>
+<a id='L10' name='L10'></a><em class='comment'> * option) any later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the</em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330,</em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='210.html'>zclient.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='790.html'>ospfd/ospfd.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='791.html'>ospfd/ospf_interface.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='807.html'>ospfd/ospf_ism.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='814.html'>ospfd/ospf_asbr.h</a>"
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='733.html'>ospfd/ospf_lsa.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='755.html'>ospfd/ospf_lsdb.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='772.html'>ospfd/ospf_neighbor.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='737.html'>ospfd/ospf_nsm.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='812.html'>ospfd/ospf_spf.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='799.html'>ospfd/ospf_flood.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='806.html'>ospfd/ospf_packet.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='803.html'>ospfd/ospf_abr.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='759.html'>ospfd/ospf_route.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='762.html'>ospfd/ospf_zebra.h</a>"
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='776.html'>ospfd/ospf_dump.h</a>"
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>;
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><em class='comment'>/* Do the LSA acking specified in table 19, Section 13.5, row 2</em>
+<a id='L54' name='L54'></a><em class='comment'> * This get called from ospf_flood_out_interface. Declared inline </em>
+<a id='L55' name='L55'></a><em class='comment'> * for speed. */</em>
+<a id='L56' name='L56'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L57' name='L57'></a><a href='../S/811.html#L328' title='Referred from 328 in ospfd/ospf_flood.c.'>ospf_flood_delayed_lsa_ack</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *inbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L58' name='L58'></a><em class='brace'>{</em>
+<a id='L59' name='L59'></a>  <em class='comment'>/* LSA is more recent than database copy, but was not</em>
+<a id='L60' name='L60'></a><em class='comment'>     flooded back out receiving interface.  Delayed</em>
+<a id='L61' name='L61'></a><em class='comment'>     acknowledgment sent. If interface is in Backup state</em>
+<a id='L62' name='L62'></a><em class='comment'>     delayed acknowledgment sent only if advertisement</em>
+<a id='L63' name='L63'></a><em class='comment'>     received from Designated Router, otherwise do nothing See</em>
+<a id='L64' name='L64'></a><em class='comment'>     RFC 2328 Section 13.5 */</em>
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>  <em class='comment'>/* Whether LSA is more recent or not, and whether this is in</em>
+<a id='L67' name='L67'></a><em class='comment'>     response to the LSA being sent out recieving interface has been </em>
+<a id='L68' name='L68'></a><em class='comment'>     worked out previously */</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a>  <em class='comment'>/* Deal with router as BDR */</em>
+<a id='L71' name='L71'></a>  <strong class='reserved'>if</strong> (inbr-&gt;oi-&gt;state == <a href='../S/807.html#L34' title='Defined at 34 in ospfd/ospf_ism.h.'>ISM_Backup</a> &amp;&amp; ! <a href='../S/772.html#L94' title='Defined at 94 in ospfd/ospf_neighbor.h.'>NBR_IS_DR</a> (inbr))
+<a id='L72' name='L72'></a>    <strong class='reserved'>return</strong>;
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <em class='comment'>/* Schedule a delayed LSA Ack to be sent */</em> 
+<a id='L75' name='L75'></a>  <a href='../S/243.html#L57' title='Defined at 57 in lib/linklist.c.'>listnode_add</a> (inbr-&gt;oi-&gt;ls_ack, <a href='../S/747.html#L277' title='Defined at 277 in ospfd/ospf_lsa.c.'>ospf_lsa_lock</a> (lsa)); <em class='comment'>/* delayed LSA Ack */</em>
+<a id='L76' name='L76'></a><em class='brace'>}</em>
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a><em class='comment'>/* Check LSA is related to external info. */</em>
+<a id='L79' name='L79'></a><strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *
+<a id='L80' name='L80'></a><a href='../R/8067.html' title='Multiple referred from 3 places.'>ospf_external_info_check</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L201' title='Defined at 201 in ospfd/ospf_lsa.h.'>as_external_lsa</a> *al;
+<a id='L83' name='L83'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L84' name='L84'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L85' name='L85'></a>  <strong class='reserved'>int</strong> type;
+<a id='L86' name='L86'></a>
+<a id='L87' name='L87'></a>  al = (<strong class='reserved'>struct</strong> <a href='../S/733.html#L201' title='Defined at 201 in ospfd/ospf_lsa.h.'>as_external_lsa</a> *) lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>  p.family = AF_INET;
+<a id='L90' name='L90'></a>  p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;id;
+<a id='L91' name='L91'></a>  p.prefixlen = <a href='../S/250.html#L471' title='Defined at 471 in lib/prefix.c.'>ip_masklen</a> (al-&gt;mask);
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a>  <strong class='reserved'>for</strong> (type = 0; type &lt;= <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>; type++)
+<a id='L94' name='L94'></a>    <em class='brace'>{</em>
+<a id='L95' name='L95'></a>      <strong class='reserved'>int</strong> redist_type = <a href='../S/747.html#L1985' title='Defined at 1985 in ospfd/ospf_lsa.c.'>is_prefix_default</a> (&amp;p) ? <a href='../S/762.html#L31' title='Defined at 31 in ospfd/ospf_zebra.h.'>DEFAULT_ROUTE</a> : type;
+<a id='L96' name='L96'></a>      <strong class='reserved'>if</strong> (<a href='../S/773.html#L560' title='Defined at 560 in ospfd/ospf_zebra.c.'>ospf_is_type_redistributed</a> (redist_type))
+<a id='L97' name='L97'></a>        <strong class='reserved'>if</strong> (<a href='../S/790.html#L144' title='Defined at 144 in ospfd/ospfd.h.'>EXTERNAL_INFO</a> (type))
+<a id='L98' name='L98'></a>          <em class='brace'>{</em>
+<a id='L99' name='L99'></a>            rn = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a> (<a href='../S/790.html#L144' title='Defined at 144 in ospfd/ospfd.h.'>EXTERNAL_INFO</a> (type),
+<a id='L100' name='L100'></a>                                    (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L101' name='L101'></a>            <strong class='reserved'>if</strong> (rn)
+<a id='L102' name='L102'></a>              <em class='brace'>{</em>
+<a id='L103' name='L103'></a>                <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (rn);
+<a id='L104' name='L104'></a>                <strong class='reserved'>if</strong> (rn-&gt;info != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L105' name='L105'></a>                  <strong class='reserved'>return</strong> (<strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *) rn-&gt;info;
+<a id='L106' name='L106'></a>              <em class='brace'>}</em>
+<a id='L107' name='L107'></a>          <em class='brace'>}</em>
+<a id='L108' name='L108'></a>    <em class='brace'>}</em>
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L111' name='L111'></a><em class='brace'>}</em>
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L114' name='L114'></a><a href='../S/811.html#L335' title='Referred from 335 in ospfd/ospf_flood.c.'>ospf_process_self_originated_lsa</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>,
+<a id='L115' name='L115'></a>                                  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *new, <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area)
+<a id='L116' name='L116'></a><em class='brace'>{</em>
+<a id='L117' name='L117'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L118' name='L118'></a>  <strong class='reserved'>struct</strong> <a href='../S/814.html#L33' title='Defined at 33 in ospfd/ospf_asbr.h.'>external_info</a> *ei;
+<a id='L119' name='L119'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L120' name='L120'></a>  
+<a id='L121' name='L121'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L122' name='L122'></a>    zlog_debug ("LSA[Type%d:%s]: Process self-originated LSA seq 0x%x",
+<a id='L123' name='L123'></a>               new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type, inet_ntoa (new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;id), 
+<a id='L124' name='L124'></a>               ntohl(new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum));
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a>  <em class='comment'>/* If we're here, we installed a self-originated LSA that we received</em>
+<a id='L127' name='L127'></a><em class='comment'>     from a neighbor, i.e. it's more recent.  We must see whether we want</em>
+<a id='L128' name='L128'></a><em class='comment'>     to originate it.</em>
+<a id='L129' name='L129'></a><em class='comment'>     If yes, we should use this LSA's sequence number and reoriginate</em>
+<a id='L130' name='L130'></a><em class='comment'>     a new instance.</em>
+<a id='L131' name='L131'></a><em class='comment'>     if not --- we must flush this LSA from the domain. */</em>
+<a id='L132' name='L132'></a>  <strong class='reserved'>switch</strong> (new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type)
+<a id='L133' name='L133'></a>    <em class='brace'>{</em>
+<a id='L134' name='L134'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>:
+<a id='L135' name='L135'></a>      <em class='comment'>/* Originate a new instance and schedule flooding */</em>
+<a id='L136' name='L136'></a>      <strong class='reserved'>if</strong> (area-&gt;router_lsa_self)
+<a id='L137' name='L137'></a>        area-&gt;router_lsa_self-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum = new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum;
+<a id='L138' name='L138'></a>      <a href='../S/747.html#L931' title='Defined at 931 in ospfd/ospf_lsa.c.'>ospf_router_lsa_update_area</a> (area);
+<a id='L139' name='L139'></a>      <strong class='reserved'>return</strong>;
+<a id='L140' name='L140'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>:
+<a id='L141' name='L141'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L142' name='L142'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L46' title='Defined at 46 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_LINK_LSA</a>:
+<a id='L143' name='L143'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L144' name='L144'></a>      <em class='comment'>/* We must find the interface the LSA could belong to.</em>
+<a id='L145' name='L145'></a><em class='comment'>         If the interface is no more a broadcast type or we are no more</em>
+<a id='L146' name='L146'></a><em class='comment'>         the DR, we flush the LSA otherwise -- create the new instance and</em>
+<a id='L147' name='L147'></a><em class='comment'>         schedule flooding. */</em>
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>      <em class='comment'>/* Look through all interfaces, not just area, since interface</em>
+<a id='L150' name='L150'></a><em class='comment'>         could be moved from one area to another. */</em>
+<a id='L151' name='L151'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;oiflist, node, oi))
+<a id='L152' name='L152'></a>        <em class='comment'>/* These are sanity check. */</em>
+<a id='L153' name='L153'></a>        <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;oi-&gt;address-&gt;u.prefix4, &amp;new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;id))
+<a id='L154' name='L154'></a>          <em class='brace'>{</em>
+<a id='L155' name='L155'></a>            <strong class='reserved'>if</strong> (oi-&gt;area != area ||
+<a id='L156' name='L156'></a>                oi-&gt;type != <a href='../S/791.html#L145' title='Defined at 145 in ospfd/ospf_interface.h.'>OSPF_IFTYPE_BROADCAST</a> ||
+<a id='L157' name='L157'></a>                !<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;oi-&gt;address-&gt;u.prefix4, &amp;<a href='../S/791.html#L184' title='Defined at 184 in ospfd/ospf_interface.h.'>DR</a> (oi)))
+<a id='L158' name='L158'></a>              <em class='brace'>{</em>
+<a id='L159' name='L159'></a>                <a href='../S/747.html#L3569' title='Defined at 3569 in ospfd/ospf_lsa.c.'>ospf_schedule_lsa_flush_area</a> (area, new);
+<a id='L160' name='L160'></a>                <strong class='reserved'>return</strong>;
+<a id='L161' name='L161'></a>              <em class='brace'>}</em>
+<a id='L162' name='L162'></a>            
+<a id='L163' name='L163'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L164' name='L164'></a>            <strong class='reserved'>if</strong> (new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type == <a href='../S/733.html#L46' title='Defined at 46 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_LINK_LSA</a>)
+<a id='L165' name='L165'></a>              <em class='brace'>{</em>
+<a id='L166' name='L166'></a>                <a href='../S/750.html#L1618' title='Defined at 1618 in ospfd/ospf_opaque.c.'>ospf_opaque_lsa_refresh</a> (new);
+<a id='L167' name='L167'></a>                <strong class='reserved'>return</strong>;
+<a id='L168' name='L168'></a>              <em class='brace'>}</em>
+<a id='L169' name='L169'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a>            <strong class='reserved'>if</strong> (oi-&gt;network_lsa_self)
+<a id='L172' name='L172'></a>              oi-&gt;network_lsa_self-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum = new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum;
+<a id='L173' name='L173'></a>            <em class='comment'>/* Schedule network-LSA origination. */</em>
+<a id='L174' name='L174'></a>            <a href='../S/747.html#L1090' title='Defined at 1090 in ospfd/ospf_lsa.c.'>ospf_network_lsa_update</a> (oi);
+<a id='L175' name='L175'></a>            <strong class='reserved'>return</strong>;
+<a id='L176' name='L176'></a>          <em class='brace'>}</em>
+<a id='L177' name='L177'></a>      <strong class='reserved'>break</strong>;
+<a id='L178' name='L178'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L40' title='Defined at 40 in ospfd/ospf_lsa.h.'>OSPF_SUMMARY_LSA</a>:
+<a id='L179' name='L179'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L41' title='Defined at 41 in ospfd/ospf_lsa.h.'>OSPF_ASBR_SUMMARY_LSA</a>:
+<a id='L180' name='L180'></a>      <a href='../S/800.html#L1879' title='Defined at 1879 in ospfd/ospf_abr.c.'>ospf_schedule_abr_task</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>);
+<a id='L181' name='L181'></a>      <strong class='reserved'>break</strong>;
+<a id='L182' name='L182'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a> :
+<a id='L183' name='L183'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>:
+<a id='L184' name='L184'></a>       <strong class='reserved'>if</strong> ( (new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type == <a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a>)
+<a id='L185' name='L185'></a>             &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (new-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/733.html#L82' title='Defined at 82 in ospfd/ospf_lsa.h.'>OSPF_LSA_LOCAL_XLT</a>))
+<a id='L186' name='L186'></a>         <em class='brace'>{</em>
+<a id='L187' name='L187'></a>           <a href='../S/747.html#L1880' title='Defined at 1880 in ospfd/ospf_lsa.c.'>ospf_translated_nssa_refresh</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, new);
+<a id='L188' name='L188'></a>           <strong class='reserved'>return</strong>;
+<a id='L189' name='L189'></a>         <em class='brace'>}</em>
+<a id='L190' name='L190'></a>      ei = <a href='../S/811.html#L80' title='Defined at 80 in ospfd/ospf_flood.c.'>ospf_external_info_check</a> (new);
+<a id='L191' name='L191'></a>      <strong class='reserved'>if</strong> (ei)
+<a id='L192' name='L192'></a>        <a href='../S/747.html#L2300' title='Defined at 2300 in ospfd/ospf_lsa.c.'>ospf_external_lsa_refresh</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new, ei, <a href='../S/733.html#L57' title='Defined at 57 in ospfd/ospf_lsa.h.'>LSA_REFRESH_FORCE</a>);
+<a id='L193' name='L193'></a>      <strong class='reserved'>else</strong>
+<a id='L194' name='L194'></a>        <a href='../S/811.html#L989' title='Defined at 989 in ospfd/ospf_flood.c.'>ospf_lsa_flush_as</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new);
+<a id='L195' name='L195'></a>      <strong class='reserved'>break</strong>;
+<a id='L196' name='L196'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L197' name='L197'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L47' title='Defined at 47 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AREA_LSA</a>:
+<a id='L198' name='L198'></a>      <a href='../S/750.html#L1618' title='Defined at 1618 in ospfd/ospf_opaque.c.'>ospf_opaque_lsa_refresh</a> (new);
+<a id='L199' name='L199'></a>      <strong class='reserved'>break</strong>;
+<a id='L200' name='L200'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L48' title='Defined at 48 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AS_LSA</a>:
+<a id='L201' name='L201'></a>      <a href='../S/750.html#L1618' title='Defined at 1618 in ospfd/ospf_opaque.c.'>ospf_opaque_lsa_refresh</a> (new); <em class='comment'>/* Reconsideration may needed. */</em><em class='comment'>/* XXX */</em>
+<a id='L202' name='L202'></a>      <strong class='reserved'>break</strong>;
+<a id='L203' name='L203'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L204' name='L204'></a>    <strong class='reserved'>default</strong>:
+<a id='L205' name='L205'></a>      <strong class='reserved'>break</strong>;
+<a id='L206' name='L206'></a>    <em class='brace'>}</em>
+<a id='L207' name='L207'></a><em class='brace'>}</em>
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a><em class='comment'>/* OSPF LSA flooding -- RFC2328 Section 13.(5). */</em>
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a><em class='comment'>/* Now Updated for NSSA operation, as follows:</em>
+<a id='L212' name='L212'></a><em class='comment'></em>
+<a id='L213' name='L213'></a><em class='comment'></em>
+<a id='L214' name='L214'></a><em class='comment'>        Type-5's have no change.  Blocked to STUB or NSSA.</em>
+<a id='L215' name='L215'></a><em class='comment'></em>
+<a id='L216' name='L216'></a><em class='comment'>        Type-7's can be received, and if a DR</em>
+<a id='L217' name='L217'></a><em class='comment'>        they will also flood the local NSSA Area as Type-7's</em>
+<a id='L218' name='L218'></a><em class='comment'></em>
+<a id='L219' name='L219'></a><em class='comment'>        If a Self-Originated LSA (now an ASBR), </em>
+<a id='L220' name='L220'></a><em class='comment'>        The LSDB will be updated as Type-5's, (for continual re-fresh)</em>
+<a id='L221' name='L221'></a><em class='comment'></em>
+<a id='L222' name='L222'></a><em class='comment'>            If an NSSA-IR it is installed/flooded as Type-7, P-bit on.</em>
+<a id='L223' name='L223'></a><em class='comment'>            if an NSSA-ABR it is installed/flooded as Type-7, P-bit off.</em>
+<a id='L224' name='L224'></a><em class='comment'></em>
+<a id='L225' name='L225'></a><em class='comment'>        Later, during the ABR TASK, if the ABR is the Elected NSSA</em>
+<a id='L226' name='L226'></a><em class='comment'>        translator, then All Type-7s (with P-bit ON) are Translated to</em>
+<a id='L227' name='L227'></a><em class='comment'>        Type-5's and flooded to all non-NSSA/STUB areas.</em>
+<a id='L228' name='L228'></a><em class='comment'></em>
+<a id='L229' name='L229'></a><em class='comment'>        During ASE Calculations, </em>
+<a id='L230' name='L230'></a><em class='comment'>            non-ABRs calculate external routes from Type-7's</em>
+<a id='L231' name='L231'></a><em class='comment'>            ABRs calculate external routes from Type-5's and non-self Type-7s</em>
+<a id='L232' name='L232'></a><em class='comment'>*/</em>
+<a id='L233' name='L233'></a><strong class='reserved'>int</strong>
+<a id='L234' name='L234'></a><a href='../R/8102.html' title='Multiple referred from 2 places.'>ospf_flood</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr,
+<a id='L235' name='L235'></a>            <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *current, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *new)
+<a id='L236' name='L236'></a><em class='brace'>{</em>
+<a id='L237' name='L237'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L238' name='L238'></a>  <strong class='reserved'>int</strong> lsa_ack_flag;
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a>  <em class='comment'>/* Type-7 LSA's will be flooded throughout their native NSSA area,</em>
+<a id='L241' name='L241'></a><em class='comment'>     but will also be flooded as Type-5's into ABR capable links.  */</em>
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L244' name='L244'></a>    zlog_debug ("LSA[Flooding]: start, NBR %s (%s), cur(%p), New-LSA[%s]",
+<a id='L245' name='L245'></a>               inet_ntoa (nbr-&gt;router_id),
+<a id='L246' name='L246'></a>               LOOKUP (ospf_nsm_state_msg, nbr-&gt;state),
+<a id='L247' name='L247'></a>               current,
+<a id='L248' name='L248'></a>               <a href='../S/747.html#L348' title='Defined at 348 in ospfd/ospf_lsa.c.'>dump_lsa_key</a> (new));
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a>  lsa_ack_flag = 0;
+<a id='L251' name='L251'></a>  oi = nbr-&gt;oi;
+<a id='L252' name='L252'></a>
+<a id='L253' name='L253'></a>  <em class='comment'>/* If there is already a database copy, and if the</em>
+<a id='L254' name='L254'></a><em class='comment'>     database copy was received via flooding and installed less</em>
+<a id='L255' name='L255'></a><em class='comment'>     than MinLSArrival seconds ago, discard the new LSA</em>
+<a id='L256' name='L256'></a><em class='comment'>     (without acknowledging it). */</em>
+<a id='L257' name='L257'></a>  <strong class='reserved'>if</strong> (current != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)          <em class='comment'>/* -- endo. */</em>
+<a id='L258' name='L258'></a>    <em class='brace'>{</em>
+<a id='L259' name='L259'></a>      <strong class='reserved'>if</strong> (<a href='../S/733.html#L225' title='Defined at 225 in ospfd/ospf_lsa.h.'>IS_LSA_SELF</a> (current)
+<a id='L260' name='L260'></a>      &amp;&amp; (ntohs (current-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_age)    == 0
+<a id='L261' name='L261'></a>      &amp;&amp;  ntohl (current-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum) == <a href='../S/790.html#L67' title='Defined at 67 in ospfd/ospfd.h.'>OSPF_INITIAL_SEQUENCE_NUMBER</a>))
+<a id='L262' name='L262'></a>        <em class='brace'>{</em>
+<a id='L263' name='L263'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L264' name='L264'></a>            zlog_debug ("LSA[Flooding]: Got a self-originated LSA, "
+<a id='L265' name='L265'></a>                       "while local one is initial instance.");
+<a id='L266' name='L266'></a>          ; <em class='comment'>/* Accept this LSA for quick LSDB resynchronization. */</em>
+<a id='L267' name='L267'></a>        <em class='brace'>}</em>
+<a id='L268' name='L268'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/747.html#L133' title='Defined at 133 in ospfd/ospf_lsa.c.'>tv_cmp</a> (<a href='../S/747.html#L122' title='Defined at 122 in ospfd/ospf_lsa.c.'>tv_sub</a> (<a href='../S/208.html#L245' title='Defined at 245 in lib/thread.c.'>recent_relative_time</a> (), current-&gt;tv_recv),
+<a id='L269' name='L269'></a>                       <a href='../S/747.html#L100' title='Defined at 100 in ospfd/ospf_lsa.c.'>int2tv</a> (<a href='../S/790.html#L60' title='Defined at 60 in ospfd/ospfd.h.'>OSPF_MIN_LS_ARRIVAL</a>)) &lt; 0)
+<a id='L270' name='L270'></a>        <em class='brace'>{</em>
+<a id='L271' name='L271'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L272' name='L272'></a>            zlog_debug ("LSA[Flooding]: LSA is received recently.");
+<a id='L273' name='L273'></a>          <strong class='reserved'>return</strong> -1;
+<a id='L274' name='L274'></a>        <em class='brace'>}</em>
+<a id='L275' name='L275'></a>    <em class='brace'>}</em>
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a>  <em class='comment'>/* Flood the new LSA out some subset of the router's interfaces.</em>
+<a id='L278' name='L278'></a><em class='comment'>     In some cases (e.g., the state of the receiving interface is</em>
+<a id='L279' name='L279'></a><em class='comment'>     DR and the LSA was received from a router other than the</em>
+<a id='L280' name='L280'></a><em class='comment'>     Backup DR) the LSA will be flooded back out the receiving</em>
+<a id='L281' name='L281'></a><em class='comment'>     interface. */</em>
+<a id='L282' name='L282'></a>  lsa_ack_flag = <a href='../S/811.html#L680' title='Defined at 680 in ospfd/ospf_flood.c.'>ospf_flood_through</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, nbr, new);
+<a id='L283' name='L283'></a>
+<a id='L284' name='L284'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L285' name='L285'></a>  <em class='comment'>/* Remove the current database copy from all neighbors' Link state</em>
+<a id='L286' name='L286'></a><em class='comment'>     retransmission lists.  AS_EXTERNAL and AS_EXTERNAL_OPAQUE does</em>
+<a id='L287' name='L287'></a><em class='comment'>                                        ^^^^^^^^^^^^^^^^^^^^^^^</em>
+<a id='L288' name='L288'></a><em class='comment'>     not have area ID.</em>
+<a id='L289' name='L289'></a><em class='comment'>     All other (even NSSA's) do have area ID.  */</em>
+<a id='L290' name='L290'></a><em class='sharp'>#else</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L291' name='L291'></a>  <em class='comment'>/* Remove the current database copy from all neighbors' Link state</em>
+<a id='L292' name='L292'></a><em class='comment'>     retransmission lists.  Only AS_EXTERNAL does not have area ID.</em>
+<a id='L293' name='L293'></a><em class='comment'>     All other (even NSSA's) do have area ID.  */</em>
+<a id='L294' name='L294'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L295' name='L295'></a>  <strong class='reserved'>if</strong> (current)
+<a id='L296' name='L296'></a>    <em class='brace'>{</em>
+<a id='L297' name='L297'></a>      <strong class='reserved'>switch</strong> (current-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type)
+<a id='L298' name='L298'></a>        <em class='brace'>{</em>
+<a id='L299' name='L299'></a>        <strong class='reserved'>case</strong> <a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a>:
+<a id='L300' name='L300'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L301' name='L301'></a>        <strong class='reserved'>case</strong> <a href='../S/733.html#L48' title='Defined at 48 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AS_LSA</a>:
+<a id='L302' name='L302'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L303' name='L303'></a>          <a href='../S/811.html#L967' title='Defined at 967 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_delete_nbr_as</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, current);
+<a id='L304' name='L304'></a>          <strong class='reserved'>break</strong>;
+<a id='L305' name='L305'></a>        <strong class='reserved'>default</strong>:
+<a id='L306' name='L306'></a>          <a href='../S/811.html#L956' title='Defined at 956 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_delete_nbr_area</a> (nbr-&gt;oi-&gt;area, current);
+<a id='L307' name='L307'></a>          <strong class='reserved'>break</strong>;
+<a id='L308' name='L308'></a>        <em class='brace'>}</em>
+<a id='L309' name='L309'></a>    <em class='brace'>}</em>
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a>  <em class='comment'>/* Do some internal house keeping that is needed here */</em>
+<a id='L312' name='L312'></a>  <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (new-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/733.html#L79' title='Defined at 79 in ospfd/ospf_lsa.h.'>OSPF_LSA_RECEIVED</a>);
+<a id='L313' name='L313'></a>  <a href='../S/747.html#L3430' title='Defined at 3430 in ospfd/ospf_lsa.c.'>ospf_lsa_is_self_originated</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new); <em class='comment'>/* Let it set the flag */</em>
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a>  <em class='comment'>/* Install the new LSA in the link state database</em>
+<a id='L316' name='L316'></a><em class='comment'>     (replacing the current database copy).  This may cause the</em>
+<a id='L317' name='L317'></a><em class='comment'>     routing table calculation to be scheduled.  In addition,</em>
+<a id='L318' name='L318'></a><em class='comment'>     timestamp the new LSA with the current time.  The flooding</em>
+<a id='L319' name='L319'></a><em class='comment'>     procedure cannot overwrite the newly installed LSA until</em>
+<a id='L320' name='L320'></a><em class='comment'>     MinLSArrival seconds have elapsed. */</em>  
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a>  <strong class='reserved'>if</strong> (! (new = <a href='../S/747.html#L2598' title='Defined at 2598 in ospfd/ospf_lsa.c.'>ospf_lsa_install</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, nbr-&gt;oi, new)))
+<a id='L323' name='L323'></a>    <strong class='reserved'>return</strong> -1; <em class='comment'>/* unknown LSA type or any other error condition */</em>
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a>  <em class='comment'>/* Acknowledge the receipt of the LSA by sending a Link State</em>
+<a id='L326' name='L326'></a><em class='comment'>     Acknowledgment packet back out the receiving interface. */</em>
+<a id='L327' name='L327'></a>  <strong class='reserved'>if</strong> (lsa_ack_flag)
+<a id='L328' name='L328'></a>    <a href='../S/811.html#L57' title='Defined at 57 in ospfd/ospf_flood.c.'>ospf_flood_delayed_lsa_ack</a> (nbr, new);     
+<a id='L329' name='L329'></a>
+<a id='L330' name='L330'></a>  <em class='comment'>/* If this new LSA indicates that it was originated by the</em>
+<a id='L331' name='L331'></a><em class='comment'>     receiving router itself, the router must take special action,</em>
+<a id='L332' name='L332'></a><em class='comment'>     either updating the LSA or in some cases flushing it from</em>
+<a id='L333' name='L333'></a><em class='comment'>     the routing domain. */</em>
+<a id='L334' name='L334'></a>  <strong class='reserved'>if</strong> (<a href='../S/747.html#L3430' title='Defined at 3430 in ospfd/ospf_lsa.c.'>ospf_lsa_is_self_originated</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new))
+<a id='L335' name='L335'></a>    <a href='../S/811.html#L114' title='Defined at 114 in ospfd/ospf_flood.c.'>ospf_process_self_originated_lsa</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, new, oi-&gt;area);
+<a id='L336' name='L336'></a>  <strong class='reserved'>else</strong>
+<a id='L337' name='L337'></a>    <em class='comment'>/* Update statistics value for OSPF-MIB. */</em>
+<a id='L338' name='L338'></a>    <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;rx_lsa_count++;
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L341' name='L341'></a><em class='brace'>}</em>
+<a id='L342' name='L342'></a>
+<a id='L343' name='L343'></a><em class='comment'>/* OSPF LSA flooding -- RFC2328 Section 13.3. */</em>
+<a id='L344' name='L344'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L345' name='L345'></a><a href='../R/8107.html' title='Multiple referred from 2 places.'>ospf_flood_through_interface</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi,
+<a id='L346' name='L346'></a>                              <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *inbr,
+<a id='L347' name='L347'></a>                              <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L348' name='L348'></a><em class='brace'>{</em>
+<a id='L349' name='L349'></a>  <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *onbr;
+<a id='L350' name='L350'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L351' name='L351'></a>  <strong class='reserved'>int</strong> retx_flag;
+<a id='L352' name='L352'></a>
+<a id='L353' name='L353'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L354' name='L354'></a>    zlog_debug ("ospf_flood_through_interface(): "
+<a id='L355' name='L355'></a>               "considering int %s, INBR(%s), LSA[%s]",
+<a id='L356' name='L356'></a>               <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a> (oi), inbr ? inet_ntoa (inbr-&gt;router_id) : "NULL",
+<a id='L357' name='L357'></a>               <a href='../S/747.html#L348' title='Defined at 348 in ospfd/ospf_lsa.c.'>dump_lsa_key</a> (lsa));
+<a id='L358' name='L358'></a>
+<a id='L359' name='L359'></a>  <strong class='reserved'>if</strong> (!<a href='../S/788.html#L721' title='Defined at 721 in ospfd/ospf_interface.c.'>ospf_if_is_enable</a> (oi))
+<a id='L360' name='L360'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L361' name='L361'></a>
+<a id='L362' name='L362'></a>  <em class='comment'>/* Remember if new LSA is aded to a retransmit list. */</em>
+<a id='L363' name='L363'></a>  retx_flag = 0;
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a>  <em class='comment'>/* Each of the neighbors attached to this interface are examined,</em>
+<a id='L366' name='L366'></a><em class='comment'>     to determine whether they must receive the new LSA.  The following</em>
+<a id='L367' name='L367'></a><em class='comment'>     steps are executed for each neighbor: */</em>
+<a id='L368' name='L368'></a>  <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (oi-&gt;nbrs); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L369' name='L369'></a>    <em class='brace'>{</em>
+<a id='L370' name='L370'></a>      <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *ls_req;
+<a id='L371' name='L371'></a> 
+<a id='L372' name='L372'></a>      <strong class='reserved'>if</strong> (rn-&gt;info == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L373' name='L373'></a>        <strong class='reserved'>continue</strong>;
+<a id='L374' name='L374'></a>
+<a id='L375' name='L375'></a>      onbr = rn-&gt;info;
+<a id='L376' name='L376'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L377' name='L377'></a>        zlog_debug ("ospf_flood_through_interface(): considering nbr %s (%s)",
+<a id='L378' name='L378'></a>                   inet_ntoa (onbr-&gt;router_id),
+<a id='L379' name='L379'></a>                   LOOKUP (ospf_nsm_state_msg, onbr-&gt;state));
+<a id='L380' name='L380'></a>
+<a id='L381' name='L381'></a>      <em class='comment'>/* If the neighbor is in a lesser state than Exchange, it</em>
+<a id='L382' name='L382'></a><em class='comment'>         does not participate in flooding, and the next neighbor</em>
+<a id='L383' name='L383'></a><em class='comment'>         should be examined. */</em>
+<a id='L384' name='L384'></a>      <strong class='reserved'>if</strong> (onbr-&gt;state &lt; <a href='../S/737.html#L35' title='Defined at 35 in ospfd/ospf_nsm.h.'>NSM_Exchange</a>)
+<a id='L385' name='L385'></a>        <strong class='reserved'>continue</strong>;
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a>      <em class='comment'>/* If the adjacency is not yet full (neighbor state is</em>
+<a id='L388' name='L388'></a><em class='comment'>         Exchange or Loading), examine the Link state request</em>
+<a id='L389' name='L389'></a><em class='comment'>         list associated with this adjacency.  If there is an</em>
+<a id='L390' name='L390'></a><em class='comment'>         instance of the new LSA on the list, it indicates that</em>
+<a id='L391' name='L391'></a><em class='comment'>         the neighboring router has an instance of the LSA</em>
+<a id='L392' name='L392'></a><em class='comment'>         already.  Compare the new LSA to the neighbor's copy: */</em>
+<a id='L393' name='L393'></a>      <strong class='reserved'>if</strong> (onbr-&gt;state &lt; <a href='../S/737.html#L37' title='Defined at 37 in ospfd/ospf_nsm.h.'>NSM_Full</a>)
+<a id='L394' name='L394'></a>        <em class='brace'>{</em>
+<a id='L395' name='L395'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L97' title='Defined at 97 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_EVENT</a>)
+<a id='L396' name='L396'></a>            zlog_debug ("ospf_flood_through_interface(): nbr adj is not Full");
+<a id='L397' name='L397'></a>          ls_req = <a href='../S/811.html#L821' title='Defined at 821 in ospfd/ospf_flood.c.'>ospf_ls_request_lookup</a> (onbr, lsa);
+<a id='L398' name='L398'></a>          <strong class='reserved'>if</strong> (ls_req != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L399' name='L399'></a>            <em class='brace'>{</em>
+<a id='L400' name='L400'></a>              <strong class='reserved'>int</strong> ret;
+<a id='L401' name='L401'></a>
+<a id='L402' name='L402'></a>              ret = <a href='../S/747.html#L3193' title='Defined at 3193 in ospfd/ospf_lsa.c.'>ospf_lsa_more_recent</a> (ls_req, lsa);
+<a id='L403' name='L403'></a>              <em class='comment'>/* The new LSA is less recent. */</em>
+<a id='L404' name='L404'></a>              <strong class='reserved'>if</strong> (ret &gt; 0)
+<a id='L405' name='L405'></a>                <strong class='reserved'>continue</strong>;
+<a id='L406' name='L406'></a>              <em class='comment'>/* The two copies are the same instance, then delete</em>
+<a id='L407' name='L407'></a><em class='comment'>                 the LSA from the Link state request list. */</em>
+<a id='L408' name='L408'></a>              <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (ret == 0)
+<a id='L409' name='L409'></a>                <em class='brace'>{</em>
+<a id='L410' name='L410'></a>                  <a href='../S/811.html#L794' title='Defined at 794 in ospfd/ospf_flood.c.'>ospf_ls_request_delete</a> (onbr, ls_req);
+<a id='L411' name='L411'></a>                  <a href='../S/815.html#L849' title='Defined at 849 in ospfd/ospf_nsm.c.'>ospf_check_nbr_loading</a> (onbr);
+<a id='L412' name='L412'></a>                  <strong class='reserved'>continue</strong>;
+<a id='L413' name='L413'></a>                <em class='brace'>}</em>
+<a id='L414' name='L414'></a>              <em class='comment'>/* The new LSA is more recent.  Delete the LSA</em>
+<a id='L415' name='L415'></a><em class='comment'>                 from the Link state request list. */</em>
+<a id='L416' name='L416'></a>              <strong class='reserved'>else</strong>
+<a id='L417' name='L417'></a>                <em class='brace'>{</em>
+<a id='L418' name='L418'></a>                  <a href='../S/811.html#L794' title='Defined at 794 in ospfd/ospf_flood.c.'>ospf_ls_request_delete</a> (onbr, ls_req);
+<a id='L419' name='L419'></a>                  <a href='../S/815.html#L849' title='Defined at 849 in ospfd/ospf_nsm.c.'>ospf_check_nbr_loading</a> (onbr);
+<a id='L420' name='L420'></a>                <em class='brace'>}</em>
+<a id='L421' name='L421'></a>            <em class='brace'>}</em>
+<a id='L422' name='L422'></a>        <em class='brace'>}</em>
+<a id='L423' name='L423'></a>
+<a id='L424' name='L424'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L425' name='L425'></a>      <strong class='reserved'>if</strong> (<a href='../S/744.html#L29' title='Defined at 29 in ospfd/ospf_opaque.h.'>IS_OPAQUE_LSA</a> (lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type))
+<a id='L426' name='L426'></a>        <em class='brace'>{</em>
+<a id='L427' name='L427'></a>          <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (onbr-&gt;options, <a href='../S/790.html#L119' title='Defined at 119 in ospfd/ospfd.h.'>OSPF_OPTION_O</a>))
+<a id='L428' name='L428'></a>            <em class='brace'>{</em>
+<a id='L429' name='L429'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L430' name='L430'></a>                zlog_debug ("Skip this neighbor: Not Opaque-capable.");
+<a id='L431' name='L431'></a>              <strong class='reserved'>continue</strong>;
+<a id='L432' name='L432'></a>            <em class='brace'>}</em>
+<a id='L433' name='L433'></a>
+<a id='L434' name='L434'></a>          <strong class='reserved'>if</strong> (<a href='../S/744.html#L46' title='Defined at 46 in ospfd/ospf_opaque.h.'>IS_OPAQUE_LSA_ORIGINATION_BLOCKED</a> (oi-&gt;<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;opaque)
+<a id='L435' name='L435'></a>          &amp;&amp;  <a href='../S/733.html#L225' title='Defined at 225 in ospfd/ospf_lsa.h.'>IS_LSA_SELF</a> (lsa)
+<a id='L436' name='L436'></a>          &amp;&amp;  onbr-&gt;state == <a href='../S/737.html#L37' title='Defined at 37 in ospfd/ospf_nsm.h.'>NSM_Full</a>)
+<a id='L437' name='L437'></a>            <em class='brace'>{</em>
+<a id='L438' name='L438'></a>              <em class='comment'>/* Small attempt to reduce unnecessary retransmission. */</em>
+<a id='L439' name='L439'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L440' name='L440'></a>                zlog_debug ("Skip this neighbor: Initial flushing done.");
+<a id='L441' name='L441'></a>              <strong class='reserved'>continue</strong>;
+<a id='L442' name='L442'></a>            <em class='brace'>}</em>
+<a id='L443' name='L443'></a>        <em class='brace'>}</em>
+<a id='L444' name='L444'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L445' name='L445'></a>
+<a id='L446' name='L446'></a>      <em class='comment'>/* If the new LSA was received from this neighbor,</em>
+<a id='L447' name='L447'></a><em class='comment'>         examine the next neighbor. */</em>
+<a id='L448' name='L448'></a><em class='sharp'>#ifdef</em> ORIGINAL_CODING
+<a id='L449' name='L449'></a>      <strong class='reserved'>if</strong> (inbr)
+<a id='L450' name='L450'></a>        <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;inbr-&gt;router_id, &amp;onbr-&gt;router_id))
+<a id='L451' name='L451'></a>          <strong class='reserved'>continue</strong>;
+<a id='L452' name='L452'></a><em class='sharp'>#else</em> <em class='comment'>/* ORIGINAL_CODING */</em>
+<a id='L453' name='L453'></a>      <strong class='reserved'>if</strong> (inbr)
+<a id='L454' name='L454'></a>        <em class='brace'>{</em>
+<a id='L455' name='L455'></a>          <em class='comment'>/*</em>
+<a id='L456' name='L456'></a><em class='comment'>           * Triggered by LSUpd message parser "ospf_ls_upd ()".</em>
+<a id='L457' name='L457'></a><em class='comment'>           * E.g., all LSAs handling here is received via network.</em>
+<a id='L458' name='L458'></a><em class='comment'>           */</em>
+<a id='L459' name='L459'></a>          <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;inbr-&gt;router_id, &amp;onbr-&gt;router_id))
+<a id='L460' name='L460'></a>            <em class='brace'>{</em>
+<a id='L461' name='L461'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L462' name='L462'></a>                zlog_debug ("Skip this neighbor: inbr == onbr");
+<a id='L463' name='L463'></a>              <strong class='reserved'>continue</strong>;
+<a id='L464' name='L464'></a>            <em class='brace'>}</em>
+<a id='L465' name='L465'></a>        <em class='brace'>}</em>
+<a id='L466' name='L466'></a>      <strong class='reserved'>else</strong>
+<a id='L467' name='L467'></a>        <em class='brace'>{</em>
+<a id='L468' name='L468'></a>          <em class='comment'>/*</em>
+<a id='L469' name='L469'></a><em class='comment'>           * Triggered by MaxAge remover, so far.</em>
+<a id='L470' name='L470'></a><em class='comment'>           * NULL "inbr" means flooding starts from this node.</em>
+<a id='L471' name='L471'></a><em class='comment'>           */</em>
+<a id='L472' name='L472'></a>          <strong class='reserved'>if</strong> (<a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;adv_router, &amp;onbr-&gt;router_id))
+<a id='L473' name='L473'></a>            <em class='brace'>{</em>
+<a id='L474' name='L474'></a>              <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L475' name='L475'></a>                zlog_debug ("Skip this neighbor: lsah-&gt;adv_router == onbr");
+<a id='L476' name='L476'></a>              <strong class='reserved'>continue</strong>;
+<a id='L477' name='L477'></a>            <em class='brace'>}</em>
+<a id='L478' name='L478'></a>        <em class='brace'>}</em>
+<a id='L479' name='L479'></a><em class='sharp'>#endif</em> <em class='comment'>/* ORIGINAL_CODING */</em>
+<a id='L480' name='L480'></a>
+<a id='L481' name='L481'></a>      <em class='comment'>/* Add the new LSA to the Link state retransmission list</em>
+<a id='L482' name='L482'></a><em class='comment'>         for the adjacency. The LSA will be retransmitted</em>
+<a id='L483' name='L483'></a><em class='comment'>         at intervals until an acknowledgment is seen from</em>
+<a id='L484' name='L484'></a><em class='comment'>         the neighbor. */</em>
+<a id='L485' name='L485'></a>      <a href='../S/811.html#L860' title='Defined at 860 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_add</a> (onbr, lsa);
+<a id='L486' name='L486'></a>      retx_flag = 1;
+<a id='L487' name='L487'></a>    <em class='brace'>}</em>
+<a id='L488' name='L488'></a>
+<a id='L489' name='L489'></a>  <em class='comment'>/* If in the previous step, the LSA was NOT added to any of</em>
+<a id='L490' name='L490'></a><em class='comment'>     the Link state retransmission lists, there is no need to</em>
+<a id='L491' name='L491'></a><em class='comment'>     flood the LSA out the interface. */</em>
+<a id='L492' name='L492'></a>  <strong class='reserved'>if</strong> (retx_flag == 0) 
+<a id='L493' name='L493'></a>    <em class='brace'>{</em>
+<a id='L494' name='L494'></a>      <strong class='reserved'>return</strong> (inbr &amp;&amp; inbr-&gt;oi == oi);
+<a id='L495' name='L495'></a>    <em class='brace'>}</em>
+<a id='L496' name='L496'></a>
+<a id='L497' name='L497'></a>  <em class='comment'>/* if we've received the lsa on this interface we need to perform</em>
+<a id='L498' name='L498'></a><em class='comment'>     additional checking */</em>
+<a id='L499' name='L499'></a>  <strong class='reserved'>if</strong> (inbr &amp;&amp; (inbr-&gt;oi == oi))
+<a id='L500' name='L500'></a>    <em class='brace'>{</em>
+<a id='L501' name='L501'></a>      <em class='comment'>/* If the new LSA was received on this interface, and it was</em>
+<a id='L502' name='L502'></a><em class='comment'>         received from either the Designated Router or the Backup</em>
+<a id='L503' name='L503'></a><em class='comment'>         Designated Router, chances are that all the neighbors have</em>
+<a id='L504' name='L504'></a><em class='comment'>         received the LSA already. */</em>
+<a id='L505' name='L505'></a>      <strong class='reserved'>if</strong> (<a href='../S/772.html#L94' title='Defined at 94 in ospfd/ospf_neighbor.h.'>NBR_IS_DR</a> (inbr) || <a href='../S/772.html#L95' title='Defined at 95 in ospfd/ospf_neighbor.h.'>NBR_IS_BDR</a> (inbr))
+<a id='L506' name='L506'></a>        <em class='brace'>{</em>
+<a id='L507' name='L507'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L99' title='Defined at 99 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_NSSA</a>)
+<a id='L508' name='L508'></a>            zlog_debug ("ospf_flood_through_interface(): "
+<a id='L509' name='L509'></a>                       "DR/BDR NOT SEND to int %s", <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a> (oi));
+<a id='L510' name='L510'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L511' name='L511'></a>        <em class='brace'>}</em>
+<a id='L512' name='L512'></a>          
+<a id='L513' name='L513'></a>      <em class='comment'>/* If the new LSA was received on this interface, and the</em>
+<a id='L514' name='L514'></a><em class='comment'>         interface state is Backup, examine the next interface.  The</em>
+<a id='L515' name='L515'></a><em class='comment'>         Designated Router will do the flooding on this interface.</em>
+<a id='L516' name='L516'></a><em class='comment'>         However, if the Designated Router fails the router will</em>
+<a id='L517' name='L517'></a><em class='comment'>         end up retransmitting the updates. */</em>
+<a id='L518' name='L518'></a>
+<a id='L519' name='L519'></a>      <strong class='reserved'>if</strong> (oi-&gt;state == <a href='../S/807.html#L34' title='Defined at 34 in ospfd/ospf_ism.h.'>ISM_Backup</a>)
+<a id='L520' name='L520'></a>        <em class='brace'>{</em>
+<a id='L521' name='L521'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L99' title='Defined at 99 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_NSSA</a>)
+<a id='L522' name='L522'></a>            zlog_debug ("ospf_flood_through_interface(): "
+<a id='L523' name='L523'></a>                       "ISM_Backup NOT SEND to int %s", <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a> (oi));
+<a id='L524' name='L524'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L525' name='L525'></a>        <em class='brace'>}</em>
+<a id='L526' name='L526'></a>    <em class='brace'>}</em>
+<a id='L527' name='L527'></a>
+<a id='L528' name='L528'></a>  <em class='comment'>/* The LSA must be flooded out the interface. Send a Link State</em>
+<a id='L529' name='L529'></a><em class='comment'>     Update packet (including the new LSA as contents) out the</em>
+<a id='L530' name='L530'></a><em class='comment'>     interface.  The LSA's LS age must be incremented by InfTransDelay</em>
+<a id='L531' name='L531'></a><em class='comment'>     (which     must be &gt; 0) when it is copied into the outgoing Link</em>
+<a id='L532' name='L532'></a><em class='comment'>     State Update packet (until the LS age field reaches the maximum</em>
+<a id='L533' name='L533'></a><em class='comment'>     value of MaxAge). */</em>
+<a id='L534' name='L534'></a>  <em class='comment'>/* XXX HASSO: Is this IS_DEBUG_OSPF_NSSA really correct? */</em>
+<a id='L535' name='L535'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L99' title='Defined at 99 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_NSSA</a>)
+<a id='L536' name='L536'></a>    zlog_debug ("ospf_flood_through_interface(): "
+<a id='L537' name='L537'></a>               "DR/BDR sending upd to int %s", <a href='../S/776.html#L112' title='Defined at 112 in ospfd/ospf_dump.h.'>IF_NAME</a> (oi));
+<a id='L538' name='L538'></a>
+<a id='L539' name='L539'></a>  <em class='comment'>/*  RFC2328  Section 13.3</em>
+<a id='L540' name='L540'></a><em class='comment'>      On non-broadcast networks, separate       Link State Update</em>
+<a id='L541' name='L541'></a><em class='comment'>      packets must be sent, as unicasts, to each adjacent       neighbor</em>
+<a id='L542' name='L542'></a><em class='comment'>      (i.e., those in state Exchange or greater).        The destination</em>
+<a id='L543' name='L543'></a><em class='comment'>      IP addresses for these packets are the neighbors' IP</em>
+<a id='L544' name='L544'></a><em class='comment'>      addresses.   */</em>
+<a id='L545' name='L545'></a>  <strong class='reserved'>if</strong> (oi-&gt;type == <a href='../S/791.html#L146' title='Defined at 146 in ospfd/ospf_interface.h.'>OSPF_IFTYPE_NBMA</a>)
+<a id='L546' name='L546'></a>    <em class='brace'>{</em>
+<a id='L547' name='L547'></a>      <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L548' name='L548'></a>      <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr;
+<a id='L549' name='L549'></a>
+<a id='L550' name='L550'></a>      <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (oi-&gt;nbrs); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L551' name='L551'></a>        <strong class='reserved'>if</strong> ((nbr = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L552' name='L552'></a>          <strong class='reserved'>if</strong> (nbr != oi-&gt;nbr_self &amp;&amp; nbr-&gt;state &gt;= <a href='../S/737.html#L35' title='Defined at 35 in ospfd/ospf_nsm.h.'>NSM_Exchange</a>)
+<a id='L553' name='L553'></a>            <a href='../S/768.html#L3645' title='Defined at 3645 in ospfd/ospf_packet.c.'>ospf_ls_upd_send_lsa</a> (nbr, lsa, <a href='../S/806.html#L43' title='Defined at 43 in ospfd/ospf_packet.h.'>OSPF_SEND_PACKET_DIRECT</a>);
+<a id='L554' name='L554'></a>    <em class='brace'>}</em>
+<a id='L555' name='L555'></a>  <strong class='reserved'>else</strong>
+<a id='L556' name='L556'></a>    <a href='../S/768.html#L3645' title='Defined at 3645 in ospfd/ospf_packet.c.'>ospf_ls_upd_send_lsa</a> (oi-&gt;nbr_self, lsa, <a href='../S/806.html#L44' title='Defined at 44 in ospfd/ospf_packet.h.'>OSPF_SEND_PACKET_INDIRECT</a>);
+<a id='L557' name='L557'></a>
+<a id='L558' name='L558'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L559' name='L559'></a><em class='brace'>}</em>
+<a id='L560' name='L560'></a>
+<a id='L561' name='L561'></a><strong class='reserved'>int</strong>
+<a id='L562' name='L562'></a><a href='../R/8105.html' title='Multiple referred from 20 places.'>ospf_flood_through_area</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area,
+<a id='L563' name='L563'></a>                         <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *inbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L564' name='L564'></a><em class='brace'>{</em>
+<a id='L565' name='L565'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L566' name='L566'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L567' name='L567'></a>  <strong class='reserved'>int</strong> lsa_ack_flag = 0;
+<a id='L568' name='L568'></a>
+<a id='L569' name='L569'></a>  <em class='comment'>/* All other types are specific to a single area (Area A).  The</em>
+<a id='L570' name='L570'></a><em class='comment'>     eligible interfaces are all those interfaces attaching to the</em>
+<a id='L571' name='L571'></a><em class='comment'>     Area A.  If Area A is the backbone, this includes all the virtual</em>
+<a id='L572' name='L572'></a><em class='comment'>     links.  */</em>
+<a id='L573' name='L573'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (area-&gt;oiflist, node, nnode, oi))
+<a id='L574' name='L574'></a>    <em class='brace'>{</em>
+<a id='L575' name='L575'></a>      <strong class='reserved'>if</strong> (area-&gt;area_id.s_addr != <a href='../S/790.html#L75' title='Defined at 75 in ospfd/ospfd.h.'>OSPF_AREA_BACKBONE</a> &amp;&amp;
+<a id='L576' name='L576'></a>          oi-&gt;type ==  <a href='../S/791.html#L148' title='Defined at 148 in ospfd/ospf_interface.h.'>OSPF_IFTYPE_VIRTUALLINK</a>) 
+<a id='L577' name='L577'></a>        <strong class='reserved'>continue</strong>;
+<a id='L578' name='L578'></a>
+<a id='L579' name='L579'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L580' name='L580'></a>      <strong class='reserved'>if</strong> ((lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type == <a href='../S/733.html#L46' title='Defined at 46 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_LINK_LSA</a>) &amp;&amp; (lsa-&gt;oi != oi))
+<a id='L581' name='L581'></a>        <em class='brace'>{</em>
+<a id='L582' name='L582'></a>          <em class='comment'>/*</em>
+<a id='L583' name='L583'></a><em class='comment'>           * Link local scoped Opaque-LSA should only be flooded</em>
+<a id='L584' name='L584'></a><em class='comment'>           * for the link on which the LSA has received.</em>
+<a id='L585' name='L585'></a><em class='comment'>           */</em>
+<a id='L586' name='L586'></a>          <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L587' name='L587'></a>            zlog_debug ("Type-9 Opaque-LSA: lsa-&gt;oi(%p) != oi(%p)", lsa-&gt;oi, oi);
+<a id='L588' name='L588'></a>          <strong class='reserved'>continue</strong>;
+<a id='L589' name='L589'></a>        <em class='brace'>}</em>
+<a id='L590' name='L590'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L591' name='L591'></a>
+<a id='L592' name='L592'></a>      <strong class='reserved'>if</strong> (<a href='../S/811.html#L345' title='Defined at 345 in ospfd/ospf_flood.c.'>ospf_flood_through_interface</a> (oi, inbr, lsa))
+<a id='L593' name='L593'></a>        lsa_ack_flag = 1;
+<a id='L594' name='L594'></a>    <em class='brace'>}</em>
+<a id='L595' name='L595'></a>
+<a id='L596' name='L596'></a>  <strong class='reserved'>return</strong> (lsa_ack_flag);
+<a id='L597' name='L597'></a><em class='brace'>}</em>
+<a id='L598' name='L598'></a>
+<a id='L599' name='L599'></a><strong class='reserved'>int</strong>
+<a id='L600' name='L600'></a><a href='../R/8106.html' title='Multiple referred from 11 places.'>ospf_flood_through_as</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *inbr,
+<a id='L601' name='L601'></a>                       <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L602' name='L602'></a><em class='brace'>{</em>
+<a id='L603' name='L603'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L604' name='L604'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area;
+<a id='L605' name='L605'></a>  <strong class='reserved'>int</strong> lsa_ack_flag;
+<a id='L606' name='L606'></a>
+<a id='L607' name='L607'></a>  lsa_ack_flag = 0;
+<a id='L608' name='L608'></a>
+<a id='L609' name='L609'></a>  <em class='comment'>/* The incoming LSA is type 5 or type 7  (AS-EXTERNAL or AS-NSSA )</em>
+<a id='L610' name='L610'></a><em class='comment'></em>
+<a id='L611' name='L611'></a><em class='comment'>    Divert the Type-5 LSA's to all non-NSSA/STUB areas</em>
+<a id='L612' name='L612'></a><em class='comment'></em>
+<a id='L613' name='L613'></a><em class='comment'>    Divert the Type-7 LSA's to all NSSA areas</em>
+<a id='L614' name='L614'></a><em class='comment'></em>
+<a id='L615' name='L615'></a><em class='comment'>     AS-external-LSAs are flooded throughout the entire AS, with the</em>
+<a id='L616' name='L616'></a><em class='comment'>     exception of stub areas (see Section 3.6).  The eligible</em>
+<a id='L617' name='L617'></a><em class='comment'>     interfaces are all the router's interfaces, excluding virtual</em>
+<a id='L618' name='L618'></a><em class='comment'>     links and those interfaces attaching to stub areas.  */</em>
+<a id='L619' name='L619'></a>
+<a id='L620' name='L620'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/733.html#L82' title='Defined at 82 in ospfd/ospf_lsa.h.'>OSPF_LSA_LOCAL_XLT</a>)) <em class='comment'>/* Translated from 7  */</em>
+<a id='L621' name='L621'></a>    <strong class='reserved'>if</strong> (<a href='../S/776.html#L99' title='Defined at 99 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_NSSA</a>)
+<a id='L622' name='L622'></a>      zlog_debug ("Flood/AS: NSSA TRANSLATED LSA");
+<a id='L623' name='L623'></a>
+<a id='L624' name='L624'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;areas, node, area))
+<a id='L625' name='L625'></a>    <em class='brace'>{</em>
+<a id='L626' name='L626'></a>      <strong class='reserved'>int</strong> continue_flag = 0;
+<a id='L627' name='L627'></a>      <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *if_node;
+<a id='L628' name='L628'></a>      <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L629' name='L629'></a>
+<a id='L630' name='L630'></a>      <strong class='reserved'>switch</strong> (area-&gt;external_routing)
+<a id='L631' name='L631'></a>        <em class='brace'>{</em>
+<a id='L632' name='L632'></a>          <em class='comment'>/* Don't send AS externals into stub areas.  Various types</em>
+<a id='L633' name='L633'></a><em class='comment'>             of support for partial stub areas can be implemented</em>
+<a id='L634' name='L634'></a><em class='comment'>             here.  NSSA's will receive Type-7's that have areas</em>
+<a id='L635' name='L635'></a><em class='comment'>             matching the originl LSA. */</em>
+<a id='L636' name='L636'></a>        <strong class='reserved'>case</strong> <a href='../S/790.html#L361' title='Defined at 361 in ospfd/ospfd.h.'>OSPF_AREA_NSSA</a>:    <em class='comment'>/* Sending Type 5 or 7 into NSSA area */</em>
+<a id='L637' name='L637'></a>          <em class='comment'>/* Type-7, flood NSSA area */</em>
+<a id='L638' name='L638'></a>          <strong class='reserved'>if</strong> (lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type == <a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>
+<a id='L639' name='L639'></a>              &amp;&amp; area == lsa-&gt;area)
+<a id='L640' name='L640'></a>            <em class='comment'>/* We will send it. */</em>
+<a id='L641' name='L641'></a>            continue_flag = 0;
+<a id='L642' name='L642'></a>          <strong class='reserved'>else</strong>
+<a id='L643' name='L643'></a>            continue_flag = 1;  <em class='comment'>/* Skip this NSSA area for Type-5's et al */</em>
+<a id='L644' name='L644'></a>          <strong class='reserved'>break</strong>;
+<a id='L645' name='L645'></a>
+<a id='L646' name='L646'></a>        <strong class='reserved'>case</strong> <a href='../S/790.html#L362' title='Defined at 362 in ospfd/ospfd.h.'>OSPF_AREA_TYPE_MAX</a>:
+<a id='L647' name='L647'></a>        <strong class='reserved'>case</strong> <a href='../S/790.html#L360' title='Defined at 360 in ospfd/ospfd.h.'>OSPF_AREA_STUB</a>:
+<a id='L648' name='L648'></a>          continue_flag = 1;    <em class='comment'>/* Skip this area. */</em>
+<a id='L649' name='L649'></a>          <strong class='reserved'>break</strong>;
+<a id='L650' name='L650'></a>
+<a id='L651' name='L651'></a>        <strong class='reserved'>case</strong> <a href='../S/790.html#L359' title='Defined at 359 in ospfd/ospfd.h.'>OSPF_AREA_DEFAULT</a>:
+<a id='L652' name='L652'></a>        <strong class='reserved'>default</strong>:
+<a id='L653' name='L653'></a>          <em class='comment'>/* No Type-7 into normal area */</em>
+<a id='L654' name='L654'></a>          <strong class='reserved'>if</strong> (lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type == <a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>) 
+<a id='L655' name='L655'></a>            continue_flag = 1; <em class='comment'>/* skip Type-7 */</em>
+<a id='L656' name='L656'></a>          <strong class='reserved'>else</strong>
+<a id='L657' name='L657'></a>            continue_flag = 0;  <em class='comment'>/* Do this area. */</em>
+<a id='L658' name='L658'></a>          <strong class='reserved'>break</strong>;
+<a id='L659' name='L659'></a>        <em class='brace'>}</em>
+<a id='L660' name='L660'></a>      
+<a id='L661' name='L661'></a>      <em class='comment'>/* Do continue for above switch.  Saves a big if then mess */</em>
+<a id='L662' name='L662'></a>      <strong class='reserved'>if</strong> (continue_flag) 
+<a id='L663' name='L663'></a>        <strong class='reserved'>continue</strong>; <em class='comment'>/* main for-loop */</em>
+<a id='L664' name='L664'></a>      
+<a id='L665' name='L665'></a>      <em class='comment'>/* send to every interface in this area */</em>
+<a id='L666' name='L666'></a>
+<a id='L667' name='L667'></a>      <strong class='reserved'>for</strong> (<a href='../S/262.html#L102' title='Defined at 102 in lib/linklist.h.'>ALL_LIST_ELEMENTS_RO</a> (area-&gt;oiflist, if_node, oi))
+<a id='L668' name='L668'></a>        <em class='brace'>{</em>
+<a id='L669' name='L669'></a>          <em class='comment'>/* Skip virtual links */</em>
+<a id='L670' name='L670'></a>          <strong class='reserved'>if</strong> (oi-&gt;type !=  <a href='../S/791.html#L148' title='Defined at 148 in ospfd/ospf_interface.h.'>OSPF_IFTYPE_VIRTUALLINK</a>)
+<a id='L671' name='L671'></a>            <strong class='reserved'>if</strong> (<a href='../S/811.html#L345' title='Defined at 345 in ospfd/ospf_flood.c.'>ospf_flood_through_interface</a> (oi, inbr, lsa)) <em class='comment'>/* lsa */</em>
+<a id='L672' name='L672'></a>              lsa_ack_flag = 1;
+<a id='L673' name='L673'></a>        <em class='brace'>}</em>
+<a id='L674' name='L674'></a>    <em class='brace'>}</em> <em class='comment'>/* main area for-loop */</em>
+<a id='L675' name='L675'></a>  
+<a id='L676' name='L676'></a>  <strong class='reserved'>return</strong> (lsa_ack_flag);
+<a id='L677' name='L677'></a><em class='brace'>}</em>
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a><strong class='reserved'>int</strong>
+<a id='L680' name='L680'></a><a href='../R/8104.html' title='Multiple referred from 4 places.'>ospf_flood_through</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>,
+<a id='L681' name='L681'></a>                    <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *inbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L682' name='L682'></a><em class='brace'>{</em>
+<a id='L683' name='L683'></a>  <strong class='reserved'>int</strong> lsa_ack_flag = 0;
+<a id='L684' name='L684'></a>  
+<a id='L685' name='L685'></a>  <em class='comment'>/* Type-7 LSA's for NSSA are flooded throughout the AS here, and</em>
+<a id='L686' name='L686'></a><em class='comment'>     upon return are updated in the LSDB for Type-7's.  Later,</em>
+<a id='L687' name='L687'></a><em class='comment'>     re-fresh will re-send them (and also, if ABR, packet code will</em>
+<a id='L688' name='L688'></a><em class='comment'>     translate to Type-5's)</em>
+<a id='L689' name='L689'></a><em class='comment'>  </em>
+<a id='L690' name='L690'></a><em class='comment'>     As usual, Type-5 LSA's (if not DISCARDED because we are STUB or</em>
+<a id='L691' name='L691'></a><em class='comment'>     NSSA) are flooded throughout the AS, and are updated in the</em>
+<a id='L692' name='L692'></a><em class='comment'>     global table.  */</em>
+<a id='L693' name='L693'></a><em class='sharp'>#ifdef</em> ORIGINAL_CODING
+<a id='L694' name='L694'></a>  <strong class='reserved'>switch</strong> (lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type)
+<a id='L695' name='L695'></a>    <em class='brace'>{</em>
+<a id='L696' name='L696'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>:
+<a id='L697' name='L697'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>:
+<a id='L698' name='L698'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L40' title='Defined at 40 in ospfd/ospf_lsa.h.'>OSPF_SUMMARY_LSA</a>:
+<a id='L699' name='L699'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L41' title='Defined at 41 in ospfd/ospf_lsa.h.'>OSPF_ASBR_SUMMARY_LSA</a>:
+<a id='L700' name='L700'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L701' name='L701'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L46' title='Defined at 46 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_LINK_LSA</a>: <em class='comment'>/* ospf_flood_through_interface ? */</em>
+<a id='L702' name='L702'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L47' title='Defined at 47 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AREA_LSA</a>:
+<a id='L703' name='L703'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L704' name='L704'></a>      lsa_ack_flag = <a href='../S/811.html#L562' title='Defined at 562 in ospfd/ospf_flood.c.'>ospf_flood_through_area</a> (inbr-&gt;oi-&gt;area, inbr, lsa);
+<a id='L705' name='L705'></a>      <strong class='reserved'>break</strong>;
+<a id='L706' name='L706'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a>: <em class='comment'>/* Type-5 */</em>
+<a id='L707' name='L707'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L708' name='L708'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L48' title='Defined at 48 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AS_LSA</a>:
+<a id='L709' name='L709'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L710' name='L710'></a>      lsa_ack_flag = <a href='../S/811.html#L600' title='Defined at 600 in ospfd/ospf_flood.c.'>ospf_flood_through_as</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, inbr, lsa);
+<a id='L711' name='L711'></a>      <strong class='reserved'>break</strong>;
+<a id='L712' name='L712'></a>      <em class='comment'>/* Type-7 Only received within NSSA, then flooded */</em>
+<a id='L713' name='L713'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>:
+<a id='L714' name='L714'></a>      <em class='comment'>/* Any P-bit was installed with the Type-7. */</em>
+<a id='L715' name='L715'></a>      lsa_ack_flag = <a href='../S/811.html#L562' title='Defined at 562 in ospfd/ospf_flood.c.'>ospf_flood_through_area</a> (inbr-&gt;oi-&gt;area, inbr, lsa);
+<a id='L716' name='L716'></a>
+<a id='L717' name='L717'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L99' title='Defined at 99 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_NSSA</a>)
+<a id='L718' name='L718'></a>        zlog_debug ("ospf_flood_through: LOCAL NSSA FLOOD of Type-7.");
+<a id='L719' name='L719'></a>      <strong class='reserved'>break</strong>;
+<a id='L720' name='L720'></a>    <strong class='reserved'>default</strong>:
+<a id='L721' name='L721'></a>      <strong class='reserved'>break</strong>;
+<a id='L722' name='L722'></a>    <em class='brace'>}</em>
+<a id='L723' name='L723'></a><em class='sharp'>#else</em> <em class='comment'>/* ORIGINAL_CODING */</em>
+<a id='L724' name='L724'></a>  <em class='comment'>/*</em>
+<a id='L725' name='L725'></a><em class='comment'>   * At the common sub-sub-function "ospf_flood_through_interface()",</em>
+<a id='L726' name='L726'></a><em class='comment'>   * a parameter "inbr" will be used to distinguish the called context</em>
+<a id='L727' name='L727'></a><em class='comment'>   * whether the given LSA was received from the neighbor, or the</em>
+<a id='L728' name='L728'></a><em class='comment'>   * flooding for the LSA starts from this node (e.g. the LSA was self-</em>
+<a id='L729' name='L729'></a><em class='comment'>   * originated, or the LSA is going to be flushed from routing domain).</em>
+<a id='L730' name='L730'></a><em class='comment'>   *</em>
+<a id='L731' name='L731'></a><em class='comment'>   * So, for consistency reasons, this function "ospf_flood_through()"</em>
+<a id='L732' name='L732'></a><em class='comment'>   * should also allow the usage that the given "inbr" parameter to be</em>
+<a id='L733' name='L733'></a><em class='comment'>   * NULL. If we do so, corresponding AREA parameter should be referred</em>
+<a id='L734' name='L734'></a><em class='comment'>   * by "lsa-&gt;area", instead of "inbr-&gt;oi-&gt;area".</em>
+<a id='L735' name='L735'></a><em class='comment'>   */</em>
+<a id='L736' name='L736'></a>  <strong class='reserved'>switch</strong> (lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type)
+<a id='L737' name='L737'></a>    <em class='brace'>{</em>
+<a id='L738' name='L738'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a>: <em class='comment'>/* Type-5 */</em>
+<a id='L739' name='L739'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L740' name='L740'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L48' title='Defined at 48 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AS_LSA</a>:
+<a id='L741' name='L741'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L742' name='L742'></a>      lsa_ack_flag = <a href='../S/811.html#L600' title='Defined at 600 in ospfd/ospf_flood.c.'>ospf_flood_through_as</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, inbr, lsa);
+<a id='L743' name='L743'></a>      <strong class='reserved'>break</strong>;
+<a id='L744' name='L744'></a>      <em class='comment'>/* Type-7 Only received within NSSA, then flooded */</em>
+<a id='L745' name='L745'></a>    <strong class='reserved'>case</strong> <a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>:
+<a id='L746' name='L746'></a>      <em class='comment'>/* Any P-bit was installed with the Type-7. */</em>
+<a id='L747' name='L747'></a>
+<a id='L748' name='L748'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L99' title='Defined at 99 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF_NSSA</a>)
+<a id='L749' name='L749'></a>        zlog_debug ("ospf_flood_through: LOCAL NSSA FLOOD of Type-7.");
+<a id='L750' name='L750'></a>      <em class='comment'>/* Fallthrough */</em>
+<a id='L751' name='L751'></a>    <strong class='reserved'>default</strong>:
+<a id='L752' name='L752'></a>      lsa_ack_flag = <a href='../S/811.html#L562' title='Defined at 562 in ospfd/ospf_flood.c.'>ospf_flood_through_area</a> (lsa-&gt;area, inbr, lsa);
+<a id='L753' name='L753'></a>      <strong class='reserved'>break</strong>;
+<a id='L754' name='L754'></a>    <em class='brace'>}</em>
+<a id='L755' name='L755'></a><em class='sharp'>#endif</em> <em class='comment'>/* ORIGINAL_CODING */</em>
+<a id='L756' name='L756'></a>  
+<a id='L757' name='L757'></a>  <strong class='reserved'>return</strong> (lsa_ack_flag);
+<a id='L758' name='L758'></a><em class='brace'>}</em>
+<a id='L759' name='L759'></a>
+<a id='L760' name='L760'></a>
+<a id='L761' name='L761'></a>
+<a id='L762' name='L762'></a><em class='comment'>/* Management functions for neighbor's Link State Request list. */</em>
+<a id='L763' name='L763'></a><strong class='reserved'>void</strong>
+<a id='L764' name='L764'></a><a href='../R/8190.html' title='Multiple referred from 2 places.'>ospf_ls_request_add</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L765' name='L765'></a><em class='brace'>{</em>
+<a id='L766' name='L766'></a>  <em class='comment'>/*</em>
+<a id='L767' name='L767'></a><em class='comment'>   * We cannot make use of the newly introduced callback function</em>
+<a id='L768' name='L768'></a><em class='comment'>   * "lsdb-&gt;new_lsa_hook" to replace debug output below, just because</em>
+<a id='L769' name='L769'></a><em class='comment'>   * it seems no simple and smart way to pass neighbor information to</em>
+<a id='L770' name='L770'></a><em class='comment'>   * the common function "ospf_lsdb_add()" -- endo.</em>
+<a id='L771' name='L771'></a><em class='comment'>   */</em>
+<a id='L772' name='L772'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L773' name='L773'></a>      zlog_debug ("RqstL(%lu)++, NBR(%s), LSA[%s]",
+<a id='L774' name='L774'></a>                  <a href='../S/811.html#L781' title='Defined at 781 in ospfd/ospf_flood.c.'>ospf_ls_request_count</a> (nbr),
+<a id='L775' name='L775'></a>                  inet_ntoa (nbr-&gt;router_id), <a href='../S/747.html#L348' title='Defined at 348 in ospfd/ospf_lsa.c.'>dump_lsa_key</a> (lsa));
+<a id='L776' name='L776'></a>
+<a id='L777' name='L777'></a>  <a href='../S/778.html#L114' title='Defined at 114 in ospfd/ospf_lsdb.c.'>ospf_lsdb_add</a> (&amp;nbr-&gt;ls_req, lsa);
+<a id='L778' name='L778'></a><em class='brace'>}</em>
+<a id='L779' name='L779'></a>
+<a id='L780' name='L780'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>
+<a id='L781' name='L781'></a><a href='../R/8191.html' title='Multiple referred from 7 places.'>ospf_ls_request_count</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr)
+<a id='L782' name='L782'></a><em class='brace'>{</em>
+<a id='L783' name='L783'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L303' title='Defined at 303 in ospfd/ospf_lsdb.c.'>ospf_lsdb_count_all</a> (&amp;nbr-&gt;ls_req);
+<a id='L784' name='L784'></a><em class='brace'>}</em>
+<a id='L785' name='L785'></a>
+<a id='L786' name='L786'></a><strong class='reserved'>int</strong>
+<a id='L787' name='L787'></a><a href='../R/8194.html' title='Multiple referred from 4 places.'>ospf_ls_request_isempty</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr)
+<a id='L788' name='L788'></a><em class='brace'>{</em>
+<a id='L789' name='L789'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L327' title='Defined at 327 in ospfd/ospf_lsdb.c.'>ospf_lsdb_isempty</a> (&amp;nbr-&gt;ls_req);
+<a id='L790' name='L790'></a><em class='brace'>}</em>
+<a id='L791' name='L791'></a>
+<a id='L792' name='L792'></a><em class='comment'>/* Remove LSA from neighbor's ls-request list. */</em>
+<a id='L793' name='L793'></a><strong class='reserved'>void</strong>
+<a id='L794' name='L794'></a><a href='../R/8192.html' title='Multiple referred from 4 places.'>ospf_ls_request_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L795' name='L795'></a><em class='brace'>{</em>
+<a id='L796' name='L796'></a>  <strong class='reserved'>if</strong> (nbr-&gt;ls_req_last == lsa)
+<a id='L797' name='L797'></a>    <em class='brace'>{</em>
+<a id='L798' name='L798'></a>      <a href='../S/747.html#L285' title='Defined at 285 in ospfd/ospf_lsa.c.'>ospf_lsa_unlock</a> (&amp;nbr-&gt;ls_req_last);
+<a id='L799' name='L799'></a>      nbr-&gt;ls_req_last = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L800' name='L800'></a>    <em class='brace'>}</em>
+<a id='L801' name='L801'></a>
+<a id='L802' name='L802'></a>  <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))        <em class='comment'>/* -- endo. */</em>
+<a id='L803' name='L803'></a>      zlog_debug ("RqstL(%lu)--, NBR(%s), LSA[%s]",
+<a id='L804' name='L804'></a>                  <a href='../S/811.html#L781' title='Defined at 781 in ospfd/ospf_flood.c.'>ospf_ls_request_count</a> (nbr),
+<a id='L805' name='L805'></a>                  inet_ntoa (nbr-&gt;router_id), <a href='../S/747.html#L348' title='Defined at 348 in ospfd/ospf_lsa.c.'>dump_lsa_key</a> (lsa));
+<a id='L806' name='L806'></a>
+<a id='L807' name='L807'></a>  <a href='../S/778.html#L149' title='Defined at 149 in ospfd/ospf_lsdb.c.'>ospf_lsdb_delete</a> (&amp;nbr-&gt;ls_req, lsa);
+<a id='L808' name='L808'></a><em class='brace'>}</em>
+<a id='L809' name='L809'></a>
+<a id='L810' name='L810'></a><em class='comment'>/* Remove all LSA from neighbor's ls-requenst list. */</em>
+<a id='L811' name='L811'></a><strong class='reserved'>void</strong>
+<a id='L812' name='L812'></a><a href='../R/8193.html' title='Multiple referred from 3 places.'>ospf_ls_request_delete_all</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr)
+<a id='L813' name='L813'></a><em class='brace'>{</em>
+<a id='L814' name='L814'></a>  <a href='../S/747.html#L285' title='Defined at 285 in ospfd/ospf_lsa.c.'>ospf_lsa_unlock</a> (&amp;nbr-&gt;ls_req_last);
+<a id='L815' name='L815'></a>  nbr-&gt;ls_req_last = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L816' name='L816'></a>  <a href='../S/778.html#L183' title='Defined at 183 in ospfd/ospf_lsdb.c.'>ospf_lsdb_delete_all</a> (&amp;nbr-&gt;ls_req);
+<a id='L817' name='L817'></a><em class='brace'>}</em>
+<a id='L818' name='L818'></a>
+<a id='L819' name='L819'></a><em class='comment'>/* Lookup LSA from neighbor's ls-request list. */</em>
+<a id='L820' name='L820'></a><strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *
+<a id='L821' name='L821'></a><a href='../R/8195.html' title='Multiple referred from 4 places.'>ospf_ls_request_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L822' name='L822'></a><em class='brace'>{</em>
+<a id='L823' name='L823'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L216' title='Defined at 216 in ospfd/ospf_lsdb.c.'>ospf_lsdb_lookup</a> (&amp;nbr-&gt;ls_req, lsa);
+<a id='L824' name='L824'></a><em class='brace'>}</em>
+<a id='L825' name='L825'></a>
+<a id='L826' name='L826'></a><strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *
+<a id='L827' name='L827'></a><a href='../R/8196.html' title='Multiple referred from 2 places.'>ospf_ls_request_new</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a> *lsah)
+<a id='L828' name='L828'></a><em class='brace'>{</em>
+<a id='L829' name='L829'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *new;
+<a id='L830' name='L830'></a>
+<a id='L831' name='L831'></a>  new = <a href='../S/747.html#L211' title='Defined at 211 in ospfd/ospf_lsa.c.'>ospf_lsa_new</a> ();
+<a id='L832' name='L832'></a>  new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a> = <a href='../S/747.html#L316' title='Defined at 316 in ospfd/ospf_lsa.c.'>ospf_lsa_data_new</a> (<a href='../S/733.html#L50' title='Defined at 50 in ospfd/ospf_lsa.h.'>OSPF_LSA_HEADER_SIZE</a>);
+<a id='L833' name='L833'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (new-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, lsah, <a href='../S/733.html#L50' title='Defined at 50 in ospfd/ospf_lsa.h.'>OSPF_LSA_HEADER_SIZE</a>);
+<a id='L834' name='L834'></a>
+<a id='L835' name='L835'></a>  <strong class='reserved'>return</strong> new;
+<a id='L836' name='L836'></a><em class='brace'>}</em>
+<a id='L837' name='L837'></a>
+<a id='L838' name='L838'></a>
+<a id='L839' name='L839'></a><em class='comment'>/* Management functions for neighbor's ls-retransmit list. */</em>
+<a id='L840' name='L840'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>
+<a id='L841' name='L841'></a><a href='../R/8199.html' title='Multiple referred from 8 places.'>ospf_ls_retransmit_count</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr)
+<a id='L842' name='L842'></a><em class='brace'>{</em>
+<a id='L843' name='L843'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L303' title='Defined at 303 in ospfd/ospf_lsdb.c.'>ospf_lsdb_count_all</a> (&amp;nbr-&gt;ls_rxmt);
+<a id='L844' name='L844'></a><em class='brace'>}</em>
+<a id='L845' name='L845'></a>
+<a id='L846' name='L846'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>
+<a id='L847' name='L847'></a><a href='../R/8200.html' title='Multiple referred from 2 places.'>ospf_ls_retransmit_count_self</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>int</strong> lsa_type)
+<a id='L848' name='L848'></a><em class='brace'>{</em>
+<a id='L849' name='L849'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L315' title='Defined at 315 in ospfd/ospf_lsdb.c.'>ospf_lsdb_count_self</a> (&amp;nbr-&gt;ls_rxmt, lsa_type);
+<a id='L850' name='L850'></a><em class='brace'>}</em>
+<a id='L851' name='L851'></a>
+<a id='L852' name='L852'></a><strong class='reserved'>int</strong>
+<a id='L853' name='L853'></a><a href='../R/8205.html' title='Multiple referred from 2 places.'>ospf_ls_retransmit_isempty</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr)
+<a id='L854' name='L854'></a><em class='brace'>{</em>
+<a id='L855' name='L855'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L327' title='Defined at 327 in ospfd/ospf_lsdb.c.'>ospf_lsdb_isempty</a> (&amp;nbr-&gt;ls_rxmt);
+<a id='L856' name='L856'></a><em class='brace'>}</em>
+<a id='L857' name='L857'></a>
+<a id='L858' name='L858'></a><em class='comment'>/* Add LSA to be retransmitted to neighbor's ls-retransmit list. */</em>
+<a id='L859' name='L859'></a><strong class='reserved'>void</strong>
+<a id='L860' name='L860'></a><a href='../R/8197.html' title='Multiple referred from 3 places.'>ospf_ls_retransmit_add</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L861' name='L861'></a><em class='brace'>{</em>
+<a id='L862' name='L862'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *old;
+<a id='L863' name='L863'></a>
+<a id='L864' name='L864'></a>  old = <a href='../S/811.html#L929' title='Defined at 929 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_lookup</a> (nbr, lsa);
+<a id='L865' name='L865'></a>
+<a id='L866' name='L866'></a>  <strong class='reserved'>if</strong> (<a href='../S/747.html#L3193' title='Defined at 3193 in ospfd/ospf_lsa.c.'>ospf_lsa_more_recent</a> (old, lsa) &lt; 0)
+<a id='L867' name='L867'></a>    <em class='brace'>{</em>
+<a id='L868' name='L868'></a>      <strong class='reserved'>if</strong> (old)
+<a id='L869' name='L869'></a>        <em class='brace'>{</em>
+<a id='L870' name='L870'></a>          old-&gt;retransmit_counter--;
+<a id='L871' name='L871'></a>          <a href='../S/778.html#L149' title='Defined at 149 in ospfd/ospf_lsdb.c.'>ospf_lsdb_delete</a> (&amp;nbr-&gt;ls_rxmt, old);
+<a id='L872' name='L872'></a>        <em class='brace'>}</em>
+<a id='L873' name='L873'></a>      lsa-&gt;retransmit_counter++;
+<a id='L874' name='L874'></a>      <em class='comment'>/*</em>
+<a id='L875' name='L875'></a><em class='comment'>       * We cannot make use of the newly introduced callback function</em>
+<a id='L876' name='L876'></a><em class='comment'>       * "lsdb-&gt;new_lsa_hook" to replace debug output below, just because</em>
+<a id='L877' name='L877'></a><em class='comment'>       * it seems no simple and smart way to pass neighbor information to</em>
+<a id='L878' name='L878'></a><em class='comment'>       * the common function "ospf_lsdb_add()" -- endo.</em>
+<a id='L879' name='L879'></a><em class='comment'>       */</em>
+<a id='L880' name='L880'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))
+<a id='L881' name='L881'></a>          zlog_debug ("RXmtL(%lu)++, NBR(%s), LSA[%s]",
+<a id='L882' name='L882'></a>                     <a href='../S/811.html#L841' title='Defined at 841 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_count</a> (nbr),
+<a id='L883' name='L883'></a>                     inet_ntoa (nbr-&gt;router_id), <a href='../S/747.html#L348' title='Defined at 348 in ospfd/ospf_lsa.c.'>dump_lsa_key</a> (lsa));
+<a id='L884' name='L884'></a>      <a href='../S/778.html#L114' title='Defined at 114 in ospfd/ospf_lsdb.c.'>ospf_lsdb_add</a> (&amp;nbr-&gt;ls_rxmt, lsa);
+<a id='L885' name='L885'></a>    <em class='brace'>}</em>
+<a id='L886' name='L886'></a><em class='brace'>}</em>
+<a id='L887' name='L887'></a>
+<a id='L888' name='L888'></a><em class='comment'>/* Remove LSA from neibghbor's ls-retransmit list. */</em>
+<a id='L889' name='L889'></a><strong class='reserved'>void</strong>
+<a id='L890' name='L890'></a><a href='../R/8201.html' title='Multiple referred from 5 places.'>ospf_ls_retransmit_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L891' name='L891'></a><em class='brace'>{</em>
+<a id='L892' name='L892'></a>  <strong class='reserved'>if</strong> (<a href='../S/811.html#L929' title='Defined at 929 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_lookup</a> (nbr, lsa))
+<a id='L893' name='L893'></a>    <em class='brace'>{</em>
+<a id='L894' name='L894'></a>      lsa-&gt;retransmit_counter--;  
+<a id='L895' name='L895'></a>      <strong class='reserved'>if</strong> (<a href='../S/776.html#L95' title='Defined at 95 in ospfd/ospf_dump.h.'>IS_DEBUG_OSPF</a> (lsa, LSA_FLOODING))            <em class='comment'>/* -- endo. */</em>
+<a id='L896' name='L896'></a>          zlog_debug ("RXmtL(%lu)--, NBR(%s), LSA[%s]",
+<a id='L897' name='L897'></a>                     <a href='../S/811.html#L841' title='Defined at 841 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_count</a> (nbr),
+<a id='L898' name='L898'></a>                     inet_ntoa (nbr-&gt;router_id), <a href='../S/747.html#L348' title='Defined at 348 in ospfd/ospf_lsa.c.'>dump_lsa_key</a> (lsa));
+<a id='L899' name='L899'></a>      <a href='../S/778.html#L149' title='Defined at 149 in ospfd/ospf_lsdb.c.'>ospf_lsdb_delete</a> (&amp;nbr-&gt;ls_rxmt, lsa);
+<a id='L900' name='L900'></a>    <em class='brace'>}</em>
+<a id='L901' name='L901'></a><em class='brace'>}</em>
+<a id='L902' name='L902'></a>
+<a id='L903' name='L903'></a><em class='comment'>/* Clear neighbor's ls-retransmit list. */</em>
+<a id='L904' name='L904'></a><strong class='reserved'>void</strong>
+<a id='L905' name='L905'></a><a href='../R/8198.html' title='Multiple referred from 3 places.'>ospf_ls_retransmit_clear</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr)
+<a id='L906' name='L906'></a><em class='brace'>{</em>
+<a id='L907' name='L907'></a>  <strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> *lsdb;
+<a id='L908' name='L908'></a>  <strong class='reserved'>int</strong> i;
+<a id='L909' name='L909'></a>
+<a id='L910' name='L910'></a>  lsdb = &amp;nbr-&gt;ls_rxmt;
+<a id='L911' name='L911'></a>
+<a id='L912' name='L912'></a>  <strong class='reserved'>for</strong> (i = <a href='../S/733.html#L29' title='Defined at 29 in ospfd/ospf_lsa.h.'>OSPF_MIN_LSA</a>; i &lt; <a href='../D/3135.html' title='Multiple defined in 2 places.'>OSPF_MAX_LSA</a>; i++)
+<a id='L913' name='L913'></a>    <em class='brace'>{</em>
+<a id='L914' name='L914'></a>      <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table = lsdb-&gt;type[i].db;
+<a id='L915' name='L915'></a>      <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L916' name='L916'></a>      <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa;
+<a id='L917' name='L917'></a>
+<a id='L918' name='L918'></a>      <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (table); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L919' name='L919'></a>        <strong class='reserved'>if</strong> ((lsa = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L920' name='L920'></a>          <a href='../S/811.html#L890' title='Defined at 890 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_delete</a> (nbr, lsa);
+<a id='L921' name='L921'></a>    <em class='brace'>}</em>
+<a id='L922' name='L922'></a>
+<a id='L923' name='L923'></a>  <a href='../S/747.html#L285' title='Defined at 285 in ospfd/ospf_lsa.c.'>ospf_lsa_unlock</a> (&amp;nbr-&gt;ls_req_last);
+<a id='L924' name='L924'></a>  nbr-&gt;ls_req_last = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L925' name='L925'></a><em class='brace'>}</em>
+<a id='L926' name='L926'></a>
+<a id='L927' name='L927'></a><em class='comment'>/* Lookup LSA from neighbor's ls-retransmit list. */</em>
+<a id='L928' name='L928'></a><strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *
+<a id='L929' name='L929'></a><a href='../R/8206.html' title='Multiple referred from 6 places.'>ospf_ls_retransmit_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L930' name='L930'></a><em class='brace'>{</em>
+<a id='L931' name='L931'></a>  <strong class='reserved'>return</strong> <a href='../S/778.html#L216' title='Defined at 216 in ospfd/ospf_lsdb.c.'>ospf_lsdb_lookup</a> (&amp;nbr-&gt;ls_rxmt, lsa);
+<a id='L932' name='L932'></a><em class='brace'>}</em>
+<a id='L933' name='L933'></a>
+<a id='L934' name='L934'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L935' name='L935'></a><a href='../R/8204.html' title='Multiple referred from 2 places.'>ospf_ls_retransmit_delete_nbr_if</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi,
+<a id='L936' name='L936'></a>                                  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L937' name='L937'></a><em class='brace'>{</em>
+<a id='L938' name='L938'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn;
+<a id='L939' name='L939'></a>  <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *nbr;
+<a id='L940' name='L940'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsr;
+<a id='L941' name='L941'></a>
+<a id='L942' name='L942'></a>  <strong class='reserved'>if</strong> (<a href='../S/788.html#L721' title='Defined at 721 in ospfd/ospf_interface.c.'>ospf_if_is_enable</a> (oi))
+<a id='L943' name='L943'></a>    <strong class='reserved'>for</strong> (rn = <a href='../S/236.html#L421' title='Defined at 421 in lib/table.c.'>route_top</a> (oi-&gt;nbrs); rn; rn = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (rn))
+<a id='L944' name='L944'></a>      <em class='comment'>/* If LSA find in LS-retransmit list, then remove it. */</em>
+<a id='L945' name='L945'></a>      <strong class='reserved'>if</strong> ((nbr = rn-&gt;info) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L946' name='L946'></a>        <em class='brace'>{</em>
+<a id='L947' name='L947'></a>          lsr = <a href='../S/811.html#L929' title='Defined at 929 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_lookup</a> (nbr, lsa);
+<a id='L948' name='L948'></a>             
+<a id='L949' name='L949'></a>          <em class='comment'>/* If LSA find in ls-retransmit list, remove it. */</em>
+<a id='L950' name='L950'></a>          <strong class='reserved'>if</strong> (lsr != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; lsr-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum == lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_seqnum)
+<a id='L951' name='L951'></a>            <a href='../S/811.html#L890' title='Defined at 890 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_delete</a> (nbr, lsr);
+<a id='L952' name='L952'></a>        <em class='brace'>}</em>
+<a id='L953' name='L953'></a><em class='brace'>}</em>
+<a id='L954' name='L954'></a>
+<a id='L955' name='L955'></a><strong class='reserved'>void</strong>
+<a id='L956' name='L956'></a><a href='../R/8202.html' title='Multiple referred from 9 places.'>ospf_ls_retransmit_delete_nbr_area</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area,
+<a id='L957' name='L957'></a>                                    <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L958' name='L958'></a><em class='brace'>{</em>
+<a id='L959' name='L959'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L960' name='L960'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L961' name='L961'></a>
+<a id='L962' name='L962'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (area-&gt;oiflist, node, nnode, oi))
+<a id='L963' name='L963'></a>    <a href='../S/811.html#L935' title='Defined at 935 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_delete_nbr_if</a> (oi, lsa);
+<a id='L964' name='L964'></a><em class='brace'>}</em>
+<a id='L965' name='L965'></a>
+<a id='L966' name='L966'></a><strong class='reserved'>void</strong>
+<a id='L967' name='L967'></a><a href='../R/8203.html' title='Multiple referred from 9 places.'>ospf_ls_retransmit_delete_nbr_as</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L968' name='L968'></a><em class='brace'>{</em>
+<a id='L969' name='L969'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node, *nnode;
+<a id='L970' name='L970'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L971' name='L971'></a>
+<a id='L972' name='L972'></a>  <strong class='reserved'>for</strong> (<a href='../S/262.html#L90' title='Defined at 90 in lib/linklist.h.'>ALL_LIST_ELEMENTS</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>-&gt;oiflist, node, nnode, oi))
+<a id='L973' name='L973'></a>    <a href='../S/811.html#L935' title='Defined at 935 in ospfd/ospf_flood.c.'>ospf_ls_retransmit_delete_nbr_if</a> (oi, lsa);
+<a id='L974' name='L974'></a><em class='brace'>}</em>
+<a id='L975' name='L975'></a>
+<a id='L976' name='L976'></a>
+<a id='L977' name='L977'></a><em class='comment'>/* Sets ls_age to MaxAge and floods throu the area. </em>
+<a id='L978' name='L978'></a><em class='comment'>   When we implement ASE routing, there will be anothe function</em>
+<a id='L979' name='L979'></a><em class='comment'>   flushing an LSA from the whole domain. */</em>
+<a id='L980' name='L980'></a><strong class='reserved'>void</strong>
+<a id='L981' name='L981'></a><a href='../R/8229.html' title='Multiple referred from 12 places.'>ospf_lsa_flush_area</a> (<strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa, <strong class='reserved'>struct</strong> <a href='../S/790.html#L338' title='Defined at 338 in ospfd/ospfd.h.'>ospf_area</a> *area)
+<a id='L982' name='L982'></a><em class='brace'>{</em>
+<a id='L983' name='L983'></a>  lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_age = htons (<a href='../S/790.html#L62' title='Defined at 62 in ospfd/ospfd.h.'>OSPF_LSA_MAXAGE</a>);
+<a id='L984' name='L984'></a>  <a href='../S/811.html#L562' title='Defined at 562 in ospfd/ospf_flood.c.'>ospf_flood_through_area</a> (area, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, lsa);
+<a id='L985' name='L985'></a>  <a href='../S/747.html#L2923' title='Defined at 2923 in ospfd/ospf_lsa.c.'>ospf_lsa_maxage</a> (area-&gt;<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, lsa);
+<a id='L986' name='L986'></a><em class='brace'>}</em>
+<a id='L987' name='L987'></a>
+<a id='L988' name='L988'></a><strong class='reserved'>void</strong>
+<a id='L989' name='L989'></a><a href='../R/8230.html' title='Multiple referred from 7 places.'>ospf_lsa_flush_as</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L990' name='L990'></a><em class='brace'>{</em>
+<a id='L991' name='L991'></a>  lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_age = htons (<a href='../S/790.html#L62' title='Defined at 62 in ospfd/ospfd.h.'>OSPF_LSA_MAXAGE</a>);
+<a id='L992' name='L992'></a>  <a href='../S/811.html#L600' title='Defined at 600 in ospfd/ospf_flood.c.'>ospf_flood_through_as</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, lsa);
+<a id='L993' name='L993'></a>  <a href='../S/747.html#L2923' title='Defined at 2923 in ospfd/ospf_lsa.c.'>ospf_lsa_maxage</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, lsa);
+<a id='L994' name='L994'></a><em class='brace'>}</em>
+<a id='L995' name='L995'></a>
+<a id='L996' name='L996'></a><strong class='reserved'>void</strong>
+<a id='L997' name='L997'></a><a href='../R/8228.html' title='Multiple referred from 4 places.'>ospf_lsa_flush</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *lsa)
+<a id='L998' name='L998'></a><em class='brace'>{</em>
+<a id='L999' name='L999'></a>  lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;ls_age = htons (<a href='../S/790.html#L62' title='Defined at 62 in ospfd/ospfd.h.'>OSPF_LSA_MAXAGE</a>);
+<a id='L1000' name='L1000'></a>  
+<a id='L1001' name='L1001'></a>  <strong class='reserved'>switch</strong> (lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type)
+<a id='L1002' name='L1002'></a>    <em class='brace'>{</em>
+<a id='L1003' name='L1003'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L38' title='Defined at 38 in ospfd/ospf_lsa.h.'>OSPF_ROUTER_LSA</a>:
+<a id='L1004' name='L1004'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L39' title='Defined at 39 in ospfd/ospf_lsa.h.'>OSPF_NETWORK_LSA</a>:
+<a id='L1005' name='L1005'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L40' title='Defined at 40 in ospfd/ospf_lsa.h.'>OSPF_SUMMARY_LSA</a>:
+<a id='L1006' name='L1006'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L41' title='Defined at 41 in ospfd/ospf_lsa.h.'>OSPF_ASBR_SUMMARY_LSA</a>:
+<a id='L1007' name='L1007'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L44' title='Defined at 44 in ospfd/ospf_lsa.h.'>OSPF_AS_NSSA_LSA</a>:
+<a id='L1008' name='L1008'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L1009' name='L1009'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L46' title='Defined at 46 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_LINK_LSA</a>:
+<a id='L1010' name='L1010'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L47' title='Defined at 47 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AREA_LSA</a>:
+<a id='L1011' name='L1011'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L1012' name='L1012'></a>        <a href='../S/811.html#L981' title='Defined at 981 in ospfd/ospf_flood.c.'>ospf_lsa_flush_area</a> (lsa, lsa-&gt;area);
+<a id='L1013' name='L1013'></a>        <strong class='reserved'>break</strong>;
+<a id='L1014' name='L1014'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L42' title='Defined at 42 in ospfd/ospf_lsa.h.'>OSPF_AS_EXTERNAL_LSA</a>:
+<a id='L1015' name='L1015'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L1016' name='L1016'></a>      <strong class='reserved'>case</strong> <a href='../S/733.html#L48' title='Defined at 48 in ospfd/ospf_lsa.h.'>OSPF_OPAQUE_AS_LSA</a>:
+<a id='L1017' name='L1017'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L1018' name='L1018'></a>        <a href='../S/811.html#L989' title='Defined at 989 in ospfd/ospf_flood.c.'>ospf_lsa_flush_as</a> (<a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a>, lsa);
+<a id='L1019' name='L1019'></a>        <strong class='reserved'>break</strong>;
+<a id='L1020' name='L1020'></a>      <strong class='reserved'>default</strong>:
+<a id='L1021' name='L1021'></a>        zlog_info ("%s: Unknown LSA type %u", __func__, lsa-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>-&gt;type);
+<a id='L1022' name='L1022'></a>        <strong class='reserved'>break</strong>;
+<a id='L1023' name='L1023'></a>    <em class='brace'>}</em>
+<a id='L1024' name='L1024'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L57'>[^]</a><a href='#L997'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

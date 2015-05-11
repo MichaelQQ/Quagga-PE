@@ -1,0 +1,1071 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospf6d/ospf6_lsa.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1027.html'>ospf6d</a>/ospf6_lsa.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L50'>[^]</a><a href='#L982'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L50' title='Defined at 50.'>ospf6_unknown_lsa_show</a></li>
+<li><a href='#L83' title='Defined at 83.'>ospf6_install_lsa_handler</a></li>
+<li><a href='#L91' title='Defined at 91.'>ospf6_get_lsa_handler</a></li>
+<li><a href='#L108' title='Defined at 108.'>ospf6_lstype_name</a></li>
+<li><a href='#L122' title='Defined at 122.'>ospf6_lstype_debug</a></li>
+<li><a href='#L131' title='Defined at 131.'>ospf6_lsa_is_differ</a></li>
+<li><a href='#L158' title='Defined at 158.'>ospf6_lsa_is_changed</a></li>
+<li><a href='#L188' title='Defined at 188.'>ospf6_lsa_age_set</a></li>
+<li><a href='#L207' title='Defined at 207.'>ospf6_lsa_age_current</a></li>
+<li><a href='#L241' title='Defined at 241.'>ospf6_lsa_age_update_to_send</a></li>
+<li><a href='#L252' title='Defined at 252.'>ospf6_lsa_premature_aging</a></li>
+<li><a href='#L268' title='Defined at 268.'>ospf6_lsa_compare</a></li>
+<li><a href='#L316' title='Defined at 316.'>ospf6_lsa_printbuf</a></li>
+<li><a href='#L328' title='Defined at 328.'>ospf6_lsa_header_print_raw</a></li>
+<li><a href='#L342' title='Defined at 342.'>ospf6_lsa_header_print</a></li>
+<li><a href='#L349' title='Defined at 349.'>ospf6_lsa_show_summary_header</a></li>
+<li><a href='#L357' title='Defined at 357.'>ospf6_lsa_show_summary</a></li>
+<li><a href='#L383' title='Defined at 383.'>ospf6_lsa_show_dump</a></li>
+<li><a href='#L410' title='Defined at 410.'>ospf6_lsa_show_internal</a></li>
+<li><a href='#L437' title='Defined at 437.'>ospf6_lsa_show</a></li>
+<li><a href='#L468' title='Defined at 468.'>ospf6_lsa_create</a></li>
+<li><a href='#L501' title='Defined at 501.'>ospf6_lsa_create_headeronly</a></li>
+<li><a href='#L531' title='Defined at 531.'>ospf6_lsa_delete</a></li>
+<li><a href='#L545' title='Defined at 545.'>ospf6_lsa_copy</a></li>
+<li><a href='#L567' title='Defined at 567.'>ospf6_lsa_lock</a></li>
+<li><a href='#L575' title='Defined at 575.'>ospf6_lsa_unlock</a></li>
+<li><a href='#L590' title='Defined at 590.'>ospf6_lsa_expire</a></li>
+<li><a href='#L624' title='Defined at 624.'>ospf6_lsa_refresh</a></li>
+<li><a href='#L681' title='Defined at 681.'>ospf6_lsa_checksum</a></li>
+<li><a href='#L697' title='Defined at 697.'>ospf6_lsa_checksum_valid</a></li>
+<li><a href='#L709' title='Defined at 709.'>ospf6_lsa_init</a></li>
+<li><a href='#L716' title='Defined at 716.'>ospf6_lsa_terminate</a></li>
+<li><a href='#L722' title='Defined at 722.'>ospf6_lsa_handler_name</a></li>
+<li><a href='#L746' title='Defined at 746.'>DEFUN</a></li>
+<li><a href='#L813' title='Defined at 813.'>DEFUN</a></li>
+<li><a href='#L881' title='Defined at 881.'>install_element_ospf6_debug_lsa</a></li>
+<li><a href='#L982' title='Defined at 982.'>config_write_ospf6_debug_lsa</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2003 Yasuhiro Ohara</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the </em>
+<a id='L18' name='L18'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330, </em>
+<a id='L19' name='L19'></a><em class='comment'> * Boston, MA 02111-1307, USA.  </em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='comment'>/* Include other stuffs */</em>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='262.html'>linklist.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='253.html'>vector.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='303.html'>checksum.h</a>"
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='30.html'>ospf6_proto.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='4.html'>ospf6_lsa.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='31.html'>ospf6_lsdb.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='26.html'>ospf6_message.h</a>"
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='7.html'>ospf6_top.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='35.html'>ospf6_area.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='41.html'>ospf6_interface.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='36.html'>ospf6_neighbor.h</a>"
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='43.html'>ospf6_flood.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='23.html'>ospf6d.h</a>"
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><a href='../S/253.html#L33' title='Defined at 33 in lib/vector.h.'>vector</a> ospf6_lsa_handler_vector;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L50' name='L50'></a><a href='../R/7785.html' title='Multiple referred from 2 places.'>ospf6_unknown_lsa_show</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L51' name='L51'></a><em class='brace'>{</em>
+<a id='L52' name='L52'></a>  u_char *start, *end, *current;
+<a id='L53' name='L53'></a>  <strong class='reserved'>char</strong> byte[4];
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>  start = (u_char *) lsa-&gt;header + <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>);
+<a id='L56' name='L56'></a>  end = (u_char *) lsa-&gt;header + ntohs (lsa-&gt;header-&gt;length);
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "        Unknown contents:%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L59' name='L59'></a>  <strong class='reserved'>for</strong> (current = start; current &lt; end; current ++)
+<a id='L60' name='L60'></a>    <em class='brace'>{</em>
+<a id='L61' name='L61'></a>      <strong class='reserved'>if</strong> ((current - start) % 16 == 0)
+<a id='L62' name='L62'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s        ", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L63' name='L63'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> ((current - start) % 4 == 0)
+<a id='L64' name='L64'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " ");
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (byte, <strong class='reserved'>sizeof</strong> (byte), "%02x", *current);
+<a id='L67' name='L67'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", byte);
+<a id='L68' name='L68'></a>    <em class='brace'>}</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L71' name='L71'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L72' name='L72'></a><em class='brace'>}</em>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> unknown_handler =
+<a id='L75' name='L75'></a><em class='brace'>{</em>
+<a id='L76' name='L76'></a>  <a href='../S/4.html#L54' title='Defined at 54 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_UNKNOWN</a>,
+<a id='L77' name='L77'></a>  "Unknown",
+<a id='L78' name='L78'></a>  <a href='../S/14.html#L50' title='Defined at 50 in ospf6d/ospf6_lsa.c.'>ospf6_unknown_lsa_show</a>,
+<a id='L79' name='L79'></a>  <a href='../S/4.html#L26' title='Defined at 26 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG</a>,
+<a id='L80' name='L80'></a><em class='brace'>}</em>;
+<a id='L81' name='L81'></a>
+<a id='L82' name='L82'></a><strong class='reserved'>void</strong>
+<a id='L83' name='L83'></a><a href='../R/7544.html' title='Multiple referred from 9 places.'>ospf6_install_lsa_handler</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler)
+<a id='L84' name='L84'></a><em class='brace'>{</em>
+<a id='L85' name='L85'></a>  <em class='comment'>/* type in handler is host byte order */</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>int</strong> index = handler-&gt;type &amp; <a href='../S/4.html#L69' title='Defined at 69 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_FCODE_MASK</a>;
+<a id='L87' name='L87'></a>  <a href='../S/204.html#L131' title='Defined at 131 in lib/vector.c.'>vector_set_index</a> (ospf6_lsa_handler_vector, index, handler);
+<a id='L88' name='L88'></a><em class='brace'>}</em>
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *
+<a id='L91' name='L91'></a><a href='../R/7532.html' title='Multiple referred from 5 places.'>ospf6_get_lsa_handler</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type)
+<a id='L92' name='L92'></a><em class='brace'>{</em>
+<a id='L93' name='L93'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L94' name='L94'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> index = ntohs (type) &amp; <a href='../S/4.html#L69' title='Defined at 69 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_FCODE_MASK</a>;
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  <strong class='reserved'>if</strong> (index &gt;= <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (ospf6_lsa_handler_vector))
+<a id='L97' name='L97'></a>    handler = &amp;unknown_handler;
+<a id='L98' name='L98'></a>  <strong class='reserved'>else</strong>
+<a id='L99' name='L99'></a>    handler = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, index);
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a>  <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L102' name='L102'></a>    handler = &amp;unknown_handler;
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>  <strong class='reserved'>return</strong> handler;
+<a id='L105' name='L105'></a><em class='brace'>}</em>
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L108' name='L108'></a><a href='../R/7655.html' title='Multiple referred from 15 places.'>ospf6_lstype_name</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type)
+<a id='L109' name='L109'></a><em class='brace'>{</em>
+<a id='L110' name='L110'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> buf[8];
+<a id='L111' name='L111'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler;
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>  handler = <a href='../S/14.html#L91' title='Defined at 91 in ospf6d/ospf6_lsa.c.'>ospf6_get_lsa_handler</a> (type);
+<a id='L114' name='L114'></a>  <strong class='reserved'>if</strong> (handler &amp;&amp; handler != &amp;unknown_handler)
+<a id='L115' name='L115'></a>    <strong class='reserved'>return</strong> handler-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, <strong class='reserved'>sizeof</strong> (buf), "0x%04hx", ntohs (type));
+<a id='L118' name='L118'></a>  <strong class='reserved'>return</strong> buf;
+<a id='L119' name='L119'></a><em class='brace'>}</em>
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>u_char
+<a id='L122' name='L122'></a><a href='../R/7654.html' title='Multiple referred from 8 places.'>ospf6_lstype_debug</a> (<a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type)
+<a id='L123' name='L123'></a><em class='brace'>{</em>
+<a id='L124' name='L124'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler;
+<a id='L125' name='L125'></a>  handler = <a href='../S/14.html#L91' title='Defined at 91 in ospf6d/ospf6_lsa.c.'>ospf6_get_lsa_handler</a> (type);
+<a id='L126' name='L126'></a>  <strong class='reserved'>return</strong> handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>;
+<a id='L127' name='L127'></a><em class='brace'>}</em>
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a><em class='comment'>/* RFC2328: Section 13.2 */</em>
+<a id='L130' name='L130'></a><strong class='reserved'>int</strong>
+<a id='L131' name='L131'></a><a href='../R/7609.html' title='Multiple referred from 2 places.'>ospf6_lsa_is_differ</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa1,
+<a id='L132' name='L132'></a>                     <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa2)
+<a id='L133' name='L133'></a><em class='brace'>{</em>
+<a id='L134' name='L134'></a>  <strong class='reserved'>int</strong> len;
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/4.html#L102' title='Defined at 102 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_SAME</a> (lsa1, lsa2));
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <em class='comment'>/* XXX, Options ??? */</em>
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a>  <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa1);
+<a id='L141' name='L141'></a>  <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa2);
+<a id='L142' name='L142'></a>  <strong class='reserved'>if</strong> (ntohs (lsa1-&gt;header-&gt;age) == <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a> &amp;&amp;
+<a id='L143' name='L143'></a>      ntohs (lsa2-&gt;header-&gt;age) != <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>)
+<a id='L144' name='L144'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L145' name='L145'></a>  <strong class='reserved'>if</strong> (ntohs (lsa1-&gt;header-&gt;age) != <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a> &amp;&amp;
+<a id='L146' name='L146'></a>      ntohs (lsa2-&gt;header-&gt;age) == <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>)
+<a id='L147' name='L147'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>  <em class='comment'>/* compare body */</em>
+<a id='L150' name='L150'></a>  <strong class='reserved'>if</strong> (ntohs (lsa1-&gt;header-&gt;length) != ntohs (lsa2-&gt;header-&gt;length))
+<a id='L151' name='L151'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a>  len = ntohs (lsa1-&gt;header-&gt;length) - <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>);
+<a id='L154' name='L154'></a>  <strong class='reserved'>return</strong> <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (lsa1-&gt;header + 1, lsa2-&gt;header + 1, len);
+<a id='L155' name='L155'></a><em class='brace'>}</em>
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a><strong class='reserved'>int</strong>
+<a id='L158' name='L158'></a><a href='../R/7608.html' title='Multiple referred from 2 places.'>ospf6_lsa_is_changed</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa1,
+<a id='L159' name='L159'></a>                      <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa2)
+<a id='L160' name='L160'></a><em class='brace'>{</em>
+<a id='L161' name='L161'></a>  <strong class='reserved'>int</strong> length;
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a>  <strong class='reserved'>if</strong> (<a href='../S/4.html#L110' title='Defined at 110 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_MAXAGE</a> (lsa1) ^ <a href='../S/4.html#L110' title='Defined at 110 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_MAXAGE</a> (lsa2))
+<a id='L164' name='L164'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L165' name='L165'></a>  <strong class='reserved'>if</strong> (ntohs (lsa1-&gt;header-&gt;length) != ntohs (lsa2-&gt;header-&gt;length))
+<a id='L166' name='L166'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L167' name='L167'></a>  <em class='comment'>/* Going beyond LSA headers to compare the payload only makes sense, when both LSAs aren't header-only. */</em>
+<a id='L168' name='L168'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa1-&gt;flag, <a href='../S/4.html#L139' title='Defined at 139 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADERONLY</a>) != <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa2-&gt;flag, <a href='../S/4.html#L139' title='Defined at 139 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADERONLY</a>))
+<a id='L169' name='L169'></a>  <em class='brace'>{</em>
+<a id='L170' name='L170'></a>    zlog_warn ("%s: only one of two (%s, %s) LSAs compared is header-only", __func__, lsa1-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, lsa2-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L171' name='L171'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L172' name='L172'></a>  <em class='brace'>}</em>
+<a id='L173' name='L173'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa1-&gt;flag, <a href='../S/4.html#L139' title='Defined at 139 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADERONLY</a>))
+<a id='L174' name='L174'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L175' name='L175'></a>
+<a id='L176' name='L176'></a>  length = <a href='../S/4.html#L96' title='Defined at 96 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_SIZE</a> (lsa1-&gt;header) - <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>);
+<a id='L177' name='L177'></a>  <em class='comment'>/* Once upper layer verifies LSAs received, length underrun should become a warning. */</em>
+<a id='L178' name='L178'></a>  <strong class='reserved'>if</strong> (length &lt;= 0)
+<a id='L179' name='L179'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a>  <strong class='reserved'>return</strong> <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (<a href='../S/4.html#L94' title='Defined at 94 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADER_END</a> (lsa1-&gt;header),
+<a id='L182' name='L182'></a>                 <a href='../S/4.html#L94' title='Defined at 94 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADER_END</a> (lsa2-&gt;header), length);
+<a id='L183' name='L183'></a><em class='brace'>}</em>
+<a id='L184' name='L184'></a>
+<a id='L185' name='L185'></a><em class='comment'>/* ospf6 age functions */</em>
+<a id='L186' name='L186'></a><em class='comment'>/* calculate birth */</em>
+<a id='L187' name='L187'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L188' name='L188'></a><a href='../R/7591.html' title='Multiple referred from 2 places.'>ospf6_lsa_age_set</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L189' name='L189'></a><em class='brace'>{</em>
+<a id='L190' name='L190'></a>  <strong class='reserved'>struct</strong> timeval now;
+<a id='L191' name='L191'></a>
+<a id='L192' name='L192'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa &amp;&amp; lsa-&gt;header);
+<a id='L193' name='L193'></a>
+<a id='L194' name='L194'></a>  <strong class='reserved'>if</strong> (<a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a> (<a href='../S/279.html#L106' title='Defined at 106 in lib/thread.h.'>QUAGGA_CLK_MONOTONIC</a>, &amp;now) &lt; 0)
+<a id='L195' name='L195'></a>    zlog_warn ("LSA: quagga_gettime failed, may fail LSA AGEs: %s",
+<a id='L196' name='L196'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>  lsa-&gt;birth.tv_sec = now.tv_sec - ntohs (lsa-&gt;header-&gt;age);
+<a id='L199' name='L199'></a>  lsa-&gt;birth.tv_usec = now.tv_usec;
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>  <strong class='reserved'>return</strong>;
+<a id='L202' name='L202'></a><em class='brace'>}</em>
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a><em class='comment'>/* this function calculates current age from its birth,</em>
+<a id='L205' name='L205'></a><em class='comment'>   then update age field of LSA header. return value is current age */</em>
+<a id='L206' name='L206'></a><a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a>
+<a id='L207' name='L207'></a><a href='../R/7590.html' title='Multiple referred from 13 places.'>ospf6_lsa_age_current</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L208' name='L208'></a><em class='brace'>{</em>
+<a id='L209' name='L209'></a>  <strong class='reserved'>struct</strong> timeval now;
+<a id='L210' name='L210'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> ulage;
+<a id='L211' name='L211'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> age;
+<a id='L212' name='L212'></a>
+<a id='L213' name='L213'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa);
+<a id='L214' name='L214'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa-&gt;header);
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a>  <em class='comment'>/* current time */</em>
+<a id='L217' name='L217'></a>  <strong class='reserved'>if</strong> (<a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a> (<a href='../S/279.html#L106' title='Defined at 106 in lib/thread.h.'>QUAGGA_CLK_MONOTONIC</a>, &amp;now) &lt; 0)
+<a id='L218' name='L218'></a>    zlog_warn ("LSA: quagga_gettime failed, may fail LSA AGEs: %s",
+<a id='L219' name='L219'></a>               <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a>  <strong class='reserved'>if</strong> (ntohs (lsa-&gt;header-&gt;age) &gt;= <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>)
+<a id='L222' name='L222'></a>    <em class='brace'>{</em>
+<a id='L223' name='L223'></a>      <em class='comment'>/* ospf6_lsa_premature_aging () sets age to MAXAGE; when using</em>
+<a id='L224' name='L224'></a><em class='comment'>         relative time, we cannot compare against lsa birth time, so</em>
+<a id='L225' name='L225'></a><em class='comment'>         we catch this special case here. */</em>
+<a id='L226' name='L226'></a>      lsa-&gt;header-&gt;age = htons (<a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>);
+<a id='L227' name='L227'></a>      <strong class='reserved'>return</strong> <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>;
+<a id='L228' name='L228'></a>    <em class='brace'>}</em>
+<a id='L229' name='L229'></a>  <em class='comment'>/* calculate age */</em>
+<a id='L230' name='L230'></a>  ulage = now.tv_sec - lsa-&gt;birth.tv_sec;
+<a id='L231' name='L231'></a>
+<a id='L232' name='L232'></a>  <em class='comment'>/* if over MAXAGE, set to it */</em>
+<a id='L233' name='L233'></a>  age = (ulage &gt; <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a> ? <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a> : ulage);
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a>  lsa-&gt;header-&gt;age = htons (age);
+<a id='L236' name='L236'></a>  <strong class='reserved'>return</strong> age;
+<a id='L237' name='L237'></a><em class='brace'>}</em>
+<a id='L238' name='L238'></a>
+<a id='L239' name='L239'></a><em class='comment'>/* update age field of LSA header with adding InfTransDelay */</em>
+<a id='L240' name='L240'></a><strong class='reserved'>void</strong>
+<a id='L241' name='L241'></a><a href='../R/7592.html' title='Multiple referred from 7 places.'>ospf6_lsa_age_update_to_send</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> transdelay)
+<a id='L242' name='L242'></a><em class='brace'>{</em>
+<a id='L243' name='L243'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> age;
+<a id='L244' name='L244'></a>
+<a id='L245' name='L245'></a>  age = <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa) + transdelay;
+<a id='L246' name='L246'></a>  <strong class='reserved'>if</strong> (age &gt; <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>)
+<a id='L247' name='L247'></a>    age = <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>;
+<a id='L248' name='L248'></a>  lsa-&gt;header-&gt;age = htons (age);
+<a id='L249' name='L249'></a><em class='brace'>}</em>
+<a id='L250' name='L250'></a>
+<a id='L251' name='L251'></a><strong class='reserved'>void</strong>
+<a id='L252' name='L252'></a><a href='../R/7615.html' title='Multiple referred from 3 places.'>ospf6_lsa_premature_aging</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L253' name='L253'></a><em class='brace'>{</em>
+<a id='L254' name='L254'></a>  <em class='comment'>/* log */</em>
+<a id='L255' name='L255'></a>  <strong class='reserved'>if</strong> (<a href='../S/4.html#L40' title='Defined at 40 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_LSA_TYPE</a> (lsa-&gt;header-&gt;type))
+<a id='L256' name='L256'></a>    zlog_debug ("LSA: Premature aging: %s", lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a>  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a> (lsa-&gt;expire);
+<a id='L259' name='L259'></a>  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a> (lsa-&gt;refresh);
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>  lsa-&gt;header-&gt;age = htons (<a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>);
+<a id='L262' name='L262'></a>  <a href='../S/279.html#L170' title='Defined at 170 in lib/thread.h.'>thread_execute</a> (master, <a href='../S/14.html#L590' title='Defined at 590 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_expire</a>, lsa, 0);
+<a id='L263' name='L263'></a><em class='brace'>}</em>
+<a id='L264' name='L264'></a>
+<a id='L265' name='L265'></a><em class='comment'>/* check which is more recent. if a is more recent, return -1;</em>
+<a id='L266' name='L266'></a><em class='comment'>   if the same, return 0; otherwise(b is more recent), return 1 */</em>
+<a id='L267' name='L267'></a><strong class='reserved'>int</strong>
+<a id='L268' name='L268'></a><a href='../R/7595.html' title='Multiple referred from 9 places.'>ospf6_lsa_compare</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L269' name='L269'></a><em class='brace'>{</em>
+<a id='L270' name='L270'></a>  <strong class='reserved'>int</strong> seqnuma, seqnumb;
+<a id='L271' name='L271'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> cksuma, cksumb;
+<a id='L272' name='L272'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> agea, ageb;
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a> &amp;&amp; <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;header);
+<a id='L275' name='L275'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a> &amp;&amp; <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;header);
+<a id='L276' name='L276'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/4.html#L102' title='Defined at 102 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_SAME</a> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>));
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a>  seqnuma = (<strong class='reserved'>int</strong>) ntohl (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;header-&gt;seqnum);
+<a id='L279' name='L279'></a>  seqnumb = (<strong class='reserved'>int</strong>) ntohl (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;header-&gt;seqnum);
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a>  <em class='comment'>/* compare by sequence number */</em>
+<a id='L282' name='L282'></a>  <strong class='reserved'>if</strong> (seqnuma &gt; seqnumb)
+<a id='L283' name='L283'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L284' name='L284'></a>  <strong class='reserved'>if</strong> (seqnuma &lt; seqnumb)
+<a id='L285' name='L285'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>  <em class='comment'>/* Checksum */</em>
+<a id='L288' name='L288'></a>  cksuma = ntohs (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;header-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>);
+<a id='L289' name='L289'></a>  cksumb = ntohs (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;header-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>);
+<a id='L290' name='L290'></a>  <strong class='reserved'>if</strong> (cksuma &gt; cksumb)
+<a id='L291' name='L291'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L292' name='L292'></a>  <strong class='reserved'>if</strong> (cksuma &lt; cksumb)
+<a id='L293' name='L293'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L294' name='L294'></a>
+<a id='L295' name='L295'></a>  <em class='comment'>/* Update Age */</em>
+<a id='L296' name='L296'></a>  agea = <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L297' name='L297'></a>  ageb = <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>);
+<a id='L298' name='L298'></a>
+<a id='L299' name='L299'></a>  <em class='comment'>/* MaxAge check */</em>
+<a id='L300' name='L300'></a>  <strong class='reserved'>if</strong> (agea == <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a> &amp;&amp; ageb != <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>)
+<a id='L301' name='L301'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L302' name='L302'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (agea != <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a> &amp;&amp; ageb == <a href='../S/30.html#L41' title='Defined at 41 in ospf6d/ospf6_proto.h.'>MAXAGE</a>)
+<a id='L303' name='L303'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L304' name='L304'></a>
+<a id='L305' name='L305'></a>  <em class='comment'>/* Age check */</em>
+<a id='L306' name='L306'></a>  <strong class='reserved'>if</strong> (agea &gt; ageb &amp;&amp; agea - ageb &gt;= <a href='../S/30.html#L43' title='Defined at 43 in ospf6d/ospf6_proto.h.'>MAX_AGE_DIFF</a>)
+<a id='L307' name='L307'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L308' name='L308'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (agea &lt; ageb &amp;&amp; ageb - agea &gt;= <a href='../S/30.html#L43' title='Defined at 43 in ospf6d/ospf6_proto.h.'>MAX_AGE_DIFF</a>)
+<a id='L309' name='L309'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a>  <em class='comment'>/* neither recent */</em>
+<a id='L312' name='L312'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L313' name='L313'></a><em class='brace'>}</em>
+<a id='L314' name='L314'></a>
+<a id='L315' name='L315'></a><strong class='reserved'>char</strong> *
+<a id='L316' name='L316'></a><a href='../R/7616.html' title='Multiple referred from 3 places.'>ospf6_lsa_printbuf</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa, <strong class='reserved'>char</strong> *buf, <strong class='reserved'>int</strong> size)
+<a id='L317' name='L317'></a><em class='brace'>{</em>
+<a id='L318' name='L318'></a>  <strong class='reserved'>char</strong> id[16], adv_router[16];
+<a id='L319' name='L319'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;id, id, <strong class='reserved'>sizeof</strong> (id));
+<a id='L320' name='L320'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;adv_router, adv_router,
+<a id='L321' name='L321'></a>             <strong class='reserved'>sizeof</strong> (adv_router));
+<a id='L322' name='L322'></a>  <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, size, "[%s Id:%s Adv:%s]",
+<a id='L323' name='L323'></a>            <a href='../S/14.html#L108' title='Defined at 108 in ospf6d/ospf6_lsa.c.'>ospf6_lstype_name</a> (lsa-&gt;header-&gt;type), id, adv_router);
+<a id='L324' name='L324'></a>  <strong class='reserved'>return</strong> buf;
+<a id='L325' name='L325'></a><em class='brace'>}</em>
+<a id='L326' name='L326'></a>
+<a id='L327' name='L327'></a><strong class='reserved'>void</strong>
+<a id='L328' name='L328'></a><a href='../R/7606.html' title='Multiple referred from 5 places.'>ospf6_lsa_header_print_raw</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *header)
+<a id='L329' name='L329'></a><em class='brace'>{</em>
+<a id='L330' name='L330'></a>  <strong class='reserved'>char</strong> id[16], adv_router[16];
+<a id='L331' name='L331'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;header-&gt;id, id, <strong class='reserved'>sizeof</strong> (id));
+<a id='L332' name='L332'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;header-&gt;adv_router, adv_router,
+<a id='L333' name='L333'></a>             <strong class='reserved'>sizeof</strong> (adv_router));
+<a id='L334' name='L334'></a>  zlog_debug ("    [%s Id:%s Adv:%s]",
+<a id='L335' name='L335'></a>              <a href='../S/14.html#L108' title='Defined at 108 in ospf6d/ospf6_lsa.c.'>ospf6_lstype_name</a> (header-&gt;type), id, adv_router);
+<a id='L336' name='L336'></a>  zlog_debug ("    Age: %4hu SeqNum: %#08lx Cksum: %04hx Len: %d",
+<a id='L337' name='L337'></a>              ntohs (header-&gt;age), (u_long) ntohl (header-&gt;seqnum),
+<a id='L338' name='L338'></a>              ntohs (header-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>), ntohs (header-&gt;length));
+<a id='L339' name='L339'></a><em class='brace'>}</em>
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a><strong class='reserved'>void</strong>
+<a id='L342' name='L342'></a><a href='../R/7605.html' title='Multiple referred from 5 places.'>ospf6_lsa_header_print</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L343' name='L343'></a><em class='brace'>{</em>
+<a id='L344' name='L344'></a>  <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa);
+<a id='L345' name='L345'></a>  <a href='../S/14.html#L328' title='Defined at 328 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_header_print_raw</a> (lsa-&gt;header);
+<a id='L346' name='L346'></a><em class='brace'>}</em>
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a><strong class='reserved'>void</strong>
+<a id='L349' name='L349'></a><a href='../R/7623.html' title='Multiple referred from 2 places.'>ospf6_lsa_show_summary_header</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L350' name='L350'></a><em class='brace'>{</em>
+<a id='L351' name='L351'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%-12s %-15s %-15s %4s %8s %4s %4s %-8s%s",
+<a id='L352' name='L352'></a>           "Type", "LSId", "AdvRouter", "Age", "SeqNum",
+<a id='L353' name='L353'></a>           "Cksm", "Len", "Duration", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L354' name='L354'></a><em class='brace'>}</em>
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a><strong class='reserved'>void</strong>
+<a id='L357' name='L357'></a><a href='../R/7622.html' title='Multiple referred from 2 places.'>ospf6_lsa_show_summary</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L358' name='L358'></a><em class='brace'>{</em>
+<a id='L359' name='L359'></a>  <strong class='reserved'>char</strong> adv_router[16], id[16];
+<a id='L360' name='L360'></a>  <strong class='reserved'>struct</strong> timeval now, res;
+<a id='L361' name='L361'></a>  <strong class='reserved'>char</strong> duration[16];
+<a id='L362' name='L362'></a>
+<a id='L363' name='L363'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa);
+<a id='L364' name='L364'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa-&gt;header);
+<a id='L365' name='L365'></a>
+<a id='L366' name='L366'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;id, id, <strong class='reserved'>sizeof</strong> (id));
+<a id='L367' name='L367'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;adv_router, adv_router,
+<a id='L368' name='L368'></a>             <strong class='reserved'>sizeof</strong> (adv_router));
+<a id='L369' name='L369'></a>
+<a id='L370' name='L370'></a>  <a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a> (<a href='../S/279.html#L106' title='Defined at 106 in lib/thread.h.'>QUAGGA_CLK_MONOTONIC</a>, &amp;now);
+<a id='L371' name='L371'></a>  <a href='../S/23.html#L66' title='Defined at 66 in ospf6d/ospf6d.h.'>timersub</a> (&amp;now, &amp;lsa-&gt;installed, &amp;res);
+<a id='L372' name='L372'></a>  <a href='../S/23.html#L77' title='Defined at 77 in ospf6d/ospf6d.h.'>timerstring</a> (&amp;res, duration, <strong class='reserved'>sizeof</strong> (duration));
+<a id='L373' name='L373'></a>
+<a id='L374' name='L374'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%-12s %-15s %-15s %4hu %8lx %04hx %4hu %8s%s",
+<a id='L375' name='L375'></a>           <a href='../S/14.html#L108' title='Defined at 108 in ospf6d/ospf6_lsa.c.'>ospf6_lstype_name</a> (lsa-&gt;header-&gt;type),
+<a id='L376' name='L376'></a>           id, adv_router, <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa),
+<a id='L377' name='L377'></a>           (u_long) ntohl (lsa-&gt;header-&gt;seqnum),
+<a id='L378' name='L378'></a>           ntohs (lsa-&gt;header-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>), ntohs (lsa-&gt;header-&gt;length),
+<a id='L379' name='L379'></a>           duration, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L380' name='L380'></a><em class='brace'>}</em>
+<a id='L381' name='L381'></a>
+<a id='L382' name='L382'></a><strong class='reserved'>void</strong>
+<a id='L383' name='L383'></a><a href='../R/7620.html' title='Multiple referred from 2 places.'>ospf6_lsa_show_dump</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L384' name='L384'></a><em class='brace'>{</em>
+<a id='L385' name='L385'></a>  u_char *start, *end, *current;
+<a id='L386' name='L386'></a>  <strong class='reserved'>char</strong> byte[4];
+<a id='L387' name='L387'></a>
+<a id='L388' name='L388'></a>  start = (u_char *) lsa-&gt;header;
+<a id='L389' name='L389'></a>  end = (u_char *) lsa-&gt;header + ntohs (lsa-&gt;header-&gt;length);
+<a id='L390' name='L390'></a>
+<a id='L391' name='L391'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L392' name='L392'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s:%s", lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L393' name='L393'></a>
+<a id='L394' name='L394'></a>  <strong class='reserved'>for</strong> (current = start; current &lt; end; current ++)
+<a id='L395' name='L395'></a>    <em class='brace'>{</em>
+<a id='L396' name='L396'></a>      <strong class='reserved'>if</strong> ((current - start) % 16 == 0)
+<a id='L397' name='L397'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s        ", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L398' name='L398'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> ((current - start) % 4 == 0)
+<a id='L399' name='L399'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " ");
+<a id='L400' name='L400'></a>
+<a id='L401' name='L401'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (byte, <strong class='reserved'>sizeof</strong> (byte), "%02x", *current);
+<a id='L402' name='L402'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", byte);
+<a id='L403' name='L403'></a>    <em class='brace'>}</em>
+<a id='L404' name='L404'></a>
+<a id='L405' name='L405'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L406' name='L406'></a>  <strong class='reserved'>return</strong>;
+<a id='L407' name='L407'></a><em class='brace'>}</em>
+<a id='L408' name='L408'></a>
+<a id='L409' name='L409'></a><strong class='reserved'>void</strong>
+<a id='L410' name='L410'></a><a href='../R/7621.html' title='Multiple referred from 2 places.'>ospf6_lsa_show_internal</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L411' name='L411'></a><em class='brace'>{</em>
+<a id='L412' name='L412'></a>  <strong class='reserved'>char</strong> adv_router[64], id[64];
+<a id='L413' name='L413'></a>
+<a id='L414' name='L414'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa &amp;&amp; lsa-&gt;header);
+<a id='L415' name='L415'></a>
+<a id='L416' name='L416'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;id, id, <strong class='reserved'>sizeof</strong> (id));
+<a id='L417' name='L417'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;adv_router,
+<a id='L418' name='L418'></a>             adv_router, <strong class='reserved'>sizeof</strong> (adv_router));
+<a id='L419' name='L419'></a>
+<a id='L420' name='L420'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L421' name='L421'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Age: %4hu Type: %s%s", <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa),
+<a id='L422' name='L422'></a>           <a href='../S/14.html#L108' title='Defined at 108 in ospf6d/ospf6_lsa.c.'>ospf6_lstype_name</a> (lsa-&gt;header-&gt;type), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L423' name='L423'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Link State ID: %s%s", id, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L424' name='L424'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Advertising Router: %s%s", adv_router, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L425' name='L425'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "LS Sequence Number: %#010lx%s",
+<a id='L426' name='L426'></a>           (u_long) ntohl (lsa-&gt;header-&gt;seqnum), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L427' name='L427'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "CheckSum: %#06hx Length: %hu%s",
+<a id='L428' name='L428'></a>           ntohs (lsa-&gt;header-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>),
+<a id='L429' name='L429'></a>           ntohs (lsa-&gt;header-&gt;length), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L430' name='L430'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "    Prev: %p This: %p Next: %p%s",
+<a id='L431' name='L431'></a>           lsa-&gt;prev, lsa, lsa-&gt;next, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L432' name='L432'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L433' name='L433'></a>  <strong class='reserved'>return</strong>;
+<a id='L434' name='L434'></a><em class='brace'>}</em>
+<a id='L435' name='L435'></a>
+<a id='L436' name='L436'></a><strong class='reserved'>void</strong>
+<a id='L437' name='L437'></a><a href='../R/7619.html' title='Multiple referred from 3 places.'>ospf6_lsa_show</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L438' name='L438'></a><em class='brace'>{</em>
+<a id='L439' name='L439'></a>  <strong class='reserved'>char</strong> adv_router[64], id[64];
+<a id='L440' name='L440'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler;
+<a id='L441' name='L441'></a>
+<a id='L442' name='L442'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa &amp;&amp; lsa-&gt;header);
+<a id='L443' name='L443'></a>
+<a id='L444' name='L444'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;id, id, <strong class='reserved'>sizeof</strong> (id));
+<a id='L445' name='L445'></a>  <a href='../S/213.html#L94' title='Defined at 94 in lib/sockunion.c.'>inet_ntop</a> (AF_INET, &amp;lsa-&gt;header-&gt;adv_router,
+<a id='L446' name='L446'></a>             adv_router, <strong class='reserved'>sizeof</strong> (adv_router));
+<a id='L447' name='L447'></a>
+<a id='L448' name='L448'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Age: %4hu Type: %s%s", <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa),
+<a id='L449' name='L449'></a>           <a href='../S/14.html#L108' title='Defined at 108 in ospf6d/ospf6_lsa.c.'>ospf6_lstype_name</a> (lsa-&gt;header-&gt;type), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L450' name='L450'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Link State ID: %s%s", id, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L451' name='L451'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "Advertising Router: %s%s", adv_router, <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L452' name='L452'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "LS Sequence Number: %#010lx%s",
+<a id='L453' name='L453'></a>           (u_long) ntohl (lsa-&gt;header-&gt;seqnum), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L454' name='L454'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "CheckSum: %#06hx Length: %hu%s",
+<a id='L455' name='L455'></a>           ntohs (lsa-&gt;header-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>),
+<a id='L456' name='L456'></a>           ntohs (lsa-&gt;header-&gt;length), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L457' name='L457'></a>
+<a id='L458' name='L458'></a>  handler = <a href='../S/14.html#L91' title='Defined at 91 in ospf6d/ospf6_lsa.c.'>ospf6_get_lsa_handler</a> (lsa-&gt;header-&gt;type);
+<a id='L459' name='L459'></a>  <strong class='reserved'>if</strong> (handler-&gt;show == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L460' name='L460'></a>    handler = &amp;unknown_handler;
+<a id='L461' name='L461'></a>  (*handler-&gt;show) (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, lsa);
+<a id='L462' name='L462'></a>
+<a id='L463' name='L463'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L464' name='L464'></a><em class='brace'>}</em>
+<a id='L465' name='L465'></a>
+<a id='L466' name='L466'></a><em class='comment'>/* OSPFv3 LSA creation/deletion function */</em>
+<a id='L467' name='L467'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *
+<a id='L468' name='L468'></a><a href='../R/7597.html' title='Multiple referred from 12 places.'>ospf6_lsa_create</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *header)
+<a id='L469' name='L469'></a><em class='brace'>{</em>
+<a id='L470' name='L470'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L471' name='L471'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *new_header = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L472' name='L472'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> lsa_size = 0;
+<a id='L473' name='L473'></a>
+<a id='L474' name='L474'></a>  <em class='comment'>/* size of the entire LSA */</em>
+<a id='L475' name='L475'></a>  lsa_size = ntohs (header-&gt;length);   <em class='comment'>/* XXX vulnerable */</em>
+<a id='L476' name='L476'></a>
+<a id='L477' name='L477'></a>  <em class='comment'>/* allocate memory for this LSA */</em>
+<a id='L478' name='L478'></a>  new_header = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *)
+<a id='L479' name='L479'></a>    <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_OSPF6_LSA, lsa_size);
+<a id='L480' name='L480'></a>
+<a id='L481' name='L481'></a>  <em class='comment'>/* copy LSA from original header */</em>
+<a id='L482' name='L482'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (new_header, header, lsa_size);
+<a id='L483' name='L483'></a>
+<a id='L484' name='L484'></a>  <em class='comment'>/* LSA information structure */</em>
+<a id='L485' name='L485'></a>  <em class='comment'>/* allocate memory */</em>
+<a id='L486' name='L486'></a>  lsa = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *)
+<a id='L487' name='L487'></a>    <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF6_LSA, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a>));
+<a id='L488' name='L488'></a>
+<a id='L489' name='L489'></a>  lsa-&gt;header = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *) new_header;
+<a id='L490' name='L490'></a>
+<a id='L491' name='L491'></a>  <em class='comment'>/* dump string */</em>
+<a id='L492' name='L492'></a>  <a href='../S/14.html#L316' title='Defined at 316 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_printbuf</a> (lsa, lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>sizeof</strong> (lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>));
+<a id='L493' name='L493'></a>
+<a id='L494' name='L494'></a>  <em class='comment'>/* calculate birth of this lsa */</em>
+<a id='L495' name='L495'></a>  <a href='../S/14.html#L188' title='Defined at 188 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_set</a> (lsa);
+<a id='L496' name='L496'></a>
+<a id='L497' name='L497'></a>  <strong class='reserved'>return</strong> lsa;
+<a id='L498' name='L498'></a><em class='brace'>}</em>
+<a id='L499' name='L499'></a>
+<a id='L500' name='L500'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *
+<a id='L501' name='L501'></a><a href='../R/7598.html' title='Multiple referred from 5 places.'>ospf6_lsa_create_headeronly</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *header)
+<a id='L502' name='L502'></a><em class='brace'>{</em>
+<a id='L503' name='L503'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L504' name='L504'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *new_header = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L505' name='L505'></a>
+<a id='L506' name='L506'></a>  <em class='comment'>/* allocate memory for this LSA */</em>
+<a id='L507' name='L507'></a>  new_header = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *)
+<a id='L508' name='L508'></a>    <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_OSPF6_LSA, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>));
+<a id='L509' name='L509'></a>
+<a id='L510' name='L510'></a>  <em class='comment'>/* copy LSA from original header */</em>
+<a id='L511' name='L511'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (new_header, header, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a>));
+<a id='L512' name='L512'></a>
+<a id='L513' name='L513'></a>  <em class='comment'>/* LSA information structure */</em>
+<a id='L514' name='L514'></a>  <em class='comment'>/* allocate memory */</em>
+<a id='L515' name='L515'></a>  lsa = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *)
+<a id='L516' name='L516'></a>    <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_OSPF6_LSA, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a>));
+<a id='L517' name='L517'></a>
+<a id='L518' name='L518'></a>  lsa-&gt;header = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *) new_header;
+<a id='L519' name='L519'></a>  <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (lsa-&gt;flag, <a href='../S/4.html#L139' title='Defined at 139 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADERONLY</a>);
+<a id='L520' name='L520'></a>
+<a id='L521' name='L521'></a>  <em class='comment'>/* dump string */</em>
+<a id='L522' name='L522'></a>  <a href='../S/14.html#L316' title='Defined at 316 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_printbuf</a> (lsa, lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>sizeof</strong> (lsa-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>));
+<a id='L523' name='L523'></a>
+<a id='L524' name='L524'></a>  <em class='comment'>/* calculate birth of this lsa */</em>
+<a id='L525' name='L525'></a>  <a href='../S/14.html#L188' title='Defined at 188 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_set</a> (lsa);
+<a id='L526' name='L526'></a>
+<a id='L527' name='L527'></a>  <strong class='reserved'>return</strong> lsa;
+<a id='L528' name='L528'></a><em class='brace'>}</em>
+<a id='L529' name='L529'></a>
+<a id='L530' name='L530'></a><strong class='reserved'>void</strong>
+<a id='L531' name='L531'></a><a href='../R/7599.html' title='Multiple referred from 23 places.'>ospf6_lsa_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L532' name='L532'></a><em class='brace'>{</em>
+<a id='L533' name='L533'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa-&gt;lock == 0);
+<a id='L534' name='L534'></a>
+<a id='L535' name='L535'></a>  <em class='comment'>/* cancel threads */</em>
+<a id='L536' name='L536'></a>  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a> (lsa-&gt;expire);
+<a id='L537' name='L537'></a>  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a> (lsa-&gt;refresh);
+<a id='L538' name='L538'></a>
+<a id='L539' name='L539'></a>  <em class='comment'>/* do free */</em>
+<a id='L540' name='L540'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF6_LSA, lsa-&gt;header);
+<a id='L541' name='L541'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_OSPF6_LSA, lsa);
+<a id='L542' name='L542'></a><em class='brace'>}</em>
+<a id='L543' name='L543'></a>
+<a id='L544' name='L544'></a><strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *
+<a id='L545' name='L545'></a><a href='../R/7596.html' title='Multiple referred from 20 places.'>ospf6_lsa_copy</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L546' name='L546'></a><em class='brace'>{</em>
+<a id='L547' name='L547'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *copy = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L548' name='L548'></a>
+<a id='L549' name='L549'></a>  <a href='../S/14.html#L207' title='Defined at 207 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_age_current</a> (lsa);
+<a id='L550' name='L550'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa-&gt;flag, <a href='../S/4.html#L139' title='Defined at 139 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADERONLY</a>))
+<a id='L551' name='L551'></a>    copy = <a href='../S/14.html#L501' title='Defined at 501 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_create_headeronly</a> (lsa-&gt;header);
+<a id='L552' name='L552'></a>  <strong class='reserved'>else</strong>
+<a id='L553' name='L553'></a>    copy = <a href='../S/14.html#L468' title='Defined at 468 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_create</a> (lsa-&gt;header);
+<a id='L554' name='L554'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (copy-&gt;lock == 0);
+<a id='L555' name='L555'></a>
+<a id='L556' name='L556'></a>  copy-&gt;birth = lsa-&gt;birth;
+<a id='L557' name='L557'></a>  copy-&gt;originated = lsa-&gt;originated;
+<a id='L558' name='L558'></a>  copy-&gt;received = lsa-&gt;received;
+<a id='L559' name='L559'></a>  copy-&gt;installed = lsa-&gt;installed;
+<a id='L560' name='L560'></a>  copy-&gt;lsdb = lsa-&gt;lsdb;
+<a id='L561' name='L561'></a>
+<a id='L562' name='L562'></a>  <strong class='reserved'>return</strong> copy;
+<a id='L563' name='L563'></a><em class='brace'>}</em>
+<a id='L564' name='L564'></a>
+<a id='L565' name='L565'></a><em class='comment'>/* increment reference counter of struct ospf6_lsa */</em>
+<a id='L566' name='L566'></a><strong class='reserved'>void</strong>
+<a id='L567' name='L567'></a><a href='../R/7610.html' title='Multiple referred from 8 places.'>ospf6_lsa_lock</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L568' name='L568'></a><em class='brace'>{</em>
+<a id='L569' name='L569'></a>  lsa-&gt;lock++;
+<a id='L570' name='L570'></a>  <strong class='reserved'>return</strong>;
+<a id='L571' name='L571'></a><em class='brace'>}</em>
+<a id='L572' name='L572'></a>
+<a id='L573' name='L573'></a><em class='comment'>/* decrement reference counter of struct ospf6_lsa */</em>
+<a id='L574' name='L574'></a><strong class='reserved'>void</strong>
+<a id='L575' name='L575'></a><a href='../R/7625.html' title='Multiple referred from 15 places.'>ospf6_lsa_unlock</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa)
+<a id='L576' name='L576'></a><em class='brace'>{</em>
+<a id='L577' name='L577'></a>  <em class='comment'>/* decrement reference counter */</em>
+<a id='L578' name='L578'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa-&gt;lock &gt; 0);
+<a id='L579' name='L579'></a>  lsa-&gt;lock--;
+<a id='L580' name='L580'></a>
+<a id='L581' name='L581'></a>  <strong class='reserved'>if</strong> (lsa-&gt;lock != 0)
+<a id='L582' name='L582'></a>    <strong class='reserved'>return</strong>;
+<a id='L583' name='L583'></a>
+<a id='L584' name='L584'></a>  <a href='../S/14.html#L531' title='Defined at 531 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_delete</a> (lsa);
+<a id='L585' name='L585'></a><em class='brace'>}</em>
+<a id='L586' name='L586'></a>
+<a id='L587' name='L587'></a>
+<a id='L588' name='L588'></a><em class='comment'>/* ospf6 lsa expiry */</em>
+<a id='L589' name='L589'></a><strong class='reserved'>int</strong>
+<a id='L590' name='L590'></a><a href='../R/7601.html' title='Multiple referred from 3 places.'>ospf6_lsa_expire</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L591' name='L591'></a><em class='brace'>{</em>
+<a id='L592' name='L592'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *lsa;
+<a id='L593' name='L593'></a>
+<a id='L594' name='L594'></a>  lsa = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *) <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L595' name='L595'></a>
+<a id='L596' name='L596'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (lsa &amp;&amp; lsa-&gt;header);
+<a id='L597' name='L597'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/4.html#L110' title='Defined at 110 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_IS_MAXAGE</a> (lsa));
+<a id='L598' name='L598'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (! lsa-&gt;refresh);
+<a id='L599' name='L599'></a>
+<a id='L600' name='L600'></a>  lsa-&gt;expire = (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *) <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L601' name='L601'></a>
+<a id='L602' name='L602'></a>  <strong class='reserved'>if</strong> (<a href='../S/4.html#L40' title='Defined at 40 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_LSA_TYPE</a> (lsa-&gt;header-&gt;type))
+<a id='L603' name='L603'></a>    <em class='brace'>{</em>
+<a id='L604' name='L604'></a>      zlog_debug ("LSA Expire:");
+<a id='L605' name='L605'></a>      <a href='../S/14.html#L342' title='Defined at 342 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_header_print</a> (lsa);
+<a id='L606' name='L606'></a>    <em class='brace'>}</em>
+<a id='L607' name='L607'></a>
+<a id='L608' name='L608'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (lsa-&gt;flag, <a href='../S/4.html#L139' title='Defined at 139 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_HEADERONLY</a>))
+<a id='L609' name='L609'></a>    <strong class='reserved'>return</strong> 0;    <em class='comment'>/* dbexchange will do something ... */</em>
+<a id='L610' name='L610'></a>
+<a id='L611' name='L611'></a>  <em class='comment'>/* reflood lsa */</em>
+<a id='L612' name='L612'></a>  <a href='../S/33.html#L438' title='Defined at 438 in ospf6d/ospf6_flood.c.'>ospf6_flood</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, lsa);
+<a id='L613' name='L613'></a>
+<a id='L614' name='L614'></a>  <em class='comment'>/* reinstall lsa */</em>
+<a id='L615' name='L615'></a>  <a href='../S/33.html#L209' title='Defined at 209 in ospf6d/ospf6_flood.c.'>ospf6_install_lsa</a> (lsa);
+<a id='L616' name='L616'></a>
+<a id='L617' name='L617'></a>  <em class='comment'>/* schedule maxage remover */</em>
+<a id='L618' name='L618'></a>  <a href='../S/13.html#L244' title='Defined at 244 in ospf6d/ospf6_top.c.'>ospf6_maxage_remove</a> (<a href='../S/7.html#L28' title='Defined at 28 in ospf6d/ospf6_top.h.'>ospf6</a>);
+<a id='L619' name='L619'></a>
+<a id='L620' name='L620'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L621' name='L621'></a><em class='brace'>}</em>
+<a id='L622' name='L622'></a>
+<a id='L623' name='L623'></a><strong class='reserved'>int</strong>
+<a id='L624' name='L624'></a><a href='../R/7618.html' title='Multiple referred from 4 places.'>ospf6_lsa_refresh</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L625' name='L625'></a><em class='brace'>{</em>
+<a id='L626' name='L626'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *old, *self, *new;
+<a id='L627' name='L627'></a>  <strong class='reserved'>struct</strong> <a href='../S/31.html#L28' title='Defined at 28 in ospf6d/ospf6_lsdb.h.'>ospf6_lsdb</a> *lsdb_self;
+<a id='L628' name='L628'></a>
+<a id='L629' name='L629'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L630' name='L630'></a>  old = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L113' title='Defined at 113 in ospf6d/ospf6_lsa.h.'>ospf6_lsa</a> *) <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L631' name='L631'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (old &amp;&amp; old-&gt;header);
+<a id='L632' name='L632'></a>
+<a id='L633' name='L633'></a>  old-&gt;refresh = (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *) <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L634' name='L634'></a>
+<a id='L635' name='L635'></a>  lsdb_self = <a href='../S/33.html#L70' title='Defined at 70 in ospf6d/ospf6_flood.c.'>ospf6_get_scoped_lsdb_self</a> (old);
+<a id='L636' name='L636'></a>  self = <a href='../S/6.html#L241' title='Defined at 241 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_lookup</a> (old-&gt;header-&gt;type, old-&gt;header-&gt;id,
+<a id='L637' name='L637'></a>                            old-&gt;header-&gt;adv_router, lsdb_self);
+<a id='L638' name='L638'></a>  <strong class='reserved'>if</strong> (self == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L639' name='L639'></a>    <em class='brace'>{</em>
+<a id='L640' name='L640'></a>      <strong class='reserved'>if</strong> (<a href='../S/4.html#L40' title='Defined at 40 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_LSA_TYPE</a> (old-&gt;header-&gt;type))
+<a id='L641' name='L641'></a>        zlog_debug ("Refresh: could not find self LSA, flush %s", old-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L642' name='L642'></a>      <a href='../S/14.html#L252' title='Defined at 252 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_premature_aging</a> (old);
+<a id='L643' name='L643'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L644' name='L644'></a>    <em class='brace'>}</em>
+<a id='L645' name='L645'></a>
+<a id='L646' name='L646'></a>  <em class='comment'>/* Reset age, increment LS sequence number. */</em>
+<a id='L647' name='L647'></a>  self-&gt;header-&gt;age = htons (0);
+<a id='L648' name='L648'></a>  self-&gt;header-&gt;seqnum =
+<a id='L649' name='L649'></a>    <a href='../S/6.html#L566' title='Defined at 566 in ospf6d/ospf6_lsdb.c.'>ospf6_new_ls_seqnum</a> (self-&gt;header-&gt;type, self-&gt;header-&gt;id,
+<a id='L650' name='L650'></a>                         self-&gt;header-&gt;adv_router, old-&gt;lsdb);
+<a id='L651' name='L651'></a>  <a href='../S/14.html#L681' title='Defined at 681 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_checksum</a> (self-&gt;header);
+<a id='L652' name='L652'></a>
+<a id='L653' name='L653'></a>  new = <a href='../S/14.html#L468' title='Defined at 468 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_create</a> (self-&gt;header);
+<a id='L654' name='L654'></a>  new-&gt;lsdb = old-&gt;lsdb;
+<a id='L655' name='L655'></a>  new-&gt;refresh = <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/14.html#L624' title='Defined at 624 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_refresh</a>, new,
+<a id='L656' name='L656'></a>                                   <a href='../S/30.html#L38' title='Defined at 38 in ospf6d/ospf6_proto.h.'>LS_REFRESH_TIME</a>);
+<a id='L657' name='L657'></a>
+<a id='L658' name='L658'></a>  <em class='comment'>/* store it in the LSDB for self-originated LSAs */</em>
+<a id='L659' name='L659'></a>  <a href='../S/6.html#L102' title='Defined at 102 in ospf6d/ospf6_lsdb.c.'>ospf6_lsdb_add</a> (<a href='../S/14.html#L545' title='Defined at 545 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_copy</a> (new), lsdb_self);
+<a id='L660' name='L660'></a>
+<a id='L661' name='L661'></a>  <strong class='reserved'>if</strong> (<a href='../S/4.html#L40' title='Defined at 40 in ospf6d/ospf6_lsa.h.'>IS_OSPF6_DEBUG_LSA_TYPE</a> (new-&gt;header-&gt;type))
+<a id='L662' name='L662'></a>    <em class='brace'>{</em>
+<a id='L663' name='L663'></a>      zlog_debug ("LSA Refresh:");
+<a id='L664' name='L664'></a>      <a href='../S/14.html#L342' title='Defined at 342 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_header_print</a> (new);
+<a id='L665' name='L665'></a>    <em class='brace'>}</em>
+<a id='L666' name='L666'></a>
+<a id='L667' name='L667'></a>  <a href='../S/33.html#L512' title='Defined at 512 in ospf6d/ospf6_flood.c.'>ospf6_flood_clear</a> (old);
+<a id='L668' name='L668'></a>  <a href='../S/33.html#L438' title='Defined at 438 in ospf6d/ospf6_flood.c.'>ospf6_flood</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, new);
+<a id='L669' name='L669'></a>  <a href='../S/33.html#L209' title='Defined at 209 in ospf6d/ospf6_flood.c.'>ospf6_install_lsa</a> (new);
+<a id='L670' name='L670'></a>
+<a id='L671' name='L671'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L672' name='L672'></a><em class='brace'>}</em>
+<a id='L673' name='L673'></a>
+<a id='L674' name='L674'></a>
+<a id='L675' name='L675'></a>
+<a id='L676' name='L676'></a><em class='comment'>/* Fletcher Checksum -- Refer to RFC1008. */</em>
+<a id='L677' name='L677'></a>
+<a id='L678' name='L678'></a><em class='comment'>/* All the offsets are zero-based. The offsets in the RFC1008 are</em>
+<a id='L679' name='L679'></a><em class='comment'>   one-based. */</em>
+<a id='L680' name='L680'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>
+<a id='L681' name='L681'></a><a href='../R/7593.html' title='Multiple referred from 10 places.'>ospf6_lsa_checksum</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>)
+<a id='L682' name='L682'></a><em class='brace'>{</em>
+<a id='L683' name='L683'></a>  u_char *<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> = (u_char *) &amp;<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;type;
+<a id='L684' name='L684'></a>  <strong class='reserved'>int</strong> type_offset = <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> - (u_char *) &amp;<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;age; <em class='comment'>/* should be 2 */</em>
+<a id='L685' name='L685'></a>
+<a id='L686' name='L686'></a>  <em class='comment'>/* Skip the AGE field */</em>
+<a id='L687' name='L687'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> len = ntohs(<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;length) - type_offset;
+<a id='L688' name='L688'></a>
+<a id='L689' name='L689'></a>  <em class='comment'>/* Checksum offset starts from "type" field, not the beginning of the</em>
+<a id='L690' name='L690'></a><em class='comment'>     lsa_header struct. The offset is 14, rather than 16. */</em>
+<a id='L691' name='L691'></a>  <strong class='reserved'>int</strong> checksum_offset = (u_char *) &amp;<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;<a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a> - <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>;
+<a id='L692' name='L692'></a>
+<a id='L693' name='L693'></a>  <strong class='reserved'>return</strong> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong>)<a href='../S/247.html#L57' title='Defined at 57 in lib/checksum.c.'>fletcher_checksum</a>(<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>, len, checksum_offset);
+<a id='L694' name='L694'></a><em class='brace'>}</em>
+<a id='L695' name='L695'></a>
+<a id='L696' name='L696'></a><strong class='reserved'>int</strong>
+<a id='L697' name='L697'></a><a href='../R/7594.html' title='Multiple referred from 2 places.'>ospf6_lsa_checksum_valid</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_header</a> *<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>)
+<a id='L698' name='L698'></a><em class='brace'>{</em>
+<a id='L699' name='L699'></a>  u_char *<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> = (u_char *) &amp;<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;type;
+<a id='L700' name='L700'></a>  <strong class='reserved'>int</strong> type_offset = <a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a> - (u_char *) &amp;<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;age; <em class='comment'>/* should be 2 */</em>
+<a id='L701' name='L701'></a>
+<a id='L702' name='L702'></a>  <em class='comment'>/* Skip the AGE field */</em>
+<a id='L703' name='L703'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> len = ntohs(<a href='../S/733.html#L60' title='Defined at 60 in ospfd/ospf_lsa.h.'>lsa_header</a>-&gt;length) - type_offset;
+<a id='L704' name='L704'></a>
+<a id='L705' name='L705'></a>  <strong class='reserved'>return</strong> (<a href='../S/247.html#L57' title='Defined at 57 in lib/checksum.c.'>fletcher_checksum</a>(<a href='../S/185.html#L34' title='Defined at 34 in lib/buffer.c.'>buffer</a>, len, <a href='../S/303.html#L2' title='Defined at 2 in lib/checksum.h.'>FLETCHER_CHECKSUM_VALIDATE</a>) == 0);
+<a id='L706' name='L706'></a><em class='brace'>}</em>
+<a id='L707' name='L707'></a>
+<a id='L708' name='L708'></a><strong class='reserved'>void</strong>
+<a id='L709' name='L709'></a><a href='../R/7607.html' title='Multiple referred from 2 places.'>ospf6_lsa_init</a> (<strong class='reserved'>void</strong>)
+<a id='L710' name='L710'></a><em class='brace'>{</em>
+<a id='L711' name='L711'></a>  ospf6_lsa_handler_vector = <a href='../S/204.html#L29' title='Defined at 29 in lib/vector.c.'>vector_init</a> (0);
+<a id='L712' name='L712'></a>  <a href='../S/14.html#L83' title='Defined at 83 in ospf6d/ospf6_lsa.c.'>ospf6_install_lsa_handler</a> (&amp;unknown_handler);
+<a id='L713' name='L713'></a><em class='brace'>}</em>
+<a id='L714' name='L714'></a>
+<a id='L715' name='L715'></a><strong class='reserved'>void</strong>
+<a id='L716' name='L716'></a><a href='../R/7624.html' title='Multiple referred from 2 places.'>ospf6_lsa_terminate</a> (<strong class='reserved'>void</strong>)
+<a id='L717' name='L717'></a><em class='brace'>{</em>
+<a id='L718' name='L718'></a>  <a href='../S/204.html#L56' title='Defined at 56 in lib/vector.c.'>vector_free</a> (ospf6_lsa_handler_vector);
+<a id='L719' name='L719'></a><em class='brace'>}</em>
+<a id='L720' name='L720'></a>
+<a id='L721' name='L721'></a><strong class='reserved'>static</strong> <strong class='reserved'>char</strong> *
+<a id='L722' name='L722'></a><a href='../R/7603.html' title='Multiple referred from 5 places.'>ospf6_lsa_handler_name</a> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *h)
+<a id='L723' name='L723'></a><em class='brace'>{</em>
+<a id='L724' name='L724'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> buf[64];
+<a id='L725' name='L725'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i; 
+<a id='L726' name='L726'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> size = strlen (h-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L727' name='L727'></a>
+<a id='L728' name='L728'></a>  <strong class='reserved'>if</strong> (!strcmp(h-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "Unknown") &amp;&amp;
+<a id='L729' name='L729'></a>      h-&gt;type != <a href='../S/4.html#L54' title='Defined at 54 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_UNKNOWN</a>)
+<a id='L730' name='L730'></a>    <em class='brace'>{</em>
+<a id='L731' name='L731'></a>      <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, <strong class='reserved'>sizeof</strong> (buf), "%#04hx", h-&gt;type);
+<a id='L732' name='L732'></a>      <strong class='reserved'>return</strong> buf;
+<a id='L733' name='L733'></a>    <em class='brace'>}</em>
+<a id='L734' name='L734'></a>
+<a id='L735' name='L735'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../D/1913.html' title='Multiple defined in 6 places.'>MIN</a> (size, <strong class='reserved'>sizeof</strong> (buf)); i++)
+<a id='L736' name='L736'></a>    <em class='brace'>{</em>
+<a id='L737' name='L737'></a>      <strong class='reserved'>if</strong> (! islower (h-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>[i]))
+<a id='L738' name='L738'></a>        buf[i] = tolower (h-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>[i]);
+<a id='L739' name='L739'></a>      <strong class='reserved'>else</strong>
+<a id='L740' name='L740'></a>        buf[i] = h-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>[i];
+<a id='L741' name='L741'></a>    <em class='brace'>}</em>
+<a id='L742' name='L742'></a>  buf[size] = '\0';
+<a id='L743' name='L743'></a>  <strong class='reserved'>return</strong> buf;
+<a id='L744' name='L744'></a><em class='brace'>}</em>
+<a id='L745' name='L745'></a>
+<a id='L746' name='L746'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (debug_ospf6_lsa_type,
+<a id='L747' name='L747'></a>       debug_ospf6_lsa_hex_cmd,
+<a id='L748' name='L748'></a>       "debug ospf6 lsa XXXX/0xXXXX",
+<a id='L749' name='L749'></a>       <a href='../S/214.html#L293' title='Defined at 293 in lib/command.h.'>DEBUG_STR</a>
+<a id='L750' name='L750'></a>       <a href='../S/214.html#L307' title='Defined at 307 in lib/command.h.'>OSPF6_STR</a>
+<a id='L751' name='L751'></a>       "Debug Link State Advertisements (LSAs)\n"
+<a id='L752' name='L752'></a>       "Specify LS type as Hexadecimal\n"
+<a id='L753' name='L753'></a>      )
+<a id='L754' name='L754'></a><em class='brace'>{</em>
+<a id='L755' name='L755'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L756' name='L756'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L757' name='L757'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> val;
+<a id='L758' name='L758'></a>  <strong class='reserved'>char</strong> *endptr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L759' name='L759'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type = 0;
+<a id='L760' name='L760'></a>
+<a id='L761' name='L761'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (argc);
+<a id='L762' name='L762'></a>
+<a id='L763' name='L763'></a>  <strong class='reserved'>if</strong> ((strlen (argv[0]) == 6 &amp;&amp; ! strncmp (argv[0], "0x", 2)) ||
+<a id='L764' name='L764'></a>      (strlen (argv[0]) == 4))
+<a id='L765' name='L765'></a>    <em class='brace'>{</em>
+<a id='L766' name='L766'></a>      val = strtoul (argv[0], &amp;endptr, 16);
+<a id='L767' name='L767'></a>      <strong class='reserved'>if</strong> (*endptr == '\0')
+<a id='L768' name='L768'></a>        type = val;
+<a id='L769' name='L769'></a>    <em class='brace'>}</em>
+<a id='L770' name='L770'></a>
+<a id='L771' name='L771'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (ospf6_lsa_handler_vector); i++)
+<a id='L772' name='L772'></a>    <em class='brace'>{</em>
+<a id='L773' name='L773'></a>      handler = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, i);
+<a id='L774' name='L774'></a>      <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L775' name='L775'></a>        <strong class='reserved'>continue</strong>;
+<a id='L776' name='L776'></a>      <strong class='reserved'>if</strong> (type &amp;&amp; handler-&gt;type == type)
+<a id='L777' name='L777'></a>        <strong class='reserved'>break</strong>;
+<a id='L778' name='L778'></a>      <strong class='reserved'>if</strong> (! strcasecmp (argv[0], handler-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>))
+<a id='L779' name='L779'></a>        <strong class='reserved'>break</strong>;
+<a id='L780' name='L780'></a>      handler = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L781' name='L781'></a>    <em class='brace'>}</em>
+<a id='L782' name='L782'></a>
+<a id='L783' name='L783'></a>  <strong class='reserved'>if</strong> (type &amp;&amp; handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L784' name='L784'></a>    <em class='brace'>{</em>
+<a id='L785' name='L785'></a>      handler = (<strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *)
+<a id='L786' name='L786'></a>        malloc (<strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a>));
+<a id='L787' name='L787'></a>      memset (handler, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a>));
+<a id='L788' name='L788'></a>      handler-&gt;type = type;
+<a id='L789' name='L789'></a>      handler-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a> = "Unknown";
+<a id='L790' name='L790'></a>      handler-&gt;show = <a href='../S/14.html#L50' title='Defined at 50 in ospf6d/ospf6_lsa.c.'>ospf6_unknown_lsa_show</a>;
+<a id='L791' name='L791'></a>      <a href='../S/204.html#L131' title='Defined at 131 in lib/vector.c.'>vector_set_index</a> (ospf6_lsa_handler_vector,
+<a id='L792' name='L792'></a>                        handler-&gt;type &amp; <a href='../S/4.html#L69' title='Defined at 69 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_FCODE_MASK</a>, handler);
+<a id='L793' name='L793'></a>    <em class='brace'>}</em>
+<a id='L794' name='L794'></a>
+<a id='L795' name='L795'></a>  <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L796' name='L796'></a>    handler = &amp;unknown_handler;
+<a id='L797' name='L797'></a>
+<a id='L798' name='L798'></a>  <strong class='reserved'>if</strong> (argc &gt;= 2)
+<a id='L799' name='L799'></a>    <em class='brace'>{</em>
+<a id='L800' name='L800'></a>      <strong class='reserved'>if</strong> (! strcmp (argv[1], "originate"))
+<a id='L801' name='L801'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L27' title='Defined at 27 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_ORIGINATE</a>);
+<a id='L802' name='L802'></a>      <strong class='reserved'>if</strong> (! strcmp (argv[1], "examin"))
+<a id='L803' name='L803'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L28' title='Defined at 28 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_EXAMIN</a>);
+<a id='L804' name='L804'></a>      <strong class='reserved'>if</strong> (! strcmp (argv[1], "flooding"))
+<a id='L805' name='L805'></a>        <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L29' title='Defined at 29 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_FLOOD</a>);
+<a id='L806' name='L806'></a>    <em class='brace'>}</em>
+<a id='L807' name='L807'></a>  <strong class='reserved'>else</strong>
+<a id='L808' name='L808'></a>    <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L26' title='Defined at 26 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG</a>);
+<a id='L809' name='L809'></a>
+<a id='L810' name='L810'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L811' name='L811'></a><em class='brace'>}</em>
+<a id='L812' name='L812'></a>
+<a id='L813' name='L813'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (no_debug_ospf6_lsa_type,
+<a id='L814' name='L814'></a>       no_debug_ospf6_lsa_hex_cmd,
+<a id='L815' name='L815'></a>       "no debug ospf6 lsa XXXX/0xXXXX",
+<a id='L816' name='L816'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L817' name='L817'></a>       <a href='../S/214.html#L293' title='Defined at 293 in lib/command.h.'>DEBUG_STR</a>
+<a id='L818' name='L818'></a>       <a href='../S/214.html#L307' title='Defined at 307 in lib/command.h.'>OSPF6_STR</a>
+<a id='L819' name='L819'></a>       "Debug Link State Advertisements (LSAs)\n"
+<a id='L820' name='L820'></a>       "Specify LS type as Hexadecimal\n"
+<a id='L821' name='L821'></a>      )
+<a id='L822' name='L822'></a><em class='brace'>{</em>
+<a id='L823' name='L823'></a>  u_int i;
+<a id='L824' name='L824'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L825' name='L825'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> val;
+<a id='L826' name='L826'></a>  <strong class='reserved'>char</strong> *endptr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L827' name='L827'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> type = 0;
+<a id='L828' name='L828'></a>
+<a id='L829' name='L829'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (argc);
+<a id='L830' name='L830'></a>
+<a id='L831' name='L831'></a>  <strong class='reserved'>if</strong> ((strlen (argv[0]) == 6 &amp;&amp; ! strncmp (argv[0], "0x", 2)) ||
+<a id='L832' name='L832'></a>      (strlen (argv[0]) == 4))
+<a id='L833' name='L833'></a>    <em class='brace'>{</em>
+<a id='L834' name='L834'></a>      val = strtoul (argv[0], &amp;endptr, 16);
+<a id='L835' name='L835'></a>      <strong class='reserved'>if</strong> (*endptr == '\0')
+<a id='L836' name='L836'></a>        type = val;
+<a id='L837' name='L837'></a>    <em class='brace'>}</em>
+<a id='L838' name='L838'></a>
+<a id='L839' name='L839'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (ospf6_lsa_handler_vector); i++)
+<a id='L840' name='L840'></a>    <em class='brace'>{</em>
+<a id='L841' name='L841'></a>      handler = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, i);
+<a id='L842' name='L842'></a>      <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L843' name='L843'></a>        <strong class='reserved'>continue</strong>;
+<a id='L844' name='L844'></a>      <strong class='reserved'>if</strong> (type &amp;&amp; handler-&gt;type == type)
+<a id='L845' name='L845'></a>        <strong class='reserved'>break</strong>;
+<a id='L846' name='L846'></a>      <strong class='reserved'>if</strong> (! strcasecmp (argv[0], handler-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>))
+<a id='L847' name='L847'></a>        <strong class='reserved'>break</strong>;
+<a id='L848' name='L848'></a>    <em class='brace'>}</em>
+<a id='L849' name='L849'></a>
+<a id='L850' name='L850'></a>  <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L851' name='L851'></a>    <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L852' name='L852'></a>
+<a id='L853' name='L853'></a>  <strong class='reserved'>if</strong> (argc &gt;= 2)
+<a id='L854' name='L854'></a>    <em class='brace'>{</em>
+<a id='L855' name='L855'></a>      <strong class='reserved'>if</strong> (! strcmp (argv[1], "originate"))
+<a id='L856' name='L856'></a>        <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L27' title='Defined at 27 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_ORIGINATE</a>);
+<a id='L857' name='L857'></a>      <strong class='reserved'>if</strong> (! strcmp (argv[1], "examin"))
+<a id='L858' name='L858'></a>        <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L28' title='Defined at 28 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_EXAMIN</a>);
+<a id='L859' name='L859'></a>      <strong class='reserved'>if</strong> (! strcmp (argv[1], "flooding"))
+<a id='L860' name='L860'></a>        <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L29' title='Defined at 29 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_FLOOD</a>);
+<a id='L861' name='L861'></a>    <em class='brace'>}</em>
+<a id='L862' name='L862'></a>  <strong class='reserved'>else</strong>
+<a id='L863' name='L863'></a>    <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L26' title='Defined at 26 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG</a>);
+<a id='L864' name='L864'></a>
+<a id='L865' name='L865'></a>  <strong class='reserved'>if</strong> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a> == 0 &amp;&amp;
+<a id='L866' name='L866'></a>      !strcmp(handler-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, "Unknown") &amp;&amp; type != <a href='../S/4.html#L54' title='Defined at 54 in ospf6d/ospf6_lsa.h.'>OSPF6_LSTYPE_UNKNOWN</a>)
+<a id='L867' name='L867'></a>    <em class='brace'>{</em>
+<a id='L868' name='L868'></a>      free (handler);
+<a id='L869' name='L869'></a>      <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, i) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L870' name='L870'></a>    <em class='brace'>}</em>
+<a id='L871' name='L871'></a>
+<a id='L872' name='L872'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L873' name='L873'></a><em class='brace'>}</em>
+<a id='L874' name='L874'></a>
+<a id='L875' name='L875'></a><strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> debug_ospf6_lsa_type_cmd;
+<a id='L876' name='L876'></a><strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> debug_ospf6_lsa_type_detail_cmd;
+<a id='L877' name='L877'></a><strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> no_debug_ospf6_lsa_type_cmd;
+<a id='L878' name='L878'></a><strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> no_debug_ospf6_lsa_type_detail_cmd;
+<a id='L879' name='L879'></a>
+<a id='L880' name='L880'></a><strong class='reserved'>void</strong>
+<a id='L881' name='L881'></a><a href='../R/6038.html' title='Multiple referred from 2 places.'>install_element_ospf6_debug_lsa</a> (<strong class='reserved'>void</strong>)
+<a id='L882' name='L882'></a><em class='brace'>{</em>
+<a id='L883' name='L883'></a>  u_int i;
+<a id='L884' name='L884'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler;
+<a id='L885' name='L885'></a><em class='sharp'>#define</em> <a href='../R/3555.html' title='Multiple referred from 8 places.'>STRSIZE</a>  256
+<a id='L886' name='L886'></a><em class='sharp'>#define</em> <a href='../R/679.html' title='Multiple referred from 13 places.'>DOCSIZE</a>  1024
+<a id='L887' name='L887'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> strbuf[<a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a>];
+<a id='L888' name='L888'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> docbuf[<a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a>];
+<a id='L889' name='L889'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> detail_strbuf[<a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a>];
+<a id='L890' name='L890'></a>  <strong class='reserved'>static</strong> <strong class='reserved'>char</strong> detail_docbuf[<a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a>];
+<a id='L891' name='L891'></a>  <strong class='reserved'>char</strong> *str, *no_str;
+<a id='L892' name='L892'></a>  <strong class='reserved'>char</strong> *doc, *no_doc;
+<a id='L893' name='L893'></a>
+<a id='L894' name='L894'></a>  strbuf[0] = '\0';
+<a id='L895' name='L895'></a>  no_str = &amp;strbuf[strlen (strbuf)];
+<a id='L896' name='L896'></a>  strncat (strbuf, "no ", <a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a> - strlen (strbuf));
+<a id='L897' name='L897'></a>  str = &amp;strbuf[strlen (strbuf)];
+<a id='L898' name='L898'></a>
+<a id='L899' name='L899'></a>  strncat (strbuf, "debug ospf6 lsa (", <a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a> - strlen (strbuf));
+<a id='L900' name='L900'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (ospf6_lsa_handler_vector); i++)
+<a id='L901' name='L901'></a>    <em class='brace'>{</em>
+<a id='L902' name='L902'></a>      handler = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, i);
+<a id='L903' name='L903'></a>      <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L904' name='L904'></a>        <strong class='reserved'>continue</strong>;
+<a id='L905' name='L905'></a>      strncat (strbuf, <a href='../S/14.html#L722' title='Defined at 722 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_handler_name</a> (handler),
+<a id='L906' name='L906'></a>               <a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a> - strlen (strbuf));
+<a id='L907' name='L907'></a>      strncat (strbuf, "|", <a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a> - strlen (strbuf));
+<a id='L908' name='L908'></a>    <em class='brace'>}</em>
+<a id='L909' name='L909'></a>  strbuf[strlen (strbuf) - 1] = ')';
+<a id='L910' name='L910'></a>  strbuf[strlen (strbuf)] = '\0';
+<a id='L911' name='L911'></a>
+<a id='L912' name='L912'></a>  docbuf[0] = '\0';
+<a id='L913' name='L913'></a>  no_doc = &amp;docbuf[strlen (docbuf)];
+<a id='L914' name='L914'></a>  strncat (docbuf, <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>, <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L915' name='L915'></a>  doc = &amp;docbuf[strlen (docbuf)];
+<a id='L916' name='L916'></a>
+<a id='L917' name='L917'></a>  strncat (docbuf, <a href='../S/214.html#L293' title='Defined at 293 in lib/command.h.'>DEBUG_STR</a>, <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L918' name='L918'></a>  strncat (docbuf, <a href='../S/214.html#L307' title='Defined at 307 in lib/command.h.'>OSPF6_STR</a>, <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L919' name='L919'></a>  strncat (docbuf, "Debug Link State Advertisements (LSAs)\n",
+<a id='L920' name='L920'></a>           <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L921' name='L921'></a>
+<a id='L922' name='L922'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (ospf6_lsa_handler_vector); i++)
+<a id='L923' name='L923'></a>    <em class='brace'>{</em>
+<a id='L924' name='L924'></a>      handler = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, i);
+<a id='L925' name='L925'></a>      <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L926' name='L926'></a>        <strong class='reserved'>continue</strong>;
+<a id='L927' name='L927'></a>      strncat (docbuf, "Debug ", <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L928' name='L928'></a>      strncat (docbuf, handler-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L929' name='L929'></a>      strncat (docbuf, "-LSA\n", <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (docbuf));
+<a id='L930' name='L930'></a>    <em class='brace'>}</em>
+<a id='L931' name='L931'></a>  docbuf[strlen (docbuf)] = '\0';
+<a id='L932' name='L932'></a>
+<a id='L933' name='L933'></a>  debug_ospf6_lsa_type_cmd.string = str;
+<a id='L934' name='L934'></a>  debug_ospf6_lsa_type_cmd.func = debug_ospf6_lsa_type;
+<a id='L935' name='L935'></a>  debug_ospf6_lsa_type_cmd.doc = doc;
+<a id='L936' name='L936'></a>
+<a id='L937' name='L937'></a>  no_debug_ospf6_lsa_type_cmd.string = no_str;
+<a id='L938' name='L938'></a>  no_debug_ospf6_lsa_type_cmd.func = no_debug_ospf6_lsa_type;
+<a id='L939' name='L939'></a>  no_debug_ospf6_lsa_type_cmd.doc = no_doc;
+<a id='L940' name='L940'></a>
+<a id='L941' name='L941'></a>  strncpy (detail_strbuf, strbuf, <a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a>);
+<a id='L942' name='L942'></a>  strncat (detail_strbuf, " (originate|examin|flooding)",
+<a id='L943' name='L943'></a>           <a href='../S/14.html#L885' title='Defined at 885 in ospf6d/ospf6_lsa.c.'>STRSIZE</a> - strlen (detail_strbuf));
+<a id='L944' name='L944'></a>  detail_strbuf[strlen (detail_strbuf)] = '\0';
+<a id='L945' name='L945'></a>  no_str = &amp;detail_strbuf[0];
+<a id='L946' name='L946'></a>  str = &amp;detail_strbuf[strlen ("no ")];
+<a id='L947' name='L947'></a>
+<a id='L948' name='L948'></a>  strncpy (detail_docbuf, docbuf, <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a>);
+<a id='L949' name='L949'></a>  strncat (detail_docbuf, "Debug Originating LSA\n",
+<a id='L950' name='L950'></a>           <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (detail_docbuf));
+<a id='L951' name='L951'></a>  strncat (detail_docbuf, "Debug Examining LSA\n",
+<a id='L952' name='L952'></a>           <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (detail_docbuf));
+<a id='L953' name='L953'></a>  strncat (detail_docbuf, "Debug Flooding LSA\n",
+<a id='L954' name='L954'></a>           <a href='../S/14.html#L886' title='Defined at 886 in ospf6d/ospf6_lsa.c.'>DOCSIZE</a> - strlen (detail_docbuf));
+<a id='L955' name='L955'></a>  detail_docbuf[strlen (detail_docbuf)] = '\0';
+<a id='L956' name='L956'></a>  no_doc = &amp;detail_docbuf[0];
+<a id='L957' name='L957'></a>  doc = &amp;detail_docbuf[strlen (<a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>)];
+<a id='L958' name='L958'></a>
+<a id='L959' name='L959'></a>  debug_ospf6_lsa_type_detail_cmd.string = str;
+<a id='L960' name='L960'></a>  debug_ospf6_lsa_type_detail_cmd.func = debug_ospf6_lsa_type;
+<a id='L961' name='L961'></a>  debug_ospf6_lsa_type_detail_cmd.doc = doc;
+<a id='L962' name='L962'></a>
+<a id='L963' name='L963'></a>  no_debug_ospf6_lsa_type_detail_cmd.string = no_str;
+<a id='L964' name='L964'></a>  no_debug_ospf6_lsa_type_detail_cmd.func = no_debug_ospf6_lsa_type;
+<a id='L965' name='L965'></a>  no_debug_ospf6_lsa_type_detail_cmd.doc = no_doc;
+<a id='L966' name='L966'></a>
+<a id='L967' name='L967'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;debug_ospf6_lsa_hex_cmd);
+<a id='L968' name='L968'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;debug_ospf6_lsa_type_cmd);
+<a id='L969' name='L969'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;debug_ospf6_lsa_type_detail_cmd);
+<a id='L970' name='L970'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;no_debug_ospf6_lsa_hex_cmd);
+<a id='L971' name='L971'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;no_debug_ospf6_lsa_type_cmd);
+<a id='L972' name='L972'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;no_debug_ospf6_lsa_type_detail_cmd);
+<a id='L973' name='L973'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;debug_ospf6_lsa_hex_cmd);
+<a id='L974' name='L974'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;debug_ospf6_lsa_type_cmd);
+<a id='L975' name='L975'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;debug_ospf6_lsa_type_detail_cmd);
+<a id='L976' name='L976'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_debug_ospf6_lsa_hex_cmd);
+<a id='L977' name='L977'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_debug_ospf6_lsa_type_cmd);
+<a id='L978' name='L978'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;no_debug_ospf6_lsa_type_detail_cmd);
+<a id='L979' name='L979'></a><em class='brace'>}</em>
+<a id='L980' name='L980'></a>
+<a id='L981' name='L981'></a><strong class='reserved'>int</strong>
+<a id='L982' name='L982'></a><a href='../R/5429.html' title='Multiple referred from 2 places.'>config_write_ospf6_debug_lsa</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L983' name='L983'></a><em class='brace'>{</em>
+<a id='L984' name='L984'></a>  u_int i;
+<a id='L985' name='L985'></a>  <strong class='reserved'>struct</strong> <a href='../S/4.html#L144' title='Defined at 144 in ospf6d/ospf6_lsa.h.'>ospf6_lsa_handler</a> *handler;
+<a id='L986' name='L986'></a>
+<a id='L987' name='L987'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/253.html#L45' title='Defined at 45 in lib/vector.h.'>vector_active</a> (ospf6_lsa_handler_vector); i++)
+<a id='L988' name='L988'></a>    <em class='brace'>{</em>
+<a id='L989' name='L989'></a>      handler = <a href='../S/253.html#L40' title='Defined at 40 in lib/vector.h.'>vector_slot</a> (ospf6_lsa_handler_vector, i);
+<a id='L990' name='L990'></a>      <strong class='reserved'>if</strong> (handler == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L991' name='L991'></a>        <strong class='reserved'>continue</strong>;
+<a id='L992' name='L992'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L26' title='Defined at 26 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG</a>))
+<a id='L993' name='L993'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "debug ospf6 lsa %s%s",
+<a id='L994' name='L994'></a>                 <a href='../S/14.html#L722' title='Defined at 722 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_handler_name</a> (handler), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L995' name='L995'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L27' title='Defined at 27 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_ORIGINATE</a>))
+<a id='L996' name='L996'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "debug ospf6 lsa %s originate%s",
+<a id='L997' name='L997'></a>                 <a href='../S/14.html#L722' title='Defined at 722 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_handler_name</a> (handler), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L998' name='L998'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L28' title='Defined at 28 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_EXAMIN</a>))
+<a id='L999' name='L999'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "debug ospf6 lsa %s examin%s",
+<a id='L1000' name='L1000'></a>                 <a href='../S/14.html#L722' title='Defined at 722 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_handler_name</a> (handler), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L1001' name='L1001'></a>      <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (handler-&gt;<a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>, <a href='../S/4.html#L29' title='Defined at 29 in ospf6d/ospf6_lsa.h.'>OSPF6_LSA_DEBUG_FLOOD</a>))
+<a id='L1002' name='L1002'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "debug ospf6 lsa %s flooding%s",
+<a id='L1003' name='L1003'></a>                 <a href='../S/14.html#L722' title='Defined at 722 in ospf6d/ospf6_lsa.c.'>ospf6_lsa_handler_name</a> (handler), <a href='../S/23.html#L108' title='Defined at 108 in ospf6d/ospf6d.h.'>VNL</a>);
+<a id='L1004' name='L1004'></a>    <em class='brace'>}</em>
+<a id='L1005' name='L1005'></a>
+<a id='L1006' name='L1006'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L1007' name='L1007'></a><em class='brace'>}</em>
+<a id='L1008' name='L1008'></a>
+<a id='L1009' name='L1009'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L50'>[^]</a><a href='#L982'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

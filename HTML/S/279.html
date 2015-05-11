@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/thread.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/thread.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/349.html' title='Multiple included from 119 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* Thread management routine header.</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 1998 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'> * Portions Copyright (c) 2008 Everton da Silva Marques &lt;everton.marques@gmail.com&gt;</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/279.html#L24' title='Defined at 24 in lib/thread.h.'>_ZEBRA_THREAD_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/279.html#L23' title='Referred from 23 in lib/thread.h.'>_ZEBRA_THREAD_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L35' title='Referred from 35 in lib/thread.h.'>rusage_t</a>
+<a id='L29' name='L29'></a><em class='brace'>{</em>
+<a id='L30' name='L30'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L303' title='Defined at 303 in config.h.'>HAVE_RUSAGE</a>
+<a id='L31' name='L31'></a>  <strong class='reserved'>struct</strong> rusage cpu;
+<a id='L32' name='L32'></a><em class='sharp'>#endif</em>
+<a id='L33' name='L33'></a>  <strong class='reserved'>struct</strong> timeval real;
+<a id='L34' name='L34'></a><em class='brace'>}</em>;
+<a id='L35' name='L35'></a><em class='sharp'>#define</em> <a href='../R/3416.html' title='Multiple referred from 7 places.'>RUSAGE_T</a>        <strong class='reserved'>struct</strong> <a href='../S/279.html#L28' title='Defined at 28 in lib/thread.h.'>rusage_t</a>
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/787.html' title='Multiple referred from 4 places.'>GETRUSAGE</a>(X) <a href='../S/208.html#L1212' title='Defined at 1212 in lib/thread.c.'>thread_getrusage</a>(X)
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='comment'>/* Linked list of thread. */</em>
+<a id='L40' name='L40'></a><strong class='reserved'>struct</strong> <a href='../R/10137.html' title='Multiple referred from 20 places.'>thread_list</a>
+<a id='L41' name='L41'></a><em class='brace'>{</em>
+<a id='L42' name='L42'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *head;
+<a id='L43' name='L43'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *tail;
+<a id='L44' name='L44'></a>  <strong class='reserved'>int</strong> count;
+<a id='L45' name='L45'></a><em class='brace'>}</em>;
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><em class='comment'>/* Master of the theads. */</em>
+<a id='L48' name='L48'></a><strong class='reserved'>struct</strong> <a href='../R/10143.html' title='Multiple referred from 101 places.'>thread_master</a>
+<a id='L49' name='L49'></a><em class='brace'>{</em>
+<a id='L50' name='L50'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> read;
+<a id='L51' name='L51'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> write;
+<a id='L52' name='L52'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> <a href='../S/469.html#L23' title='Defined at 23 in isisd/topology/random.c.'>timer</a>;
+<a id='L53' name='L53'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> <a href='../D/6458.html' title='Multiple defined in 4 places.'>event</a>;
+<a id='L54' name='L54'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> ready;
+<a id='L55' name='L55'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> unuse;
+<a id='L56' name='L56'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L40' title='Defined at 40 in lib/thread.h.'>thread_list</a> background;
+<a id='L57' name='L57'></a>  fd_set readfd;
+<a id='L58' name='L58'></a>  fd_set writefd;
+<a id='L59' name='L59'></a>  fd_set exceptfd;
+<a id='L60' name='L60'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> alloc;
+<a id='L61' name='L61'></a><em class='brace'>}</em>;
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> <a href='../R/10154.html' title='Multiple referred from 10 places.'>thread_type</a>;
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a><em class='comment'>/* ISO C99 maximum function name length is 63 */</em>
+<a id='L66' name='L66'></a><em class='sharp'>#define</em> <a href='../R/771.html' title='Multiple referred from 3 places.'>FUNCNAME_LEN</a>    64
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a><em class='comment'>/* Thread itself. */</em>
+<a id='L69' name='L69'></a><strong class='reserved'>struct</strong> <a href='../R/10120.html' title='Multiple referred from 884 places.'>thread</a>
+<a id='L70' name='L70'></a><em class='brace'>{</em>
+<a id='L71' name='L71'></a>  <a href='../S/279.html#L63' title='Defined at 63 in lib/thread.h.'>thread_type</a> type;             <em class='comment'>/* thread type */</em>
+<a id='L72' name='L72'></a>  <a href='../S/279.html#L63' title='Defined at 63 in lib/thread.h.'>thread_type</a> add_type;         <em class='comment'>/* thread type */</em>
+<a id='L73' name='L73'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *next;          <em class='comment'>/* next pointer of the thread */</em>   
+<a id='L74' name='L74'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *prev;          <em class='comment'>/* previous pointer of the thread */</em>
+<a id='L75' name='L75'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master; <em class='comment'>/* pointer to the struct thread_master. */</em>
+<a id='L76' name='L76'></a>  <strong class='reserved'>int</strong> (*func) (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *); <em class='comment'>/* event function */</em>
+<a id='L77' name='L77'></a>  <strong class='reserved'>void</strong> *arg;                    <em class='comment'>/* event argument */</em>
+<a id='L78' name='L78'></a>  <strong class='reserved'>union</strong> <em class='brace'>{</em>
+<a id='L79' name='L79'></a>    <strong class='reserved'>int</strong> val;                    <em class='comment'>/* second argument of the event. */</em>
+<a id='L80' name='L80'></a>    <strong class='reserved'>int</strong> fd;                     <em class='comment'>/* file descriptor in case of read/write. */</em>
+<a id='L81' name='L81'></a>    <strong class='reserved'>struct</strong> timeval sands;       <em class='comment'>/* rest of time sands value. */</em>
+<a id='L82' name='L82'></a>  <em class='brace'>}</em> u;
+<a id='L83' name='L83'></a>  <strong class='reserved'>struct</strong> timeval real;
+<a id='L84' name='L84'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L88' title='Defined at 88 in lib/thread.h.'>cpu_thread_history</a> *hist; <em class='comment'>/* cache pointer to cpu_history */</em>
+<a id='L85' name='L85'></a>  <strong class='reserved'>char</strong> funcname[<a href='../S/279.html#L66' title='Defined at 66 in lib/thread.h.'>FUNCNAME_LEN</a>];
+<a id='L86' name='L86'></a><em class='brace'>}</em>;
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a><strong class='reserved'>struct</strong> <a href='../R/5496.html' title='Multiple referred from 14 places.'>cpu_thread_history</a> 
+<a id='L89' name='L89'></a><em class='brace'>{</em>
+<a id='L90' name='L90'></a>  <strong class='reserved'>int</strong> (*func)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L91' name='L91'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> total_calls;
+<a id='L92' name='L92'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L97' title='Referred from 97 in lib/thread.h.'>time_stats</a>
+<a id='L93' name='L93'></a>  <em class='brace'>{</em>
+<a id='L94' name='L94'></a>    <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> total, max;
+<a id='L95' name='L95'></a>  <em class='brace'>}</em> real;
+<a id='L96' name='L96'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L303' title='Defined at 303 in config.h.'>HAVE_RUSAGE</a>
+<a id='L97' name='L97'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L92' title='Defined at 92 in lib/thread.h.'>time_stats</a> cpu;
+<a id='L98' name='L98'></a><em class='sharp'>#endif</em>
+<a id='L99' name='L99'></a>  <a href='../S/279.html#L63' title='Defined at 63 in lib/thread.h.'>thread_type</a> types;
+<a id='L100' name='L100'></a>  <strong class='reserved'>char</strong> funcname[<a href='../S/279.html#L66' title='Defined at 66 in lib/thread.h.'>FUNCNAME_LEN</a>];
+<a id='L101' name='L101'></a><em class='brace'>}</em>;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><em class='comment'>/* Clocks supported by Quagga */</em>
+<a id='L104' name='L104'></a><strong class='reserved'>enum</strong> <a href='../R/8920.html' title='Multiple referred from 2 places.'>quagga_clkid</a> <em class='brace'>{</em>
+<a id='L105' name='L105'></a>  <a href='../S/208.html#L217' title='Referred from 217 in lib/thread.c.'>QUAGGA_CLK_REALTIME</a> = 0,      <em class='comment'>/* ala gettimeofday() */</em>
+<a id='L106' name='L106'></a>  <a href='../R/3043.html' title='Multiple referred from 34 places.'>QUAGGA_CLK_MONOTONIC</a>,         <em class='comment'>/* monotonic, against an indeterminate base */</em>
+<a id='L107' name='L107'></a>  <a href='../S/208.html#L221' title='Referred from 221 in lib/thread.c.'>QUAGGA_CLK_REALTIME_STABILISED</a>, <em class='comment'>/* like realtime, but non-decrementing */</em>
+<a id='L108' name='L108'></a><em class='brace'>}</em>;
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a><em class='comment'>/* Thread types. */</em>
+<a id='L111' name='L111'></a><em class='sharp'>#define</em> <a href='../R/3638.html' title='Multiple referred from 5 places.'>THREAD_READ</a>           0
+<a id='L112' name='L112'></a><em class='sharp'>#define</em> <a href='../R/3648.html' title='Multiple referred from 5 places.'>THREAD_WRITE</a>          1
+<a id='L113' name='L113'></a><em class='sharp'>#define</em> <a href='../R/3642.html' title='Multiple referred from 8 places.'>THREAD_TIMER</a>          2
+<a id='L114' name='L114'></a><em class='sharp'>#define</em> <a href='../R/3634.html' title='Multiple referred from 6 places.'>THREAD_EVENT</a>          3
+<a id='L115' name='L115'></a><em class='sharp'>#define</em> <a href='../R/3639.html' title='Multiple referred from 4 places.'>THREAD_READY</a>          4
+<a id='L116' name='L116'></a><em class='sharp'>#define</em> <a href='../R/3633.html' title='Multiple referred from 6 places.'>THREAD_BACKGROUND</a>     5
+<a id='L117' name='L117'></a><em class='sharp'>#define</em> <a href='../R/3646.html' title='Multiple referred from 5 places.'>THREAD_UNUSED</a>         6
+<a id='L118' name='L118'></a><em class='sharp'>#define</em> <a href='../R/3635.html' title='Multiple referred from 4 places.'>THREAD_EXECUTE</a>        7
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a><em class='comment'>/* Thread yield time.  */</em>
+<a id='L121' name='L121'></a><em class='sharp'>#define</em> <a href='../S/208.html#L1208' title='Referred from 1208 in lib/thread.c.'>THREAD_YIELD_TIME_SLOT</a>     10 * 1000L <em class='comment'>/* 10ms */</em>
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a><em class='comment'>/* Macros. */</em>
+<a id='L124' name='L124'></a><em class='sharp'>#define</em> <a href='../R/3632.html' title='Multiple referred from 148 places.'>THREAD_ARG</a>(X) ((X)-&gt;arg)
+<a id='L125' name='L125'></a><em class='sharp'>#define</em> <a href='../R/3636.html' title='Multiple referred from 24 places.'>THREAD_FD</a>(X)  ((X)-&gt;u.fd)
+<a id='L126' name='L126'></a><em class='sharp'>#define</em> <a href='../R/3647.html' title='Multiple referred from 8 places.'>THREAD_VAL</a>(X) ((X)-&gt;u.val)
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a><em class='sharp'>#define</em> <a href='../R/3641.html' title='Multiple referred from 6 places.'>THREAD_READ_ON</a>(master,<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>,func,arg,sock) \
+<a id='L129' name='L129'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L130' name='L130'></a>    <strong class='reserved'>if</strong> (! <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) \
+<a id='L131' name='L131'></a>      <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> = <a href='../S/279.html#L165' title='Defined at 165 in lib/thread.h.'>thread_add_read</a> (master, func, arg, sock); \
+<a id='L132' name='L132'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a><em class='sharp'>#define</em> <a href='../R/3650.html' title='Multiple referred from 4 places.'>THREAD_WRITE_ON</a>(master,<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>,func,arg,sock) \
+<a id='L135' name='L135'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L136' name='L136'></a>    <strong class='reserved'>if</strong> (! <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) \
+<a id='L137' name='L137'></a>      <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> = <a href='../S/279.html#L166' title='Defined at 166 in lib/thread.h.'>thread_add_write</a> (master, func, arg, sock); \
+<a id='L138' name='L138'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a><em class='sharp'>#define</em> <a href='../R/3645.html' title='Multiple referred from 56 places.'>THREAD_TIMER_ON</a>(master,<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>,func,arg,time) \
+<a id='L141' name='L141'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L142' name='L142'></a>    <strong class='reserved'>if</strong> (! <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) \
+<a id='L143' name='L143'></a>      <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> = <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, func, arg, time); \
+<a id='L144' name='L144'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a><em class='sharp'>#define</em> <a href='../R/3643.html' title='Multiple referred from 17 places.'>THREAD_TIMER_MSEC_ON</a>(master,<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>,func,arg,time) \
+<a id='L147' name='L147'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L148' name='L148'></a>    <strong class='reserved'>if</strong> (! <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) \
+<a id='L149' name='L149'></a>      <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> = <a href='../S/279.html#L168' title='Defined at 168 in lib/thread.h.'>thread_add_timer_msec</a> (master, func, arg, time); \
+<a id='L150' name='L150'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a><em class='sharp'>#define</em> <a href='../R/3637.html' title='Multiple referred from 59 places.'>THREAD_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) \
+<a id='L153' name='L153'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em> \
+<a id='L154' name='L154'></a>    <strong class='reserved'>if</strong> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>) \
+<a id='L155' name='L155'></a>      <em class='brace'>{</em> \
+<a id='L156' name='L156'></a>        <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a> (<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>); \
+<a id='L157' name='L157'></a>        <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>; \
+<a id='L158' name='L158'></a>      <em class='brace'>}</em> \
+<a id='L159' name='L159'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong> (0)
+<a id='L160' name='L160'></a>
+<a id='L161' name='L161'></a><em class='sharp'>#define</em> <a href='../R/3640.html' title='Multiple referred from 2 places.'>THREAD_READ_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L162' name='L162'></a><em class='sharp'>#define</em> <a href='../R/3649.html' title='Multiple referred from 2 places.'>THREAD_WRITE_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L163' name='L163'></a><em class='sharp'>#define</em> <a href='../R/3644.html' title='Multiple referred from 40 places.'>THREAD_TIMER_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)  <a href='../S/279.html#L152' title='Defined at 152 in lib/thread.h.'>THREAD_OFF</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L164' name='L164'></a>
+<a id='L165' name='L165'></a><em class='sharp'>#define</em> <a href='../R/10123.html' title='Multiple referred from 35 places.'>thread_add_read</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L716' title='Defined at 716 in lib/thread.c.'>funcname_thread_add_read</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L166' name='L166'></a><em class='sharp'>#define</em> <a href='../R/10127.html' title='Multiple referred from 12 places.'>thread_add_write</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L739' title='Defined at 739 in lib/thread.c.'>funcname_thread_add_write</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L167' name='L167'></a><em class='sharp'>#define</em> <a href='../R/10124.html' title='Multiple referred from 75 places.'>thread_add_timer</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L803' title='Defined at 803 in lib/thread.c.'>funcname_thread_add_timer</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L168' name='L168'></a><em class='sharp'>#define</em> <a href='../R/10125.html' title='Multiple referred from 11 places.'>thread_add_timer_msec</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L820' title='Defined at 820 in lib/thread.c.'>funcname_thread_add_timer_msec</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L169' name='L169'></a><em class='sharp'>#define</em> <a href='../R/10122.html' title='Multiple referred from 91 places.'>thread_add_event</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L863' title='Defined at 863 in lib/thread.c.'>funcname_thread_add_event</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L170' name='L170'></a><em class='sharp'>#define</em> <a href='../R/10133.html' title='Multiple referred from 18 places.'>thread_execute</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L1293' title='Defined at 1293 in lib/thread.c.'>funcname_thread_execute</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a><em class='comment'>/* The 4th arg to thread_add_background is the # of milliseconds to delay. */</em>
+<a id='L173' name='L173'></a><em class='sharp'>#define</em> <a href='../R/10121.html' title='Multiple referred from 7 places.'>thread_add_background</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v) <a href='../S/208.html#L837' title='Defined at 837 in lib/thread.c.'>funcname_thread_add_background</a>(m,f,<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,v,#f)
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L176' name='L176'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *<a href='../S/208.html#L530' title='Defined at 530 in lib/thread.c.'>thread_master_create</a> (<strong class='reserved'>void</strong>);
+<a id='L177' name='L177'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/208.html#L618' title='Defined at 618 in lib/thread.c.'>thread_master_free</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *);
+<a id='L178' name='L178'></a>
+<a id='L179' name='L179'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L716' title='Defined at 716 in lib/thread.c.'>funcname_thread_add_read</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *, 
+<a id='L180' name='L180'></a>                                                <strong class='reserved'>int</strong> (*)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L181' name='L181'></a>                                                <strong class='reserved'>void</strong> *, <strong class='reserved'>int</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong>*);
+<a id='L182' name='L182'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L739' title='Defined at 739 in lib/thread.c.'>funcname_thread_add_write</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *,
+<a id='L183' name='L183'></a>                                                 <strong class='reserved'>int</strong> (*)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L184' name='L184'></a>                                                 <strong class='reserved'>void</strong> *, <strong class='reserved'>int</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong>*);
+<a id='L185' name='L185'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L803' title='Defined at 803 in lib/thread.c.'>funcname_thread_add_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *,
+<a id='L186' name='L186'></a>                                                 <strong class='reserved'>int</strong> (*)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L187' name='L187'></a>                                                 <strong class='reserved'>void</strong> *, <strong class='reserved'>long</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong>*);
+<a id='L188' name='L188'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L820' title='Defined at 820 in lib/thread.c.'>funcname_thread_add_timer_msec</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *,
+<a id='L189' name='L189'></a>                                                      <strong class='reserved'>int</strong> (*)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L190' name='L190'></a>                                                      <strong class='reserved'>void</strong> *, <strong class='reserved'>long</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong>*);
+<a id='L191' name='L191'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L863' title='Defined at 863 in lib/thread.c.'>funcname_thread_add_event</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *,
+<a id='L192' name='L192'></a>                                                 <strong class='reserved'>int</strong> (*)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L193' name='L193'></a>                                                 <strong class='reserved'>void</strong> *, <strong class='reserved'>int</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong>*);
+<a id='L194' name='L194'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L837' title='Defined at 837 in lib/thread.c.'>funcname_thread_add_background</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *,
+<a id='L195' name='L195'></a>                                               <strong class='reserved'>int</strong> (*func)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L196' name='L196'></a>                                               <strong class='reserved'>void</strong> *arg,
+<a id='L197' name='L197'></a>                                               <strong class='reserved'>long</strong> milliseconds_to_delay,
+<a id='L198' name='L198'></a>                                               <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *funcname);
+<a id='L199' name='L199'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L1293' title='Defined at 1293 in lib/thread.c.'>funcname_thread_execute</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *,
+<a id='L200' name='L200'></a>                                               <strong class='reserved'>int</strong> (*)(<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *),
+<a id='L201' name='L201'></a>                                               <strong class='reserved'>void</strong> *, <strong class='reserved'>int</strong>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L202' name='L202'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L203' name='L203'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../S/208.html#L918' title='Defined at 918 in lib/thread.c.'>thread_cancel_event</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *, <strong class='reserved'>void</strong> *);
+<a id='L204' name='L204'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/208.html#L1050' title='Defined at 1050 in lib/thread.c.'>thread_fetch</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *, <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L205' name='L205'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/208.html#L1233' title='Defined at 1233 in lib/thread.c.'>thread_call</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L206' name='L206'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/208.html#L656' title='Defined at 656 in lib/thread.c.'>thread_timer_remain_second</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L207' name='L207'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/208.html#L1204' title='Defined at 1204 in lib/thread.c.'>thread_should_yield</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *);
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a><em class='comment'>/* Internal libzebra exports */</em>
+<a id='L210' name='L210'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/208.html#L1212' title='Defined at 1212 in lib/thread.c.'>thread_getrusage</a> (<a href='../S/279.html#L35' title='Defined at 35 in lib/thread.h.'>RUSAGE_T</a> *);
+<a id='L211' name='L211'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> show_thread_cpu_cmd;
+<a id='L212' name='L212'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L144' title='Defined at 144 in lib/command.h.'>cmd_element</a> clear_thread_cpu_cmd;
+<a id='L213' name='L213'></a>
+<a id='L214' name='L214'></a><em class='comment'>/* replacements for the system gettimeofday(), clock_gettime() and</em>
+<a id='L215' name='L215'></a><em class='comment'> * time() functions, providing support for non-decrementing clock on</em>
+<a id='L216' name='L216'></a><em class='comment'> * all systems, and fully monotonic on /some/ systems.</em>
+<a id='L217' name='L217'></a><em class='comment'> */</em>
+<a id='L218' name='L218'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/208.html#L213' title='Defined at 213 in lib/thread.c.'>quagga_gettime</a> (<strong class='reserved'>enum</strong> <a href='../S/279.html#L104' title='Defined at 104 in lib/thread.h.'>quagga_clkid</a>, <strong class='reserved'>struct</strong> timeval *);
+<a id='L219' name='L219'></a><strong class='reserved'>extern</strong> time_t <a href='../S/208.html#L234' title='Defined at 234 in lib/thread.c.'>quagga_time</a> (time_t *);
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a><em class='comment'>/* Returns elapsed real (wall clock) time. */</em>
+<a id='L222' name='L222'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> <a href='../S/208.html#L1182' title='Defined at 1182 in lib/thread.c.'>thread_consumed_time</a>(<a href='../S/279.html#L35' title='Defined at 35 in lib/thread.h.'>RUSAGE_T</a> *after, <a href='../S/279.html#L35' title='Defined at 35 in lib/thread.h.'>RUSAGE_T</a> *before,
+<a id='L223' name='L223'></a>                                          <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> *cpu_time_elapsed);
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a><em class='comment'>/* Global variable containing a recent result from gettimeofday.  This can</em>
+<a id='L226' name='L226'></a><em class='comment'>   be used instead of calling gettimeofday if a recent value is sufficient.</em>
+<a id='L227' name='L227'></a><em class='comment'>   This is guaranteed to be refreshed before a thread is called. */</em>
+<a id='L228' name='L228'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> timeval recent_time;
+<a id='L229' name='L229'></a><em class='comment'>/* Similar to recent_time, but a monotonically increasing time value */</em>
+<a id='L230' name='L230'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> timeval <a href='../S/208.html#L245' title='Defined at 245 in lib/thread.c.'>recent_relative_time</a> (<strong class='reserved'>void</strong>);
+<a id='L231' name='L231'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_THREAD_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

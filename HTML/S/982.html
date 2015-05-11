@@ -1,0 +1,575 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>zebra/zebra_fpm_netlink.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1038.html'>zebra</a>/zebra_fpm_netlink.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L41'>[^]</a><a href='#L528'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L41' title='Defined at 41.'>addr_to_a</a></li>
+<li><a href='#L69' title='Defined at 69.'>prefix_addr_to_a</a></li>
+<li><a href='#L83' title='Defined at 83.'>af_addr_size</a></li>
+<li><a href='#L155' title='Defined at 155.'>netlink_route_info_add_nh</a></li>
+<li><a href='#L251' title='Defined at 251.'>netlink_proto_from_route_type</a></li>
+<li><a href='#L272' title='Defined at 272.'>netlink_route_info_fill</a></li>
+<li><a href='#L374' title='Defined at 374.'>netlink_route_info_encode</a></li>
+<li><a href='#L497' title='Defined at 497.'>zfpm_log_route_info</a></li>
+<li><a href='#L528' title='Defined at 528.'>zfpm_netlink_encode_route</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Code for encoding/decoding FPM messages that are in netlink format.</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (C) 1997, 98, 99 Kunihiro Ishiguro</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2012 by Open Source Routing.</em>
+<a id='L6' name='L6'></a><em class='comment'> * Copyright (C) 2012 by Internet Systems Consortium, Inc. ("ISC")</em>
+<a id='L7' name='L7'></a><em class='comment'> *</em>
+<a id='L8' name='L8'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L9' name='L9'></a><em class='comment'> *</em>
+<a id='L10' name='L10'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L11' name='L11'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L12' name='L12'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L13' name='L13'></a><em class='comment'> * later version.</em>
+<a id='L14' name='L14'></a><em class='comment'> *</em>
+<a id='L15' name='L15'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L16' name='L16'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L17' name='L17'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L18' name='L18'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L19' name='L19'></a><em class='comment'> *</em>
+<a id='L20' name='L20'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L21' name='L21'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L22' name='L22'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L23' name='L23'></a><em class='comment'> * 02111-1307, USA.</em>
+<a id='L24' name='L24'></a><em class='comment'> */</em>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='981.html'>rib.h</a>"
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='969.html'>rt_netlink.h</a>"
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='961.html'>zebra_fpm_private.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='comment'>/*</em>
+<a id='L36' name='L36'></a><em class='comment'> * addr_to_a</em>
+<a id='L37' name='L37'></a><em class='comment'> *</em>
+<a id='L38' name='L38'></a><em class='comment'> * Returns string representation of an address of the given AF.</em>
+<a id='L39' name='L39'></a><em class='comment'> */</em>
+<a id='L40' name='L40'></a><strong class='reserved'>static</strong> <strong class='reserved'>inline</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L41' name='L41'></a><a href='../R/4405.html' title='Multiple referred from 2 places.'>addr_to_a</a> (u_char af, <strong class='reserved'>void</strong> *addr)
+<a id='L42' name='L42'></a><em class='brace'>{</em>
+<a id='L43' name='L43'></a>  <strong class='reserved'>if</strong> (!addr)
+<a id='L44' name='L44'></a>    <strong class='reserved'>return</strong> "&lt;No address&gt;";
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a>  <strong class='reserved'>switch</strong> (af)
+<a id='L47' name='L47'></a>    <em class='brace'>{</em>
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a>    <strong class='reserved'>case</strong> AF_INET:
+<a id='L50' name='L50'></a>      <strong class='reserved'>return</strong> inet_ntoa (*((<strong class='reserved'>struct</strong> in_addr *) addr));
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L53' name='L53'></a>    <strong class='reserved'>case</strong> AF_INET6:
+<a id='L54' name='L54'></a>      <strong class='reserved'>return</strong> <a href='../S/250.html#L899' title='Defined at 899 in lib/prefix.c.'>inet6_ntoa</a> (*((<strong class='reserved'>struct</strong> in6_addr *) addr));
+<a id='L55' name='L55'></a><em class='sharp'>#endif</em>
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a>    <strong class='reserved'>default</strong>:
+<a id='L58' name='L58'></a>      <strong class='reserved'>return</strong> "&lt;Addr in unknown AF&gt;";
+<a id='L59' name='L59'></a>    <em class='brace'>}</em>
+<a id='L60' name='L60'></a><em class='brace'>}</em>
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a><em class='comment'>/*</em>
+<a id='L63' name='L63'></a><em class='comment'> * prefix_addr_to_a</em>
+<a id='L64' name='L64'></a><em class='comment'> *</em>
+<a id='L65' name='L65'></a><em class='comment'> * Convience wrapper that returns a human-readable string for the</em>
+<a id='L66' name='L66'></a><em class='comment'> * address in a prefix.</em>
+<a id='L67' name='L67'></a><em class='comment'> */</em>
+<a id='L68' name='L68'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L69' name='L69'></a><a href='../S/982.html#L504' title='Referred from 504 in zebra/zebra_fpm_netlink.c.'>prefix_addr_to_a</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)
+<a id='L70' name='L70'></a><em class='brace'>{</em>
+<a id='L71' name='L71'></a>  <strong class='reserved'>if</strong> (!<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)
+<a id='L72' name='L72'></a>    <strong class='reserved'>return</strong> "&lt;No address&gt;";
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a>  <strong class='reserved'>return</strong> <a href='../S/982.html#L41' title='Defined at 41 in zebra/zebra_fpm_netlink.c.'>addr_to_a</a> (<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>-&gt;family, &amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L75' name='L75'></a><em class='brace'>}</em>
+<a id='L76' name='L76'></a>
+<a id='L77' name='L77'></a><em class='comment'>/*</em>
+<a id='L78' name='L78'></a><em class='comment'> * af_addr_size</em>
+<a id='L79' name='L79'></a><em class='comment'> *</em>
+<a id='L80' name='L80'></a><em class='comment'> * The size of an address in a given address family.</em>
+<a id='L81' name='L81'></a><em class='comment'> */</em>
+<a id='L82' name='L82'></a><strong class='reserved'>static</strong> size_t
+<a id='L83' name='L83'></a><a href='../S/982.html#L400' title='Referred from 400 in zebra/zebra_fpm_netlink.c.'>af_addr_size</a> (u_char af)
+<a id='L84' name='L84'></a><em class='brace'>{</em>
+<a id='L85' name='L85'></a>  <strong class='reserved'>switch</strong> (af)
+<a id='L86' name='L86'></a>    <em class='brace'>{</em>
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a>    <strong class='reserved'>case</strong> AF_INET:
+<a id='L89' name='L89'></a>      <strong class='reserved'>return</strong> 4;
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L92' name='L92'></a>    <strong class='reserved'>case</strong> AF_INET6:
+<a id='L93' name='L93'></a>      <strong class='reserved'>return</strong> 16;
+<a id='L94' name='L94'></a><em class='sharp'>#endif</em>
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>    <strong class='reserved'>default</strong>:
+<a id='L97' name='L97'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(0);
+<a id='L98' name='L98'></a>      <strong class='reserved'>return</strong> 16;
+<a id='L99' name='L99'></a>    <em class='brace'>}</em>
+<a id='L100' name='L100'></a><em class='brace'>}</em>
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><em class='comment'>/*</em>
+<a id='L103' name='L103'></a><em class='comment'> * netlink_nh_info_t</em>
+<a id='L104' name='L104'></a><em class='comment'> *</em>
+<a id='L105' name='L105'></a><em class='comment'> * Holds information about a single nexthop for netlink. These info</em>
+<a id='L106' name='L106'></a><em class='comment'> * structures are transient and may contain pointers into rib</em>
+<a id='L107' name='L107'></a><em class='comment'> * data structures for convenience.</em>
+<a id='L108' name='L108'></a><em class='comment'> */</em>
+<a id='L109' name='L109'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> netlink_nh_info_t_
+<a id='L110' name='L110'></a><em class='brace'>{</em>
+<a id='L111' name='L111'></a>  <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> if_index;
+<a id='L112' name='L112'></a>  <strong class='reserved'>union</strong> <a href='../S/981.html#L34' title='Defined at 34 in zebra/rib.h.'>g_addr</a> *gateway;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a>  <em class='comment'>/*</em>
+<a id='L115' name='L115'></a><em class='comment'>   * Information from the struct nexthop from which this nh was</em>
+<a id='L116' name='L116'></a><em class='comment'>   * derived. For debug purposes only.</em>
+<a id='L117' name='L117'></a><em class='comment'>   */</em>
+<a id='L118' name='L118'></a>  <strong class='reserved'>int</strong> recursive;
+<a id='L119' name='L119'></a>  <strong class='reserved'>enum</strong> <a href='../S/981.html#L227' title='Defined at 227 in zebra/rib.h.'>nexthop_types_t</a> type;
+<a id='L120' name='L120'></a><em class='brace'>}</em> <a href='../R/7314.html' title='Multiple referred from 4 places.'>netlink_nh_info_t</a>;
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a><em class='comment'>/*</em>
+<a id='L123' name='L123'></a><em class='comment'> * netlink_route_info_t</em>
+<a id='L124' name='L124'></a><em class='comment'> *</em>
+<a id='L125' name='L125'></a><em class='comment'> * A structure for holding information for a netlink route message.</em>
+<a id='L126' name='L126'></a><em class='comment'> */</em>
+<a id='L127' name='L127'></a><strong class='reserved'>typedef</strong> <strong class='reserved'>struct</strong> netlink_route_info_t_
+<a id='L128' name='L128'></a><em class='brace'>{</em>
+<a id='L129' name='L129'></a>  <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> nlmsg_type;
+<a id='L130' name='L130'></a>  u_char rtm_type;
+<a id='L131' name='L131'></a>  <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> rtm_table;
+<a id='L132' name='L132'></a>  u_char rtm_protocol;
+<a id='L133' name='L133'></a>  u_char af;
+<a id='L134' name='L134'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L135' name='L135'></a>  <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> *<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L136' name='L136'></a>  <strong class='reserved'>int</strong> num_nhs;
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <em class='comment'>/*</em>
+<a id='L139' name='L139'></a><em class='comment'>   * Nexthop structures. We keep things simple for now by enforcing a</em>
+<a id='L140' name='L140'></a><em class='comment'>   * maximum of 64 in case MULTIPATH_NUM is 0;</em>
+<a id='L141' name='L141'></a><em class='comment'>   */</em>
+<a id='L142' name='L142'></a>  <a href='../S/982.html#L120' title='Defined at 120 in zebra/zebra_fpm_netlink.c.'>netlink_nh_info_t</a> nhs[<a href='../D/1844.html' title='Multiple defined in 5 places.'>MAX</a> (MULTIPATH_NUM, 64)];
+<a id='L143' name='L143'></a>  <strong class='reserved'>union</strong> <a href='../S/981.html#L34' title='Defined at 34 in zebra/rib.h.'>g_addr</a> *pref_src;
+<a id='L144' name='L144'></a><em class='brace'>}</em> <a href='../R/7325.html' title='Multiple referred from 5 places.'>netlink_route_info_t</a>;
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a><em class='comment'>/*</em>
+<a id='L147' name='L147'></a><em class='comment'> * netlink_route_info_add_nh</em>
+<a id='L148' name='L148'></a><em class='comment'> *</em>
+<a id='L149' name='L149'></a><em class='comment'> * Add information about the given nexthop to the given route info</em>
+<a id='L150' name='L150'></a><em class='comment'> * structure.</em>
+<a id='L151' name='L151'></a><em class='comment'> *</em>
+<a id='L152' name='L152'></a><em class='comment'> * Returns TRUE if a nexthop was added, FALSE otherwise.</em>
+<a id='L153' name='L153'></a><em class='comment'> */</em>
+<a id='L154' name='L154'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L155' name='L155'></a><a href='../R/7322.html' title='Multiple referred from 2 places.'>netlink_route_info_add_nh</a> (<a href='../S/982.html#L144' title='Defined at 144 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_t</a> *ri, <strong class='reserved'>struct</strong> <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>)
+<a id='L156' name='L156'></a><em class='brace'>{</em>
+<a id='L157' name='L157'></a>  <a href='../S/982.html#L120' title='Defined at 120 in zebra/zebra_fpm_netlink.c.'>netlink_nh_info_t</a> nhi;
+<a id='L158' name='L158'></a>  <strong class='reserved'>union</strong> <a href='../S/981.html#L34' title='Defined at 34 in zebra/rib.h.'>g_addr</a> *src;
+<a id='L159' name='L159'></a>
+<a id='L160' name='L160'></a>  memset (&amp;nhi, 0, <strong class='reserved'>sizeof</strong> (nhi));
+<a id='L161' name='L161'></a>  src = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a>  <strong class='reserved'>if</strong> (ri-&gt;num_nhs &gt;= (<strong class='reserved'>int</strong>) <a href='../S/191.html#L394' title='Defined at 394 in lib/zebra.h.'>ZEBRA_NUM_OF</a> (ri-&gt;nhs))
+<a id='L164' name='L164'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L165' name='L165'></a>
+<a id='L166' name='L166'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/981.html#L255' title='Defined at 255 in zebra/rib.h.'>NEXTHOP_FLAG_RECURSIVE</a>))
+<a id='L167' name='L167'></a>    <em class='brace'>{</em>
+<a id='L168' name='L168'></a>      nhi.recursive = 1;
+<a id='L169' name='L169'></a>      nhi.type = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype;
+<a id='L170' name='L170'></a>      nhi.if_index = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rifindex;
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>      <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IPV4
+<a id='L173' name='L173'></a>          || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IPV4_IFINDEX)
+<a id='L174' name='L174'></a>        <em class='brace'>{</em>
+<a id='L175' name='L175'></a>          nhi.gateway = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rgate;
+<a id='L176' name='L176'></a>          <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src.ipv4.s_addr)
+<a id='L177' name='L177'></a>            src = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src;
+<a id='L178' name='L178'></a>        <em class='brace'>}</em>
+<a id='L179' name='L179'></a>
+<a id='L180' name='L180'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L181' name='L181'></a>      <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IPV6
+<a id='L182' name='L182'></a>          || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IPV6_IFINDEX
+<a id='L183' name='L183'></a>          || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IPV6_IFNAME)
+<a id='L184' name='L184'></a>        <em class='brace'>{</em>
+<a id='L185' name='L185'></a>          nhi.gateway = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rgate;
+<a id='L186' name='L186'></a>        <em class='brace'>}</em>
+<a id='L187' name='L187'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a>      <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IFINDEX
+<a id='L190' name='L190'></a>          || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;rtype == NEXTHOP_TYPE_IFNAME)
+<a id='L191' name='L191'></a>        <em class='brace'>{</em>
+<a id='L192' name='L192'></a>          <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src.ipv4.s_addr)
+<a id='L193' name='L193'></a>            src = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src;
+<a id='L194' name='L194'></a>        <em class='brace'>}</em>
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>      <strong class='reserved'>goto</strong> done;
+<a id='L197' name='L197'></a>    <em class='brace'>}</em>
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>  nhi.recursive = 0;
+<a id='L200' name='L200'></a>  nhi.type = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type;
+<a id='L201' name='L201'></a>  nhi.if_index = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;ifindex;
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a>  <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IPV4
+<a id='L204' name='L204'></a>      || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IPV4_IFINDEX)
+<a id='L205' name='L205'></a>    <em class='brace'>{</em>
+<a id='L206' name='L206'></a>      nhi.gateway = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;gate;
+<a id='L207' name='L207'></a>      <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src.ipv4.s_addr)
+<a id='L208' name='L208'></a>        src = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src;
+<a id='L209' name='L209'></a>    <em class='brace'>}</em>
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L212' name='L212'></a>  <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IPV6
+<a id='L213' name='L213'></a>      || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IPV6_IFNAME
+<a id='L214' name='L214'></a>      || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IPV6_IFINDEX)
+<a id='L215' name='L215'></a>    <em class='brace'>{</em>
+<a id='L216' name='L216'></a>      nhi.gateway = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;gate;
+<a id='L217' name='L217'></a>    <em class='brace'>}</em>
+<a id='L218' name='L218'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a>  <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IFINDEX
+<a id='L221' name='L221'></a>      || <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;type == NEXTHOP_TYPE_IFNAME)
+<a id='L222' name='L222'></a>    <em class='brace'>{</em>
+<a id='L223' name='L223'></a>      <strong class='reserved'>if</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src.ipv4.s_addr)
+<a id='L224' name='L224'></a>        src = &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;src;
+<a id='L225' name='L225'></a>    <em class='brace'>}</em>
+<a id='L226' name='L226'></a>
+<a id='L227' name='L227'></a>  <em class='comment'>/*</em>
+<a id='L228' name='L228'></a><em class='comment'>   * Fall through...</em>
+<a id='L229' name='L229'></a><em class='comment'>   */</em>
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a> done:
+<a id='L232' name='L232'></a>  <strong class='reserved'>if</strong> (!nhi.gateway &amp;&amp; nhi.if_index == 0)
+<a id='L233' name='L233'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a>  <em class='comment'>/*</em>
+<a id='L236' name='L236'></a><em class='comment'>   * We have a valid nhi. Copy the structure over to the route_info.</em>
+<a id='L237' name='L237'></a><em class='comment'>   */</em>
+<a id='L238' name='L238'></a>  ri-&gt;nhs[ri-&gt;num_nhs] = nhi;
+<a id='L239' name='L239'></a>  ri-&gt;num_nhs++;
+<a id='L240' name='L240'></a>
+<a id='L241' name='L241'></a>  <strong class='reserved'>if</strong> (src &amp;&amp; !ri-&gt;pref_src)
+<a id='L242' name='L242'></a>    ri-&gt;pref_src = src;
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L245' name='L245'></a><em class='brace'>}</em>
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a><em class='comment'>/*</em>
+<a id='L248' name='L248'></a><em class='comment'> * netlink_proto_from_route_type</em>
+<a id='L249' name='L249'></a><em class='comment'> */</em>
+<a id='L250' name='L250'></a><strong class='reserved'>static</strong> u_char
+<a id='L251' name='L251'></a><a href='../S/982.html#L295' title='Referred from 295 in zebra/zebra_fpm_netlink.c.'>netlink_proto_from_route_type</a> (<strong class='reserved'>int</strong> type)
+<a id='L252' name='L252'></a><em class='brace'>{</em>
+<a id='L253' name='L253'></a>  <strong class='reserved'>switch</strong> (type)
+<a id='L254' name='L254'></a>    <em class='brace'>{</em>
+<a id='L255' name='L255'></a>    <strong class='reserved'>case</strong> <a href='../S/280.html#L9' title='Defined at 9 in lib/route_types.h.'>ZEBRA_ROUTE_KERNEL</a>:
+<a id='L256' name='L256'></a>    <strong class='reserved'>case</strong> <a href='../S/280.html#L10' title='Defined at 10 in lib/route_types.h.'>ZEBRA_ROUTE_CONNECT</a>:
+<a id='L257' name='L257'></a>      <strong class='reserved'>return</strong> RTPROT_KERNEL;
+<a id='L258' name='L258'></a>
+<a id='L259' name='L259'></a>    <strong class='reserved'>default</strong>:
+<a id='L260' name='L260'></a>      <strong class='reserved'>return</strong> RTPROT_ZEBRA;
+<a id='L261' name='L261'></a>    <em class='brace'>}</em>
+<a id='L262' name='L262'></a><em class='brace'>}</em>
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a><em class='comment'>/*</em>
+<a id='L265' name='L265'></a><em class='comment'> * netlink_route_info_fill</em>
+<a id='L266' name='L266'></a><em class='comment'> *</em>
+<a id='L267' name='L267'></a><em class='comment'> * Fill out the route information object from the given route.</em>
+<a id='L268' name='L268'></a><em class='comment'> *</em>
+<a id='L269' name='L269'></a><em class='comment'> * Returns TRUE on success and FALSE on failure.</em>
+<a id='L270' name='L270'></a><em class='comment'> */</em>
+<a id='L271' name='L271'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L272' name='L272'></a><a href='../S/982.html#L535' title='Referred from 535 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_fill</a> (<a href='../S/982.html#L144' title='Defined at 144 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_t</a> *ri, <strong class='reserved'>int</strong> cmd,
+<a id='L273' name='L273'></a>                         <a href='../S/981.html#L125' title='Defined at 125 in zebra/rib.h.'>rib_dest_t</a> *dest, <strong class='reserved'>struct</strong> <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a> *<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>)
+<a id='L274' name='L274'></a><em class='brace'>{</em>
+<a id='L275' name='L275'></a>  <strong class='reserved'>struct</strong> <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> *<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L276' name='L276'></a>  <strong class='reserved'>int</strong> discard;
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a>  memset (ri, 0, <strong class='reserved'>sizeof</strong> (*ri));
+<a id='L279' name='L279'></a>
+<a id='L280' name='L280'></a>  ri-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = <a href='../S/981.html#L461' title='Defined at 461 in zebra/rib.h.'>rib_dest_prefix</a> (dest);
+<a id='L281' name='L281'></a>  ri-&gt;af = <a href='../S/981.html#L472' title='Defined at 472 in zebra/rib.h.'>rib_dest_af</a> (dest);
+<a id='L282' name='L282'></a>
+<a id='L283' name='L283'></a>  ri-&gt;nlmsg_type = cmd;
+<a id='L284' name='L284'></a>  ri-&gt;rtm_table = <a href='../S/981.html#L490' title='Defined at 490 in zebra/rib.h.'>rib_dest_vrf</a> (dest)-&gt;id;
+<a id='L285' name='L285'></a>  ri-&gt;rtm_protocol = RTPROT_UNSPEC;
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a>  <em class='comment'>/*</em>
+<a id='L288' name='L288'></a><em class='comment'>   * An RTM_DELROUTE need not be accompanied by any nexthops,</em>
+<a id='L289' name='L289'></a><em class='comment'>   * particularly in our communication with the FPM.</em>
+<a id='L290' name='L290'></a><em class='comment'>   */</em>
+<a id='L291' name='L291'></a>  <strong class='reserved'>if</strong> (cmd == RTM_DELROUTE &amp;&amp; !<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>)
+<a id='L292' name='L292'></a>    <strong class='reserved'>goto</strong> skip;
+<a id='L293' name='L293'></a>
+<a id='L294' name='L294'></a>  <strong class='reserved'>if</strong> (<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>)
+<a id='L295' name='L295'></a>    ri-&gt;rtm_protocol = <a href='../S/982.html#L251' title='Defined at 251 in zebra/zebra_fpm_netlink.c.'>netlink_proto_from_route_type</a> (<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;type);
+<a id='L296' name='L296'></a>
+<a id='L297' name='L297'></a>  <strong class='reserved'>if</strong> ((<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/191.html#L474' title='Defined at 474 in lib/zebra.h.'>ZEBRA_FLAG_BLACKHOLE</a>) || (<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/191.html#L479' title='Defined at 479 in lib/zebra.h.'>ZEBRA_FLAG_REJECT</a>))
+<a id='L298' name='L298'></a>    discard = 1;
+<a id='L299' name='L299'></a>  <strong class='reserved'>else</strong>
+<a id='L300' name='L300'></a>    discard = 0;
+<a id='L301' name='L301'></a>
+<a id='L302' name='L302'></a>  <strong class='reserved'>if</strong> (cmd == RTM_NEWROUTE)
+<a id='L303' name='L303'></a>    <em class='brace'>{</em>
+<a id='L304' name='L304'></a>      <strong class='reserved'>if</strong> (discard)
+<a id='L305' name='L305'></a>        <em class='brace'>{</em>
+<a id='L306' name='L306'></a>          <strong class='reserved'>if</strong> (<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/191.html#L474' title='Defined at 474 in lib/zebra.h.'>ZEBRA_FLAG_BLACKHOLE</a>)
+<a id='L307' name='L307'></a>            ri-&gt;rtm_type = RTN_BLACKHOLE;
+<a id='L308' name='L308'></a>          <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> &amp; <a href='../S/191.html#L479' title='Defined at 479 in lib/zebra.h.'>ZEBRA_FLAG_REJECT</a>)
+<a id='L309' name='L309'></a>            ri-&gt;rtm_type = RTN_UNREACHABLE;
+<a id='L310' name='L310'></a>          <strong class='reserved'>else</strong>
+<a id='L311' name='L311'></a>            <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (0);
+<a id='L312' name='L312'></a>        <em class='brace'>}</em>
+<a id='L313' name='L313'></a>      <strong class='reserved'>else</strong>
+<a id='L314' name='L314'></a>        ri-&gt;rtm_type = RTN_UNICAST;
+<a id='L315' name='L315'></a>    <em class='brace'>}</em>
+<a id='L316' name='L316'></a>
+<a id='L317' name='L317'></a>  ri-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = &amp;<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>;
+<a id='L318' name='L318'></a>
+<a id='L319' name='L319'></a>  <strong class='reserved'>if</strong> (discard)
+<a id='L320' name='L320'></a>    <em class='brace'>{</em>
+<a id='L321' name='L321'></a>      <strong class='reserved'>goto</strong> skip;
+<a id='L322' name='L322'></a>    <em class='brace'>}</em>
+<a id='L323' name='L323'></a>
+<a id='L324' name='L324'></a>  <em class='comment'>/* Multipath case. */</em>
+<a id='L325' name='L325'></a>  <strong class='reserved'>if</strong> (<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;nexthop_active_num == 1 || MULTIPATH_NUM == 1)
+<a id='L326' name='L326'></a>    <em class='brace'>{</em>
+<a id='L327' name='L327'></a>      <strong class='reserved'>for</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>; <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>; <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;next)
+<a id='L328' name='L328'></a>        <em class='brace'>{</em>
+<a id='L329' name='L329'></a>
+<a id='L330' name='L330'></a>          <strong class='reserved'>if</strong> ((cmd == RTM_NEWROUTE
+<a id='L331' name='L331'></a>               &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/981.html#L253' title='Defined at 253 in zebra/rib.h.'>NEXTHOP_FLAG_ACTIVE</a>))
+<a id='L332' name='L332'></a>              || (cmd == RTM_DELROUTE
+<a id='L333' name='L333'></a>                  &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/981.html#L254' title='Defined at 254 in zebra/rib.h.'>NEXTHOP_FLAG_FIB</a>)))
+<a id='L334' name='L334'></a>            <em class='brace'>{</em>
+<a id='L335' name='L335'></a>              <a href='../S/982.html#L155' title='Defined at 155 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_add_nh</a> (ri, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L336' name='L336'></a>              <strong class='reserved'>break</strong>;
+<a id='L337' name='L337'></a>            <em class='brace'>}</em>
+<a id='L338' name='L338'></a>        <em class='brace'>}</em>
+<a id='L339' name='L339'></a>    <em class='brace'>}</em>
+<a id='L340' name='L340'></a>  <strong class='reserved'>else</strong>
+<a id='L341' name='L341'></a>    <em class='brace'>{</em>
+<a id='L342' name='L342'></a>      <strong class='reserved'>for</strong> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>-&gt;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L343' name='L343'></a>           <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> &amp;&amp; (MULTIPATH_NUM == 0 || ri-&gt;num_nhs &lt; MULTIPATH_NUM);
+<a id='L344' name='L344'></a>           <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;next)
+<a id='L345' name='L345'></a>        <em class='brace'>{</em>
+<a id='L346' name='L346'></a>          <strong class='reserved'>if</strong> ((cmd == RTM_NEWROUTE
+<a id='L347' name='L347'></a>               &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/981.html#L253' title='Defined at 253 in zebra/rib.h.'>NEXTHOP_FLAG_ACTIVE</a>))
+<a id='L348' name='L348'></a>              || (cmd == RTM_DELROUTE
+<a id='L349' name='L349'></a>                  &amp;&amp; <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/981.html#L254' title='Defined at 254 in zebra/rib.h.'>NEXTHOP_FLAG_FIB</a>)))
+<a id='L350' name='L350'></a>            <em class='brace'>{</em>
+<a id='L351' name='L351'></a>              <a href='../S/982.html#L155' title='Defined at 155 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_add_nh</a> (ri, <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L352' name='L352'></a>            <em class='brace'>}</em>
+<a id='L353' name='L353'></a>        <em class='brace'>}</em>
+<a id='L354' name='L354'></a>    <em class='brace'>}</em>
+<a id='L355' name='L355'></a>
+<a id='L356' name='L356'></a>  <em class='comment'>/* If there is no useful nexthop then return. */</em>
+<a id='L357' name='L357'></a>  <strong class='reserved'>if</strong> (ri-&gt;num_nhs == 0)
+<a id='L358' name='L358'></a>    <em class='brace'>{</em>
+<a id='L359' name='L359'></a>      <a href='../D/11577.html' title='Multiple defined in 3 places.'>zfpm_debug</a> ("netlink_encode_route(): No useful nexthop.");
+<a id='L360' name='L360'></a>      <strong class='reserved'>return</strong> 0;
+<a id='L361' name='L361'></a>    <em class='brace'>}</em>
+<a id='L362' name='L362'></a>
+<a id='L363' name='L363'></a> skip:
+<a id='L364' name='L364'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L365' name='L365'></a><em class='brace'>}</em>
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a><em class='comment'>/*</em>
+<a id='L368' name='L368'></a><em class='comment'> * netlink_route_info_encode</em>
+<a id='L369' name='L369'></a><em class='comment'> *</em>
+<a id='L370' name='L370'></a><em class='comment'> * Returns the number of bytes written to the buffer. 0 or a negative</em>
+<a id='L371' name='L371'></a><em class='comment'> * value indicates an error.</em>
+<a id='L372' name='L372'></a><em class='comment'> */</em>
+<a id='L373' name='L373'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L374' name='L374'></a><a href='../S/982.html#L540' title='Referred from 540 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_encode</a> (<a href='../S/982.html#L144' title='Defined at 144 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_t</a> *ri, <strong class='reserved'>char</strong> *in_buf,
+<a id='L375' name='L375'></a>                           size_t in_buf_len)
+<a id='L376' name='L376'></a><em class='brace'>{</em>
+<a id='L377' name='L377'></a>  <strong class='reserved'>int</strong> bytelen;
+<a id='L378' name='L378'></a>  <strong class='reserved'>int</strong> nexthop_num = 0;
+<a id='L379' name='L379'></a>  size_t buf_offset;
+<a id='L380' name='L380'></a>  <a href='../S/982.html#L120' title='Defined at 120 in zebra/zebra_fpm_netlink.c.'>netlink_nh_info_t</a> *nhi;
+<a id='L381' name='L381'></a>
+<a id='L382' name='L382'></a>  <strong class='reserved'>struct</strong>
+<a id='L383' name='L383'></a>  <em class='brace'>{</em>
+<a id='L384' name='L384'></a>    <strong class='reserved'>struct</strong> <a href='../S/839.html#L35' title='Defined at 35 in mplsadmd/netlink.h.'>nlmsghdr</a> n;
+<a id='L385' name='L385'></a>    <strong class='reserved'>struct</strong> rtmsg r;
+<a id='L386' name='L386'></a>    <strong class='reserved'>char</strong> buf[1];
+<a id='L387' name='L387'></a>  <em class='brace'>}</em> *req;
+<a id='L388' name='L388'></a>
+<a id='L389' name='L389'></a>  req = (<strong class='reserved'>void</strong> *) in_buf;
+<a id='L390' name='L390'></a>
+<a id='L391' name='L391'></a>  buf_offset = ((<strong class='reserved'>char</strong> *) req-&gt;buf) - ((<strong class='reserved'>char</strong> *) req);
+<a id='L392' name='L392'></a>
+<a id='L393' name='L393'></a>  <strong class='reserved'>if</strong> (in_buf_len &lt; buf_offset) <em class='brace'>{</em>
+<a id='L394' name='L394'></a>    <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a>(0);
+<a id='L395' name='L395'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L396' name='L396'></a>  <em class='brace'>}</em>
+<a id='L397' name='L397'></a>
+<a id='L398' name='L398'></a>  memset (req, 0, buf_offset);
+<a id='L399' name='L399'></a>
+<a id='L400' name='L400'></a>  bytelen = <a href='../S/982.html#L83' title='Defined at 83 in zebra/zebra_fpm_netlink.c.'>af_addr_size</a> (ri-&gt;af);
+<a id='L401' name='L401'></a>
+<a id='L402' name='L402'></a>  req-&gt;n.nlmsg_len = <a href='../S/839.html#L75' title='Defined at 75 in mplsadmd/netlink.h.'>NLMSG_LENGTH</a> (<strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> rtmsg));
+<a id='L403' name='L403'></a>  req-&gt;n.nlmsg_flags = <a href='../S/839.html#L60' title='Defined at 60 in mplsadmd/netlink.h.'>NLM_F_CREATE</a> | <a href='../S/839.html#L46' title='Defined at 46 in mplsadmd/netlink.h.'>NLM_F_REQUEST</a>;
+<a id='L404' name='L404'></a>  req-&gt;n.nlmsg_type = ri-&gt;nlmsg_type;
+<a id='L405' name='L405'></a>  req-&gt;r.rtm_family = ri-&gt;af;
+<a id='L406' name='L406'></a>  req-&gt;r.rtm_table = ri-&gt;rtm_table;
+<a id='L407' name='L407'></a>  req-&gt;r.rtm_dst_len = ri-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>-&gt;prefixlen;
+<a id='L408' name='L408'></a>  req-&gt;r.rtm_protocol = ri-&gt;rtm_protocol;
+<a id='L409' name='L409'></a>  req-&gt;r.rtm_scope = RT_SCOPE_UNIVERSE;
+<a id='L410' name='L410'></a>
+<a id='L411' name='L411'></a>  <a href='../D/5135.html' title='Multiple defined in 2 places.'>addattr_l</a> (&amp;req-&gt;n, in_buf_len, RTA_DST, &amp;ri-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, bytelen);
+<a id='L412' name='L412'></a>
+<a id='L413' name='L413'></a>  req-&gt;r.rtm_type = ri-&gt;rtm_type;
+<a id='L414' name='L414'></a>
+<a id='L415' name='L415'></a>  <em class='comment'>/* Metric. */</em>
+<a id='L416' name='L416'></a>  <strong class='reserved'>if</strong> (ri-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>)
+<a id='L417' name='L417'></a>    <a href='../D/5134.html' title='Multiple defined in 2 places.'>addattr32</a> (&amp;req-&gt;n, in_buf_len, RTA_PRIORITY, *ri-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>);
+<a id='L418' name='L418'></a>
+<a id='L419' name='L419'></a>  <strong class='reserved'>if</strong> (ri-&gt;num_nhs == 0)
+<a id='L420' name='L420'></a>    <strong class='reserved'>goto</strong> done;
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a>  <strong class='reserved'>if</strong> (ri-&gt;num_nhs == 1)
+<a id='L423' name='L423'></a>    <em class='brace'>{</em>
+<a id='L424' name='L424'></a>      nhi = &amp;ri-&gt;nhs[0];
+<a id='L425' name='L425'></a>
+<a id='L426' name='L426'></a>      <strong class='reserved'>if</strong> (nhi-&gt;gateway)
+<a id='L427' name='L427'></a>        <em class='brace'>{</em>
+<a id='L428' name='L428'></a>          <a href='../D/5135.html' title='Multiple defined in 2 places.'>addattr_l</a> (&amp;req-&gt;n, in_buf_len, RTA_GATEWAY, nhi-&gt;gateway,
+<a id='L429' name='L429'></a>                     bytelen);
+<a id='L430' name='L430'></a>        <em class='brace'>}</em>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a>      <strong class='reserved'>if</strong> (nhi-&gt;if_index)
+<a id='L433' name='L433'></a>        <em class='brace'>{</em>
+<a id='L434' name='L434'></a>          <a href='../D/5134.html' title='Multiple defined in 2 places.'>addattr32</a> (&amp;req-&gt;n, in_buf_len, RTA_OIF, nhi-&gt;if_index);
+<a id='L435' name='L435'></a>        <em class='brace'>}</em>
+<a id='L436' name='L436'></a>
+<a id='L437' name='L437'></a>      <strong class='reserved'>goto</strong> done;
+<a id='L438' name='L438'></a>
+<a id='L439' name='L439'></a>    <em class='brace'>}</em>
+<a id='L440' name='L440'></a>
+<a id='L441' name='L441'></a>  <em class='comment'>/*</em>
+<a id='L442' name='L442'></a><em class='comment'>   * Multipath case.</em>
+<a id='L443' name='L443'></a><em class='comment'>   */</em>
+<a id='L444' name='L444'></a>  <strong class='reserved'>char</strong> buf[<a href='../S/969.html#L27' title='Defined at 27 in zebra/rt_netlink.h.'>NL_PKT_BUF_SIZE</a>];
+<a id='L445' name='L445'></a>  <strong class='reserved'>struct</strong> rtattr *rta = (<strong class='reserved'>void</strong> *) buf;
+<a id='L446' name='L446'></a>  <strong class='reserved'>struct</strong> rtnexthop *rtnh;
+<a id='L447' name='L447'></a>
+<a id='L448' name='L448'></a>  rta-&gt;rta_type = RTA_MULTIPATH;
+<a id='L449' name='L449'></a>  rta-&gt;rta_len = RTA_LENGTH (0);
+<a id='L450' name='L450'></a>  rtnh = RTA_DATA (rta);
+<a id='L451' name='L451'></a>
+<a id='L452' name='L452'></a>  <strong class='reserved'>for</strong> (nexthop_num = 0; nexthop_num &lt; ri-&gt;num_nhs; nexthop_num++)
+<a id='L453' name='L453'></a>    <em class='brace'>{</em>
+<a id='L454' name='L454'></a>      nhi = &amp;ri-&gt;nhs[nexthop_num];
+<a id='L455' name='L455'></a>
+<a id='L456' name='L456'></a>      rtnh-&gt;rtnh_len = <strong class='reserved'>sizeof</strong> (*rtnh);
+<a id='L457' name='L457'></a>      rtnh-&gt;rtnh_flags = 0;
+<a id='L458' name='L458'></a>      rtnh-&gt;rtnh_hops = 0;
+<a id='L459' name='L459'></a>      rtnh-&gt;rtnh_ifindex = 0;
+<a id='L460' name='L460'></a>      rta-&gt;rta_len += rtnh-&gt;rtnh_len;
+<a id='L461' name='L461'></a>
+<a id='L462' name='L462'></a>      <strong class='reserved'>if</strong> (nhi-&gt;gateway)
+<a id='L463' name='L463'></a>        <em class='brace'>{</em>
+<a id='L464' name='L464'></a>          <a href='../D/10540.html' title='Multiple defined in 2 places.'>rta_addattr_l</a> (rta, <strong class='reserved'>sizeof</strong> (buf), RTA_GATEWAY, nhi-&gt;gateway, bytelen);
+<a id='L465' name='L465'></a>          rtnh-&gt;rtnh_len += <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> rtattr) + bytelen;
+<a id='L466' name='L466'></a>        <em class='brace'>}</em>
+<a id='L467' name='L467'></a>
+<a id='L468' name='L468'></a>      <strong class='reserved'>if</strong> (nhi-&gt;if_index)
+<a id='L469' name='L469'></a>        <em class='brace'>{</em>
+<a id='L470' name='L470'></a>          rtnh-&gt;rtnh_ifindex = nhi-&gt;if_index;
+<a id='L471' name='L471'></a>        <em class='brace'>}</em>
+<a id='L472' name='L472'></a>
+<a id='L473' name='L473'></a>      rtnh = RTNH_NEXT (rtnh);
+<a id='L474' name='L474'></a>    <em class='brace'>}</em>
+<a id='L475' name='L475'></a>
+<a id='L476' name='L476'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (rta-&gt;rta_len &gt; RTA_LENGTH (0));
+<a id='L477' name='L477'></a>  <a href='../D/5135.html' title='Multiple defined in 2 places.'>addattr_l</a> (&amp;req-&gt;n, in_buf_len, RTA_MULTIPATH, RTA_DATA (rta),
+<a id='L478' name='L478'></a>             RTA_PAYLOAD (rta));
+<a id='L479' name='L479'></a>
+<a id='L480' name='L480'></a>done:
+<a id='L481' name='L481'></a>
+<a id='L482' name='L482'></a>  <strong class='reserved'>if</strong> (ri-&gt;pref_src)
+<a id='L483' name='L483'></a>    <em class='brace'>{</em>
+<a id='L484' name='L484'></a>      <a href='../D/5135.html' title='Multiple defined in 2 places.'>addattr_l</a> (&amp;req-&gt;n, in_buf_len, RTA_PREFSRC, &amp;ri-&gt;pref_src, bytelen);
+<a id='L485' name='L485'></a>    <em class='brace'>}</em>
+<a id='L486' name='L486'></a>
+<a id='L487' name='L487'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (req-&gt;n.nlmsg_len &lt; in_buf_len);
+<a id='L488' name='L488'></a>  <strong class='reserved'>return</strong> req-&gt;n.nlmsg_len;
+<a id='L489' name='L489'></a><em class='brace'>}</em>
+<a id='L490' name='L490'></a>
+<a id='L491' name='L491'></a><em class='comment'>/*</em>
+<a id='L492' name='L492'></a><em class='comment'> * zfpm_log_route_info</em>
+<a id='L493' name='L493'></a><em class='comment'> *</em>
+<a id='L494' name='L494'></a><em class='comment'> * Helper function to log the information in a route_info structure.</em>
+<a id='L495' name='L495'></a><em class='comment'> */</em>
+<a id='L496' name='L496'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L497' name='L497'></a><a href='../S/982.html#L538' title='Referred from 538 in zebra/zebra_fpm_netlink.c.'>zfpm_log_route_info</a> (<a href='../S/982.html#L144' title='Defined at 144 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_t</a> *ri, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *label)
+<a id='L498' name='L498'></a><em class='brace'>{</em>
+<a id='L499' name='L499'></a>  <a href='../S/982.html#L120' title='Defined at 120 in zebra/zebra_fpm_netlink.c.'>netlink_nh_info_t</a> *nhi;
+<a id='L500' name='L500'></a>  <strong class='reserved'>int</strong> i;
+<a id='L501' name='L501'></a>
+<a id='L502' name='L502'></a>  <a href='../D/11577.html' title='Multiple defined in 3 places.'>zfpm_debug</a> ("%s : %s %s/%d, Proto: %s, Metric: %u", label,
+<a id='L503' name='L503'></a>              <a href='../S/1006.html#L2017' title='Defined at 2017 in zebra/rt_netlink.c.'>nl_msg_type_to_str</a> (ri-&gt;nlmsg_type),
+<a id='L504' name='L504'></a>              <a href='../S/982.html#L69' title='Defined at 69 in zebra/zebra_fpm_netlink.c.'>prefix_addr_to_a</a> (ri-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), ri-&gt;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>-&gt;prefixlen,
+<a id='L505' name='L505'></a>              <a href='../S/1006.html#L2026' title='Defined at 2026 in zebra/rt_netlink.c.'>nl_rtproto_to_str</a> (ri-&gt;rtm_protocol),
+<a id='L506' name='L506'></a>              ri-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> ? *ri-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> : 0);
+<a id='L507' name='L507'></a>
+<a id='L508' name='L508'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; ri-&gt;num_nhs; i++)
+<a id='L509' name='L509'></a>    <em class='brace'>{</em>
+<a id='L510' name='L510'></a>      nhi = &amp;ri-&gt;nhs[i];
+<a id='L511' name='L511'></a>      <a href='../D/11577.html' title='Multiple defined in 3 places.'>zfpm_debug</a>("  Intf: %u, Gateway: %s, Recursive: %s, Type: %s",
+<a id='L512' name='L512'></a>                 nhi-&gt;if_index, <a href='../S/982.html#L41' title='Defined at 41 in zebra/zebra_fpm_netlink.c.'>addr_to_a</a> (ri-&gt;af, nhi-&gt;gateway),
+<a id='L513' name='L513'></a>                 nhi-&gt;recursive ? "yes" : "no",
+<a id='L514' name='L514'></a>                 <a href='../S/940.html#L184' title='Defined at 184 in zebra/zebra_rib.c.'>nexthop_type_to_str</a> (nhi-&gt;type));
+<a id='L515' name='L515'></a>    <em class='brace'>}</em>
+<a id='L516' name='L516'></a><em class='brace'>}</em>
+<a id='L517' name='L517'></a>
+<a id='L518' name='L518'></a><em class='comment'>/*</em>
+<a id='L519' name='L519'></a><em class='comment'> * zfpm_netlink_encode_route</em>
+<a id='L520' name='L520'></a><em class='comment'> *</em>
+<a id='L521' name='L521'></a><em class='comment'> * Create a netlink message corresponding to the given route in the</em>
+<a id='L522' name='L522'></a><em class='comment'> * given buffer space.</em>
+<a id='L523' name='L523'></a><em class='comment'> *</em>
+<a id='L524' name='L524'></a><em class='comment'> * Returns the number of bytes written to the buffer. 0 or a negative</em>
+<a id='L525' name='L525'></a><em class='comment'> * value indicates an error.</em>
+<a id='L526' name='L526'></a><em class='comment'> */</em>
+<a id='L527' name='L527'></a><strong class='reserved'>int</strong>
+<a id='L528' name='L528'></a><a href='../R/10655.html' title='Multiple referred from 2 places.'>zfpm_netlink_encode_route</a> (<strong class='reserved'>int</strong> cmd, <a href='../S/981.html#L125' title='Defined at 125 in zebra/rib.h.'>rib_dest_t</a> *dest, <strong class='reserved'>struct</strong> <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a> *<a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>,
+<a id='L529' name='L529'></a>                           <strong class='reserved'>char</strong> *in_buf, size_t in_buf_len)
+<a id='L530' name='L530'></a><em class='brace'>{</em>
+<a id='L531' name='L531'></a>  <a href='../S/982.html#L144' title='Defined at 144 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_t</a> ri_space, *ri;
+<a id='L532' name='L532'></a>
+<a id='L533' name='L533'></a>  ri = &amp;ri_space;
+<a id='L534' name='L534'></a>
+<a id='L535' name='L535'></a>  <strong class='reserved'>if</strong> (!<a href='../S/982.html#L272' title='Defined at 272 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_fill</a> (ri, cmd, dest, <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a>))
+<a id='L536' name='L536'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L537' name='L537'></a>
+<a id='L538' name='L538'></a>  <a href='../S/982.html#L497' title='Defined at 497 in zebra/zebra_fpm_netlink.c.'>zfpm_log_route_info</a> (ri, __FUNCTION__);
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a>  <strong class='reserved'>return</strong> <a href='../S/982.html#L374' title='Defined at 374 in zebra/zebra_fpm_netlink.c.'>netlink_route_info_encode</a> (ri, in_buf, in_buf_len);
+<a id='L541' name='L541'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L41'>[^]</a><a href='#L528'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>area_addr</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/521.html#L457'>area_addr</a>         457 isisd/isis_adjacency.c           struct area_addr *area_addr;</span>
+<span class='curline'><a href='../S/521.html#L459'>area_addr</a>         459 isisd/isis_adjacency.c           for (ALL_LIST_ELEMENTS_RO (adj-&gt;area_addrs, node, area_addr))</span>
+<span class='curline'><a href='../S/521.html#L460'>area_addr</a>         460 isisd/isis_adjacency.c             vty_out (vty, "      %s%s", isonet_print (area_addr-&gt;area_addr,</span>
+<span class='curline'><a href='../S/521.html#L461'>area_addr</a>         461 isisd/isis_adjacency.c                      area_addr-&gt;addr_len), VTY_NEWLINE);</span>
+<span class='curline'><a href='../S/488.html#L33'>area_addr</a>          33 isisd/isis_common.h   u_char area_addr[20];</span>
+<span class='curline'><a href='../S/511.html#L866'>area_addr</a>         866 isisd/isis_lsp.c   struct area_addr *area_addr;</span>
+<span class='curline'><a href='../S/511.html#L890'>area_addr</a>         890 isisd/isis_lsp.c     for (ALL_LIST_ELEMENTS_RO (lsp-&gt;tlv_data.area_addrs, lnode, area_addr))</span>
+<span class='curline'><a href='../S/511.html#L893'>area_addr</a>         893 isisd/isis_lsp.c 		 isonet_print (area_addr-&gt;area_addr, area_addr-&gt;addr_len),</span>
+<span class='curline'><a href='../S/530.html#L65'>area_addr</a>          65 isisd/isis_misc.h #define GETSYSID(A) (A-&gt;area_addr + (A-&gt;addr_len - \</span>
+<span class='curline'><a href='../S/527.html#L79'>area_addr</a>          79 isisd/isis_pdu.c   struct area_addr *addr1, *addr2;</span>
+<span class='curline'><a href='../S/527.html#L87'>area_addr</a>          87 isisd/isis_pdu.c 	  !memcmp (addr1-&gt;area_addr, addr2-&gt;area_addr, (int) addr1-&gt;addr_len))</span>
+<span class='curline'><a href='../S/527.html#L295'>area_addr</a>         295 isisd/isis_pdu.c   struct area_addr *area_addr, *malloced;</span>
+<span class='curline'><a href='../S/527.html#L305'>area_addr</a>         305 isisd/isis_pdu.c       for (ALL_LIST_ELEMENTS_RO (tlvs-&gt;area_addrs, node, area_addr))</span>
+<span class='curline'><a href='../S/527.html#L307'>area_addr</a>         307 isisd/isis_pdu.c 	malloced = XMALLOC (MTYPE_ISIS_TMP, sizeof (struct area_addr));</span>
+<span class='curline'><a href='../S/527.html#L308'>area_addr</a>         308 isisd/isis_pdu.c 	memcpy (malloced, area_addr, sizeof (struct area_addr));</span>
+<span class='curline'><a href='../S/479.html#L111'>area_addr</a>         111 isisd/isis_tlv.c   struct area_addr *area_addr;</span>
+<span class='curline'><a href='../S/479.html#L162'>area_addr</a>         162 isisd/isis_tlv.c 		  area_addr = (struct area_addr *) pnt;</span>
+<span class='curline'><a href='../S/479.html#L163'>area_addr</a>         163 isisd/isis_tlv.c 		  value_len += area_addr-&gt;addr_len + 1;</span>
+<span class='curline'><a href='../S/479.html#L164'>area_addr</a>         164 isisd/isis_tlv.c 		  pnt += area_addr-&gt;addr_len + 1;</span>
+<span class='curline'><a href='../S/479.html#L167'>area_addr</a>         167 isisd/isis_tlv.c 		  listnode_add (tlvs-&gt;area_addrs, area_addr);</span>
+<span class='curline'><a href='../S/479.html#L803'>area_addr</a>         803 isisd/isis_tlv.c   struct area_addr *area_addr;</span>
+<span class='curline'><a href='../S/479.html#L808'>area_addr</a>         808 isisd/isis_tlv.c   for (ALL_LIST_ELEMENTS_RO (area_addrs, node, area_addr))</span>
+<span class='curline'><a href='../S/479.html#L810'>area_addr</a>         810 isisd/isis_tlv.c       if (pos - value + area_addr-&gt;addr_len &gt; 255)</span>
+<span class='curline'><a href='../S/479.html#L812'>area_addr</a>         812 isisd/isis_tlv.c       *pos = area_addr-&gt;addr_len;</span>
+<span class='curline'><a href='../S/479.html#L814'>area_addr</a>         814 isisd/isis_tlv.c       memcpy (pos, area_addr-&gt;area_addr, (int) area_addr-&gt;addr_len);</span>
+<span class='curline'><a href='../S/479.html#L815'>area_addr</a>         815 isisd/isis_tlv.c       pos += area_addr-&gt;addr_len;</span>
+<span class='curline'><a href='../S/499.html#L234'>area_addr</a>         234 isisd/isisd.c    struct area_addr *addr;</span>
+<span class='curline'><a href='../S/499.html#L334'>area_addr</a>         334 isisd/isisd.c    struct area_addr *addr;</span>
+<span class='curline'><a href='../S/499.html#L335'>area_addr</a>         335 isisd/isisd.c    struct area_addr *addrp;</span>
+<span class='curline'><a href='../S/499.html#L355'>area_addr</a>         355 isisd/isisd.c    addr = XMALLOC (MTYPE_ISIS_AREA_ADDR, sizeof (struct area_addr));</span>
+<span class='curline'><a href='../S/499.html#L357'>area_addr</a>         357 isisd/isisd.c    memcpy (addr-&gt;area_addr, buff, addr-&gt;addr_len);</span>
+<span class='curline'><a href='../S/499.html#L370'>area_addr</a>         370 isisd/isisd.c    if (addr-&gt;area_addr[addr-&gt;addr_len-1] != 0)</span>
+<span class='curline'><a href='../S/499.html#L407'>area_addr</a>         407 isisd/isisd.c  	  if (!memcmp (addrp-&gt;area_addr, addr-&gt;area_addr, addr-&gt;addr_len))</span>
+<span class='curline'><a href='../S/499.html#L437'>area_addr</a>         437 isisd/isisd.c    struct area_addr addr, *addrp = NULL;</span>
+<span class='curline'><a href='../S/499.html#L456'>area_addr</a>         456 isisd/isisd.c    memcpy (addr.area_addr, buff, (int) addr.addr_len);</span>
+<span class='curline'><a href='../S/499.html#L460'>area_addr</a>         460 isisd/isisd.c  	!memcmp (addrp-&gt;area_addr, addr.area_addr, addr.addr_len))</span>
+<span class='curline'><a href='../S/499.html#L1268'>area_addr</a>        1268 isisd/isisd.c        struct area_addr *area_addr;</span>
+<span class='curline'><a href='../S/499.html#L1269'>area_addr</a>        1269 isisd/isisd.c        for (ALL_LIST_ELEMENTS_RO (area-&gt;area_addrs, node2, area_addr))</span>
+<span class='curline'><a href='../S/499.html#L1272'>area_addr</a>        1272 isisd/isisd.c              isonet_print (area_addr-&gt;area_addr,</span>
+<span class='curline'><a href='../S/499.html#L1273'>area_addr</a>        1273 isisd/isisd.c                area_addr-&gt;addr_len + ISIS_SYS_ID_LEN +</span>
+<span class='curline'><a href='../S/499.html#L2854'>area_addr</a>        2854 isisd/isisd.c  	    struct area_addr *area_addr;</span>
+<span class='curline'><a href='../S/499.html#L2855'>area_addr</a>        2855 isisd/isisd.c  	    for (ALL_LIST_ELEMENTS_RO (area-&gt;area_addrs, node2, area_addr))</span>
+<span class='curline'><a href='../S/499.html#L2858'>area_addr</a>        2858 isisd/isisd.c  			 isonet_print (area_addr-&gt;area_addr,</span>
+<span class='curline'><a href='../S/499.html#L2859'>area_addr</a>        2859 isisd/isisd.c  				       area_addr-&gt;addr_len + ISIS_SYS_ID_LEN +</span>
+<span class='curline'><a href='../S/510.html#L51'>area_addr</a>          51 isisd/isisd.h    struct area_addr *man_area_addrs;	/* manualAreaAddresses */</span>
+</pre>
+</body>
+</html>

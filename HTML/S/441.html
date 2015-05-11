@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_resource.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_resource.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L20'>[^]</a><a href='#L72'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L20' title='Defined at 20.'>ldp_resource_create</a></li>
+<li><a href='#L34' title='Defined at 34.'>ldp_resource_delete</a></li>
+<li><a href='#L41' title='Defined at 41.'>_ldp_resource_get_next_index</a></li>
+<li><a href='#L52' title='Defined at 52.'>_ldp_resource_add_tunnel</a></li>
+<li><a href='#L62' title='Defined at 62.'>_ldp_resource_del_tunnel</a></li>
+<li><a href='#L72' title='Defined at 72.'>ldp_resource_in_use</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2001</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L11' name='L11'></a><em class='sharp'>#include</em> "<a href='437.html'>ldp_resource.h</a>"
+<a id='L12' name='L12'></a><em class='sharp'>#include</em> "<a href='361.html'>ldp_tunnel.h</a>"
+<a id='L13' name='L13'></a>
+<a id='L14' name='L14'></a><em class='sharp'>#include</em> "<a href='359.html'>mpls_assert.h</a>"
+<a id='L15' name='L15'></a><em class='sharp'>#include</em> "<a href='381.html'>mpls_mm_impl.h</a>"
+<a id='L16' name='L16'></a><em class='sharp'>#include</em> "<a href='415.html'>mpls_trace_impl.h</a>"
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a><strong class='reserved'>static</strong> <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> _ldp_resource_next_index = 1;
+<a id='L19' name='L19'></a>
+<a id='L20' name='L20'></a><a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> *<a href='../R/6707.html' title='Multiple referred from 2 places.'>ldp_resource_create</a>()
+<a id='L21' name='L21'></a><em class='brace'>{</em>
+<a id='L22' name='L22'></a>  <a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> *r = (<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> *) <a href='../S/341.html#L10' title='Defined at 10 in ldpd/impl_mm.c.'>mpls_malloc</a>(<strong class='reserved'>sizeof</strong>(<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a>));
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a>  <strong class='reserved'>if</strong> (r) <em class='brace'>{</em>
+<a id='L25' name='L25'></a>    memset(r, 0, <strong class='reserved'>sizeof</strong>(<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a>));
+<a id='L26' name='L26'></a>    <a href='../S/457.html#L19' title='Defined at 19 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_INIT</a>(r, 0);
+<a id='L27' name='L27'></a>    <a href='../S/373.html#L103' title='Defined at 103 in ldpd/mpls_list.h.'>MPLS_LIST_ELEM_INIT</a>(r, _global);
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a>    r-&gt;index = <a href='../S/441.html#L41' title='Defined at 41 in ldpd/ldp_resource.c.'>_ldp_resource_get_next_index</a>();
+<a id='L30' name='L30'></a>  <em class='brace'>}</em>
+<a id='L31' name='L31'></a>  <strong class='reserved'>return</strong> r;
+<a id='L32' name='L32'></a><em class='brace'>}</em>
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><strong class='reserved'>void</strong> <a href='../R/6708.html' title='Multiple referred from 3 places.'>ldp_resource_delete</a>(<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> * r)
+<a id='L35' name='L35'></a><em class='brace'>{</em>
+<a id='L36' name='L36'></a>  <em class='comment'>// LDP_PRINT(g-&gt;user_data,"resource delete\n");</em>
+<a id='L37' name='L37'></a>  <a href='../S/457.html#L49' title='Defined at 49 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_ASSERT</a>(r, 0);
+<a id='L38' name='L38'></a>  <a href='../S/341.html#L19' title='Defined at 19 in ldpd/impl_mm.c.'>mpls_free</a>(r);
+<a id='L39' name='L39'></a><em class='brace'>}</em>
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> <a href='../R/4317.html' title='Multiple referred from 2 places.'>_ldp_resource_get_next_index</a>()
+<a id='L42' name='L42'></a><em class='brace'>{</em>
+<a id='L43' name='L43'></a>  <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> retval = _ldp_resource_next_index;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a>  _ldp_resource_next_index++;
+<a id='L46' name='L46'></a>  <strong class='reserved'>if</strong> (retval &gt; _ldp_resource_next_index) <em class='brace'>{</em>
+<a id='L47' name='L47'></a>    _ldp_resource_next_index = 1;
+<a id='L48' name='L48'></a>  <em class='brace'>}</em>
+<a id='L49' name='L49'></a>  <strong class='reserved'>return</strong> retval;
+<a id='L50' name='L50'></a><em class='brace'>}</em>
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/4315.html' title='Multiple referred from 2 places.'>_ldp_resource_add_tunnel</a>(<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> * r, <a href='../D/7536.html' title='Multiple defined in 2 places.'>ldp_tunnel</a> * t)
+<a id='L53' name='L53'></a><em class='brace'>{</em>
+<a id='L54' name='L54'></a>  <strong class='reserved'>if</strong> (r &amp;&amp; t) <em class='brace'>{</em>
+<a id='L55' name='L55'></a>    <a href='../S/457.html#L23' title='Defined at 23 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_HOLD</a>(t);
+<a id='L56' name='L56'></a>    r-&gt;tunnel = t;
+<a id='L57' name='L57'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L58' name='L58'></a>  <em class='brace'>}</em>
+<a id='L59' name='L59'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L60' name='L60'></a><em class='brace'>}</em>
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/4316.html' title='Multiple referred from 2 places.'>_ldp_resource_del_tunnel</a>(<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> * r)
+<a id='L63' name='L63'></a><em class='brace'>{</em>
+<a id='L64' name='L64'></a>  <strong class='reserved'>if</strong> (r &amp;&amp; r-&gt;tunnel) <em class='brace'>{</em>
+<a id='L65' name='L65'></a>    <a href='../S/457.html#L29' title='Defined at 29 in ldpd/mpls_refcnt.h.'>MPLS_REFCNT_RELEASE</a>(r-&gt;tunnel, <a href='../S/344.html#L37' title='Defined at 37 in ldpd/ldp_tunnel.c.'>ldp_tunnel_delete</a>);
+<a id='L66' name='L66'></a>    r-&gt;tunnel = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L67' name='L67'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L68' name='L68'></a>  <em class='brace'>}</em>
+<a id='L69' name='L69'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L21' title='Defined at 21 in ldpd/mpls_struct.h.'>MPLS_FAILURE</a>;
+<a id='L70' name='L70'></a><em class='brace'>}</em>
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a><a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> <a href='../R/6709.html' title='Multiple referred from 2 places.'>ldp_resource_in_use</a>(<a href='../D/7492.html' title='Multiple defined in 2 places.'>ldp_resource</a> * r)
+<a id='L73' name='L73'></a><em class='brace'>{</em>
+<a id='L74' name='L74'></a>  <strong class='reserved'>if</strong> (r-&gt;tunnel &amp;&amp; (r-&gt;tunnel-&gt;admin_state == <a href='../S/383.html#L53' title='Defined at 53 in ldpd/mpls_struct.h.'>MPLS_ADMIN_ENABLE</a>)) <em class='brace'>{</em>
+<a id='L75' name='L75'></a>    <strong class='reserved'>return</strong> <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L76' name='L76'></a>  <em class='brace'>}</em>
+<a id='L77' name='L77'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L74' title='Defined at 74 in ldpd/mpls_struct.h.'>MPLS_BOOL_FALSE</a>;
+<a id='L78' name='L78'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L20'>[^]</a><a href='#L72'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

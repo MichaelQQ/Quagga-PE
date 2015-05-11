@@ -962,6 +962,9 @@ static void trill_publish_nick(struct isis_area *area, int fd,
 			    sizeof(struct trill_nl_header), NLM_F_REQUEST,
 			    TRILL_CMD_SET_NICKS_INFO, TRILL_NL_VERSION);
     }
+
+    printf("tni_nick: %x\n tni_adjsnpa: %x\n tni_linkid: %u\n tni_adjcount: %u\n tni_dtrootcount: %u\n", ni->tni_nick, ni->tni_adjsnpa, ni->tni_linkid, ni->tni_adjcount, ni->tni_dtrootcount);
+
     nla_put(msg,TRILL_ATTR_BIN, new_ni_size, ni);
     trnlhdr->ifindex = port_id;
     trnlhdr->total_length = sizeof(msg);
@@ -1008,13 +1011,18 @@ static void trill_publish (struct isis_area *area)
   struct isis_circuit *circuit;
   if (area->circuit_list && listhead(area->circuit_list))
     circuit = listgetdata(listhead(area->circuit_list));
-  if (circuit == NULL)
-      return;
+  if (circuit == NULL){
+     printf("circuit == NULL\n"); 
+     return;
+  }
 
-  if (area->trill->fwdtbl != NULL)
+  if (area->trill->fwdtbl != NULL){
+    printf("area->trill->fwdtbl != NULL\n");
+    printf("circuit->interface->ifindex = %p\n", circuit->interface->ifindex);
     for (ALL_LIST_ELEMENTS_RO (area->trill->fwdtbl, node, fwdnode))
       trill_publish_nick(area, circuit->fd, fwdnode->dest_nick,
 			 fwdnode,circuit->interface->ifindex);
+  }
 
   trill_publish_nick(area, circuit->fd, area->trill->nick.name,
 		     NULL, circuit->interface->ifindex);
@@ -1289,10 +1297,16 @@ static void trill_nick_recv(struct isis_area *area, nickinfo_t *other_nick)
     zlog_warn("ISIS TRILL received reserved nickname:%d from sysID:%s",
 	      ntohs (other_nick->nick.name),
 	      sysid_print(other_nick->sysid) );
+    printf("ISIS TRILL received reserved nickname:%d from sysID:%s",
+	      ntohs (other_nick->nick.name),
+	      sysid_print(other_nick->sysid) );
     return;
   }
   if (!(other_nick->flags & TRILL_FLAGS_V0)) {
     zlog_info ("ISIS TRILL nick %d doesn't support V0 headers; flags %02X",
+	       ntohs (other_nick->nick.name),
+	       other_nick->flags);
+    printf("ISIS TRILL nick %d doesn't support V0 headers; flags %02X",
 	       ntohs (other_nick->nick.name),
 	       other_nick->flags);
     return;
@@ -1302,8 +1316,10 @@ static void trill_nick_recv(struct isis_area *area, nickinfo_t *other_nick)
     /* Check if our nickname has lower priority or our
      * system ID is lower, if not we keep our nickname
      */
-    if (!(nickchange = trill_nick_conflict (&ournick, other_nick)))
-      return;
+    if (!(nickchange = trill_nick_conflict (&ournick, other_nick))){
+      printf("if (!(nickchange = trill_nick_conflict (&ournick, other_nick)))\n");
+	return;
+	}
   }
   /* out nickname conflit and we have to change it */
   if (nickchange) {
@@ -1399,8 +1415,20 @@ void trill_parse_router_capability_tlvs (struct isis_area *area,
 
   if (trill_parse_lsp (lsp, &recvd_nick)) {
       /* Parsed LSP correctly but process only if nick is not unknown */
-      if (recvd_nick.nick.name != RBRIDGE_NICKNAME_NONE)
+      if (recvd_nick.nick.name != RBRIDGE_NICKNAME_NONE){
+	 printf("nick-name: %X\nnick-prio: %X\nnick-pad: %u\nsysid: %X\nflags: %u\ndt_roots: %p\nroot-prio: %u\nroot-count: %u\nvni_count: %u\nsupported_vni: %p\n",
+		 recvd_nick.nick.name,
+		 recvd_nick.nick.priority,
+		 recvd_nick.nick.pad,
+		 recvd_nick.sysid[0],
+		 recvd_nick.flags,
+		 recvd_nick.dt_roots,
+		 recvd_nick.root_priority,
+		 recvd_nick.root_count,
+		 recvd_nick.vni_count,
+		 recvd_nick.supported_vni);
          trill_nick_recv (area, &recvd_nick);
+	}
     } else {
       /* if we have a nickname stored from this RBridge we remove it as this
        * LSP without a nickname likely indicates the RBridge has re-started
@@ -1804,6 +1832,37 @@ DEFUN (no_trill_rootcount,
 	return CMD_SUCCESS;
 }
 
+DEFUN (add_remote_trill_nick,
+	   add_remote_trill_nick_cmd,
+	   "add remote trill nick <1-65534> <1-127>",
+	   "add remote RB's nickname")
+{
+	printf("add remote RB nickname init\n");
+	struct isis_area *area;
+	
+	area = vty->index;
+	assert (area);
+	assert (area->trill);
+	
+	nickinfo_t remote_nick;
+	memset(&remote_nick, 0, sizeof(nickinfo_t));
+	memset(&remote_nick.sysid, 0, ISIS_SYS_ID_LEN);
+	
+	remote_nick.root_priority = TRILL_DFLT_ROOT_PRIORITY;
+	remote_nick.dt_roots = list_new();
+	remote_nick.supported_vni = list_new();
+	remote_nick.flags = 128;
+
+	remote_nick.nick.name = atoi(argv[0]);
+	remote_nick.nick.priority = atoi(argv[1]);
+	remote_nick.nick.pad = 0;
+	printf("trill_nick_recv init\n");
+	trill_nick_recv(area, &remote_nick);
+	trill_process_spf (area);
+	printf("trill_nick_recv_finish\n");
+	return CMD_SUCCESS;
+}
+
 void trill_init()
 {
   install_element (ISIS_NODE, &trill_nickname_cmd);
@@ -1813,6 +1872,7 @@ void trill_init()
   install_element (ISIS_NODE, &trill_nickname_priority_cmd);
   install_element (ISIS_NODE, &no_trill_nickname_priority_cmd);
   install_element (ISIS_NODE, &trill_instance_cmd);
+  install_element (ISIS_NODE, &add_remote_trill_nick_cmd);
 
   install_element (VIEW_NODE, &show_trill_nickdatabase_cmd);
   install_element (VIEW_NODE, &show_trill_circuits_cmd);
@@ -1825,6 +1885,7 @@ void trill_init()
   install_element (ENABLE_NODE, &show_trill_fwdtable_cmd);
   install_element (ENABLE_NODE, &show_trill_topology_cmd);
   install_element (ENABLE_NODE, &show_trill_adjtable_cmd);
+
 
 
 }

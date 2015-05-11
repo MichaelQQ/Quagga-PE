@@ -1,0 +1,573 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>tests/bgp_mp_attr_test.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1034.html'>tests</a>/bgp_mp_attr_test.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L435'>[^]</a><a href='#L500'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L435' title='Defined at 435.'>parse_test</a></li>
+<li><a href='#L500' title='Defined at 500.'>main</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L2' name='L2'></a>
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L7' name='L7'></a>
+<a id='L8' name='L8'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L9' name='L9'></a><em class='sharp'>#include</em> "<a href='642.html'>bgpd/bgp_attr.h</a>"
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> "<a href='659.html'>bgpd/bgp_open.h</a>"
+<a id='L11' name='L11'></a><em class='sharp'>#include</em> "<a href='662.html'>bgpd/bgp_debug.h</a>"
+<a id='L12' name='L12'></a>
+<a id='L13' name='L13'></a><em class='sharp'>#define</em> <a href='../R/3771.html' title='Multiple referred from 8 places.'>VT100_RESET</a> "\x1b[0m"
+<a id='L14' name='L14'></a><em class='sharp'>#define</em> <a href='../R/3770.html' title='Multiple referred from 4 places.'>VT100_RED</a> "\x1b[31m"
+<a id='L15' name='L15'></a><em class='sharp'>#define</em> <a href='../R/3769.html' title='Multiple referred from 4 places.'>VT100_GREEN</a> "\x1b[32m"
+<a id='L16' name='L16'></a><em class='sharp'>#define</em> VT100_YELLOW "\x1b[33m"
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><em class='sharp'>#define</em> <a href='../R/441.html' title='Multiple referred from 5 places.'>CAPABILITY</a> 0
+<a id='L20' name='L20'></a><em class='sharp'>#define</em> <a href='../R/690.html' title='Multiple referred from 3 places.'>DYNCAP</a>     1
+<a id='L21' name='L21'></a><em class='sharp'>#define</em> <a href='../R/2150.html' title='Multiple referred from 2 places.'>OPT_PARAM</a>  2
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='comment'>/* need these to link in libbgp */</em>
+<a id='L24' name='L24'></a><strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> *bgpd_privs = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L25' name='L25'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> failed = 0;
+<a id='L28' name='L28'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> tty = 0;
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><em class='comment'>/* test segments to parse and validate, and use for other tests */</em>
+<a id='L31' name='L31'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../R/10110.html' title='Multiple referred from 16 places.'>test_segment</a> <em class='brace'>{</em>
+<a id='L32' name='L32'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L33' name='L33'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/214.html#L158' title='Defined at 158 in lib/command.h.'>desc</a>;
+<a id='L34' name='L34'></a>  <strong class='reserved'>const</strong> u_char <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>[1024];
+<a id='L35' name='L35'></a>  <strong class='reserved'>int</strong> len;
+<a id='L36' name='L36'></a><em class='sharp'>#define</em> <a href='../R/3456.html' title='Multiple referred from 38 places.'>SHOULD_PARSE</a>    0
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/3455.html' title='Multiple referred from 25 places.'>SHOULD_ERR</a>      -1
+<a id='L38' name='L38'></a>  <strong class='reserved'>int</strong> parses; <em class='comment'>/* whether it should parse or not */</em>
+<a id='L39' name='L39'></a>  
+<a id='L40' name='L40'></a>  <em class='comment'>/* AFI/SAFI validation */</em>
+<a id='L41' name='L41'></a>  <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi;
+<a id='L42' name='L42'></a>  <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi;
+<a id='L43' name='L43'></a><em class='sharp'>#define</em> <a href='../R/3748.html' title='Multiple referred from 29 places.'>VALID_AFI</a> 1
+<a id='L44' name='L44'></a><em class='sharp'>#define</em> <a href='../S/78.html#L124' title='Referred from 124 in tests/bgp_capability_test.c.'>INVALID_AFI</a> 0
+<a id='L45' name='L45'></a>  <strong class='reserved'>int</strong> afi_valid;
+<a id='L46' name='L46'></a><em class='brace'>}</em> mp_reach_segments [] = 
+<a id='L47' name='L47'></a><em class='brace'>{</em>
+<a id='L48' name='L48'></a>  <em class='brace'>{</em> "IPv6",
+<a id='L49' name='L49'></a>    "IPV6 MP Reach, global nexthop, 1 NLRI", 
+<a id='L50' name='L50'></a>    <em class='brace'>{</em>
+<a id='L51' name='L51'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L52' name='L52'></a>      <em class='comment'>/* nexthop bytes */</em>       16,
+<a id='L53' name='L53'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,
+<a id='L54' name='L54'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L55' name='L55'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L56' name='L56'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L57' name='L57'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L58' name='L58'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L59' name='L59'></a>    <em class='brace'>}</em>,
+<a id='L60' name='L60'></a>    (4 + 16 + 1 + 5), 
+<a id='L61' name='L61'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L62' name='L62'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L63' name='L63'></a>  <em class='brace'>}</em>,
+<a id='L64' name='L64'></a>  <em class='brace'>{</em> "IPv6-2",
+<a id='L65' name='L65'></a>    "IPV6 MP Reach, global nexthop, 2 NLRIs", 
+<a id='L66' name='L66'></a>    <em class='brace'>{</em>
+<a id='L67' name='L67'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L68' name='L68'></a>      <em class='comment'>/* nexthop bytes */</em>       16,
+<a id='L69' name='L69'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,   <em class='comment'>/* ffee:102:... */</em>
+<a id='L70' name='L70'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L71' name='L71'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L72' name='L72'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L73' name='L73'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L74' name='L74'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L75' name='L75'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L76' name='L76'></a>                                64,
+<a id='L77' name='L77'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L78' name='L78'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L79' name='L79'></a>    <em class='brace'>}</em>,
+<a id='L80' name='L80'></a>    (4 + 16 + 1 + 5 + 9), 
+<a id='L81' name='L81'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L82' name='L82'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L83' name='L83'></a>  <em class='brace'>}</em>,
+<a id='L84' name='L84'></a>  <em class='brace'>{</em> "IPv6-default",
+<a id='L85' name='L85'></a>    "IPV6 MP Reach, global nexthop, 2 NLRIs + default", 
+<a id='L86' name='L86'></a>    <em class='brace'>{</em>
+<a id='L87' name='L87'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L88' name='L88'></a>      <em class='comment'>/* nexthop bytes */</em>       16,
+<a id='L89' name='L89'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,
+<a id='L90' name='L90'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L91' name='L91'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L92' name='L92'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L93' name='L93'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L94' name='L94'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L95' name='L95'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L96' name='L96'></a>                                64,
+<a id='L97' name='L97'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L98' name='L98'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L99' name='L99'></a>                                0x0, <em class='comment'>/* ::/0 */</em>
+<a id='L100' name='L100'></a>    <em class='brace'>}</em>,
+<a id='L101' name='L101'></a>    (4 + 16 + 1 + 5 + 9 + 1),
+<a id='L102' name='L102'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L103' name='L103'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L104' name='L104'></a>  <em class='brace'>}</em>,
+<a id='L105' name='L105'></a>  <em class='brace'>{</em> "IPv6-lnh",
+<a id='L106' name='L106'></a>    "IPV6 MP Reach, global+local nexthops, 2 NLRIs + default", 
+<a id='L107' name='L107'></a>    <em class='brace'>{</em>
+<a id='L108' name='L108'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L109' name='L109'></a>      <em class='comment'>/* nexthop bytes */</em>       32,
+<a id='L110' name='L110'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,  <em class='comment'>/* fffe:102:... */</em>
+<a id='L111' name='L111'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L112' name='L112'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L113' name='L113'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L114' name='L114'></a>      <em class='comment'>/* Nexthop (local) */</em>     0xfe, 0x80, 0x0,  0x0,  <em class='comment'>/* fe80::210:2ff:.. */</em>
+<a id='L115' name='L115'></a>                                0x0,  0x0,  0x0,  0x0,
+<a id='L116' name='L116'></a>                                0x2,  0x10, 0x2,  0xff,
+<a id='L117' name='L117'></a>                                0x1,  0x2,  0x3,  0x4,
+<a id='L118' name='L118'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L119' name='L119'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L120' name='L120'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L121' name='L121'></a>                                64,
+<a id='L122' name='L122'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L123' name='L123'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L124' name='L124'></a>                                0x0, <em class='comment'>/* ::/0 */</em>
+<a id='L125' name='L125'></a>    <em class='brace'>}</em>,
+<a id='L126' name='L126'></a>    (4 + 32 + 1 + 5 + 9 + 1),
+<a id='L127' name='L127'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L128' name='L128'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L129' name='L129'></a>  <em class='brace'>}</em>,
+<a id='L130' name='L130'></a>  <em class='brace'>{</em> "IPv6-nhlen",
+<a id='L131' name='L131'></a>    "IPV6 MP Reach, inappropriate nexthop length", 
+<a id='L132' name='L132'></a>    <em class='brace'>{</em>
+<a id='L133' name='L133'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L134' name='L134'></a>      <em class='comment'>/* nexthop bytes */</em>       4,
+<a id='L135' name='L135'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,  <em class='comment'>/* fffe:102:... */</em>
+<a id='L136' name='L136'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L137' name='L137'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L138' name='L138'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L139' name='L139'></a>      <em class='comment'>/* Nexthop (local) */</em>     0xfe, 0x80, 0x0,  0x0,  <em class='comment'>/* fe80::210:2ff:.. */</em>
+<a id='L140' name='L140'></a>                                0x0,  0x0,  0x0,  0x0,
+<a id='L141' name='L141'></a>                                0x2,  0x10, 0x2,  0xff,
+<a id='L142' name='L142'></a>                                0x1,  0x2,  0x3,  0x4,
+<a id='L143' name='L143'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L144' name='L144'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L145' name='L145'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L146' name='L146'></a>                                64,
+<a id='L147' name='L147'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L148' name='L148'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L149' name='L149'></a>                                0x0, <em class='comment'>/* ::/0 */</em>
+<a id='L150' name='L150'></a>    <em class='brace'>}</em>,
+<a id='L151' name='L151'></a>    (4 + 32 + 1 + 5 + 9 + 1),
+<a id='L152' name='L152'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L153' name='L153'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L154' name='L154'></a>  <em class='brace'>}</em>,
+<a id='L155' name='L155'></a>  <em class='brace'>{</em> "IPv6-nhlen2",
+<a id='L156' name='L156'></a>    "IPV6 MP Reach, invalid nexthop length", 
+<a id='L157' name='L157'></a>    <em class='brace'>{</em>
+<a id='L158' name='L158'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L159' name='L159'></a>      <em class='comment'>/* nexthop bytes */</em>       5,
+<a id='L160' name='L160'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,  <em class='comment'>/* fffe:102:... */</em>
+<a id='L161' name='L161'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L162' name='L162'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L163' name='L163'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L164' name='L164'></a>      <em class='comment'>/* Nexthop (local) */</em>     0xfe, 0x80, 0x0,  0x0,  <em class='comment'>/* fe80::210:2ff:.. */</em>
+<a id='L165' name='L165'></a>                                0x0,  0x0,  0x0,  0x0,
+<a id='L166' name='L166'></a>                                0x2,  0x10, 0x2,  0xff,
+<a id='L167' name='L167'></a>                                0x1,  0x2,  0x3,  0x4,
+<a id='L168' name='L168'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L169' name='L169'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L170' name='L170'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L171' name='L171'></a>                                64,
+<a id='L172' name='L172'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L173' name='L173'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L174' name='L174'></a>                                0x0, <em class='comment'>/* ::/0 */</em>
+<a id='L175' name='L175'></a>    <em class='brace'>}</em>,
+<a id='L176' name='L176'></a>    (4 + 32 + 1 + 5 + 9 + 1),
+<a id='L177' name='L177'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L178' name='L178'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L179' name='L179'></a>  <em class='brace'>}</em>,
+<a id='L180' name='L180'></a>  <em class='brace'>{</em> "IPv6-nhlen3",
+<a id='L181' name='L181'></a>    "IPV6 MP Reach, nexthop length overflow", 
+<a id='L182' name='L182'></a>    <em class='brace'>{</em>
+<a id='L183' name='L183'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L184' name='L184'></a>      <em class='comment'>/* nexthop bytes */</em>       32,
+<a id='L185' name='L185'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,  <em class='comment'>/* fffe:102:... */</em>
+<a id='L186' name='L186'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L187' name='L187'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L188' name='L188'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L189' name='L189'></a>    <em class='brace'>}</em>,
+<a id='L190' name='L190'></a>    (4 + 16),
+<a id='L191' name='L191'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L192' name='L192'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L193' name='L193'></a>  <em class='brace'>}</em>,
+<a id='L194' name='L194'></a>  <em class='brace'>{</em> "IPv6-nhlen4",
+<a id='L195' name='L195'></a>    "IPV6 MP Reach, nexthop length short", 
+<a id='L196' name='L196'></a>    <em class='brace'>{</em>
+<a id='L197' name='L197'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L198' name='L198'></a>      <em class='comment'>/* nexthop bytes */</em>       16,
+<a id='L199' name='L199'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,  <em class='comment'>/* fffe:102:... */</em>
+<a id='L200' name='L200'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L201' name='L201'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L202' name='L202'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L203' name='L203'></a>      <em class='comment'>/* Nexthop (local) */</em>     0xfe, 0x80, 0x0,  0x0,  <em class='comment'>/* fe80::210:2ff:.. */</em>
+<a id='L204' name='L204'></a>                                0x0,  0x0,  0x0,  0x0,
+<a id='L205' name='L205'></a>                                0x2,  0x10, 0x2,  0xff,
+<a id='L206' name='L206'></a>                                0x1,  0x2,  0x3,  0x4,
+<a id='L207' name='L207'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L208' name='L208'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L209' name='L209'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L210' name='L210'></a>                                64,
+<a id='L211' name='L211'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L212' name='L212'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L213' name='L213'></a>                                0x0, <em class='comment'>/* ::/0 */</em>
+<a id='L214' name='L214'></a>    <em class='brace'>}</em>,
+<a id='L215' name='L215'></a>    (4 + 32 + 1 + 5 + 9 + 1),
+<a id='L216' name='L216'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L217' name='L217'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L218' name='L218'></a>  <em class='brace'>}</em>,
+<a id='L219' name='L219'></a>  <em class='brace'>{</em> "IPv6-nlri",
+<a id='L220' name='L220'></a>    "IPV6 MP Reach, NLRI bitlen overflow", 
+<a id='L221' name='L221'></a>    <em class='brace'>{</em>
+<a id='L222' name='L222'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L223' name='L223'></a>      <em class='comment'>/* nexthop bytes */</em>       32,
+<a id='L224' name='L224'></a>      <em class='comment'>/* Nexthop (global) */</em>    0xff, 0xfe, 0x1,  0x2,  <em class='comment'>/* fffe:102:... */</em>
+<a id='L225' name='L225'></a>                                0xaa, 0xbb, 0xcc, 0xdd,
+<a id='L226' name='L226'></a>                                0x3,  0x4,  0x5,  0x6,
+<a id='L227' name='L227'></a>                                0xa1, 0xa2, 0xa3, 0xa4,
+<a id='L228' name='L228'></a>      <em class='comment'>/* Nexthop (local) */</em>     0xfe, 0x80, 0x0,  0x0,  <em class='comment'>/* fe80::210:2ff:.. */</em>
+<a id='L229' name='L229'></a>                                0x0,  0x0,  0x0,  0x0,
+<a id='L230' name='L230'></a>                                0x2,  0x10, 0x2,  0xff,
+<a id='L231' name='L231'></a>                                0x1,  0x2,  0x3,  0x4,
+<a id='L232' name='L232'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L233' name='L233'></a>      <em class='comment'>/* NLRI tuples */</em>         120, 
+<a id='L234' name='L234'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L235' name='L235'></a>                                64,
+<a id='L236' name='L236'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L237' name='L237'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L238' name='L238'></a>                                0, <em class='comment'>/* ::/0 */</em>
+<a id='L239' name='L239'></a>    <em class='brace'>}</em>,
+<a id='L240' name='L240'></a>    (4 + 32 + 1 + 5 + 9 + 1),
+<a id='L241' name='L241'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L242' name='L242'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L243' name='L243'></a>  <em class='brace'>}</em>,
+<a id='L244' name='L244'></a>  <em class='brace'>{</em> "IPv4",
+<a id='L245' name='L245'></a>    "IPv4 MP Reach, 2 NLRIs + default", 
+<a id='L246' name='L246'></a>    <em class='brace'>{</em>
+<a id='L247' name='L247'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L248' name='L248'></a>      <em class='comment'>/* nexthop bytes */</em>       4,
+<a id='L249' name='L249'></a>      <em class='comment'>/* Nexthop */</em>             192, 168,   0,  1, 
+<a id='L250' name='L250'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L251' name='L251'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L252' name='L252'></a>                                17, 10, 2, 3, <em class='comment'>/* 10.2.3/17 */</em>
+<a id='L253' name='L253'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L254' name='L254'></a>    <em class='brace'>}</em>,
+<a id='L255' name='L255'></a>    (4 + 4 + 1 + 3 + 4 + 1),
+<a id='L256' name='L256'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L257' name='L257'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L258' name='L258'></a>  <em class='brace'>}</em>,
+<a id='L259' name='L259'></a>  <em class='brace'>{</em> "IPv4-nhlen",
+<a id='L260' name='L260'></a>    "IPv4 MP Reach, nexthop lenth overflow", 
+<a id='L261' name='L261'></a>    <em class='brace'>{</em>
+<a id='L262' name='L262'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L263' name='L263'></a>      <em class='comment'>/* nexthop bytes */</em>       32,
+<a id='L264' name='L264'></a>      <em class='comment'>/* Nexthop */</em>             192, 168,   0,  1, 
+<a id='L265' name='L265'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L266' name='L266'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L267' name='L267'></a>                                17, 10, 2, 3, <em class='comment'>/* 10.2.3/17 */</em>
+<a id='L268' name='L268'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L269' name='L269'></a>    <em class='brace'>}</em>,
+<a id='L270' name='L270'></a>    (4 + 4 + 1 + 3 + 4 + 1),
+<a id='L271' name='L271'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L272' name='L272'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L273' name='L273'></a>  <em class='brace'>}</em>,
+<a id='L274' name='L274'></a>  <em class='brace'>{</em> "IPv4-nlrilen",
+<a id='L275' name='L275'></a>    "IPv4 MP Reach, nlri lenth overflow", 
+<a id='L276' name='L276'></a>    <em class='brace'>{</em>
+<a id='L277' name='L277'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L278' name='L278'></a>      <em class='comment'>/* nexthop bytes */</em>       4,
+<a id='L279' name='L279'></a>      <em class='comment'>/* Nexthop */</em>             192, 168,   0,  1, 
+<a id='L280' name='L280'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L281' name='L281'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L282' name='L282'></a>                                30, 10, 
+<a id='L283' name='L283'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L284' name='L284'></a>    <em class='brace'>}</em>,
+<a id='L285' name='L285'></a>    (4 + 4 + 1 + 3 + 2 + 1),
+<a id='L286' name='L286'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L287' name='L287'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L288' name='L288'></a>  <em class='brace'>}</em>,
+<a id='L289' name='L289'></a>  <em class='brace'>{</em> "IPv4-MLVPN",
+<a id='L290' name='L290'></a>    "IPv4/MPLS-labeled VPN MP Reach, RD, Nexthop, 3 NLRIs", 
+<a id='L291' name='L291'></a>    <em class='brace'>{</em>
+<a id='L292' name='L292'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/608.html#L751' title='Defined at 751 in bgpd/bgpd.h.'>SAFI_MPLS_LABELED_VPN</a>,
+<a id='L293' name='L293'></a>      <em class='comment'>/* nexthop bytes */</em>       12,
+<a id='L294' name='L294'></a>      <em class='comment'>/* RD */</em>                  0, 0, 1, 2,
+<a id='L295' name='L295'></a>                                0, 0xff, 3, 4,
+<a id='L296' name='L296'></a>      <em class='comment'>/* Nexthop */</em>             192, 168,   0,  1, 
+<a id='L297' name='L297'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L298' name='L298'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L299' name='L299'></a>                                17, 10, 2, 3,  <em class='comment'>/* 10.2.3/17 */</em>
+<a id='L300' name='L300'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L301' name='L301'></a>    <em class='brace'>}</em>,
+<a id='L302' name='L302'></a>    (4 + 12 + 1 + 3 + 4 + 1),
+<a id='L303' name='L303'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L304' name='L304'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L305' name='L305'></a>  <em class='brace'>}</em>,
+<a id='L306' name='L306'></a>  <em class='comment'>/* From bug #385 */</em>
+<a id='L307' name='L307'></a>  <em class='brace'>{</em> "IPv6-bug",
+<a id='L308' name='L308'></a>    "IPv6, global nexthop, 1 default NLRI", 
+<a id='L309' name='L309'></a>    <em class='brace'>{</em>
+<a id='L310' name='L310'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, 0x2, 0x1,
+<a id='L311' name='L311'></a>      <em class='comment'>/* nexthop bytes */</em>       0x20,
+<a id='L312' name='L312'></a>      <em class='comment'>/* Nexthop (global) */</em>    0x20, 0x01, 0x04, 0x70, 
+<a id='L313' name='L313'></a>                                0x00, 0x01, 0x00, 0x06,
+<a id='L314' name='L314'></a>                                0x00, 0x00, 0x00, 0x00,
+<a id='L315' name='L315'></a>                                0x00, 0x00, 0x00, 0x01, 
+<a id='L316' name='L316'></a>      <em class='comment'>/* Nexthop (local) */</em>     0xfe, 0x80, 0x00, 0x00, 
+<a id='L317' name='L317'></a>                                0x00, 0x00, 0x00, 0x00,
+<a id='L318' name='L318'></a>                                0x02, 0x0c, 0xdb, 0xff, 
+<a id='L319' name='L319'></a>                                0xfe, 0xfe, 0xeb, 0x00,
+<a id='L320' name='L320'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0,
+<a id='L321' name='L321'></a>      <em class='comment'>/* NLRI tuples */</em>         <em class='comment'>/* Should have 0 here for ::/0, but dont */</em>
+<a id='L322' name='L322'></a>    <em class='brace'>}</em>,
+<a id='L323' name='L323'></a>    37,
+<a id='L324' name='L324'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L325' name='L325'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L326' name='L326'></a>  <em class='brace'>}</em>,
+<a id='L327' name='L327'></a>  
+<a id='L328' name='L328'></a>  <em class='brace'>{</em> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <em class='brace'>{</em>0<em class='brace'>}</em>, 0, 0<em class='brace'>}</em>
+<a id='L329' name='L329'></a><em class='brace'>}</em>;
+<a id='L330' name='L330'></a>
+<a id='L331' name='L331'></a><em class='comment'>/* MP_UNREACH_NLRI tests */</em>
+<a id='L332' name='L332'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../D/11027.html' title='Multiple defined in 4 places.'>test_segment</a> mp_unreach_segments [] =
+<a id='L333' name='L333'></a><em class='brace'>{</em>
+<a id='L334' name='L334'></a>  <em class='brace'>{</em> "IPv6-unreach",
+<a id='L335' name='L335'></a>    "IPV6 MP Unreach, 1 NLRI", 
+<a id='L336' name='L336'></a>    <em class='brace'>{</em>
+<a id='L337' name='L337'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L338' name='L338'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L339' name='L339'></a>    <em class='brace'>}</em>,
+<a id='L340' name='L340'></a>    (3 + 5), 
+<a id='L341' name='L341'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L342' name='L342'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L343' name='L343'></a>  <em class='brace'>}</em>,
+<a id='L344' name='L344'></a>  <em class='brace'>{</em> "IPv6-unreach2",
+<a id='L345' name='L345'></a>    "IPV6 MP Unreach, 2 NLRIs", 
+<a id='L346' name='L346'></a>    <em class='brace'>{</em>
+<a id='L347' name='L347'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L348' name='L348'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L349' name='L349'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L350' name='L350'></a>                                64,
+<a id='L351' name='L351'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L352' name='L352'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L353' name='L353'></a>    <em class='brace'>}</em>,
+<a id='L354' name='L354'></a>    (3 + 5 + 9), 
+<a id='L355' name='L355'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L356' name='L356'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L357' name='L357'></a>  <em class='brace'>}</em>,
+<a id='L358' name='L358'></a>  <em class='brace'>{</em> "IPv6-unreach-default",
+<a id='L359' name='L359'></a>    "IPV6 MP Unreach, 2 NLRIs + default", 
+<a id='L360' name='L360'></a>    <em class='brace'>{</em>
+<a id='L361' name='L361'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L362' name='L362'></a>      <em class='comment'>/* NLRI tuples */</em>         32, 
+<a id='L363' name='L363'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L364' name='L364'></a>                                64,
+<a id='L365' name='L365'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L366' name='L366'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L367' name='L367'></a>                                0x0, <em class='comment'>/* ::/0 */</em>
+<a id='L368' name='L368'></a>    <em class='brace'>}</em>,
+<a id='L369' name='L369'></a>    (3 + 5 + 9 + 1),
+<a id='L370' name='L370'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L371' name='L371'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L372' name='L372'></a>  <em class='brace'>}</em>,
+<a id='L373' name='L373'></a>  <em class='brace'>{</em> "IPv6-unreach-nlri",
+<a id='L374' name='L374'></a>    "IPV6 MP Unreach, NLRI bitlen overflow", 
+<a id='L375' name='L375'></a>    <em class='brace'>{</em>
+<a id='L376' name='L376'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L377' name='L377'></a>      <em class='comment'>/* NLRI tuples */</em>         120, 
+<a id='L378' name='L378'></a>                                0xff, 0xfe, 0x1, 0x2, <em class='comment'>/* fffe:102::/32 */</em>
+<a id='L379' name='L379'></a>                                64,
+<a id='L380' name='L380'></a>                                0xff, 0xfe, 0x0, 0x1, <em class='comment'>/* fffe:1:2:3::/64 */</em>
+<a id='L381' name='L381'></a>                                0x0,  0x2,  0x0, 0x3,
+<a id='L382' name='L382'></a>                                0, <em class='comment'>/* ::/0 */</em>
+<a id='L383' name='L383'></a>    <em class='brace'>}</em>,
+<a id='L384' name='L384'></a>    (3 + 5 + 9 + 1),
+<a id='L385' name='L385'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L386' name='L386'></a>    <a href='../S/191.html#L498' title='Defined at 498 in lib/zebra.h.'>AFI_IP6</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L387' name='L387'></a>  <em class='brace'>}</em>,
+<a id='L388' name='L388'></a>  <em class='brace'>{</em> "IPv4-unreach",
+<a id='L389' name='L389'></a>    "IPv4 MP Unreach, 2 NLRIs + default", 
+<a id='L390' name='L390'></a>    <em class='brace'>{</em>
+<a id='L391' name='L391'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L392' name='L392'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L393' name='L393'></a>                                17, 10, 2, 3, <em class='comment'>/* 10.2.3/17 */</em>
+<a id='L394' name='L394'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L395' name='L395'></a>    <em class='brace'>}</em>,
+<a id='L396' name='L396'></a>    (3 + 3 + 4 + 1),
+<a id='L397' name='L397'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L398' name='L398'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L399' name='L399'></a>  <em class='brace'>}</em>,
+<a id='L400' name='L400'></a>  <em class='brace'>{</em> "IPv4-unreach-nlrilen",
+<a id='L401' name='L401'></a>    "IPv4 MP Unreach, nlri length overflow", 
+<a id='L402' name='L402'></a>    <em class='brace'>{</em>
+<a id='L403' name='L403'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>,
+<a id='L404' name='L404'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L405' name='L405'></a>                                30, 10, 
+<a id='L406' name='L406'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L407' name='L407'></a>    <em class='brace'>}</em>,
+<a id='L408' name='L408'></a>    (3 + 3 + 2 + 1),
+<a id='L409' name='L409'></a>    <a href='../D/4080.html' title='Multiple defined in 2 places.'>SHOULD_ERR</a>,
+<a id='L410' name='L410'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L411' name='L411'></a>  <em class='brace'>}</em>,
+<a id='L412' name='L412'></a>  <em class='brace'>{</em> "IPv4-unreach-MLVPN",
+<a id='L413' name='L413'></a>    "IPv4/MPLS-labeled VPN MP Unreach, RD, 3 NLRIs", 
+<a id='L414' name='L414'></a>    <em class='brace'>{</em>
+<a id='L415' name='L415'></a>      <em class='comment'>/* AFI / SAFI */</em>          0x0, <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/608.html#L751' title='Defined at 751 in bgpd/bgpd.h.'>SAFI_MPLS_LABELED_VPN</a>,
+<a id='L416' name='L416'></a>      <em class='comment'>/* nexthop bytes */</em>       12,
+<a id='L417' name='L417'></a>      <em class='comment'>/* RD */</em>                  0, 0, 1, 2,
+<a id='L418' name='L418'></a>                                0, 0xff, 3, 4,
+<a id='L419' name='L419'></a>      <em class='comment'>/* Nexthop */</em>             192, 168,   0,  1, 
+<a id='L420' name='L420'></a>      <em class='comment'>/* SNPA (defunct, MBZ) */</em> 0x0,
+<a id='L421' name='L421'></a>      <em class='comment'>/* NLRI tuples */</em>         16, 10, 1,    <em class='comment'>/* 10.1/16 */</em>
+<a id='L422' name='L422'></a>                                17, 10, 2, 3,  <em class='comment'>/* 10.2.3/17 */</em>
+<a id='L423' name='L423'></a>                                0, <em class='comment'>/* 0/0 */</em>
+<a id='L424' name='L424'></a>    <em class='brace'>}</em>,
+<a id='L425' name='L425'></a>    (3 + 3 + 4 + 1),
+<a id='L426' name='L426'></a>    <a href='../D/4081.html' title='Multiple defined in 2 places.'>SHOULD_PARSE</a>,
+<a id='L427' name='L427'></a>    <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>, <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>, <a href='../D/4451.html' title='Multiple defined in 2 places.'>VALID_AFI</a>,
+<a id='L428' name='L428'></a>  <em class='brace'>}</em>,
+<a id='L429' name='L429'></a>  <em class='brace'>{</em> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <em class='brace'>{</em>0<em class='brace'>}</em>, 0, 0<em class='brace'>}</em>
+<a id='L430' name='L430'></a><em class='brace'>}</em>;
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a>
+<a id='L433' name='L433'></a><em class='comment'>/* basic parsing test */</em>
+<a id='L434' name='L434'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L435' name='L435'></a><a href='../R/8604.html' title='Multiple referred from 9 places.'>parse_test</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, <strong class='reserved'>struct</strong> <a href='../D/11027.html' title='Multiple defined in 4 places.'>test_segment</a> *t, <strong class='reserved'>int</strong> type)
+<a id='L436' name='L436'></a><em class='brace'>{</em>
+<a id='L437' name='L437'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L438' name='L438'></a>  <strong class='reserved'>int</strong> oldfailed = failed;
+<a id='L439' name='L439'></a>  <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = <em class='brace'>{</em> <em class='brace'>}</em>;
+<a id='L440' name='L440'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L572' title='Defined at 572 in bgpd/bgpd.h.'>bgp_nlri</a> nlri = <em class='brace'>{</em> <em class='brace'>}</em>;
+<a id='L441' name='L441'></a>  <strong class='reserved'>struct</strong> <a href='../S/642.html#L183' title='Defined at 183 in bgpd/bgp_attr.h.'>bgp_attr_parser_args</a> attr_args = <em class='brace'>{</em>
+<a id='L442' name='L442'></a>    .<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>,
+<a id='L443' name='L443'></a>    .length = t-&gt;len,
+<a id='L444' name='L444'></a>    .total = 1,
+<a id='L445' name='L445'></a>    .<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> = &amp;<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>,
+<a id='L446' name='L446'></a>    .type = <a href='../S/608.html#L633' title='Defined at 633 in bgpd/bgpd.h.'>BGP_ATTR_MP_REACH_NLRI</a>,
+<a id='L447' name='L447'></a>    .<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/642.html#L41' title='Defined at 41 in bgpd/bgp_attr.h.'>BGP_ATTR_FLAG_OPTIONAL</a>, 
+<a id='L448' name='L448'></a>    .startp = <a href='../S/608.html#L779' title='Defined at 779 in bgpd/bgpd.h.'>BGP_INPUT_PNT</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>),
+<a id='L449' name='L449'></a>  <em class='brace'>}</em>;
+<a id='L450' name='L450'></a><em class='sharp'>#define</em> <a href='../R/3072.html' title='Multiple referred from 5 places.'>RANDOM_FUZZ</a> 35
+<a id='L451' name='L451'></a>  
+<a id='L452' name='L452'></a>  <a href='../S/296.html#L902' title='Defined at 902 in lib/stream.c.'>stream_reset</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ibuf);
+<a id='L453' name='L453'></a>  <a href='../S/296.html#L485' title='Defined at 485 in lib/stream.c.'>stream_put</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ibuf, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../D/3640.html' title='Multiple defined in 2 places.'>RANDOM_FUZZ</a>);
+<a id='L454' name='L454'></a>  <a href='../S/296.html#L204' title='Defined at 204 in lib/stream.c.'>stream_set_getp</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ibuf, <a href='../D/3640.html' title='Multiple defined in 2 places.'>RANDOM_FUZZ</a>);
+<a id='L455' name='L455'></a>  
+<a id='L456' name='L456'></a>  <a href='../D/10972.html' title='Multiple defined in 2 places.'>stream_write</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;ibuf, t-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>, t-&gt;len);
+<a id='L457' name='L457'></a>  
+<a id='L458' name='L458'></a>  printf ("%s: %s\n", t-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, t-&gt;<a href='../S/214.html#L158' title='Defined at 158 in lib/command.h.'>desc</a>);
+<a id='L459' name='L459'></a>  
+<a id='L460' name='L460'></a>  
+<a id='L461' name='L461'></a>  <strong class='reserved'>if</strong> (type == <a href='../S/608.html#L633' title='Defined at 633 in bgpd/bgpd.h.'>BGP_ATTR_MP_REACH_NLRI</a>)
+<a id='L462' name='L462'></a>    ret = <a href='../S/643.html#L1459' title='Defined at 1459 in bgpd/bgp_attr.c.'>bgp_mp_reach_parse</a> (&amp;attr_args, &amp;nlri);
+<a id='L463' name='L463'></a>  <strong class='reserved'>else</strong>
+<a id='L464' name='L464'></a>    ret = <a href='../S/643.html#L1591' title='Defined at 1591 in bgpd/bgp_attr.c.'>bgp_mp_unreach_parse</a> (&amp;attr_args, &amp;nlri);
+<a id='L465' name='L465'></a>
+<a id='L466' name='L466'></a>  <strong class='reserved'>if</strong> (!ret)
+<a id='L467' name='L467'></a>    <em class='brace'>{</em>
+<a id='L468' name='L468'></a>      <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi = t-&gt;safi;
+<a id='L469' name='L469'></a>      
+<a id='L470' name='L470'></a>      <strong class='reserved'>if</strong> (<a href='../S/625.html#L125' title='Defined at 125 in bgpd/bgp_open.c.'>bgp_afi_safi_valid_indices</a> (t-&gt;afi, &amp;safi) != t-&gt;afi_valid)
+<a id='L471' name='L471'></a>        failed++;
+<a id='L472' name='L472'></a>      
+<a id='L473' name='L473'></a>      printf ("MP: %u/%u (%u): recv %u, nego %u\n",
+<a id='L474' name='L474'></a>              t-&gt;afi, t-&gt;safi, safi,
+<a id='L475' name='L475'></a>              <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_recv[t-&gt;afi][safi],
+<a id='L476' name='L476'></a>              <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_nego[t-&gt;afi][safi]);
+<a id='L477' name='L477'></a>    <em class='brace'>}</em>
+<a id='L478' name='L478'></a>  
+<a id='L479' name='L479'></a>  printf ("parsed?: %s\n", ret ? "no" : "yes");
+<a id='L480' name='L480'></a>  
+<a id='L481' name='L481'></a>  <strong class='reserved'>if</strong> (ret != t-&gt;parses)
+<a id='L482' name='L482'></a>    failed++;
+<a id='L483' name='L483'></a>  
+<a id='L484' name='L484'></a>  <strong class='reserved'>if</strong> (tty)
+<a id='L485' name='L485'></a>    printf ("%s", (failed &gt; oldfailed) ? <a href='../D/4477.html' title='Multiple defined in 4 places.'>VT100_RED</a> "failed!" <a href='../D/4478.html' title='Multiple defined in 4 places.'>VT100_RESET</a> 
+<a id='L486' name='L486'></a>                                         : <a href='../D/4476.html' title='Multiple defined in 4 places.'>VT100_GREEN</a> "OK" <a href='../D/4478.html' title='Multiple defined in 4 places.'>VT100_RESET</a>);
+<a id='L487' name='L487'></a>  <strong class='reserved'>else</strong>
+<a id='L488' name='L488'></a>    printf ("%s", (failed &gt; oldfailed) ? "failed!" : "OK" );
+<a id='L489' name='L489'></a>  
+<a id='L490' name='L490'></a>  <strong class='reserved'>if</strong> (failed)
+<a id='L491' name='L491'></a>    printf (" (%u)", failed);
+<a id='L492' name='L492'></a>  
+<a id='L493' name='L493'></a>  printf ("\n\n");
+<a id='L494' name='L494'></a><em class='brace'>}</em>
+<a id='L495' name='L495'></a>
+<a id='L496' name='L496'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>;
+<a id='L497' name='L497'></a><strong class='reserved'>static</strong> <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a> asn = 100;
+<a id='L498' name='L498'></a>
+<a id='L499' name='L499'></a><strong class='reserved'>int</strong>
+<a id='L500' name='L500'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a> (<strong class='reserved'>void</strong>)
+<a id='L501' name='L501'></a><em class='brace'>{</em>
+<a id='L502' name='L502'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L503' name='L503'></a>  <strong class='reserved'>int</strong> i, j;
+<a id='L504' name='L504'></a>  
+<a id='L505' name='L505'></a>  conf_bgp_debug_fsm = -1UL;
+<a id='L506' name='L506'></a>  conf_bgp_debug_events = -1UL;
+<a id='L507' name='L507'></a>  conf_bgp_debug_packet = -1UL;
+<a id='L508' name='L508'></a>  conf_bgp_debug_normal = -1UL;
+<a id='L509' name='L509'></a>  conf_bgp_debug_as4 = -1UL;
+<a id='L510' name='L510'></a>  term_bgp_debug_fsm = -1UL;
+<a id='L511' name='L511'></a>  term_bgp_debug_events = -1UL;
+<a id='L512' name='L512'></a>  term_bgp_debug_packet = -1UL;
+<a id='L513' name='L513'></a>  term_bgp_debug_normal = -1UL;
+<a id='L514' name='L514'></a>  term_bgp_debug_as4 = -1UL;
+<a id='L515' name='L515'></a>  
+<a id='L516' name='L516'></a>  master = <a href='../S/208.html#L530' title='Defined at 530 in lib/thread.c.'>thread_master_create</a> ();
+<a id='L517' name='L517'></a>  <a href='../S/610.html#L5357' title='Defined at 5357 in bgpd/bgpd.c.'>bgp_master_init</a> ();
+<a id='L518' name='L518'></a>  <a href='../S/610.html#L78' title='Defined at 78 in bgpd/bgpd.c.'>bgp_option_set</a> (<a href='../S/608.html#L62' title='Defined at 62 in bgpd/bgpd.h.'>BGP_OPT_NO_LISTEN</a>);
+<a id='L519' name='L519'></a>  
+<a id='L520' name='L520'></a>  <strong class='reserved'>if</strong> (fileno (stdout) &gt;= 0) 
+<a id='L521' name='L521'></a>    tty = isatty (fileno (stdout));
+<a id='L522' name='L522'></a>  
+<a id='L523' name='L523'></a>  <strong class='reserved'>if</strong> (<a href='../S/610.html#L2015' title='Defined at 2015 in bgpd/bgpd.c.'>bgp_get</a> (&amp;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, &amp;asn, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>))
+<a id='L524' name='L524'></a>    <strong class='reserved'>return</strong> -1;
+<a id='L525' name='L525'></a>  
+<a id='L526' name='L526'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> = <a href='../S/610.html#L893' title='Defined at 893 in bgpd/bgpd.c.'>peer_create_accept</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>);
+<a id='L527' name='L527'></a>  <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a> = "foo";
+<a id='L528' name='L528'></a>  
+<a id='L529' name='L529'></a>  <strong class='reserved'>for</strong> (i = <a href='../S/191.html#L497' title='Defined at 497 in lib/zebra.h.'>AFI_IP</a>; i &lt; <a href='../S/191.html#L499' title='Defined at 499 in lib/zebra.h.'>AFI_MAX</a>; i++)
+<a id='L530' name='L530'></a>    <strong class='reserved'>for</strong> (j = <a href='../S/191.html#L502' title='Defined at 502 in lib/zebra.h.'>SAFI_UNICAST</a>; j &lt; <a href='../S/191.html#L506' title='Defined at 506 in lib/zebra.h.'>SAFI_MAX</a>; j++)
+<a id='L531' name='L531'></a>      <em class='brace'>{</em>
+<a id='L532' name='L532'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc[i][j] = 1;
+<a id='L533' name='L533'></a>        <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;afc_adv[i][j] = 1;
+<a id='L534' name='L534'></a>      <em class='brace'>}</em>
+<a id='L535' name='L535'></a>  
+<a id='L536' name='L536'></a>  i = 0;
+<a id='L537' name='L537'></a>  <strong class='reserved'>while</strong> (mp_reach_segments[i].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L538' name='L538'></a>    <a href='../D/9486.html' title='Multiple defined in 4 places.'>parse_test</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, &amp;mp_reach_segments[i++], <a href='../S/608.html#L633' title='Defined at 633 in bgpd/bgpd.h.'>BGP_ATTR_MP_REACH_NLRI</a>);
+<a id='L539' name='L539'></a>
+<a id='L540' name='L540'></a>  i = 0;
+<a id='L541' name='L541'></a>  <strong class='reserved'>while</strong> (mp_unreach_segments[i].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L542' name='L542'></a>    <a href='../D/9486.html' title='Multiple defined in 4 places.'>parse_test</a> (<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>, &amp;mp_unreach_segments[i++], <a href='../S/608.html#L634' title='Defined at 634 in bgpd/bgpd.h.'>BGP_ATTR_MP_UNREACH_NLRI</a>);
+<a id='L543' name='L543'></a>
+<a id='L544' name='L544'></a>  printf ("failures: %d\n", failed);
+<a id='L545' name='L545'></a>  <strong class='reserved'>return</strong> failed;
+<a id='L546' name='L546'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L435'>[^]</a><a href='#L500'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>rmap</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/644.html#L1170'>rmap</a>             1170 bgpd/bgp_nexthop.c 			|| bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3241'>rmap</a>             3241 bgpd/bgp_route.c   if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3242'>rmap</a>             3242 bgpd/bgp_route.c     free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3308'>rmap</a>             3308 bgpd/bgp_route.c   if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3317'>rmap</a>             3317 bgpd/bgp_route.c       ret = route_map_apply (bgp_static-&gt;rmap.map, p, RMAP_BGP, &amp;info);</span>
+<span class='curline'><a href='../S/620.html#L3457'>rmap</a>             3457 bgpd/bgp_route.c   if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3465'>rmap</a>             3465 bgpd/bgp_route.c       ret = route_map_apply (bgp_static-&gt;rmap.map, p, RMAP_BGP, &amp;info);</span>
+<span class='curline'><a href='../S/620.html#L3680'>rmap</a>             3680 bgpd/bgp_route.c                 afi_t afi, safi_t safi, const char *rmap, int backdoor)</span>
+<span class='curline'><a href='../S/620.html#L3720'>rmap</a>             3720 bgpd/bgp_route.c       if (rmap)</span>
+<span class='curline'><a href='../S/620.html#L3722'>rmap</a>             3722 bgpd/bgp_route.c 	  if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3723'>rmap</a>             3723 bgpd/bgp_route.c 	    free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3724'>rmap</a>             3724 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.name = strdup (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3725'>rmap</a>             3725 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.map = route_map_lookup_by_name (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3729'>rmap</a>             3729 bgpd/bgp_route.c 	  if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3730'>rmap</a>             3730 bgpd/bgp_route.c 	    free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3731'>rmap</a>             3731 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.name = NULL;</span>
+<span class='curline'><a href='../S/620.html#L3732'>rmap</a>             3732 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.map = NULL;</span>
+<span class='curline'><a href='../S/620.html#L3746'>rmap</a>             3746 bgpd/bgp_route.c       if (rmap)</span>
+<span class='curline'><a href='../S/620.html#L3748'>rmap</a>             3748 bgpd/bgp_route.c 	  if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L3749'>rmap</a>             3749 bgpd/bgp_route.c 	    free (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/620.html#L3750'>rmap</a>             3750 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.name = strdup (rmap);</span>
+<span class='curline'><a href='../S/620.html#L3751'>rmap</a>             3751 bgpd/bgp_route.c 	  bgp_static-&gt;rmap.map = route_map_lookup_by_name (rmap);</span>
+<span class='curline'><a href='../S/620.html#L5419'>rmap</a>             5419 bgpd/bgp_route.c 	  if (bgp-&gt;rmap[afi][type].map)</span>
+<span class='curline'><a href='../S/620.html#L5426'>rmap</a>             5426 bgpd/bgp_route.c 	      ret = route_map_apply (bgp-&gt;rmap[afi][type].map, p, RMAP_BGP,</span>
+<span class='curline'><a href='../S/620.html#L6214'>rmap</a>             6214 bgpd/bgp_route.c 		struct route_map *rmap = output_arg;</span>
+<span class='curline'><a href='../S/620.html#L6226'>rmap</a>             6226 bgpd/bgp_route.c 		ret = route_map_apply (rmap, &amp;rn-&gt;p, RMAP_BGP, &amp;binfo);</span>
+<span class='curline'><a href='../S/620.html#L7466'>rmap</a>             7466 bgpd/bgp_route.c   struct route_map *rmap;</span>
+<span class='curline'><a href='../S/620.html#L7468'>rmap</a>             7468 bgpd/bgp_route.c   rmap = route_map_lookup_by_name (rmap_str);</span>
+<span class='curline'><a href='../S/620.html#L7469'>rmap</a>             7469 bgpd/bgp_route.c   if (! rmap)</span>
+<span class='curline'><a href='../S/620.html#L7476'>rmap</a>             7476 bgpd/bgp_route.c   return bgp_show (vty, NULL, afi, safi, type, rmap);</span>
+<span class='curline'><a href='../S/620.html#L12284'>rmap</a>             12284 bgpd/bgp_route.c 	if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/620.html#L12285'>rmap</a>             12285 bgpd/bgp_route.c 	  vty_out (vty, " route-map %s", bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/609.html#L121'>rmap</a>              121 bgpd/bgp_route.h   } rmap;</span>
+<span class='curline'><a href='../S/621.html#L2387'>rmap</a>             2387 bgpd/bgp_routemap.c 		if (bgp_static-&gt;rmap.name)</span>
+<span class='curline'><a href='../S/621.html#L2388'>rmap</a>             2388 bgpd/bgp_routemap.c 		  bgp_static-&gt;rmap.map =</span>
+<span class='curline'><a href='../S/621.html#L2389'>rmap</a>             2389 bgpd/bgp_routemap.c 			 route_map_lookup_by_name (bgp_static-&gt;rmap.name);</span>
+<span class='curline'><a href='../S/621.html#L2391'>rmap</a>             2391 bgpd/bgp_routemap.c 		  bgp_static-&gt;rmap.map = NULL;</span>
+<span class='curline'><a href='../S/621.html#L2400'>rmap</a>             2400 bgpd/bgp_routemap.c 	  if (bgp-&gt;rmap[ZEBRA_FAMILY_IPV4][i].name)</span>
+<span class='curline'><a href='../S/621.html#L2401'>rmap</a>             2401 bgpd/bgp_routemap.c 	    bgp-&gt;rmap[ZEBRA_FAMILY_IPV4][i].map = </span>
+<span class='curline'><a href='../S/621.html#L2402'>rmap</a>             2402 bgpd/bgp_routemap.c 	      route_map_lookup_by_name (bgp-&gt;rmap[ZEBRA_FAMILY_IPV4][i].name);</span>
+<span class='curline'><a href='../S/621.html#L2404'>rmap</a>             2404 bgpd/bgp_routemap.c 	  if (bgp-&gt;rmap[ZEBRA_FAMILY_IPV6][i].name)</span>
+<span class='curline'><a href='../S/621.html#L2405'>rmap</a>             2405 bgpd/bgp_routemap.c 	    bgp-&gt;rmap[ZEBRA_FAMILY_IPV6][i].map =</span>
+<span class='curline'><a href='../S/621.html#L2406'>rmap</a>             2406 bgpd/bgp_routemap.c 	      route_map_lookup_by_name (bgp-&gt;rmap[ZEBRA_FAMILY_IPV6][i].name);</span>
+<span class='curline'><a href='../S/638.html#L3031'>rmap</a>             3031 bgpd/bgp_vty.c                                 const char *rmap, int set)</span>
+<span class='curline'><a href='../S/638.html#L3041'>rmap</a>             3041 bgpd/bgp_vty.c     ret = peer_default_originate_set (peer, afi, safi, rmap);</span>
+<span class='curline'><a href='../S/638.html#L9004'>rmap</a>             9004 bgpd/bgp_vty.c 	  if (bgp-&gt;rmap[afi][i].name)</span>
+<span class='curline'><a href='../S/638.html#L9005'>rmap</a>             9005 bgpd/bgp_vty.c 	    vty_out (vty, " route-map %s", bgp-&gt;rmap[afi][i].name);</span>
+<span class='curline'><a href='../S/654.html#L964'>rmap</a>              964 bgpd/bgp_zebra.c   if (bgp-&gt;rmap[afi][type].name</span>
+<span class='curline'><a href='../S/654.html#L965'>rmap</a>              965 bgpd/bgp_zebra.c       &amp;&amp; (strcmp (bgp-&gt;rmap[afi][type].name, name) == 0))</span>
+<span class='curline'><a href='../S/654.html#L968'>rmap</a>              968 bgpd/bgp_zebra.c   if (bgp-&gt;rmap[afi][type].name)</span>
+<span class='curline'><a href='../S/654.html#L969'>rmap</a>              969 bgpd/bgp_zebra.c     free (bgp-&gt;rmap[afi][type].name);</span>
+<span class='curline'><a href='../S/654.html#L970'>rmap</a>              970 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].name = strdup (name);</span>
+<span class='curline'><a href='../S/654.html#L971'>rmap</a>              971 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].map = route_map_lookup_by_name (name);</span>
+<span class='curline'><a href='../S/654.html#L999'>rmap</a>              999 bgpd/bgp_zebra.c   if (bgp-&gt;rmap[afi][type].name)</span>
+<span class='curline'><a href='../S/654.html#L1000'>rmap</a>             1000 bgpd/bgp_zebra.c     free (bgp-&gt;rmap[afi][type].name);</span>
+<span class='curline'><a href='../S/654.html#L1001'>rmap</a>             1001 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].name = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1002'>rmap</a>             1002 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].map = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1034'>rmap</a>             1034 bgpd/bgp_zebra.c   if (! bgp-&gt;rmap[afi][type].name)</span>
+<span class='curline'><a href='../S/654.html#L1038'>rmap</a>             1038 bgpd/bgp_zebra.c   free (bgp-&gt;rmap[afi][type].name);</span>
+<span class='curline'><a href='../S/654.html#L1039'>rmap</a>             1039 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].name = NULL;</span>
+<span class='curline'><a href='../S/654.html#L1040'>rmap</a>             1040 bgpd/bgp_zebra.c   bgp-&gt;rmap[afi][type].map = NULL;</span>
+<span class='curline'><a href='../S/610.html#L3019'>rmap</a>             3019 bgpd/bgpd.c    			    const char *rmap)</span>
+<span class='curline'><a href='../S/610.html#L3033'>rmap</a>             3033 bgpd/bgpd.c          || (rmap &amp;&amp; ! peer-&gt;default_rmap[afi][safi].name)</span>
+<span class='curline'><a href='../S/610.html#L3034'>rmap</a>             3034 bgpd/bgpd.c          || (rmap &amp;&amp; strcmp (rmap, peer-&gt;default_rmap[afi][safi].name) != 0))</span>
+<span class='curline'><a href='../S/610.html#L3038'>rmap</a>             3038 bgpd/bgpd.c          if (rmap)</span>
+<span class='curline'><a href='../S/610.html#L3042'>rmap</a>             3042 bgpd/bgpd.c    	  peer-&gt;default_rmap[afi][safi].name = strdup (rmap);</span>
+<span class='curline'><a href='../S/610.html#L3043'>rmap</a>             3043 bgpd/bgpd.c    	  peer-&gt;default_rmap[afi][safi].map = route_map_lookup_by_name (rmap);</span>
+<span class='curline'><a href='../S/610.html#L3060'>rmap</a>             3060 bgpd/bgpd.c          if (rmap)</span>
+<span class='curline'><a href='../S/610.html#L3064'>rmap</a>             3064 bgpd/bgpd.c    	  peer-&gt;default_rmap[afi][safi].name = strdup (rmap);</span>
+<span class='curline'><a href='../S/610.html#L3065'>rmap</a>             3065 bgpd/bgpd.c    	  peer-&gt;default_rmap[afi][safi].map = route_map_lookup_by_name (rmap);</span>
+<span class='curline'><a href='../S/608.html#L149'>rmap</a>              149 bgpd/bgpd.h      } rmap[AFI_MAX][ZEBRA_ROUTE_MAX];</span>
+<span class='curline'><a href='../S/467.html#L71'>rmap</a>               71 isisd/isis_routemap.c       if (isis-&gt;rmap[i].name)</span>
+<span class='curline'><a href='../S/467.html#L72'>rmap</a>               72 isisd/isis_routemap.c 	isis-&gt;rmap[i].map = route_map_lookup_by_name (isis-&gt;rmap[i].name);</span>
+<span class='curline'><a href='../S/467.html#L74'>rmap</a>               74 isisd/isis_routemap.c 	isis-&gt;rmap[i].map = NULL;</span>
+<span class='curline'><a href='../S/467.html#L89'>rmap</a>               89 isisd/isis_routemap.c       if (isis-&gt;rmap[type].name &amp;&amp; isis-&gt;rmap[type].map &amp;&amp;</span>
+<span class='curline'><a href='../S/467.html#L90'>rmap</a>               90 isisd/isis_routemap.c 	  !strcmp (isis-&gt;rmap[type].name, name))</span>
+<span class='curline'><a href='../S/510.html#L69'>rmap</a>               69 isisd/isisd.h    } rmap[ZEBRA_ROUTE_MAX + 1];</span>
+<span class='curline'><a href='../S/510.html#L77'>rmap</a>               77 isisd/isisd.h      } rmap[ZEBRA_ROUTE_MAX + 1];</span>
+<span class='curline'><a href='../S/37.html#L342'>rmap</a>              342 ospf6d/ospf6_asbr.c   if (ospf6-&gt;rmap[type].name)</span>
+<span class='curline'><a href='../S/37.html#L343'>rmap</a>              343 ospf6d/ospf6_asbr.c     free (ospf6-&gt;rmap[type].name);</span>
+<span class='curline'><a href='../S/37.html#L344'>rmap</a>              344 ospf6d/ospf6_asbr.c   ospf6-&gt;rmap[type].name = strdup (mapname);</span>
+<span class='curline'><a href='../S/37.html#L345'>rmap</a>              345 ospf6d/ospf6_asbr.c   ospf6-&gt;rmap[type].map = route_map_lookup_by_name (mapname);</span>
+<span class='curline'><a href='../S/37.html#L351'>rmap</a>              351 ospf6d/ospf6_asbr.c   if (ospf6-&gt;rmap[type].name)</span>
+<span class='curline'><a href='../S/37.html#L352'>rmap</a>              352 ospf6d/ospf6_asbr.c     free (ospf6-&gt;rmap[type].name);</span>
+<span class='curline'><a href='../S/37.html#L353'>rmap</a>              353 ospf6d/ospf6_asbr.c   ospf6-&gt;rmap[type].name = NULL;</span>
+<span class='curline'><a href='../S/37.html#L354'>rmap</a>              354 ospf6d/ospf6_asbr.c   ospf6-&gt;rmap[type].map = NULL;</span>
+<span class='curline'><a href='../S/37.html#L367'>rmap</a>              367 ospf6d/ospf6_asbr.c       if (ospf6-&gt;rmap[type].name)</span>
+<span class='curline'><a href='../S/37.html#L368'>rmap</a>              368 ospf6d/ospf6_asbr.c         ospf6-&gt;rmap[type].map =</span>
+<span class='curline'><a href='../S/37.html#L369'>rmap</a>              369 ospf6d/ospf6_asbr.c           route_map_lookup_by_name (ospf6-&gt;rmap[type].name);</span>
+<span class='curline'><a href='../S/37.html#L371'>rmap</a>              371 ospf6d/ospf6_asbr.c         ospf6-&gt;rmap[type].map = NULL;</span>
+<span class='curline'><a href='../S/37.html#L432'>rmap</a>              432 ospf6d/ospf6_asbr.c   if (ospf6-&gt;rmap[type].name)</span>
+<span class='curline'><a href='../S/37.html#L434'>rmap</a>              434 ospf6d/ospf6_asbr.c       if (ospf6-&gt;rmap[type].map == NULL)</span>
+<span class='curline'><a href='../S/37.html#L436'>rmap</a>              436 ospf6d/ospf6_asbr.c       if (ospf6-&gt;rmap[type].map == NULL)</span>
+<span class='curline'><a href='../S/37.html#L439'>rmap</a>              439 ospf6d/ospf6_asbr.c                      ospf6-&gt;rmap[type].name);</span>
+<span class='curline'><a href='../S/37.html#L445'>rmap</a>              445 ospf6d/ospf6_asbr.c   if (ospf6-&gt;rmap[type].map)</span>
+<span class='curline'><a href='../S/37.html#L452'>rmap</a>              452 ospf6d/ospf6_asbr.c       ret = route_map_apply (ospf6-&gt;rmap[type].map, prefix,</span>
+<span class='curline'><a href='../S/37.html#L457'>rmap</a>              457 ospf6d/ospf6_asbr.c             zlog_debug ("Denied by route-map \"%s\"", ospf6-&gt;rmap[type].name);</span>
+<span class='curline'><a href='../S/37.html#L468'>rmap</a>              468 ospf6d/ospf6_asbr.c       if (ospf6-&gt;rmap[type].map)</span>
+<span class='curline'><a href='../S/37.html#L513'>rmap</a>              513 ospf6d/ospf6_asbr.c   if (ospf6-&gt;rmap[type].map)</span>
+<span class='curline'><a href='../S/37.html#L690'>rmap</a>              690 ospf6d/ospf6_asbr.c       if (ospf6-&gt;rmap[type].name)</span>
+<span class='curline'><a href='../S/37.html#L692'>rmap</a>              692 ospf6d/ospf6_asbr.c                  ZROUTE_NAME (type), ospf6-&gt;rmap[type].name, VNL);</span>
+<span class='curline'><a href='../S/37.html#L729'>rmap</a>              729 ospf6d/ospf6_asbr.c       if (ospf6-&gt;rmap[type].name)</span>
+<span class='curline'><a href='../S/37.html#L731'>rmap</a>              731 ospf6d/ospf6_asbr.c                  ZROUTE_NAME (type), ospf6-&gt;rmap[type].name,</span>
+<span class='curline'><a href='../S/37.html#L732'>rmap</a>              732 ospf6d/ospf6_asbr.c                  (ospf6-&gt;rmap[type].map ? "" : " (not found !)"),</span>
+<span class='curline'><a href='../S/7.html#L58'>rmap</a>               58 ospf6d/ospf6_top.h   } rmap[ZEBRA_ROUTE_MAX];</span>
+<span class='curline'><a href='../S/596.html#L3908'>rmap</a>             3908 ripd/ripd.c      struct route_map *rmap;</span>
+<span class='curline'><a href='../S/596.html#L3918'>rmap</a>             3918 ripd/ripd.c          rmap = route_map_lookup_by_name (if_rmap-&gt;routemap[IF_RMAP_IN]);</span>
+<span class='curline'><a href='../S/596.html#L3919'>rmap</a>             3919 ripd/ripd.c          if (rmap)</span>
+<span class='curline'><a href='../S/596.html#L3920'>rmap</a>             3920 ripd/ripd.c    	ri-&gt;routemap[IF_RMAP_IN] = rmap;</span>
+<span class='curline'><a href='../S/596.html#L3929'>rmap</a>             3929 ripd/ripd.c          rmap = route_map_lookup_by_name (if_rmap-&gt;routemap[IF_RMAP_OUT]);</span>
+<span class='curline'><a href='../S/596.html#L3930'>rmap</a>             3930 ripd/ripd.c          if (rmap)</span>
+<span class='curline'><a href='../S/596.html#L3931'>rmap</a>             3931 ripd/ripd.c    	ri-&gt;routemap[IF_RMAP_OUT] = rmap;</span>
+<span class='curline'><a href='../S/99.html#L2873'>rmap</a>             2873 ripngd/ripngd.c   struct route_map *rmap;</span>
+<span class='curline'><a href='../S/99.html#L2883'>rmap</a>             2883 ripngd/ripngd.c       rmap = route_map_lookup_by_name (if_rmap-&gt;routemap[IF_RMAP_IN]);</span>
+<span class='curline'><a href='../S/99.html#L2884'>rmap</a>             2884 ripngd/ripngd.c       if (rmap)</span>
+<span class='curline'><a href='../S/99.html#L2885'>rmap</a>             2885 ripngd/ripngd.c 	ri-&gt;routemap[IF_RMAP_IN] = rmap;</span>
+<span class='curline'><a href='../S/99.html#L2894'>rmap</a>             2894 ripngd/ripngd.c       rmap = route_map_lookup_by_name (if_rmap-&gt;routemap[IF_RMAP_OUT]);</span>
+<span class='curline'><a href='../S/99.html#L2895'>rmap</a>             2895 ripngd/ripngd.c       if (rmap)</span>
+<span class='curline'><a href='../S/99.html#L2896'>rmap</a>             2896 ripngd/ripngd.c 	ri-&gt;routemap[IF_RMAP_OUT] = rmap;</span>
+<span class='curline'><a href='../S/940.html#L838'>rmap</a>              838 zebra/zebra_rib.c   struct route_map *rmap;</span>
+<span class='curline'><a href='../S/940.html#L917'>rmap</a>              917 zebra/zebra_rib.c   rmap = 0;</span>
+<span class='curline'><a href='../S/940.html#L920'>rmap</a>              920 zebra/zebra_rib.c     rmap = route_map_lookup_by_name (proto_rm[family][rib-&gt;type]);</span>
+<span class='curline'><a href='../S/940.html#L921'>rmap</a>              921 zebra/zebra_rib.c   if (!rmap &amp;&amp; proto_rm[family][ZEBRA_ROUTE_MAX])</span>
+<span class='curline'><a href='../S/940.html#L922'>rmap</a>              922 zebra/zebra_rib.c     rmap = route_map_lookup_by_name (proto_rm[family][ZEBRA_ROUTE_MAX]);</span>
+<span class='curline'><a href='../S/940.html#L923'>rmap</a>              923 zebra/zebra_rib.c   if (rmap) {</span>
+<span class='curline'><a href='../S/940.html#L924'>rmap</a>              924 zebra/zebra_rib.c       ret = route_map_apply(rmap, &amp;rn-&gt;p, RMAP_ZEBRA, nexthop);</span>
+</pre>
+</body>
+</html>

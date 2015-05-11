@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_zebra.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_zebra.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L30'>[^]</a><a href='#L321'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L30' title='Defined at 30.'>ldp_router_id_update_zebra</a></li>
+<li><a href='#L45' title='Defined at 45.'>ldp_interface_add</a></li>
+<li><a href='#L67' title='Defined at 67.'>ldp_interface_delete2</a></li>
+<li><a href='#L92' title='Defined at 92.'>zebra_interface_if_lookup</a></li>
+<li><a href='#L110' title='Defined at 110.'>ldp_interface_state_up</a></li>
+<li><a href='#L141' title='Defined at 141.'>ldp_interface_state_down</a></li>
+<li><a href='#L157' title='Defined at 157.'>prefix2mpls_inet_addr</a></li>
+<li><a href='#L163' title='Defined at 163.'>zebra_prefix2mpls_fec</a></li>
+<li><a href='#L171' title='Defined at 171.'>mpls_fec2zebra_prefix</a></li>
+<li><a href='#L187' title='Defined at 187.'>ldp_interface_address_add</a></li>
+<li><a href='#L216' title='Defined at 216.'>ldp_interface_address_delete</a></li>
+<li><a href='#L247' title='Defined at 247.'>ldp_zebra_read_ipv4</a></li>
+<li><a href='#L321' title='Defined at 321.'>ldp_zebra_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L2' name='L2'></a>
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L7' name='L7'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L8' name='L8'></a><em class='sharp'>#include</em> "<a href='210.html'>zclient.h</a>"
+<a id='L9' name='L9'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L10' name='L10'></a>
+<a id='L11' name='L11'></a><em class='sharp'>#include</em> "<a href='345.html'>ldp_cfg.h</a>"
+<a id='L12' name='L12'></a><em class='sharp'>#include</em> "<a href='372.html'>mpls_compare.h</a>"
+<a id='L13' name='L13'></a>
+<a id='L14' name='L14'></a><em class='sharp'>#include</em> "<a href='389.html'>ldp.h</a>"
+<a id='L15' name='L15'></a><em class='sharp'>#include</em> "<a href='349.html'>impl_fib.h</a>"
+<a id='L16' name='L16'></a><em class='sharp'>#include</em> "<a href='461.html'>impl_ifmgr.h</a>"
+<a id='L17' name='L17'></a><em class='sharp'>#include</em> "<a href='421.html'>impl_mpls.h</a>"
+<a id='L18' name='L18'></a><em class='sharp'>#include</em> "<a href='451.html'>ldp_interface.h</a>"
+<a id='L19' name='L19'></a>
+<a id='L20' name='L20'></a><em class='comment'>/* All information about zebra. */</em>
+<a id='L21' name='L21'></a><strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='comment'>/* For registering threads. */</em>
+<a id='L24' name='L24'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> router_id;
+<a id='L27' name='L27'></a><strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table;
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><em class='comment'>/* Router-id update message from zebra. */</em>
+<a id='L30' name='L30'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L330' title='Referred from 330 in ldpd/ldp_zebra.c.'>ldp_router_id_update_zebra</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L31' name='L31'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L32' name='L32'></a>    <strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> = <a href='../S/394.html#L144' title='Defined at 144 in ldpd/ldp.c.'>ldp_get</a>();
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a>    <a href='../S/255.html#L601' title='Defined at 601 in lib/zclient.c.'>zebra_router_id_update_read</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf,&amp;router_id);
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a>    zlog_info("router-id change %s",
+<a id='L37' name='L37'></a>        inet_ntoa(router_id.u.prefix4));
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a>    <strong class='reserved'>if</strong> (<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> &amp;&amp; <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;lsr_id_is_static != <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>) 
+<a id='L40' name='L40'></a>        <a href='../S/394.html#L59' title='Defined at 59 in ldpd/ldp.c.'>ldp_router_id_update</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>, &amp;router_id);
+<a id='L41' name='L41'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L42' name='L42'></a><em class='brace'>}</em>
+<a id='L43' name='L43'></a>
+<a id='L44' name='L44'></a><em class='comment'>/* Inteface addition message from zebra. */</em>
+<a id='L45' name='L45'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L331' title='Referred from 331 in ldpd/ldp_zebra.c.'>ldp_interface_add</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L46' name='L46'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L47' name='L47'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a>    <strong class='reserved'>if</strong> (!(ifp = <a href='../S/255.html#L646' title='Defined at 646 in lib/zclient.c.'>zebra_interface_add_read</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf))) <em class='brace'>{</em>
+<a id='L50' name='L50'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L51' name='L51'></a>    <em class='brace'>}</em>
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a>    <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a> (ifp-&gt;info);
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a>    <em class='comment'>/* it must have a valid index now */</em>
+<a id='L56' name='L56'></a>    <a href='../S/413.html#L58' title='Defined at 58 in ldpd/impl_mpls.c.'>do_mpls_labelspace</a>(ifp-&gt;info);
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>    zlog_info("interface add %s index %d flags %ld metric %d mtu %d",
+<a id='L59' name='L59'></a>               ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, ifp-&gt;ifindex, ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>, ifp-&gt;mtu);
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L62' name='L62'></a><em class='brace'>}</em>
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a><em class='comment'>/* this is not the same as ldp_interface_delete() which is found in</em>
+<a id='L65' name='L65'></a><em class='comment'> * ldp_interface.c</em>
+<a id='L66' name='L66'></a><em class='comment'> */</em>
+<a id='L67' name='L67'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L332' title='Referred from 332 in ldpd/ldp_zebra.c.'>ldp_interface_delete2</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L68' name='L68'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L69' name='L69'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L70' name='L70'></a>    <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>    s = <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf;
+<a id='L73' name='L73'></a>    <em class='comment'>/* zebra_interface_state_read() updates interface structure in iflist */</em>
+<a id='L74' name='L74'></a>    ifp = <a href='../S/255.html#L670' title='Defined at 670 in lib/zclient.c.'>zebra_interface_state_read</a>(s);
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>    <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L77' name='L77'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L78' name='L78'></a>    <em class='brace'>}</em>
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a>    <strong class='reserved'>if</strong> (<a href='../S/240.html#L329' title='Defined at 329 in lib/if.c.'>if_is_up</a>(ifp)) <em class='brace'>{</em>
+<a id='L81' name='L81'></a>        zlog_warn("got delete of %s, but interface is still up",
+<a id='L82' name='L82'></a>            ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L83' name='L83'></a>    <em class='brace'>}</em>
+<a id='L84' name='L84'></a>
+<a id='L85' name='L85'></a>    zlog_info("interface delete %s index %d flags %ld metric %d mtu %d",               ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, ifp-&gt;ifindex, ifp-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, ifp-&gt;<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a>, ifp-&gt;mtu);
+<a id='L86' name='L86'></a>
+<a id='L87' name='L87'></a>    <a href='../S/240.html#L154' title='Defined at 154 in lib/if.c.'>if_delete</a>(ifp);
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L90' name='L90'></a><em class='brace'>}</em>
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a><strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> * <a href='../R/10595.html' title='Multiple referred from 2 places.'>zebra_interface_if_lookup</a>(<strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s) <em class='brace'>{</em>
+<a id='L93' name='L93'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L94' name='L94'></a>    u_char ifname_tmp[<a href='../D/1122.html' title='Multiple defined in 2 places.'>INTERFACE_NAMSIZ</a>];
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>    <em class='comment'>/* Read interface name. */</em>
+<a id='L97' name='L97'></a>    <a href='../S/296.html#L272' title='Defined at 272 in lib/stream.c.'>stream_get</a>(ifname_tmp, s, <a href='../D/1122.html' title='Multiple defined in 2 places.'>INTERFACE_NAMSIZ</a>);
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a>    <em class='comment'>/* Lookup this by interface index. */</em>
+<a id='L100' name='L100'></a>    ifp = <a href='../S/240.html#L216' title='Defined at 216 in lib/if.c.'>if_lookup_by_name</a>(ifname_tmp);
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a>    <em class='comment'>/* If such interface does not exist, indicate an error */</em>
+<a id='L103' name='L103'></a>    <strong class='reserved'>if</strong> (!ifp) <em class='brace'>{</em>
+<a id='L104' name='L104'></a>        <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L105' name='L105'></a>    <em class='brace'>}</em>
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a>    <strong class='reserved'>return</strong> ifp;
+<a id='L108' name='L108'></a><em class='brace'>}</em>
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L333' title='Referred from 333 in ldpd/ldp_zebra.c.'>ldp_interface_state_up</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L111' name='L111'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L112' name='L112'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L113' name='L113'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> if_tmp;
+<a id='L114' name='L114'></a>
+<a id='L115' name='L115'></a>    ifp = <a href='../D/11525.html' title='Multiple defined in 2 places.'>zebra_interface_if_lookup</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L116' name='L116'></a>    <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L117' name='L117'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L118' name='L118'></a>    <em class='brace'>}</em>
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>    <em class='comment'>/* Interface is already up. */</em>
+<a id='L121' name='L121'></a>    <strong class='reserved'>if</strong> (<a href='../S/240.html#L329' title='Defined at 329 in lib/if.c.'>if_is_up</a> (ifp)) <em class='brace'>{</em>
+<a id='L122' name='L122'></a>        <em class='comment'>/* Temporarily keep ifp values. */</em>
+<a id='L123' name='L123'></a>        <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;if_tmp, ifp, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a>));
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a>        <a href='../S/255.html#L724' title='Defined at 724 in lib/zclient.c.'>zebra_interface_if_set_value</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf, ifp);
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a>        zlog_info ("Interface[%s] state update.", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L130' name='L130'></a>    <em class='brace'>}</em>
+<a id='L131' name='L131'></a>
+<a id='L132' name='L132'></a>    <a href='../S/255.html#L724' title='Defined at 724 in lib/zclient.c.'>zebra_interface_if_set_value</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf, ifp);
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a>    zlog_info ("Interface[%s] state change to up.", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>    <a href='../S/458.html#L140' title='Defined at 140 in ldpd/ldp_interface.c.'>ldp_interface_up</a>(ifp-&gt;info);
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L139' name='L139'></a><em class='brace'>}</em>
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L334' title='Referred from 334 in ldpd/ldp_zebra.c.'>ldp_interface_state_down</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L142' name='L142'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L143' name='L143'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a>    ifp = <a href='../S/255.html#L670' title='Defined at 670 in lib/zclient.c.'>zebra_interface_state_read</a> (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L146' name='L146'></a>    <strong class='reserved'>if</strong> (ifp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L147' name='L147'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L148' name='L148'></a>    <em class='brace'>}</em>
+<a id='L149' name='L149'></a>
+<a id='L150' name='L150'></a>    zlog_info ("Interface[%s] state change to down.", ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L151' name='L151'></a>
+<a id='L152' name='L152'></a>    <a href='../S/458.html#L146' title='Defined at 146 in ldpd/ldp_interface.c.'>ldp_interface_down</a>(ifp-&gt;info);
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L155' name='L155'></a><em class='brace'>}</em>
+<a id='L156' name='L156'></a>
+<a id='L157' name='L157'></a><strong class='reserved'>void</strong> <a href='../R/8755.html' title='Multiple referred from 4 places.'>prefix2mpls_inet_addr</a>(<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p, <strong class='reserved'>struct</strong> <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>)
+<a id='L158' name='L158'></a><em class='brace'>{</em>
+<a id='L159' name='L159'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L160' name='L160'></a>    <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>-&gt;u.ipv4 = (<a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a>)ntohl(p-&gt;u.prefix4.s_addr);
+<a id='L161' name='L161'></a><em class='brace'>}</em>
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><strong class='reserved'>void</strong> <a href='../R/10601.html' title='Multiple referred from 7 places.'>zebra_prefix2mpls_fec</a>(<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p, <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> *fec)
+<a id='L164' name='L164'></a><em class='brace'>{</em>
+<a id='L165' name='L165'></a>  fec-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.length = p-&gt;prefixlen;
+<a id='L166' name='L166'></a>  fec-&gt;type = <a href='../S/383.html#L172' title='Defined at 172 in ldpd/mpls_struct.h.'>MPLS_FEC_PREFIX</a>;
+<a id='L167' name='L167'></a>  fec-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.network.type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L168' name='L168'></a>  fec-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.network.u.ipv4 = ntohl(p-&gt;u.prefix4.s_addr);
+<a id='L169' name='L169'></a><em class='brace'>}</em>
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a><strong class='reserved'>void</strong> <a href='../R/7068.html' title='Multiple referred from 7 places.'>mpls_fec2zebra_prefix</a>(<a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> *lp, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L172' name='L172'></a><em class='brace'>{</em>
+<a id='L173' name='L173'></a>  <strong class='reserved'>switch</strong>(lp-&gt;type) <em class='brace'>{</em>
+<a id='L174' name='L174'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L172' title='Defined at 172 in ldpd/mpls_struct.h.'>MPLS_FEC_PREFIX</a>:
+<a id='L175' name='L175'></a>      p-&gt;prefixlen = lp-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.length;
+<a id='L176' name='L176'></a>      p-&gt;u.prefix4.s_addr = htonl(lp-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.network.u.ipv4);
+<a id='L177' name='L177'></a>      <strong class='reserved'>break</strong>;
+<a id='L178' name='L178'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L173' title='Defined at 173 in ldpd/mpls_struct.h.'>MPLS_FEC_HOST</a>:
+<a id='L179' name='L179'></a>      p-&gt;prefixlen = 32;
+<a id='L180' name='L180'></a>      p-&gt;u.prefix4.s_addr = htonl(lp-&gt;u.<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>.u.ipv4);
+<a id='L181' name='L181'></a>      <strong class='reserved'>break</strong>;
+<a id='L182' name='L182'></a>    <strong class='reserved'>default</strong>:
+<a id='L183' name='L183'></a>      <strong class='reserved'>break</strong>;
+<a id='L184' name='L184'></a>  <em class='brace'>}</em>
+<a id='L185' name='L185'></a><em class='brace'>}</em>
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L335' title='Referred from 335 in ldpd/ldp_zebra.c.'>ldp_interface_address_add</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L188' name='L188'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L189' name='L189'></a>    <strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> = <a href='../S/394.html#L144' title='Defined at 144 in ldpd/ldp.c.'>ldp_get</a>();
+<a id='L190' name='L190'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *c;
+<a id='L191' name='L191'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L192' name='L192'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p;
+<a id='L193' name='L193'></a>    <strong class='reserved'>struct</strong> <a href='../D/7132.html' title='Multiple defined in 2 places.'>ldp_addr</a> addr;
+<a id='L194' name='L194'></a>    <strong class='reserved'>struct</strong> <a href='../D/7345.html' title='Multiple defined in 2 places.'>ldp_if</a> iff;
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>    c = <a href='../S/255.html#L746' title='Defined at 746 in lib/zclient.c.'>zebra_interface_address_add_read</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L197' name='L197'></a>    <strong class='reserved'>if</strong> (c == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || c-&gt;address-&gt;family != AF_INET) <em class='brace'>{</em>
+<a id='L198' name='L198'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L199' name='L199'></a>    <em class='brace'>}</em>
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>    ifp = c-&gt;ifp;
+<a id='L202' name='L202'></a>    p = c-&gt;address;
+<a id='L203' name='L203'></a>
+<a id='L204' name='L204'></a>    zlog_info("address add %s to interface %s",inet_ntoa(p-&gt;u.prefix4),
+<a id='L205' name='L205'></a>        ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a>    <strong class='reserved'>if</strong> (<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L208' name='L208'></a>        <a href='../S/439.html#L157' title='Defined at 157 in ldpd/ldp_zebra.c.'>prefix2mpls_inet_addr</a>(p, &amp;addr.address);
+<a id='L209' name='L209'></a>        iff.handle = ifp;
+<a id='L210' name='L210'></a>        <a href='../S/446.html#L1705' title='Defined at 1705 in ldpd/ldp_cfg.c.'>ldp_cfg_if_addr_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, &amp;iff, &amp;addr, <a href='../S/345.html#L17' title='Defined at 17 in ldpd/ldp_cfg.h.'>LDP_CFG_ADD</a>);
+<a id='L211' name='L211'></a>    <em class='brace'>}</em>
+<a id='L212' name='L212'></a>
+<a id='L213' name='L213'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L214' name='L214'></a><em class='brace'>}</em>
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/439.html#L336' title='Referred from 336 in ldpd/ldp_zebra.c.'>ldp_interface_address_delete</a>(<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>,
+<a id='L217' name='L217'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L218' name='L218'></a>    <strong class='reserved'>struct</strong> <a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> *<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a> = <a href='../S/394.html#L144' title='Defined at 144 in ldpd/ldp.c.'>ldp_get</a>();
+<a id='L219' name='L219'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *c;
+<a id='L220' name='L220'></a>    <strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *ifp;
+<a id='L221' name='L221'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p;
+<a id='L222' name='L222'></a>    <strong class='reserved'>struct</strong> <a href='../D/7132.html' title='Multiple defined in 2 places.'>ldp_addr</a> addr;
+<a id='L223' name='L223'></a>    <strong class='reserved'>struct</strong> <a href='../D/7345.html' title='Multiple defined in 2 places.'>ldp_if</a> iff;
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a>    c = <a href='../S/255.html#L798' title='Defined at 798 in lib/zclient.c.'>zebra_interface_address_delete_read</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ibuf);
+<a id='L226' name='L226'></a>    <strong class='reserved'>if</strong> (c == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || c-&gt;address-&gt;family != AF_INET) <em class='brace'>{</em>
+<a id='L227' name='L227'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L228' name='L228'></a>    <em class='brace'>}</em>
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a>    ifp = c-&gt;ifp;
+<a id='L231' name='L231'></a>    p = c-&gt;address;
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>    zlog_info("address delete %s from interface %s",
+<a id='L234' name='L234'></a>        inet_ntoa(p-&gt;u.prefix4), ifp-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>);
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a>    <strong class='reserved'>if</strong> (<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>) <em class='brace'>{</em>
+<a id='L237' name='L237'></a>        <a href='../S/439.html#L157' title='Defined at 157 in ldpd/ldp_zebra.c.'>prefix2mpls_inet_addr</a>(p, &amp;addr.address);
+<a id='L238' name='L238'></a>        iff.handle = ifp;
+<a id='L239' name='L239'></a>        <a href='../S/446.html#L1705' title='Defined at 1705 in ldpd/ldp_cfg.c.'>ldp_cfg_if_addr_set</a>(<a href='../S/389.html#L28' title='Defined at 28 in ldpd/ldp.h.'>ldp</a>-&gt;h, &amp;iff, &amp;addr, <a href='../S/345.html#L18' title='Defined at 18 in ldpd/ldp_cfg.h.'>LDP_CFG_DEL</a>);
+<a id='L240' name='L240'></a>    <em class='brace'>}</em>
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>    <a href='../S/240.html#L630' title='Defined at 630 in lib/if.c.'>connected_free</a>(c);
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L245' name='L245'></a><em class='brace'>}</em>
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/6767.html' title='Multiple referred from 2 places.'>ldp_zebra_read_ipv4</a>(<strong class='reserved'>int</strong> cmd, <strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *client,
+<a id='L248' name='L248'></a>    <a href='../S/191.html#L535' title='Defined at 535 in lib/zebra.h.'>zebra_size_t</a> length) <em class='brace'>{</em>
+<a id='L249' name='L249'></a>    <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L250' name='L250'></a>    <strong class='reserved'>struct</strong> <a href='../S/284.html#L95' title='Defined at 95 in lib/stream.h.'>stream</a> *s;
+<a id='L251' name='L251'></a>    <strong class='reserved'>int</strong> ifindex_num;
+<a id='L252' name='L252'></a>    <strong class='reserved'>int</strong> nexthop_num;
+<a id='L253' name='L253'></a>    <strong class='reserved'>int</strong> <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>;
+<a id='L254' name='L254'></a>    <strong class='reserved'>int</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L255' name='L255'></a>    <strong class='reserved'>int</strong> type;
+<a id='L256' name='L256'></a>    <strong class='reserved'>struct</strong> <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a> <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a>    s = client-&gt;ibuf;
+<a id='L259' name='L259'></a>    memset(&amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>,0,<strong class='reserved'>sizeof</strong>(<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>));
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>    <em class='comment'>/* Type, flags, message. */</em>
+<a id='L262' name='L262'></a>    type = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a>(s);
+<a id='L263' name='L263'></a>    <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a>(s);
+<a id='L264' name='L264'></a>    <a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a>(s);
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a>    <em class='comment'>/* IPv4 prefix. */</em>
+<a id='L267' name='L267'></a>    memset (&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, 0, <strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a>));
+<a id='L268' name='L268'></a>    <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.family = AF_INET;
+<a id='L269' name='L269'></a>    <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a> (s);
+<a id='L270' name='L270'></a>    <a href='../S/296.html#L272' title='Defined at 272 in lib/stream.c.'>stream_get</a>(&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, s, <a href='../D/3540.html' title='Multiple defined in 4 places.'>PSIZE</a>(<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen));
+<a id='L271' name='L271'></a>
+<a id='L272' name='L272'></a>    zlog_info("route %s/%d", inet_ntoa(<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>), <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.prefixlen);
+<a id='L273' name='L273'></a>    <strong class='reserved'>if</strong> (type == <a href='../S/280.html#L10' title='Defined at 10 in lib/route_types.h.'>ZEBRA_ROUTE_CONNECT</a>) <em class='brace'>{</em>
+<a id='L274' name='L274'></a>      <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.attached = <a href='../S/383.html#L75' title='Defined at 75 in ldpd/mpls_struct.h.'>MPLS_BOOL_TRUE</a>;
+<a id='L275' name='L275'></a>      zlog_info("\tattached");
+<a id='L276' name='L276'></a>    <em class='brace'>}</em>
+<a id='L277' name='L277'></a>
+<a id='L278' name='L278'></a>    <em class='comment'>/* Nexthop, ifindex, distance, metric. */</em>
+<a id='L279' name='L279'></a>    <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a>(<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>)) <em class='brace'>{</em>
+<a id='L280' name='L280'></a>        <strong class='reserved'>struct</strong> in_addr tmp;
+<a id='L281' name='L281'></a>        nexthop_num = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a>(s);
+<a id='L282' name='L282'></a>        zlog_info("\tnum nexthop %d", nexthop_num);
+<a id='L283' name='L283'></a>        <strong class='reserved'>if</strong> (nexthop_num &amp;&amp; (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.ip.u.ipv4 = ntohl(<a href='../S/296.html#L459' title='Defined at 459 in lib/stream.c.'>stream_get_ipv4</a>(s)))) <em class='brace'>{</em>
+<a id='L284' name='L284'></a>            <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.ip.type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L285' name='L285'></a>            <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.type |= <a href='../S/383.html#L165' title='Defined at 165 in ldpd/mpls_struct.h.'>MPLS_NH_IP</a>;
+<a id='L286' name='L286'></a>            tmp.s_addr = htonl(<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.ip.u.ipv4);
+<a id='L287' name='L287'></a>            zlog_info("\tnexthop %s", inet_ntoa(tmp));
+<a id='L288' name='L288'></a>        <em class='brace'>}</em>
+<a id='L289' name='L289'></a>    <em class='brace'>}</em>
+<a id='L290' name='L290'></a>
+<a id='L291' name='L291'></a>    <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a>(<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L89' title='Defined at 89 in lib/zclient.h.'>ZAPI_MESSAGE_IFINDEX</a>)) <em class='brace'>{</em>
+<a id='L292' name='L292'></a>        ifindex_num = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a>(s);
+<a id='L293' name='L293'></a>        zlog_info("\tnum ifindex %d", ifindex_num);
+<a id='L294' name='L294'></a>        <strong class='reserved'>if</strong> (ifindex_num &amp;&amp; (<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.if_handle =
+<a id='L295' name='L295'></a>            <a href='../S/240.html#L183' title='Defined at 183 in lib/if.c.'>if_lookup_by_index</a>(<a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a>(s)))) <em class='brace'>{</em>
+<a id='L296' name='L296'></a>            <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.type |= <a href='../S/383.html#L166' title='Defined at 166 in ldpd/mpls_struct.h.'>MPLS_NH_IF</a>;
+<a id='L297' name='L297'></a>            zlog_info("\tifindex %d", <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.if_handle-&gt;ifindex);
+<a id='L298' name='L298'></a>        <em class='brace'>}</em>
+<a id='L299' name='L299'></a>    <em class='brace'>}</em>
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a>    <em class='comment'>/* Distance. */</em>
+<a id='L302' name='L302'></a>    <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a>(<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L90' title='Defined at 90 in lib/zclient.h.'>ZAPI_MESSAGE_DISTANCE</a>)) <em class='brace'>{</em>
+<a id='L303' name='L303'></a>        <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.distance = <a href='../S/296.html#L288' title='Defined at 288 in lib/stream.c.'>stream_getc</a>(s);
+<a id='L304' name='L304'></a>    <em class='brace'>}</em>
+<a id='L305' name='L305'></a>
+<a id='L306' name='L306'></a>    <em class='comment'>/* Metric. */</em>
+<a id='L307' name='L307'></a>    <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a>(<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L91' title='Defined at 91 in lib/zclient.h.'>ZAPI_MESSAGE_METRIC</a>)) <em class='brace'>{</em>
+<a id='L308' name='L308'></a>        <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>.<a href='../S/524.html#L35' title='Defined at 35 in isisd/isis_circuit.h.'>metric</a> = <a href='../S/296.html#L386' title='Defined at 386 in lib/stream.c.'>stream_getl</a>(s);
+<a id='L309' name='L309'></a>    <em class='brace'>}</em>
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a>    <strong class='reserved'>if</strong> (cmd == <a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>) <em class='brace'>{</em>
+<a id='L312' name='L312'></a>        zlog_info("\tadd");
+<a id='L313' name='L313'></a>        <a href='../S/435.html#L151' title='Defined at 151 in ldpd/impl_fib.c.'>mpls_fib_ipv4_add</a>(&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L314' name='L314'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>
+<a id='L315' name='L315'></a>        zlog_info("\tdelete");
+<a id='L316' name='L316'></a>        <a href='../S/435.html#L175' title='Defined at 175 in ldpd/impl_fib.c.'>mpls_fib_ipv4_delete</a>(&amp;<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L317' name='L317'></a>    <em class='brace'>}</em>
+<a id='L318' name='L318'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L319' name='L319'></a><em class='brace'>}</em>
+<a id='L320' name='L320'></a>
+<a id='L321' name='L321'></a><strong class='reserved'>void</strong> <a href='../R/6766.html' title='Multiple referred from 2 places.'>ldp_zebra_init</a>() <em class='brace'>{</em>
+<a id='L322' name='L322'></a>  <strong class='reserved'>int</strong> i;
+<a id='L323' name='L323'></a>
+<a id='L324' name='L324'></a>  <em class='comment'>/* Allocate zebra structure. */</em>
+<a id='L325' name='L325'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> = <a href='../S/255.html#L51' title='Defined at 51 in lib/zclient.c.'>zclient_new</a>();
+<a id='L326' name='L326'></a>  <a href='../S/255.html#L84' title='Defined at 84 in lib/zclient.c.'>zclient_init</a>(<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, <a href='../S/280.html#L22' title='Defined at 22 in lib/route_types.h.'>ZEBRA_ROUTE_LDP</a>);
+<a id='L327' name='L327'></a>  <strong class='reserved'>for</strong> (i = 0;i &lt; <a href='../S/280.html#L27' title='Defined at 27 in lib/route_types.h.'>ZEBRA_ROUTE_MAX</a>;i++) <em class='brace'>{</em>
+<a id='L328' name='L328'></a>        <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;redist[i] = 1;
+<a id='L329' name='L329'></a>  <em class='brace'>}</em>
+<a id='L330' name='L330'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;router_id_update = <a href='../S/439.html#L30' title='Defined at 30 in ldpd/ldp_zebra.c.'>ldp_router_id_update_zebra</a>;
+<a id='L331' name='L331'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_add = <a href='../S/439.html#L45' title='Defined at 45 in ldpd/ldp_zebra.c.'>ldp_interface_add</a>;
+<a id='L332' name='L332'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_delete = <a href='../S/439.html#L67' title='Defined at 67 in ldpd/ldp_zebra.c.'>ldp_interface_delete2</a>;
+<a id='L333' name='L333'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;<a href='../S/28.html#L597' title='Defined at 597 in ospf6d/ospf6_interface.c.'>interface_up</a> = <a href='../S/439.html#L110' title='Defined at 110 in ldpd/ldp_zebra.c.'>ldp_interface_state_up</a>;
+<a id='L334' name='L334'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;<a href='../S/28.html#L707' title='Defined at 707 in ospf6d/ospf6_interface.c.'>interface_down</a> = <a href='../S/439.html#L141' title='Defined at 141 in ldpd/ldp_zebra.c.'>ldp_interface_state_down</a>;
+<a id='L335' name='L335'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_address_add = <a href='../S/439.html#L187' title='Defined at 187 in ldpd/ldp_zebra.c.'>ldp_interface_address_add</a>;
+<a id='L336' name='L336'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;interface_address_delete = <a href='../S/439.html#L216' title='Defined at 216 in ldpd/ldp_zebra.c.'>ldp_interface_address_delete</a>;
+<a id='L337' name='L337'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ipv4_route_add = <a href='../S/439.html#L247' title='Defined at 247 in ldpd/ldp_zebra.c.'>ldp_zebra_read_ipv4</a>;
+<a id='L338' name='L338'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;ipv4_route_delete = <a href='../S/439.html#L247' title='Defined at 247 in ldpd/ldp_zebra.c.'>ldp_zebra_read_ipv4</a>;
+<a id='L339' name='L339'></a>
+<a id='L340' name='L340'></a>  table = <a href='../S/236.html#L574' title='Defined at 574 in lib/table.c.'>route_table_init</a>();
+<a id='L341' name='L341'></a>  memset(&amp;router_id, 0, <strong class='reserved'>sizeof</strong>(router_id));
+<a id='L342' name='L342'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L30'>[^]</a><a href='#L321'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

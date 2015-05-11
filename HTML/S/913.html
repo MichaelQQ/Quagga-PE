@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>vpnmd/vpnm_via_mpls.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1035.html'>vpnmd</a>/vpnm_via_mpls.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L18'>[^]</a><a href='#L171'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L18' title='Defined at 18.'>connect_mplsd</a></li>
+<li><a href='#L22' title='Defined at 22.'>disconnect_mplsd</a></li>
+<li><a href='#L26' title='Defined at 26.'>add_label_to_packet</a></li>
+<li><a href='#L33' title='Defined at 33.'>add_otunnel_packet</a></li>
+<li><a href='#L40' title='Defined at 40.'>add_label_stack</a></li>
+<li><a href='#L47' title='Defined at 47.'>bind_olabel</a></li>
+<li><a href='#L53' title='Defined at 53.'>create_tunnel_interface</a></li>
+<li><a href='#L60' title='Defined at 60.'>map_label_tunnel</a></li>
+<li><a href='#L66' title='Defined at 66.'>del_tunnel</a></li>
+<li><a href='#L72' title='Defined at 72.'>del_label_to_label</a></li>
+<li><a href='#L80' title='Defined at 80.'>set_pw_data_plane</a></li>
+<li><a href='#L121' title='Defined at 121.'>del_pw_data_plane</a></li>
+<li><a href='#L125' title='Defined at 125.'>set_out_vclsp</a></li>
+<li><a href='#L171' title='Defined at 171.'>set_in_vclsp</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='914.html'>vpnm_via_mpls.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='../I/167.html'>connect_daemon.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='908.html'>vpnmd_table.h</a>"
+<a id='L5' name='L5'></a>
+<a id='L6' name='L6'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/5118.html' title='Multiple defined in 2 places.'>add_label_to_packet</a>(<strong class='reserved'>int</strong> il,<strong class='reserved'>int</strong> labelspace);
+<a id='L7' name='L7'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/5126.html' title='Multiple defined in 2 places.'>add_otunnel_packet</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong>* iface);
+<a id='L8' name='L8'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/5889.html' title='Multiple defined in 3 places.'>bind_olabel</a>(<strong class='reserved'>int</strong> label, <strong class='reserved'>int</strong> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>,<strong class='reserved'>int</strong> labelspace);
+<a id='L9' name='L9'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/6255.html' title='Multiple defined in 3 places.'>create_tunnel_interface</a>(<strong class='reserved'>char</strong>* mplsiface);
+<a id='L10' name='L10'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/7689.html' title='Multiple defined in 3 places.'>map_label_tunnel</a>(<strong class='reserved'>int</strong> labelref,<strong class='reserved'>const</strong> <strong class='reserved'>char</strong>* mplsiface);
+<a id='L11' name='L11'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/6292.html' title='Multiple defined in 3 places.'>del_tunnel</a>(<strong class='reserved'>char</strong>* mplsiface);
+<a id='L12' name='L12'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../D/6283.html' title='Multiple defined in 3 places.'>del_label_to_label</a>(<strong class='reserved'>int</strong> il, <strong class='reserved'>int</strong> okey);
+<a id='L13' name='L13'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/913.html#L18' title='Defined at 18 in vpnmd/vpnm_via_mpls.c.'>connect_mplsd</a>();
+<a id='L14' name='L14'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/913.html#L22' title='Defined at 22 in vpnmd/vpnm_via_mpls.c.'>disconnect_mplsd</a>();
+<a id='L15' name='L15'></a>
+<a id='L16' name='L16'></a><strong class='reserved'>char</strong> buf[1024]=<em class='brace'>{</em>0<em class='brace'>}</em>;
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5454.html' title='Multiple referred from 2 places.'>connect_mplsd</a>()<em class='brace'>{</em>
+<a id='L19' name='L19'></a>        <a href='../D/6208.html' title='Multiple defined in 2 places.'>connect_daemon</a>(<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>);
+<a id='L20' name='L20'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L21' name='L21'></a><em class='brace'>}</em>
+<a id='L22' name='L22'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5584.html' title='Multiple referred from 4 places.'>disconnect_mplsd</a>()<em class='brace'>{</em>
+<a id='L23' name='L23'></a>        <a href='../D/6464.html' title='Multiple defined in 2 places.'>exit_daemon</a>(<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>);
+<a id='L24' name='L24'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L25' name='L25'></a><em class='brace'>}</em>
+<a id='L26' name='L26'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/4385.html' title='Multiple referred from 4 places.'>add_label_to_packet</a>(<strong class='reserved'>int</strong> il,<strong class='reserved'>int</strong> labelspace)<em class='brace'>{</em>
+<a id='L27' name='L27'></a>        <em class='comment'>//add_label_to_packet il &lt;0-65535&gt; labelspace &lt;1-65535&gt;</em>
+<a id='L28' name='L28'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L29' name='L29'></a>        sprintf(buf,"add_label_to_packet il %d labelspace %d",il,labelspace);
+<a id='L30' name='L30'></a>        retval=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L31' name='L31'></a>        <strong class='reserved'>return</strong> retval;
+<a id='L32' name='L32'></a><em class='brace'>}</em>
+<a id='L33' name='L33'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/4392.html' title='Multiple referred from 4 places.'>add_otunnel_packet</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong>* iface)<em class='brace'>{</em>
+<a id='L34' name='L34'></a>        <em class='comment'>//add_otunnel_packet iface WORD</em>
+<a id='L35' name='L35'></a>        sprintf(buf,"add_otunnel_packet iface %s",iface);
+<a id='L36' name='L36'></a>        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L37' name='L37'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L38' name='L38'></a><em class='brace'>}</em>
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/4379.html' title='Multiple referred from 3 places.'>add_label_stack</a>(<strong class='reserved'>int</strong> nhlfe_key,<strong class='reserved'>int</strong> olabel)<em class='brace'>{</em>
+<a id='L41' name='L41'></a>        <em class='comment'>//add_label_stack label_key &lt;1-65535&gt; label &lt;1-65535&gt;</em>
+<a id='L42' name='L42'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L43' name='L43'></a>        sprintf(buf,"add_label_stack label_key %d label %d",nhlfe_key,olabel);
+<a id='L44' name='L44'></a>        retval=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L45' name='L45'></a>        <strong class='reserved'>return</strong> retval;
+<a id='L46' name='L46'></a><em class='brace'>}</em>
+<a id='L47' name='L47'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5141.html' title='Multiple referred from 7 places.'>bind_olabel</a>(<strong class='reserved'>int</strong> label, <strong class='reserved'>int</strong> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>,<strong class='reserved'>int</strong> labelspace)<em class='brace'>{</em>
+<a id='L48' name='L48'></a>        <em class='comment'>//bind_olabel ilabel &lt;1-65535&gt; olabelkey &lt;1-65535&gt; labelspace &lt;0-65535&gt;</em>
+<a id='L49' name='L49'></a>        sprintf(buf,"bind_olabel ilabel %d olabelkey %d labelspace %d",label,<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>,labelspace);
+<a id='L50' name='L50'></a>        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L51' name='L51'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L52' name='L52'></a><em class='brace'>}</em>
+<a id='L53' name='L53'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5499.html' title='Multiple referred from 7 places.'>create_tunnel_interface</a>(<strong class='reserved'>char</strong>* mplsiface)<em class='brace'>{</em>
+<a id='L54' name='L54'></a>        <em class='comment'>//create_tunnel_interface mplsiface WORD</em>
+<a id='L55' name='L55'></a>        <em class='comment'>//create_tunnel_interface mplsiface WORD</em>
+<a id='L56' name='L56'></a>        sprintf(buf,"create_tunnel_interface mplsiface %s",mplsiface);
+<a id='L57' name='L57'></a>        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L58' name='L58'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L59' name='L59'></a><em class='brace'>}</em>
+<a id='L60' name='L60'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/6901.html' title='Multiple referred from 7 places.'>map_label_tunnel</a>(<strong class='reserved'>int</strong> labelref,<strong class='reserved'>const</strong> <strong class='reserved'>char</strong>* mplsiface)<em class='brace'>{</em>
+<a id='L61' name='L61'></a>        <em class='comment'>//map_label_tunnel labelref &lt;1-65535&gt; mplsiface WORD</em>
+<a id='L62' name='L62'></a>        sprintf(buf,"map_label_tunnel labelref %d mplsiface %s",labelref,mplsiface);
+<a id='L63' name='L63'></a>        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L64' name='L64'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L65' name='L65'></a><em class='brace'>}</em>
+<a id='L66' name='L66'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5536.html' title='Multiple referred from 6 places.'>del_tunnel</a>(<strong class='reserved'>char</strong>* mplsiface)<em class='brace'>{</em>
+<a id='L67' name='L67'></a>        <em class='comment'>//del_tunnel mplsiface WORD</em>
+<a id='L68' name='L68'></a>        sprintf(buf,"del_tunnel mplsiface %s",mplsiface);
+<a id='L69' name='L69'></a>        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L70' name='L70'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L71' name='L71'></a><em class='brace'>}</em>
+<a id='L72' name='L72'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../R/5527.html' title='Multiple referred from 6 places.'>del_label_to_label</a>(<strong class='reserved'>int</strong> il, <strong class='reserved'>int</strong> okey)<em class='brace'>{</em>
+<a id='L73' name='L73'></a>        <em class='comment'>//del_label_to_label ilabel &lt;1-65535&gt; okey &lt;1-65535&gt;</em>
+<a id='L74' name='L74'></a>        sprintf(buf,"del_label_to_label ilabel %d okey %d",il,okey);
+<a id='L75' name='L75'></a>        <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L76' name='L76'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L77' name='L77'></a><em class='brace'>}</em>
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a><em class='comment'>//To use set out &amp;&amp; in VC LSP nhlfe/ILM entry</em>
+<a id='L80' name='L80'></a><strong class='reserved'>int</strong> <a href='../S/914.html#L11' title='Referred from 11 in vpnmd/vpnm_via_mpls.h.'>set_pw_data_plane</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *pw_if,<strong class='reserved'>int</strong> olabel,<strong class='reserved'>int</strong> nhlfe_key,<strong class='reserved'>int</strong> ilabel)<em class='brace'>{</em>
+<a id='L81' name='L81'></a><em class='comment'>//pw_if,olabel,key,ilabel, </em>
+<a id='L82' name='L82'></a><em class='comment'>/*</em>
+<a id='L83' name='L83'></a><em class='comment'>./mpls tunnel add dev mpls100</em>
+<a id='L84' name='L84'></a><em class='comment'>./mpls nhlfe add key 0 instructions push gen 100 forward 0x2</em>
+<a id='L85' name='L85'></a><em class='comment'>(return 0x03)</em>
+<a id='L86' name='L86'></a><em class='comment'>./mpls tunnel set dev mpls100 nhlfe 0x03</em>
+<a id='L87' name='L87'></a><em class='comment'></em>
+<a id='L88' name='L88'></a><em class='comment'> Updating ILM table</em>
+<a id='L89' name='L89'></a><em class='comment'>./mpls labelspace set dev eth2 labelspace 0</em>
+<a id='L90' name='L90'></a><em class='comment'>./mpls ilm add label gen 601 labelspace 0 proto packet</em>
+<a id='L91' name='L91'></a><em class='comment'>./mpls ilm add label gen 101 labelspace 0 proto packet</em>
+<a id='L92' name='L92'></a><em class='comment'>./mpls nhlfe add key 0 instructions nexthop mpls100 packet</em>
+<a id='L93' name='L93'></a><em class='comment'>(returns key 0x4)</em>
+<a id='L94' name='L94'></a><em class='comment'>./mpls xc add ilm_label gen 101 ilm_labelspace 0 nhlfe_key 0x4</em>
+<a id='L95' name='L95'></a><em class='comment'>*/</em>
+<a id='L96' name='L96'></a>        <strong class='reserved'>int</strong> okey=-1;
+<a id='L97' name='L97'></a>        <em class='comment'>//writing outgoing VC_LSP information into NHLFE entry</em>
+<a id='L98' name='L98'></a>        <a href='../S/913.html#L18' title='Defined at 18 in vpnmd/vpnm_via_mpls.c.'>connect_mplsd</a>();
+<a id='L99' name='L99'></a>        <em class='comment'>//use the "pw_in_label" to create tunnnel interface.</em>
+<a id='L100' name='L100'></a>        <a href='../D/6255.html' title='Multiple defined in 3 places.'>create_tunnel_interface</a>(pw_if);
+<a id='L101' name='L101'></a>        okey=<a href='../D/5111.html' title='Multiple defined in 2 places.'>add_label_stack</a>(nhlfe_key,olabel);
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>        <strong class='reserved'>if</strong>(okey &lt;= 0)<em class='brace'>{</em>
+<a id='L104' name='L104'></a>                <a href='../S/913.html#L22' title='Defined at 22 in vpnmd/vpnm_via_mpls.c.'>disconnect_mplsd</a>();
+<a id='L105' name='L105'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L106' name='L106'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L107' name='L107'></a>                <a href='../D/7689.html' title='Multiple defined in 3 places.'>map_label_tunnel</a>(okey,pw_if);
+<a id='L108' name='L108'></a>        <em class='brace'>}</em>
+<a id='L109' name='L109'></a>        <em class='comment'>//writing incoming VC_LSP information into ILM entry</em>
+<a id='L110' name='L110'></a>        <a href='../D/5118.html' title='Multiple defined in 2 places.'>add_label_to_packet</a>(ilabel,0); <em class='comment'>//default labelspace =0</em>
+<a id='L111' name='L111'></a>        okey=<a href='../D/5126.html' title='Multiple defined in 2 places.'>add_otunnel_packet</a>(pw_if);
+<a id='L112' name='L112'></a>        <strong class='reserved'>if</strong>(okey &lt;= 0)<em class='brace'>{</em>
+<a id='L113' name='L113'></a>                <a href='../S/913.html#L22' title='Defined at 22 in vpnmd/vpnm_via_mpls.c.'>disconnect_mplsd</a>();
+<a id='L114' name='L114'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L115' name='L115'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L116' name='L116'></a>                <a href='../D/5889.html' title='Multiple defined in 3 places.'>bind_olabel</a>(ilabel,okey,0);<em class='comment'>//default labelspace =0</em>
+<a id='L117' name='L117'></a>        <em class='brace'>}</em>
+<a id='L118' name='L118'></a>        <a href='../S/913.html#L22' title='Defined at 22 in vpnmd/vpnm_via_mpls.c.'>disconnect_mplsd</a>();
+<a id='L119' name='L119'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L120' name='L120'></a><em class='brace'>}</em>
+<a id='L121' name='L121'></a><strong class='reserved'>int</strong> <a href='../S/914.html#L12' title='Referred from 12 in vpnmd/vpnm_via_mpls.h.'>del_pw_data_plane</a>()<em class='brace'>{</em>
+<a id='L122' name='L122'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L123' name='L123'></a><em class='brace'>}</em>
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><strong class='reserved'>int</strong> <a href='../R/9759.html' title='Multiple referred from 2 places.'>set_out_vclsp</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *pw_if,<strong class='reserved'>int</strong> olabel,<strong class='reserved'>int</strong> nhlfe_key,<strong class='reserved'>int</strong> pw_in_state)<em class='brace'>{</em>
+<a id='L126' name='L126'></a><em class='comment'>//writing outgoing VC_LSP information into NHLFE entry</em>
+<a id='L127' name='L127'></a><em class='comment'>/*</em>
+<a id='L128' name='L128'></a><em class='comment'>./mpls tunnel add dev mpls100</em>
+<a id='L129' name='L129'></a><em class='comment'>./mpls nhlfe add key 0 instructions push gen 100 forward 0x2</em>
+<a id='L130' name='L130'></a><em class='comment'>(return 0x03)</em>
+<a id='L131' name='L131'></a><em class='comment'>./mpls tunnel set dev mpls100 nhlfe 0x03</em>
+<a id='L132' name='L132'></a><em class='comment'>*/</em>
+<a id='L133' name='L133'></a><em class='comment'>/*</em>
+<a id='L134' name='L134'></a><em class='comment'>        int okey=-1;</em>
+<a id='L135' name='L135'></a><em class='comment'>        //writing outgoing VC_LSP information into NHLFE entry</em>
+<a id='L136' name='L136'></a><em class='comment'>        connect_mplsd();</em>
+<a id='L137' name='L137'></a><em class='comment'>        if(pw_in_state!=READY)</em>
+<a id='L138' name='L138'></a><em class='comment'>                create_tunnel_interface(pw_if);</em>
+<a id='L139' name='L139'></a><em class='comment'>        okey=add_label_stack(nhlfe_key,olabel);</em>
+<a id='L140' name='L140'></a><em class='comment'>        </em>
+<a id='L141' name='L141'></a><em class='comment'>        if(okey &lt;= 0){</em>
+<a id='L142' name='L142'></a><em class='comment'>                disconnect_mplsd();</em>
+<a id='L143' name='L143'></a><em class='comment'>                return -1;</em>
+<a id='L144' name='L144'></a><em class='comment'>        }else{</em>
+<a id='L145' name='L145'></a><em class='comment'>                map_label_tunnel(okey,pw_if);</em>
+<a id='L146' name='L146'></a><em class='comment'>                return 0;</em>
+<a id='L147' name='L147'></a><em class='comment'>        }</em>
+<a id='L148' name='L148'></a><em class='comment'>        */</em>
+<a id='L149' name='L149'></a>        printf("DEBUG(VPN Manager)set_out_vclsp enter.\n ");
+<a id='L150' name='L150'></a>        <strong class='reserved'>int</strong> okey=-1;
+<a id='L151' name='L151'></a>        <a href='../D/6208.html' title='Multiple defined in 2 places.'>connect_daemon</a>(<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>);
+<a id='L152' name='L152'></a>        <strong class='reserved'>if</strong>(pw_in_state!=<a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L153' name='L153'></a>                sprintf(buf,"create_tunnel_interface mplsiface %s",pw_if);
+<a id='L154' name='L154'></a>                okey=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L155' name='L155'></a>        <em class='brace'>}</em>
+<a id='L156' name='L156'></a>        sprintf(buf,"add_label_stack label_key %d label %d",nhlfe_key,olabel);
+<a id='L157' name='L157'></a>        okey=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L158' name='L158'></a>        <strong class='reserved'>if</strong>(okey &lt;= 0)<em class='brace'>{</em>
+<a id='L159' name='L159'></a>                <a href='../D/11230.html' title='Multiple defined in 3 places.'>vclient_close</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>]);
+<a id='L160' name='L160'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L161' name='L161'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L162' name='L162'></a>                <em class='comment'>//map_label_tunnel(okey,pw_if);</em>
+<a id='L163' name='L163'></a>                sprintf(buf,"map_label_tunnel labelref %d mplsiface %s",okey,pw_if);
+<a id='L164' name='L164'></a>                <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L165' name='L165'></a>        <em class='brace'>}</em>
+<a id='L166' name='L166'></a>        <a href='../D/11230.html' title='Multiple defined in 3 places.'>vclient_close</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>]);
+<a id='L167' name='L167'></a>        printf("DEBUG(VPN Manager)set_out_vclsp exit.\n ");
+<a id='L168' name='L168'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L169' name='L169'></a><em class='brace'>}</em>
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a><strong class='reserved'>int</strong> <a href='../R/9742.html' title='Multiple referred from 2 places.'>set_in_vclsp</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *pw_if,<strong class='reserved'>int</strong> ilabel,<strong class='reserved'>int</strong> pw_out_state)<em class='brace'>{</em>
+<a id='L172' name='L172'></a><em class='comment'>/*</em>
+<a id='L173' name='L173'></a><em class='comment'>Updating ILM table</em>
+<a id='L174' name='L174'></a><em class='comment'>./mpls labelspace set dev eth2 labelspace 0</em>
+<a id='L175' name='L175'></a><em class='comment'>./mpls ilm add label gen 601 labelspace 0 proto packet</em>
+<a id='L176' name='L176'></a><em class='comment'>./mpls ilm add label gen 101 labelspace 0 proto packet</em>
+<a id='L177' name='L177'></a><em class='comment'>./mpls nhlfe add key 0 instructions nexthop mpls100 packet</em>
+<a id='L178' name='L178'></a><em class='comment'>(returns key 0x4)</em>
+<a id='L179' name='L179'></a><em class='comment'>./mpls xc add ilm_label gen 101 ilm_labelspace 0 nhlfe_key 0x4</em>
+<a id='L180' name='L180'></a><em class='comment'>*/</em>
+<a id='L181' name='L181'></a>        printf("DEBUG(VPN Manager)set_in_vclsp enter.\n ");
+<a id='L182' name='L182'></a>        <em class='comment'>/*</em>
+<a id='L183' name='L183'></a><em class='comment'>        int okey=-1;</em>
+<a id='L184' name='L184'></a><em class='comment'>        //writing incoming VC_LSP information into ILM entry</em>
+<a id='L185' name='L185'></a><em class='comment'>        //use the "pw_in_label" to create tunnnel interface.</em>
+<a id='L186' name='L186'></a><em class='comment'>        connect_mplsd();</em>
+<a id='L187' name='L187'></a><em class='comment'>        if(pw_out_state!=READY)</em>
+<a id='L188' name='L188'></a><em class='comment'>                create_tunnel_interface(pw_if);</em>
+<a id='L189' name='L189'></a><em class='comment'>                </em>
+<a id='L190' name='L190'></a><em class='comment'>        add_label_to_packet(ilabel,0); //default labelspace =0</em>
+<a id='L191' name='L191'></a><em class='comment'>        okey=add_otunnel_packet(pw_if);</em>
+<a id='L192' name='L192'></a><em class='comment'>        if(okey &lt;= 0){</em>
+<a id='L193' name='L193'></a><em class='comment'>                disconnect_mplsd();</em>
+<a id='L194' name='L194'></a><em class='comment'>                return -1;</em>
+<a id='L195' name='L195'></a><em class='comment'>        }else{</em>
+<a id='L196' name='L196'></a><em class='comment'>                bind_olabel(ilabel,okey,0);//default labelspace =0</em>
+<a id='L197' name='L197'></a><em class='comment'>        }</em>
+<a id='L198' name='L198'></a><em class='comment'>        disconnect_mplsd();</em>
+<a id='L199' name='L199'></a><em class='comment'>        return 0;</em>
+<a id='L200' name='L200'></a><em class='comment'>        */</em>
+<a id='L201' name='L201'></a>        <strong class='reserved'>int</strong> okey;
+<a id='L202' name='L202'></a>        <a href='../D/6208.html' title='Multiple defined in 2 places.'>connect_daemon</a>(<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>);
+<a id='L203' name='L203'></a>        <strong class='reserved'>if</strong>(pw_out_state!=<a href='../S/908.html#L13' title='Defined at 13 in vpnmd/vpnmd_table.h.'>READY</a>)<em class='brace'>{</em>
+<a id='L204' name='L204'></a>        sprintf(buf,"create_tunnel_interface mplsiface %s",pw_if);
+<a id='L205' name='L205'></a>                okey=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L206' name='L206'></a>        <em class='brace'>}</em>
+<a id='L207' name='L207'></a>        <em class='comment'>//add_label_to_packet il &lt;0-65535&gt; labelspace &lt;1-65535&gt;</em>
+<a id='L208' name='L208'></a>        printf("il:%d\n",ilabel);
+<a id='L209' name='L209'></a>        sprintf(buf,"add_label_to_packet il %d labelspace %d",ilabel,0);<em class='comment'>//default labelspace =0</em>
+<a id='L210' name='L210'></a>        okey=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L211' name='L211'></a>        sprintf(buf,"add_otunnel_packet iface %s",pw_if);
+<a id='L212' name='L212'></a>        okey=<a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L213' name='L213'></a>        <strong class='reserved'>if</strong>(okey &lt;= 0)<em class='brace'>{</em>
+<a id='L214' name='L214'></a>                <a href='../D/11230.html' title='Multiple defined in 3 places.'>vclient_close</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>]);
+<a id='L215' name='L215'></a>                <strong class='reserved'>return</strong> -1;
+<a id='L216' name='L216'></a>        <em class='brace'>}</em><strong class='reserved'>else</strong><em class='brace'>{</em>
+<a id='L217' name='L217'></a>                sprintf(buf,"bind_olabel ilabel %d olabelkey %d labelspace %d",ilabel,okey,0);<em class='comment'>//default labelspace =0</em>
+<a id='L218' name='L218'></a>                <a href='../D/11393.html' title='Multiple defined in 3 places.'>vtysh_client_execute</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>], buf, stdout);
+<a id='L219' name='L219'></a>        <em class='brace'>}</em>
+<a id='L220' name='L220'></a>        <a href='../D/11230.html' title='Multiple defined in 3 places.'>vclient_close</a>(&amp;<a href='../D/11391.html' title='Multiple defined in 3 places.'>vtysh_client</a>[<a href='../D/4492.html' title='Multiple defined in 2 places.'>VTYSH_INDEX_MPLSADMD</a>]);
+<a id='L221' name='L221'></a>        printf("DEBUG(VPN Manager)set_in_vclsp exit.\n ");
+<a id='L222' name='L222'></a>        <strong class='reserved'>return</strong> 0;
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L18'>[^]</a><a href='#L171'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

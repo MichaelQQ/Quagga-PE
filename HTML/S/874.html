@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lmd/lmd.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1023.html'>lmd</a>/lmd.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L5'>[^]</a><a href='#L35'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L5' title='Defined at 5.'>LM_LabelPool_new</a></li>
+<li><a href='#L19' title='Defined at 19.'>LM_LabelPool_new_more</a></li>
+<li><a href='#L35' title='Defined at 35.'>lm_get</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='886.html'>lmd.h</a>"
+<a id='L3' name='L3'></a><strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *lm_head = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L4' name='L4'></a><em class='comment'>/* LMD instance top. */</em>
+<a id='L5' name='L5'></a><strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *<a href='../R/1510.html' title='Multiple referred from 2 places.'>LM_LabelPool_new</a>(<strong class='reserved'>void</strong>) <em class='brace'>{</em>
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a>        <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *new;
+<a id='L8' name='L8'></a>        new=(<strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *)malloc(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a>));
+<a id='L9' name='L9'></a>        
+<a id='L10' name='L10'></a>        <strong class='reserved'>if</strong>(!new)
+<a id='L11' name='L11'></a>                <strong class='reserved'>return</strong>  <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;<em class='comment'>//memory allocate fail</em>
+<a id='L12' name='L12'></a>        
+<a id='L13' name='L13'></a>        <em class='comment'>//initial </em>
+<a id='L14' name='L14'></a>        memset(new,0,<strong class='reserved'>sizeof</strong>(*new));
+<a id='L15' name='L15'></a>        lm_head=new;
+<a id='L16' name='L16'></a>        <strong class='reserved'>return</strong> new;
+<a id='L17' name='L17'></a><em class='brace'>}</em>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *<a href='../R/1511.html' title='Multiple referred from 2 places.'>LM_LabelPool_new_more</a>(<strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *pool) <em class='brace'>{</em>
+<a id='L20' name='L20'></a>        
+<a id='L21' name='L21'></a>        <strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *new;
+<a id='L22' name='L22'></a>        new=(<strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *)malloc(<strong class='reserved'>sizeof</strong>(<strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a>));
+<a id='L23' name='L23'></a>        
+<a id='L24' name='L24'></a>        <strong class='reserved'>if</strong>(!new)
+<a id='L25' name='L25'></a>                <strong class='reserved'>return</strong>  <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;<em class='comment'>//memory allocate fail</em>
+<a id='L26' name='L26'></a>        
+<a id='L27' name='L27'></a>        <em class='comment'>//initial </em>
+<a id='L28' name='L28'></a>        memset(new,0,<strong class='reserved'>sizeof</strong>(*new));
+<a id='L29' name='L29'></a>        new-&gt;next=pool;
+<a id='L30' name='L30'></a>        pool=new;
+<a id='L31' name='L31'></a>  lm_head=new;
+<a id='L32' name='L32'></a>        <strong class='reserved'>return</strong> new;
+<a id='L33' name='L33'></a><em class='brace'>}</em>
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><strong class='reserved'>struct</strong> <a href='../S/886.html#L26' title='Defined at 26 in lmd/lmd.h.'>LM_LabelPool</a> *<a href='../R/6808.html' title='Multiple referred from 9 places.'>lm_get</a>()<em class='brace'>{</em>
+<a id='L36' name='L36'></a>    <strong class='reserved'>if</strong> (lm_head)<em class='brace'>{</em>
+<a id='L37' name='L37'></a>                        <strong class='reserved'>return</strong> lm_head;
+<a id='L38' name='L38'></a>    <em class='brace'>}</em>
+<a id='L39' name='L39'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L5'>[^]</a><a href='#L35'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

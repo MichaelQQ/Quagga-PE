@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_adj.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_adj.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/187.html' title='Multiple included from 7 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2000</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#ifndef</em> <a href='../S/362.html#L11' title='Defined at 11 in ldpd/ldp_adj.h.'>_LDP_ADJ_H_</a>
+<a id='L11' name='L11'></a><em class='sharp'>#define</em> <a href='../S/362.html#L10' title='Referred from 10 in ldpd/ldp_adj.h.'>_LDP_ADJ_H_</a>
+<a id='L12' name='L12'></a>
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L14' name='L14'></a>
+<a id='L15' name='L15'></a><strong class='reserved'>extern</strong> <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> *<a href='../S/449.html#L28' title='Defined at 28 in ldpd/ldp_adj.c.'>ldp_adj_create</a>(<a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * <a href='../S/148.html#L44' title='Defined at 44 in babeld/source.h.'>source</a>,
+<a id='L16' name='L16'></a>  <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * lsraddr, <strong class='reserved'>int</strong> labelspace, <strong class='reserved'>int</strong> remote_hellotime,
+<a id='L17' name='L17'></a>  <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> * remote_transport_address, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> remote_csn);
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/449.html#L76' title='Defined at 76 in ldpd/ldp_adj.c.'>ldp_adj_delete</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L20' name='L20'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/449.html#L83' title='Defined at 83 in ldpd/ldp_adj.c.'>ldp_adj_startup</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>,
+<a id='L21' name='L21'></a>  <strong class='reserved'>int</strong> request);
+<a id='L22' name='L22'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/449.html#L134' title='Defined at 134 in ldpd/ldp_adj.c.'>ldp_adj_restart</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L23' name='L23'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/449.html#L152' title='Defined at 152 in ldpd/ldp_adj.c.'>ldp_adj_shutdown</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L24' name='L24'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/449.html#L189' title='Defined at 189 in ldpd/ldp_adj.c.'>ldp_adj_maintain_timer</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L25' name='L25'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/449.html#L225' title='Defined at 225 in ldpd/ldp_adj.c.'>ldp_adj_recv_stop</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/449.html#L243' title='Defined at 243 in ldpd/ldp_adj.c.'>_ldp_adj_add_entity</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L28' name='L28'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/449.html#L250' title='Defined at 250 in ldpd/ldp_adj.c.'>_ldp_adj_del_entity</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L29' name='L29'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/449.html#L257' title='Defined at 257 in ldpd/ldp_adj.c.'>ldp_adj_add_session</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s);
+<a id='L30' name='L30'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/449.html#L269' title='Defined at 269 in ldpd/ldp_adj.c.'>ldp_adj_del_session</a>(<a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <a href='../D/7500.html' title='Multiple defined in 2 places.'>ldp_session</a> * s);
+<a id='L31' name='L31'></a><strong class='reserved'>extern</strong> <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> <a href='../S/449.html#L277' title='Defined at 277 in ldpd/ldp_adj.c.'>_ldp_adj_get_next_index</a>();
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>babeld/babel_main.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1012.html'>babeld</a>/babel_main.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/6.html' title='Multiple included from 9 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*  </em>
+<a id='L2' name='L2'></a><em class='comment'> *  This file is free software: you may copy, redistribute and/or modify it  </em>
+<a id='L3' name='L3'></a><em class='comment'> *  under the terms of the GNU General Public License as published by the  </em>
+<a id='L4' name='L4'></a><em class='comment'> *  Free Software Foundation, either version 2 of the License, or (at your  </em>
+<a id='L5' name='L5'></a><em class='comment'> *  option) any later version.  </em>
+<a id='L6' name='L6'></a><em class='comment'> *  </em>
+<a id='L7' name='L7'></a><em class='comment'> *  This file is distributed in the hope that it will be useful, but  </em>
+<a id='L8' name='L8'></a><em class='comment'> *  WITHOUT ANY WARRANTY; without even the implied warranty of  </em>
+<a id='L9' name='L9'></a><em class='comment'> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  </em>
+<a id='L10' name='L10'></a><em class='comment'> *  General Public License for more details.  </em>
+<a id='L11' name='L11'></a><em class='comment'> *  </em>
+<a id='L12' name='L12'></a><em class='comment'> *  You should have received a copy of the GNU General Public License  </em>
+<a id='L13' name='L13'></a><em class='comment'> *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.  </em>
+<a id='L14' name='L14'></a><em class='comment'> *  </em>
+<a id='L15' name='L15'></a><em class='comment'> * This file incorporates work covered by the following copyright and  </em>
+<a id='L16' name='L16'></a><em class='comment'> * permission notice:  </em>
+<a id='L17' name='L17'></a><em class='comment'> *  </em>
+<a id='L18' name='L18'></a><em class='comment'>Copyright 2011 by Matthieu Boutier and Juliusz Chroboczek</em>
+<a id='L19' name='L19'></a><em class='comment'></em>
+<a id='L20' name='L20'></a><em class='comment'>Permission is hereby granted, free of charge, to any person obtaining a copy</em>
+<a id='L21' name='L21'></a><em class='comment'>of this software and associated documentation files (the "Software"), to deal</em>
+<a id='L22' name='L22'></a><em class='comment'>in the Software without restriction, including without limitation the rights</em>
+<a id='L23' name='L23'></a><em class='comment'>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</em>
+<a id='L24' name='L24'></a><em class='comment'>copies of the Software, and to permit persons to whom the Software is</em>
+<a id='L25' name='L25'></a><em class='comment'>furnished to do so, subject to the following conditions:</em>
+<a id='L26' name='L26'></a><em class='comment'></em>
+<a id='L27' name='L27'></a><em class='comment'>The above copyright notice and this permission notice shall be included in</em>
+<a id='L28' name='L28'></a><em class='comment'>all copies or substantial portions of the Software.</em>
+<a id='L29' name='L29'></a><em class='comment'></em>
+<a id='L30' name='L30'></a><em class='comment'>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</em>
+<a id='L31' name='L31'></a><em class='comment'>IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</em>
+<a id='L32' name='L32'></a><em class='comment'>FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE</em>
+<a id='L33' name='L33'></a><em class='comment'>AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</em>
+<a id='L34' name='L34'></a><em class='comment'>LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</em>
+<a id='L35' name='L35'></a><em class='comment'>OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</em>
+<a id='L36' name='L36'></a><em class='comment'>THE SOFTWARE.</em>
+<a id='L37' name='L37'></a><em class='comment'>*/</em>
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> timeval babel_now;         <em class='comment'>/* current time             */</em>
+<a id='L42' name='L42'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;     <em class='comment'>/* quagga's threads handler */</em>
+<a id='L43' name='L43'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/613.html#L298' title='Defined at 298 in bgpd/bgp_debug.c.'>debug</a>;
+<a id='L44' name='L44'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> resend_delay;
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> myid[8];
+<a id='L47' name='L47'></a>
+<a id='L48' name='L48'></a><strong class='reserved'>extern</strong> <strong class='reserved'>const</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> zeroes[16], ones[16];
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> protocol_port;
+<a id='L51' name='L51'></a><strong class='reserved'>extern</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> protocol_group[16];
+<a id='L52' name='L52'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> protocol_socket;
+<a id='L53' name='L53'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> kernel_socket;
+<a id='L54' name='L54'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> max_request_hopcount;
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><strong class='reserved'>void</strong> <a href='../S/157.html#L361' title='Defined at 361 in babeld/babel_main.c.'>babel_load_state_file</a>(<strong class='reserved'>void</strong>);
+<a id='L57' name='L57'></a><strong class='reserved'>void</strong> <a href='../S/157.html#L505' title='Defined at 505 in babeld/babel_main.c.'>show_babel_main_configuration</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>);
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_route.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_route.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/68.html' title='Multiple included from 18 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP routing information base</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 1996, 97, 98, 2000 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#ifndef</em> <a href='../S/609.html#L22' title='Defined at 22 in bgpd/bgp_route.h.'>_QUAGGA_BGP_ROUTE_H</a>
+<a id='L22' name='L22'></a><em class='sharp'>#define</em> <a href='../S/609.html#L21' title='Referred from 21 in bgpd/bgp_route.h.'>_QUAGGA_BGP_ROUTE_H</a>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='646.html'>bgp_table.h</a>"
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='comment'>/* Ancillary information to struct bgp_info, </em>
+<a id='L27' name='L27'></a><em class='comment'> * used for uncommonly used data (aggregation, MPLS, etc.)</em>
+<a id='L28' name='L28'></a><em class='comment'> * and lazily allocated to save memory.</em>
+<a id='L29' name='L29'></a><em class='comment'> */</em>
+<a id='L30' name='L30'></a><strong class='reserved'>struct</strong> <a href='../R/4882.html' title='Multiple referred from 8 places.'>bgp_info_extra</a>
+<a id='L31' name='L31'></a><em class='brace'>{</em>
+<a id='L32' name='L32'></a>  <em class='comment'>/* Pointer to dampening structure.  */</em>
+<a id='L33' name='L33'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *damp_info;
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a>  <em class='comment'>/* This route is suppressed with aggregation.  */</em>
+<a id='L36' name='L36'></a>  <strong class='reserved'>int</strong> suppress;
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a>  <em class='comment'>/* Nexthop reachability check.  */</em>
+<a id='L39' name='L39'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> igpmetric;
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a>  <em class='comment'>/* MPLS label.  */</em>
+<a id='L42' name='L42'></a>  u_char tag[3];  
+<a id='L43' name='L43'></a><em class='brace'>}</em>;
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><strong class='reserved'>struct</strong> <a href='../R/4878.html' title='Multiple referred from 285 places.'>bgp_info</a>
+<a id='L46' name='L46'></a><em class='brace'>{</em>
+<a id='L47' name='L47'></a>  <em class='comment'>/* For linked list. */</em>
+<a id='L48' name='L48'></a>  <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *next;
+<a id='L49' name='L49'></a>  <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *prev;
+<a id='L50' name='L50'></a>  
+<a id='L51' name='L51'></a>  <em class='comment'>/* Peer structure.  */</em>
+<a id='L52' name='L52'></a>  <strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>;
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a>  <em class='comment'>/* Attribute structure.  */</em>
+<a id='L55' name='L55'></a>  <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *<a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a>;
+<a id='L56' name='L56'></a>  
+<a id='L57' name='L57'></a>  <em class='comment'>/* Extra information */</em>
+<a id='L58' name='L58'></a>  <strong class='reserved'>struct</strong> <a href='../S/609.html#L30' title='Defined at 30 in bgpd/bgp_route.h.'>bgp_info_extra</a> *extra;
+<a id='L59' name='L59'></a>  
+<a id='L60' name='L60'></a>
+<a id='L61' name='L61'></a>  <em class='comment'>/* Multipath information */</em>
+<a id='L62' name='L62'></a>  <strong class='reserved'>struct</strong> <a href='../S/631.html#L33' title='Defined at 33 in bgpd/bgp_mpath.h.'>bgp_info_mpath</a> *mpath;
+<a id='L63' name='L63'></a>
+<a id='L64' name='L64'></a>  <em class='comment'>/* Uptime.  */</em>
+<a id='L65' name='L65'></a>  time_t uptime;
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a>  <em class='comment'>/* reference count */</em>
+<a id='L68' name='L68'></a>  <strong class='reserved'>int</strong> lock;
+<a id='L69' name='L69'></a>  
+<a id='L70' name='L70'></a>  <em class='comment'>/* BGP information status.  */</em>
+<a id='L71' name='L71'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L72' name='L72'></a><em class='sharp'>#define</em> <a href='../R/285.html' title='Multiple referred from 3 places.'>BGP_INFO_IGP_CHANGED</a>    (1 &lt;&lt; 0)
+<a id='L73' name='L73'></a><em class='sharp'>#define</em> <a href='../R/279.html' title='Multiple referred from 17 places.'>BGP_INFO_DAMPED</a>         (1 &lt;&lt; 1)
+<a id='L74' name='L74'></a><em class='sharp'>#define</em> <a href='../R/283.html' title='Multiple referred from 18 places.'>BGP_INFO_HISTORY</a>        (1 &lt;&lt; 2)
+<a id='L75' name='L75'></a><em class='sharp'>#define</em> <a href='../R/289.html' title='Multiple referred from 19 places.'>BGP_INFO_SELECTED</a>       (1 &lt;&lt; 3)
+<a id='L76' name='L76'></a><em class='sharp'>#define</em> <a href='../R/292.html' title='Multiple referred from 25 places.'>BGP_INFO_VALID</a>          (1 &lt;&lt; 4)
+<a id='L77' name='L77'></a><em class='sharp'>#define</em> <a href='../R/277.html' title='Multiple referred from 19 places.'>BGP_INFO_ATTR_CHANGED</a>   (1 &lt;&lt; 5)
+<a id='L78' name='L78'></a><em class='sharp'>#define</em> <a href='../R/281.html' title='Multiple referred from 6 places.'>BGP_INFO_DMED_CHECK</a>     (1 &lt;&lt; 6)
+<a id='L79' name='L79'></a><em class='sharp'>#define</em> <a href='../R/282.html' title='Multiple referred from 4 places.'>BGP_INFO_DMED_SELECTED</a>  (1 &lt;&lt; 7)
+<a id='L80' name='L80'></a><em class='sharp'>#define</em> <a href='../R/290.html' title='Multiple referred from 11 places.'>BGP_INFO_STALE</a>          (1 &lt;&lt; 8)
+<a id='L81' name='L81'></a><em class='sharp'>#define</em> <a href='../R/288.html' title='Multiple referred from 19 places.'>BGP_INFO_REMOVED</a>        (1 &lt;&lt; 9)
+<a id='L82' name='L82'></a><em class='sharp'>#define</em> <a href='../R/278.html' title='Multiple referred from 5 places.'>BGP_INFO_COUNTED</a>        (1 &lt;&lt; 10)
+<a id='L83' name='L83'></a><em class='sharp'>#define</em> <a href='../R/286.html' title='Multiple referred from 7 places.'>BGP_INFO_MULTIPATH</a>      (1 &lt;&lt; 11)
+<a id='L84' name='L84'></a><em class='sharp'>#define</em> <a href='../R/287.html' title='Multiple referred from 8 places.'>BGP_INFO_MULTIPATH_CHG</a>  (1 &lt;&lt; 12)
+<a id='L85' name='L85'></a>
+<a id='L86' name='L86'></a>  <em class='comment'>/* BGP route type.  This can be static, RIP, OSPF, BGP etc.  */</em>
+<a id='L87' name='L87'></a>  u_char type;
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a>  <em class='comment'>/* When above type is BGP.  This sub type specify BGP sub type</em>
+<a id='L90' name='L90'></a><em class='comment'>     information.  */</em>
+<a id='L91' name='L91'></a>  u_char sub_type;
+<a id='L92' name='L92'></a><em class='sharp'>#define</em> <a href='../R/389.html' title='Multiple referred from 13 places.'>BGP_ROUTE_NORMAL</a>       0
+<a id='L93' name='L93'></a><em class='sharp'>#define</em> <a href='../R/391.html' title='Multiple referred from 8 places.'>BGP_ROUTE_STATIC</a>       1
+<a id='L94' name='L94'></a><em class='sharp'>#define</em> <a href='../R/388.html' title='Multiple referred from 7 places.'>BGP_ROUTE_AGGREGATE</a>    2
+<a id='L95' name='L95'></a><em class='sharp'>#define</em> <a href='../R/390.html' title='Multiple referred from 2 places.'>BGP_ROUTE_REDISTRIBUTE</a> 3 
+<a id='L96' name='L96'></a><em class='brace'>}</em>;
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a><em class='comment'>/* BGP static route configuration. */</em>
+<a id='L99' name='L99'></a><strong class='reserved'>struct</strong> <a href='../R/5080.html' title='Multiple referred from 110 places.'>bgp_static</a>
+<a id='L100' name='L100'></a><em class='brace'>{</em>
+<a id='L101' name='L101'></a>  <em class='comment'>/* Backdoor configuration.  */</em>
+<a id='L102' name='L102'></a>  <strong class='reserved'>int</strong> backdoor;
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>  <em class='comment'>/* Import check status.  */</em>
+<a id='L105' name='L105'></a>  u_char valid;
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a>  <em class='comment'>/* IGP metric. */</em>
+<a id='L108' name='L108'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> igpmetric;
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a>  <em class='comment'>/* IGP nexthop. */</em>
+<a id='L111' name='L111'></a>  <strong class='reserved'>struct</strong> in_addr igpnexthop;
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>  <em class='comment'>/* Atomic set reference count (ie cause of pathlimit) */</em>
+<a id='L114' name='L114'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> atomic;
+<a id='L115' name='L115'></a>  
+<a id='L116' name='L116'></a>  <em class='comment'>/* BGP redistribute route-map.  */</em>
+<a id='L117' name='L117'></a>  <strong class='reserved'>struct</strong>
+<a id='L118' name='L118'></a>  <em class='brace'>{</em>
+<a id='L119' name='L119'></a>    <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>;
+<a id='L120' name='L120'></a>    <strong class='reserved'>struct</strong> <a href='../S/235.html#L140' title='Defined at 140 in lib/routemap.h.'>route_map</a> *map;
+<a id='L121' name='L121'></a>  <em class='brace'>}</em> <a href='../S/510.html#L32' title='Defined at 32 in isisd/isisd.h.'>rmap</a>;
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>  <em class='comment'>/* MPLS label.  */</em>
+<a id='L124' name='L124'></a>  u_char tag[3];
+<a id='L125' name='L125'></a><em class='brace'>}</em>;
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a><em class='comment'>/* Flags which indicate a route is unuseable in some form */</em>
+<a id='L128' name='L128'></a><em class='sharp'>#define</em> <a href='../R/291.html' title='Multiple referred from 7 places.'>BGP_INFO_UNUSEABLE</a> \
+<a id='L129' name='L129'></a>  (<a href='../S/609.html#L74' title='Defined at 74 in bgpd/bgp_route.h.'>BGP_INFO_HISTORY</a>|<a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>|<a href='../S/609.html#L81' title='Defined at 81 in bgpd/bgp_route.h.'>BGP_INFO_REMOVED</a>)
+<a id='L130' name='L130'></a><em class='comment'>/* Macro to check BGP information is alive or not.  Sadly,</em>
+<a id='L131' name='L131'></a><em class='comment'> * not equivalent to just checking previous, because of the</em>
+<a id='L132' name='L132'></a><em class='comment'> * sense of the additional VALID flag.</em>
+<a id='L133' name='L133'></a><em class='comment'> */</em>
+<a id='L134' name='L134'></a><em class='sharp'>#define</em> <a href='../R/284.html' title='Multiple referred from 9 places.'>BGP_INFO_HOLDDOWN</a>(BI) \
+<a id='L135' name='L135'></a>  (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> ((BI)-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L76' title='Defined at 76 in bgpd/bgp_route.h.'>BGP_INFO_VALID</a>) \
+<a id='L136' name='L136'></a>   || <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> ((BI)-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L128' title='Defined at 128 in bgpd/bgp_route.h.'>BGP_INFO_UNUSEABLE</a>))
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a><em class='sharp'>#define</em> <a href='../S/620.html#L567' title='Referred from 567 in bgpd/bgp_route.c.'>DISTRIBUTE_IN_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)   ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;dlist[<a href='../S/191.html#L509' title='Defined at 509 in lib/zebra.h.'>FILTER_IN</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L139' name='L139'></a><em class='sharp'>#define</em> <a href='../R/665.html' title='Multiple referred from 73 places.'>DISTRIBUTE_IN</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)        ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;dlist[<a href='../S/191.html#L509' title='Defined at 509 in lib/zebra.h.'>FILTER_IN</a>].alist)
+<a id='L140' name='L140'></a><em class='sharp'>#define</em> <a href='../S/620.html#L606' title='Referred from 606 in bgpd/bgp_route.c.'>DISTRIBUTE_OUT_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)  ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;dlist[<a href='../S/191.html#L510' title='Defined at 510 in lib/zebra.h.'>FILTER_OUT</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L141' name='L141'></a><em class='sharp'>#define</em> <a href='../R/669.html' title='Multiple referred from 73 places.'>DISTRIBUTE_OUT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)       ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;dlist[<a href='../S/191.html#L510' title='Defined at 510 in lib/zebra.h.'>FILTER_OUT</a>].alist)
+<a id='L142' name='L142'></a>
+<a id='L143' name='L143'></a><em class='sharp'>#define</em> <a href='../S/620.html#L574' title='Referred from 574 in bgpd/bgp_route.c.'>PREFIX_LIST_IN_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)  ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;plist[<a href='../S/191.html#L509' title='Defined at 509 in lib/zebra.h.'>FILTER_IN</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L144' name='L144'></a><em class='sharp'>#define</em> <a href='../R/3003.html' title='Multiple referred from 15 places.'>PREFIX_LIST_IN</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)       ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;plist[<a href='../S/191.html#L509' title='Defined at 509 in lib/zebra.h.'>FILTER_IN</a>].plist)
+<a id='L145' name='L145'></a><em class='sharp'>#define</em> <a href='../S/620.html#L613' title='Referred from 613 in bgpd/bgp_route.c.'>PREFIX_LIST_OUT_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>) ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;plist[<a href='../S/191.html#L510' title='Defined at 510 in lib/zebra.h.'>FILTER_OUT</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L146' name='L146'></a><em class='sharp'>#define</em> <a href='../R/3005.html' title='Multiple referred from 13 places.'>PREFIX_LIST_OUT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)      ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;plist[<a href='../S/191.html#L510' title='Defined at 510 in lib/zebra.h.'>FILTER_OUT</a>].plist)
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a><em class='sharp'>#define</em> <a href='../S/620.html#L581' title='Referred from 581 in bgpd/bgp_route.c.'>FILTER_LIST_IN_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)  ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;aslist[<a href='../S/191.html#L509' title='Defined at 509 in lib/zebra.h.'>FILTER_IN</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L149' name='L149'></a><em class='sharp'>#define</em> <a href='../S/620.html#L584' title='Referred from 584 in bgpd/bgp_route.c.'>FILTER_LIST_IN</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)       ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;aslist[<a href='../S/191.html#L509' title='Defined at 509 in lib/zebra.h.'>FILTER_IN</a>].aslist)
+<a id='L150' name='L150'></a><em class='sharp'>#define</em> <a href='../S/620.html#L620' title='Referred from 620 in bgpd/bgp_route.c.'>FILTER_LIST_OUT_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>) ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;aslist[<a href='../S/191.html#L510' title='Defined at 510 in lib/zebra.h.'>FILTER_OUT</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L151' name='L151'></a><em class='sharp'>#define</em> <a href='../S/620.html#L623' title='Referred from 623 in bgpd/bgp_route.c.'>FILTER_LIST_OUT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)      ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;aslist[<a href='../S/191.html#L510' title='Defined at 510 in lib/zebra.h.'>FILTER_OUT</a>].aslist)
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a><em class='sharp'>#define</em> <a href='../S/620.html#L689' title='Referred from 689 in bgpd/bgp_route.c.'>ROUTE_MAP_IN_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)    ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L218' title='Defined at 218 in bgpd/bgpd.h.'>RMAP_IN</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L154' name='L154'></a><em class='sharp'>#define</em> <a href='../S/620.html#L698' title='Referred from 698 in bgpd/bgp_route.c.'>ROUTE_MAP_IN</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)         ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L218' title='Defined at 218 in bgpd/bgpd.h.'>RMAP_IN</a>].map)
+<a id='L155' name='L155'></a><em class='sharp'>#define</em> <a href='../R/3383.html' title='Multiple referred from 2 places.'>ROUTE_MAP_OUT_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)   ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L219' title='Defined at 219 in bgpd/bgpd.h.'>RMAP_OUT</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L156' name='L156'></a><em class='sharp'>#define</em> <a href='../R/3382.html' title='Multiple referred from 2 places.'>ROUTE_MAP_OUT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)        ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L219' title='Defined at 219 in bgpd/bgpd.h.'>RMAP_OUT</a>].map)
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a><em class='sharp'>#define</em> <a href='../R/3379.html' title='Multiple referred from 2 places.'>ROUTE_MAP_IMPORT_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)    ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L220' title='Defined at 220 in bgpd/bgpd.h.'>RMAP_IMPORT</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L159' name='L159'></a><em class='sharp'>#define</em> <a href='../S/620.html#L770' title='Referred from 770 in bgpd/bgp_route.c.'>ROUTE_MAP_IMPORT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)    ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L220' title='Defined at 220 in bgpd/bgpd.h.'>RMAP_IMPORT</a>].map)
+<a id='L160' name='L160'></a><em class='sharp'>#define</em> <a href='../R/3377.html' title='Multiple referred from 2 places.'>ROUTE_MAP_EXPORT_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)    ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L221' title='Defined at 221 in bgpd/bgpd.h.'>RMAP_EXPORT</a>].<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L161' name='L161'></a><em class='sharp'>#define</em> <a href='../S/620.html#L732' title='Referred from 732 in bgpd/bgp_route.c.'>ROUTE_MAP_EXPORT</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)    ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;map[<a href='../S/608.html#L221' title='Defined at 221 in bgpd/bgpd.h.'>RMAP_EXPORT</a>].map)
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><em class='sharp'>#define</em> <a href='../R/3742.html' title='Multiple referred from 2 places.'>UNSUPPRESS_MAP_NAME</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)  ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;usmap.<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>)
+<a id='L164' name='L164'></a><em class='sharp'>#define</em> <a href='../R/3741.html' title='Multiple referred from 2 places.'>UNSUPPRESS_MAP</a>(<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)       ((<a href='../S/288.html#L47' title='Defined at 47 in lib/md5.c.'>F</a>)-&gt;usmap.map)
+<a id='L165' name='L165'></a>
+<a id='L166' name='L166'></a><strong class='reserved'>enum</strong> <a href='../R/4762.html' title='Multiple referred from 4 places.'>bgp_clear_route_type</a>
+<a id='L167' name='L167'></a><em class='brace'>{</em>
+<a id='L168' name='L168'></a>  BGP_CLEAR_ROUTE_NORMAL,
+<a id='L169' name='L169'></a>  BGP_CLEAR_ROUTE_MY_RSCLIENT
+<a id='L170' name='L170'></a><em class='brace'>}</em>;
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L173' name='L173'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L12363' title='Defined at 12363 in bgpd/bgp_route.c.'>bgp_route_init</a> (<strong class='reserved'>void</strong>);
+<a id='L174' name='L174'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L13116' title='Defined at 13116 in bgpd/bgp_route.c.'>bgp_route_finish</a> (<strong class='reserved'>void</strong>);
+<a id='L175' name='L175'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L3030' title='Defined at 3030 in bgpd/bgp_route.c.'>bgp_cleanup_routes</a> (<strong class='reserved'>void</strong>);
+<a id='L176' name='L176'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2594' title='Defined at 2594 in bgpd/bgp_route.c.'>bgp_announce_route</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L177' name='L177'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2622' title='Defined at 2622 in bgpd/bgp_route.c.'>bgp_announce_route_all</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *);
+<a id='L178' name='L178'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2459' title='Defined at 2459 in bgpd/bgp_route.c.'>bgp_default_originate</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>, <strong class='reserved'>int</strong>);
+<a id='L179' name='L179'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2710' title='Defined at 2710 in bgpd/bgp_route.c.'>bgp_soft_reconfig_in</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L180' name='L180'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2654' title='Defined at 2654 in bgpd/bgp_route.c.'>bgp_soft_reconfig_rsclient</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L181' name='L181'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L3629' title='Defined at 3629 in bgpd/bgp_route.c.'>bgp_check_local_routes_rsclient</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *rsclient, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi);
+<a id='L182' name='L182'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2902' title='Defined at 2902 in bgpd/bgp_route.c.'>bgp_clear_route</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>,
+<a id='L183' name='L183'></a>                             <strong class='reserved'>enum</strong> <a href='../S/609.html#L166' title='Defined at 166 in bgpd/bgp_route.h.'>bgp_clear_route_type</a>);
+<a id='L184' name='L184'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2978' title='Defined at 2978 in bgpd/bgp_route.c.'>bgp_clear_route_all</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *);
+<a id='L185' name='L185'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L2989' title='Defined at 2989 in bgpd/bgp_route.c.'>bgp_clear_adj_in</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L186' name='L186'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L3008' title='Defined at 3008 in bgpd/bgp_route.c.'>bgp_clear_stale_route</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L187' name='L187'></a>
+<a id='L188' name='L188'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *<a href='../S/620.html#L152' title='Defined at 152 in bgpd/bgp_route.c.'>bgp_info_lock</a> (<strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *);
+<a id='L189' name='L189'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *<a href='../S/620.html#L159' title='Defined at 159 in bgpd/bgp_route.c.'>bgp_info_unlock</a> (<strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *);
+<a id='L190' name='L190'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L186' title='Defined at 186 in bgpd/bgp_route.c.'>bgp_info_add</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *ri);
+<a id='L191' name='L191'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L221' title='Defined at 221 in bgpd/bgp_route.c.'>bgp_info_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *ri);
+<a id='L192' name='L192'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/609.html#L30' title='Defined at 30 in bgpd/bgp_route.h.'>bgp_info_extra</a> *<a href='../S/620.html#L122' title='Defined at 122 in bgpd/bgp_route.c.'>bgp_info_extra_get</a> (<strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *);
+<a id='L193' name='L193'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L285' title='Defined at 285 in bgpd/bgp_route.c.'>bgp_info_set_flag</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L194' name='L194'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (<strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *, <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>);
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L3172' title='Defined at 3172 in bgpd/bgp_route.c.'>bgp_nlri_sanity_check</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <strong class='reserved'>int</strong>, u_char *, <a href='../S/608.html#L30' title='Defined at 30 in bgpd/bgpd.h.'>bgp_size_t</a>);
+<a id='L197' name='L197'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L3072' title='Defined at 3072 in bgpd/bgp_route.c.'>bgp_nlri_parse</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *, <strong class='reserved'>struct</strong> <a href='../S/608.html#L572' title='Defined at 572 in bgpd/bgpd.h.'>bgp_nlri</a> *);
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L1720' title='Defined at 1720 in bgpd/bgp_route.c.'>bgp_maximum_prefix_overflow</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>, <strong class='reserved'>int</strong>);
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> bgp_redistribute_add (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> in_addr *,
+<a id='L202' name='L202'></a>                                  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> in6_addr *,
+<a id='L203' name='L203'></a>                                  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a>, u_char);
+<a id='L204' name='L204'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L5510' title='Defined at 5510 in bgpd/bgp_route.c.'>bgp_redistribute_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, u_char);
+<a id='L205' name='L205'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L5544' title='Defined at 5544 in bgpd/bgp_route.c.'>bgp_redistribute_withdraw</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <strong class='reserved'>int</strong>);
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L3825' title='Defined at 3825 in bgpd/bgp_route.c.'>bgp_static_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *);
+<a id='L208' name='L208'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L3552' title='Defined at 3552 in bgpd/bgp_route.c.'>bgp_static_update</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L99' title='Defined at 99 in bgpd/bgp_route.h.'>bgp_static</a> *,
+<a id='L209' name='L209'></a>                        <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L210' name='L210'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L3601' title='Defined at 3601 in bgpd/bgp_route.c.'>bgp_static_withdraw</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L211' name='L211'></a>                     
+<a id='L212' name='L212'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L3867' title='Defined at 3867 in bgpd/bgp_route.c.'>bgp_static_set_vpnv4</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, 
+<a id='L213' name='L213'></a>                          <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L3935' title='Defined at 3935 in bgpd/bgp_route.c.'>bgp_static_unset_vpnv4</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, 
+<a id='L216' name='L216'></a>                            <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *);
+<a id='L217' name='L217'></a>
+<a id='L218' name='L218'></a><em class='comment'>/* this is primarily for MPLS-VPN */</em>
+<a id='L219' name='L219'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L2376' title='Defined at 2376 in bgpd/bgp_route.c.'>bgp_update</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *,
+<a id='L220' name='L220'></a>                       <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>, <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> *, 
+<a id='L221' name='L221'></a>                       u_char *, <strong class='reserved'>int</strong>);
+<a id='L222' name='L222'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L2402' title='Defined at 2402 in bgpd/bgp_route.c.'>bgp_withdraw</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *,
+<a id='L223' name='L223'></a>                         <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>, <strong class='reserved'>int</strong>, <strong class='reserved'>int</strong>, <strong class='reserved'>struct</strong> <a href='../S/249.html#L85' title='Defined at 85 in lib/prefix.h.'>prefix_rd</a> *, u_char *);
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a><em class='comment'>/* for bgp_nexthop and bgp_damp */</em>
+<a id='L226' name='L226'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L1663' title='Defined at 1663 in bgpd/bgp_route.c.'>bgp_process</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L227' name='L227'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L12235' title='Defined at 12235 in bgpd/bgp_route.c.'>bgp_config_write_network</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>, <strong class='reserved'>int</strong> *);
+<a id='L228' name='L228'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/620.html#L12333' title='Defined at 12333 in bgpd/bgp_route.c.'>bgp_config_write_distance</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *);
+<a id='L229' name='L229'></a>
+<a id='L230' name='L230'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L4680' title='Defined at 4680 in bgpd/bgp_route.c.'>bgp_aggregate_increment</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *,
+<a id='L231' name='L231'></a>                              <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L232' name='L232'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L4717' title='Defined at 4717 in bgpd/bgp_route.c.'>bgp_aggregate_decrement</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *,
+<a id='L233' name='L233'></a>                              <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a><strong class='reserved'>extern</strong> u_char <a href='../S/620.html#L11768' title='Defined at 11768 in bgpd/bgp_route.c.'>bgp_distance_apply</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *, <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *);
+<a id='L236' name='L236'></a>
+<a id='L237' name='L237'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> <a href='../S/638.html#L57' title='Defined at 57 in bgpd/bgp_vty.c.'>bgp_node_afi</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L238' name='L238'></a><strong class='reserved'>extern</strong> <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> <a href='../S/638.html#L67' title='Defined at 67 in bgpd/bgp_vty.c.'>bgp_node_safi</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *);
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L5642' title='Defined at 5642 in bgpd/bgp_route.c.'>route_vty_out</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *, <strong class='reserved'>int</strong>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L241' name='L241'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L5774' title='Defined at 5774 in bgpd/bgp_route.c.'>route_vty_out_tag</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *, <strong class='reserved'>int</strong>, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L242' name='L242'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/620.html#L5709' title='Defined at 5709 in bgpd/bgp_route.c.'>route_vty_out_tmp</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *, <strong class='reserved'>struct</strong> <a href='../S/642.html#L91' title='Defined at 91 in bgpd/bgp_attr.h.'>attr</a> *, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a>);
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a><em class='sharp'>#endif</em> <em class='comment'>/* _QUAGGA_BGP_ROUTE_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

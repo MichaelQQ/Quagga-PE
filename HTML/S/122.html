@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>brctld/old_brctld/libbridge_init.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1014.html'>brctld</a>/<a href='../files/1015.html'>old_brctld</a>/libbridge_init.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L15'>[^]</a>[v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L15' title='Defined at 15.'>br_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;sys/socket.h&gt;
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> &lt;errno.h&gt;
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L7' name='L7'></a><em class='sharp'>#include</em> &lt;dirent.h&gt;
+<a id='L8' name='L8'></a>
+<a id='L9' name='L9'></a><em class='sharp'>#include</em> "<a href='../I/91.html'>libbridge.h</a>"
+<a id='L10' name='L10'></a><em class='sharp'>#include</em> "<a href='../I/96.html'>libbridge_private.h</a>"
+<a id='L11' name='L11'></a>
+<a id='L12' name='L12'></a><strong class='reserved'>int</strong> br_socket_fd = -1;
+<a id='L13' name='L13'></a><strong class='reserved'>struct</strong> <a href='../D/10991.html' title='Multiple defined in 2 places.'>sysfs_class</a> *br_class_net;
+<a id='L14' name='L14'></a>
+<a id='L15' name='L15'></a><strong class='reserved'>int</strong> <a href='../R/5177.html' title='Multiple referred from 5 places.'>br_init</a>(<strong class='reserved'>void</strong>)
+<a id='L16' name='L16'></a><em class='brace'>{</em>
+<a id='L17' name='L17'></a>        <strong class='reserved'>if</strong> ((br_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) &lt; 0)
+<a id='L18' name='L18'></a>                <strong class='reserved'>return</strong> errno;
+<a id='L19' name='L19'></a>
+<a id='L20' name='L20'></a>        br_class_net = <a href='../D/10993.html' title='Multiple defined in 2 places.'>sysfs_open_class</a>("net");
+<a id='L21' name='L21'></a>        <strong class='reserved'>return</strong> 0;
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^]<a href='#L15'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

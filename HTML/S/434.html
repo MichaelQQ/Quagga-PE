@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/mpls_compare.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/mpls_compare.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L4'>[^]</a><a href='#L114'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L4' title='Defined at 4.'>mpls_inet_addr_compare</a></li>
+<li><a href='#L23' title='Defined at 23.'>mpls_nexthop_compare</a></li>
+<li><a href='#L56' title='Defined at 56.'>mpls_label_struct_compare</a></li>
+<li><a href='#L89' title='Defined at 89.'>mpls_dest_compare</a></li>
+<li><a href='#L103' title='Defined at 103.'>mpls_range_compare</a></li>
+<li><a href='#L114' title='Defined at 114.'>mpls_fec_compare</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='383.html'>mpls_struct.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='359.html'>mpls_assert.h</a>"
+<a id='L3' name='L3'></a>
+<a id='L4' name='L4'></a><strong class='reserved'>int</strong> <a href='../R/7098.html' title='Multiple referred from 13 places.'>mpls_inet_addr_compare</a>(<strong class='reserved'>struct</strong> <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> *addr1,
+<a id='L5' name='L5'></a>                <strong class='reserved'>struct</strong> <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> *addr2) <em class='brace'>{</em>
+<a id='L6' name='L6'></a>  <strong class='reserved'>if</strong> (addr1-&gt;type != addr2-&gt;type) <em class='brace'>{</em>
+<a id='L7' name='L7'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L8' name='L8'></a>  <em class='brace'>}</em>
+<a id='L9' name='L9'></a>  <strong class='reserved'>switch</strong>(addr1-&gt;type) <em class='brace'>{</em>
+<a id='L10' name='L10'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>:
+<a id='L11' name='L11'></a>      <strong class='reserved'>if</strong> (addr1-&gt;u.ipv4 != addr2-&gt;u.ipv4) <em class='brace'>{</em>
+<a id='L12' name='L12'></a>        <strong class='reserved'>return</strong> addr1-&gt;u.ipv4 &gt; addr2-&gt;u.ipv4 ? 1 : -1;
+<a id='L13' name='L13'></a>      <em class='brace'>}</em>
+<a id='L14' name='L14'></a>      <strong class='reserved'>break</strong>;
+<a id='L15' name='L15'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L140' title='Defined at 140 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV6</a>:
+<a id='L16' name='L16'></a>      <strong class='reserved'>return</strong> <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a>(addr1-&gt;u.ipv6, addr2-&gt;u.ipv6, 16);
+<a id='L17' name='L17'></a>    <strong class='reserved'>default</strong>:
+<a id='L18' name='L18'></a>      <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L19' name='L19'></a>  <em class='brace'>}</em>
+<a id='L20' name='L20'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L21' name='L21'></a><em class='brace'>}</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><strong class='reserved'>int</strong> <a href='../R/7154.html' title='Multiple referred from 4 places.'>mpls_nexthop_compare</a>(<strong class='reserved'>struct</strong> <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a> *nh1, <strong class='reserved'>struct</strong> <a href='../D/7990.html' title='Multiple defined in 2 places.'>mpls_nexthop</a> *nh2) <em class='brace'>{</em>
+<a id='L24' name='L24'></a>  <strong class='reserved'>int</strong> retval = 0;
+<a id='L25' name='L25'></a>  <strong class='reserved'>int</strong> match = 0;
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a>  <strong class='reserved'>if</strong> (nh1-&gt;type != nh2-&gt;type) <em class='brace'>{</em>
+<a id='L28' name='L28'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L29' name='L29'></a>  <em class='brace'>}</em>
+<a id='L30' name='L30'></a>  <strong class='reserved'>if</strong> (nh1-&gt;type &amp; <a href='../S/383.html#L165' title='Defined at 165 in ldpd/mpls_struct.h.'>MPLS_NH_IP</a>) <em class='brace'>{</em>
+<a id='L31' name='L31'></a>    match++;
+<a id='L32' name='L32'></a>    <strong class='reserved'>if</strong> ((retval = <a href='../S/434.html#L4' title='Defined at 4 in ldpd/mpls_compare.c.'>mpls_inet_addr_compare</a>(&amp;nh1-&gt;ip, &amp;nh2-&gt;ip))) <em class='brace'>{</em>
+<a id='L33' name='L33'></a>      <strong class='reserved'>return</strong> retval;
+<a id='L34' name='L34'></a>    <em class='brace'>}</em>
+<a id='L35' name='L35'></a>  <em class='brace'>}</em>
+<a id='L36' name='L36'></a>  <strong class='reserved'>if</strong> (nh1-&gt;type &amp; <a href='../S/383.html#L166' title='Defined at 166 in ldpd/mpls_struct.h.'>MPLS_NH_IF</a>) <em class='brace'>{</em>
+<a id='L37' name='L37'></a>    match++;
+<a id='L38' name='L38'></a>    <strong class='reserved'>if</strong> ((retval = <a href='../S/448.html#L42' title='Defined at 42 in ldpd/mpls_handle_type.h.'>mpls_if_handle_compare</a>(nh1-&gt;if_handle, nh2-&gt;if_handle))) <em class='brace'>{</em>
+<a id='L39' name='L39'></a>      <strong class='reserved'>return</strong> retval;
+<a id='L40' name='L40'></a>    <em class='brace'>}</em>
+<a id='L41' name='L41'></a>  <em class='brace'>}</em>
+<a id='L42' name='L42'></a>  <strong class='reserved'>if</strong> (nh1-&gt;type &amp; <a href='../S/383.html#L167' title='Defined at 167 in ldpd/mpls_struct.h.'>MPLS_NH_OUTSEGMENT</a>) <em class='brace'>{</em>
+<a id='L43' name='L43'></a>    match++;
+<a id='L44' name='L44'></a>    <strong class='reserved'>if</strong> ((retval = <a href='../S/448.html#L71' title='Defined at 71 in ldpd/mpls_handle_type.h.'>mpls_outsegment_handle_compare</a>(nh1-&gt;outsegment_handle,
+<a id='L45' name='L45'></a>      nh2-&gt;outsegment_handle))) <em class='brace'>{</em>
+<a id='L46' name='L46'></a>      <strong class='reserved'>return</strong> retval;
+<a id='L47' name='L47'></a>    <em class='brace'>}</em>
+<a id='L48' name='L48'></a>  <em class='brace'>}</em>
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a>  <strong class='reserved'>if</strong> (!match) <em class='brace'>{</em>
+<a id='L51' name='L51'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L52' name='L52'></a>  <em class='brace'>}</em>
+<a id='L53' name='L53'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L54' name='L54'></a><em class='brace'>}</em>
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><strong class='reserved'>int</strong> <a href='../R/7110.html' title='Multiple referred from 3 places.'>mpls_label_struct_compare</a>(<strong class='reserved'>struct</strong> <a href='../D/7935.html' title='Multiple defined in 2 places.'>mpls_label_struct</a>* l1,
+<a id='L57' name='L57'></a>                <strong class='reserved'>struct</strong> <a href='../D/7935.html' title='Multiple defined in 2 places.'>mpls_label_struct</a>* l2) <em class='brace'>{</em>
+<a id='L58' name='L58'></a>  <strong class='reserved'>if</strong> (l1-&gt;type != l2-&gt;type) <em class='brace'>{</em>
+<a id='L59' name='L59'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L60' name='L60'></a>  <em class='brace'>}</em>
+<a id='L61' name='L61'></a>  <strong class='reserved'>switch</strong>(l1-&gt;type) <em class='brace'>{</em>
+<a id='L62' name='L62'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L68' title='Defined at 68 in ldpd/mpls_struct.h.'>MPLS_LABEL_TYPE_GENERIC</a>:
+<a id='L63' name='L63'></a>      <strong class='reserved'>if</strong> (l1-&gt;u.gen != l2-&gt;u.gen) <em class='brace'>{</em>
+<a id='L64' name='L64'></a>        <strong class='reserved'>return</strong> (l1-&gt;u.gen &gt; l2-&gt;u.gen) ? 1 : -1;
+<a id='L65' name='L65'></a>      <em class='brace'>}</em>
+<a id='L66' name='L66'></a>      <strong class='reserved'>break</strong>;
+<a id='L67' name='L67'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L69' title='Defined at 69 in ldpd/mpls_struct.h.'>MPLS_LABEL_TYPE_ATM</a>:
+<a id='L68' name='L68'></a>      <strong class='reserved'>if</strong> (l1-&gt;u.atm.vpi != l2-&gt;u.atm.vpi) <em class='brace'>{</em>
+<a id='L69' name='L69'></a>        <strong class='reserved'>return</strong> (l1-&gt;u.atm.vpi &gt; l2-&gt;u.atm.vpi) ? 1 : -1;
+<a id='L70' name='L70'></a>      <em class='brace'>}</em>
+<a id='L71' name='L71'></a>      <strong class='reserved'>if</strong> (l1-&gt;u.atm.vci != l2-&gt;u.atm.vci) <em class='brace'>{</em>
+<a id='L72' name='L72'></a>        <strong class='reserved'>return</strong> (l1-&gt;u.atm.vci &gt; l2-&gt;u.atm.vci) ? 1 : -1;
+<a id='L73' name='L73'></a>      <em class='brace'>}</em>
+<a id='L74' name='L74'></a>      <strong class='reserved'>break</strong>;
+<a id='L75' name='L75'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L70' title='Defined at 70 in ldpd/mpls_struct.h.'>MPLS_LABEL_TYPE_FR</a>:
+<a id='L76' name='L76'></a>      <strong class='reserved'>if</strong> (l1-&gt;u.fr.len != l2-&gt;u.fr.len) <em class='brace'>{</em>
+<a id='L77' name='L77'></a>        <strong class='reserved'>return</strong> (l1-&gt;u.fr.dlci &gt; l2-&gt;u.fr.dlci) ? 1 : -1;
+<a id='L78' name='L78'></a>      <em class='brace'>}</em>
+<a id='L79' name='L79'></a>      <strong class='reserved'>if</strong> (l1-&gt;u.fr.dlci != l2-&gt;u.fr.dlci) <em class='brace'>{</em>
+<a id='L80' name='L80'></a>        <strong class='reserved'>return</strong> (l1-&gt;u.fr.len &gt; l2-&gt;u.fr.len) ? 1 : -1;
+<a id='L81' name='L81'></a>      <em class='brace'>}</em>
+<a id='L82' name='L82'></a>      <strong class='reserved'>break</strong>;
+<a id='L83' name='L83'></a>    <strong class='reserved'>default</strong>:
+<a id='L84' name='L84'></a>      <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L85' name='L85'></a>  <em class='brace'>}</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L87' name='L87'></a><em class='brace'>}</em>
+<a id='L88' name='L88'></a>
+<a id='L89' name='L89'></a><strong class='reserved'>int</strong> <a href='../R/7058.html' title='Multiple referred from 2 places.'>mpls_dest_compare</a>(<strong class='reserved'>struct</strong> <a href='../D/7875.html' title='Multiple defined in 2 places.'>mpls_dest</a>* d1, <strong class='reserved'>struct</strong> <a href='../D/7875.html' title='Multiple defined in 2 places.'>mpls_dest</a>* d2) <em class='brace'>{</em>
+<a id='L90' name='L90'></a>  <strong class='reserved'>int</strong> retval;
+<a id='L91' name='L91'></a>  <strong class='reserved'>if</strong> ((retval = <a href='../S/434.html#L4' title='Defined at 4 in ldpd/mpls_compare.c.'>mpls_inet_addr_compare</a>(&amp;d1-&gt;addr, &amp;d2-&gt;addr))) <em class='brace'>{</em>
+<a id='L92' name='L92'></a>    <strong class='reserved'>return</strong> retval;
+<a id='L93' name='L93'></a>  <em class='brace'>}</em>
+<a id='L94' name='L94'></a>  <strong class='reserved'>if</strong> (d1-&gt;port != d2-&gt;port) <em class='brace'>{</em>
+<a id='L95' name='L95'></a>    <strong class='reserved'>return</strong> (d1-&gt;port &gt; d2-&gt;port) ? 1 : -1;
+<a id='L96' name='L96'></a>  <em class='brace'>}</em>
+<a id='L97' name='L97'></a>  <strong class='reserved'>if</strong> ((retval = <a href='../S/448.html#L42' title='Defined at 42 in ldpd/mpls_handle_type.h.'>mpls_if_handle_compare</a>(d1-&gt;if_handle, d2-&gt;if_handle))) <em class='brace'>{</em>
+<a id='L98' name='L98'></a>    <strong class='reserved'>return</strong> retval;
+<a id='L99' name='L99'></a>  <em class='brace'>}</em>
+<a id='L100' name='L100'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L101' name='L101'></a><em class='brace'>}</em>
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><strong class='reserved'>int</strong> <a href='../S/372.html#L11' title='Referred from 11 in ldpd/mpls_compare.h.'>mpls_range_compare</a>(<strong class='reserved'>struct</strong> <a href='../D/8023.html' title='Multiple defined in 2 places.'>mpls_range</a>* r1, <strong class='reserved'>struct</strong> <a href='../D/8023.html' title='Multiple defined in 2 places.'>mpls_range</a>* r2) <em class='brace'>{</em>
+<a id='L104' name='L104'></a>  <strong class='reserved'>int</strong> retval;
+<a id='L105' name='L105'></a>  <strong class='reserved'>if</strong> ((retval = <a href='../S/434.html#L56' title='Defined at 56 in ldpd/mpls_compare.c.'>mpls_label_struct_compare</a>(&amp;r1-&gt;<a href='../D/7719.html' title='Multiple defined in 4 places.'>min</a>, &amp;r2-&gt;<a href='../D/7719.html' title='Multiple defined in 4 places.'>min</a>))) <em class='brace'>{</em>
+<a id='L106' name='L106'></a>    <strong class='reserved'>return</strong> retval;
+<a id='L107' name='L107'></a>  <em class='brace'>}</em>
+<a id='L108' name='L108'></a>  <strong class='reserved'>if</strong> ((retval = <a href='../S/434.html#L56' title='Defined at 56 in ldpd/mpls_compare.c.'>mpls_label_struct_compare</a>(&amp;r1-&gt;max, &amp;r2-&gt;max))) <em class='brace'>{</em>
+<a id='L109' name='L109'></a>    <strong class='reserved'>return</strong> retval;
+<a id='L110' name='L110'></a>  <em class='brace'>}</em>
+<a id='L111' name='L111'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L112' name='L112'></a><em class='brace'>}</em>
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a><strong class='reserved'>int</strong> <a href='../R/7069.html' title='Multiple referred from 2 places.'>mpls_fec_compare</a>(<strong class='reserved'>struct</strong> <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a>* f1, <strong class='reserved'>struct</strong> <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a>* f2) <em class='brace'>{</em>
+<a id='L115' name='L115'></a>  <strong class='reserved'>int</strong> retval;
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>  <strong class='reserved'>if</strong> (f1-&gt;type != f2-&gt;type) <em class='brace'>{</em>
+<a id='L118' name='L118'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L119' name='L119'></a>  <em class='brace'>}</em>
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>  <strong class='reserved'>switch</strong>(f1-&gt;type) <em class='brace'>{</em>
+<a id='L122' name='L122'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L172' title='Defined at 172 in ldpd/mpls_struct.h.'>MPLS_FEC_PREFIX</a>:
+<a id='L123' name='L123'></a>      <strong class='reserved'>if</strong> ((retval = <a href='../S/434.html#L4' title='Defined at 4 in ldpd/mpls_compare.c.'>mpls_inet_addr_compare</a>(&amp;f1-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.network,
+<a id='L124' name='L124'></a>        &amp;f2-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.network))) <em class='brace'>{</em>
+<a id='L125' name='L125'></a>        <strong class='reserved'>return</strong> retval;
+<a id='L126' name='L126'></a>      <em class='brace'>}</em>
+<a id='L127' name='L127'></a>      <strong class='reserved'>if</strong> (f1-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.length &gt; f2-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.length) <em class='brace'>{</em>
+<a id='L128' name='L128'></a>        <strong class='reserved'>return</strong> (f1-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.length != f2-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>.length) ? 1 : -1;
+<a id='L129' name='L129'></a>      <em class='brace'>}</em>
+<a id='L130' name='L130'></a>      <strong class='reserved'>break</strong>;
+<a id='L131' name='L131'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L173' title='Defined at 173 in ldpd/mpls_struct.h.'>MPLS_FEC_HOST</a>:
+<a id='L132' name='L132'></a>      <strong class='reserved'>return</strong> <a href='../S/434.html#L4' title='Defined at 4 in ldpd/mpls_compare.c.'>mpls_inet_addr_compare</a>(&amp;f1-&gt;u.<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>, &amp;f2-&gt;u.<a href='../S/214.html#L31' title='Defined at 31 in lib/command.h.'>host</a>);
+<a id='L133' name='L133'></a>    <strong class='reserved'>case</strong> <a href='../S/383.html#L174' title='Defined at 174 in ldpd/mpls_struct.h.'>MPLS_FEC_L2CC</a>:
+<a id='L134' name='L134'></a>      <strong class='reserved'>if</strong> (f1-&gt;u.l2cc.connection_id != f2-&gt;u.l2cc.connection_id) <em class='brace'>{</em>
+<a id='L135' name='L135'></a>        <strong class='reserved'>return</strong> (f1-&gt;u.l2cc.connection_id&gt;f2-&gt;u.l2cc.connection_id) ? 1 : -1;
+<a id='L136' name='L136'></a>      <em class='brace'>}</em>
+<a id='L137' name='L137'></a>      <strong class='reserved'>if</strong> (f1-&gt;u.l2cc.group_id != f2-&gt;u.l2cc.group_id) <em class='brace'>{</em>
+<a id='L138' name='L138'></a>        <strong class='reserved'>return</strong> (f1-&gt;u.l2cc.group_id &gt; f2-&gt;u.l2cc.group_id) ? 1 : -1;
+<a id='L139' name='L139'></a>      <em class='brace'>}</em>
+<a id='L140' name='L140'></a>      <strong class='reserved'>if</strong> (f1-&gt;u.l2cc.type != f2-&gt;u.l2cc.type) <em class='brace'>{</em>
+<a id='L141' name='L141'></a>        <strong class='reserved'>return</strong> 1;
+<a id='L142' name='L142'></a>      <em class='brace'>}</em>
+<a id='L143' name='L143'></a>      <strong class='reserved'>break</strong>;
+<a id='L144' name='L144'></a>    <strong class='reserved'>default</strong>:
+<a id='L145' name='L145'></a>      <a href='../S/359.html#L15' title='Defined at 15 in ldpd/mpls_assert.h.'>MPLS_ASSERT</a>(0);
+<a id='L146' name='L146'></a>  <em class='brace'>}</em>
+<a id='L147' name='L147'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L148' name='L148'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L4'>[^]</a><a href='#L114'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/mpls_trace.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/mpls_trace.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='415.html#L13' title='Included from 13 in ldpd/mpls_trace_impl.h.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#ifndef</em> <a href='../S/453.html#L2' title='Defined at 2 in ldpd/mpls_trace.h.'>_LDP_TRACE_H_</a>
+<a id='L2' name='L2'></a><em class='sharp'>#define</em> <a href='../S/453.html#L1' title='Referred from 1 in ldpd/mpls_trace.h.'>_LDP_TRACE_H_</a>
+<a id='L3' name='L3'></a>
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a><strong class='reserved'>extern</strong> <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> ldp_traceflags;
+<a id='L8' name='L8'></a><strong class='reserved'>extern</strong> <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> trace_buffer[16834];
+<a id='L9' name='L9'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> trace_buffer_len;
+<a id='L10' name='L10'></a>
+<a id='L11' name='L11'></a><em class='sharp'>#if</em> 0
+<a id='L12' name='L12'></a>1 2 3 4 5 6 7 8
+<a id='L13' name='L13'></a>  12345678901234567890123456789012345678901234567890123456789012345678901234567890
+<a id='L14' name='L14'></a><em class='sharp'>#endif</em>
+<a id='L15' name='L15'></a><em class='sharp'>#define</em> <a href='../R/1468.html' title='Multiple referred from 203 places.'>LDP_TRACE_OUT</a>(handle,args...) <em class='brace'>{</em>                         \
+<a id='L16' name='L16'></a>    <strong class='reserved'>if</strong>(trace_buffer_len == 0) <em class='brace'>{</em>                                 \
+<a id='L17' name='L17'></a>      trace_buffer_len += sprintf(trace_buffer,"OUT: " args);\
+<a id='L18' name='L18'></a>    <em class='brace'>}</em> <strong class='reserved'>else</strong> <em class='brace'>{</em>                                                    \
+<a id='L19' name='L19'></a>      trace_buffer_len += sprintf(trace_buffer+trace_buffer_len,args);\
+<a id='L20' name='L20'></a>    <em class='brace'>}</em>                                                           \
+<a id='L21' name='L21'></a>    <strong class='reserved'>if</strong>(trace_buffer[strlen(trace_buffer)-1] == '\n') <em class='brace'>{</em>          \
+<a id='L22' name='L22'></a>      fprintf(stderr,"%s",trace_buffer);                        \
+<a id='L23' name='L23'></a>      trace_buffer_len = 0;                                     \
+<a id='L24' name='L24'></a>    <em class='brace'>}</em>                                                           \
+<a id='L25' name='L25'></a><em class='brace'>}</em>
+<a id='L26' name='L26'></a><em class='sharp'>#define</em> <a href='../R/1467.html' title='Multiple referred from 119 places.'>LDP_TRACE_LOG</a>(handle,class,type,args...) <em class='brace'>{</em>              \
+<a id='L27' name='L27'></a>  <strong class='reserved'>if</strong>(type &amp; ldp_traceflags) <em class='brace'>{</em>                                   \
+<a id='L28' name='L28'></a>    <a href='../S/453.html#L15' title='Defined at 15 in ldpd/mpls_trace.h.'>LDP_TRACE_OUT</a>(handle,args);                                 \
+<a id='L29' name='L29'></a>  <em class='brace'>}</em>                                                             \
+<a id='L30' name='L30'></a><em class='brace'>}</em>
+<a id='L31' name='L31'></a><em class='sharp'>#define</em> <a href='../R/1469.html' title='Multiple referred from 18 places.'>LDP_TRACE_PKT</a>(handle,class,type,header,body) <em class='brace'>{</em>          \
+<a id='L32' name='L32'></a>  <strong class='reserved'>if</strong>(type &amp; ldp_traceflags) <em class='brace'>{</em>                                   \
+<a id='L33' name='L33'></a>    header;                                                     \
+<a id='L34' name='L34'></a>    body;                                                       \
+<a id='L35' name='L35'></a>  <em class='brace'>}</em>                                                             \
+<a id='L36' name='L36'></a><em class='brace'>}</em>
+<a id='L37' name='L37'></a><em class='sharp'>#define</em> <a href='../R/1231.html' title='Multiple referred from 11 places.'>LDP_DUMP_PKT</a>(handle,class,type,func) <em class='brace'>{</em>                  \
+<a id='L38' name='L38'></a>  <strong class='reserved'>if</strong>(type &amp; ldp_traceflags) <em class='brace'>{</em>                                   \
+<a id='L39' name='L39'></a>    func;                                                       \
+<a id='L40' name='L40'></a>  <em class='brace'>}</em>                                                             \
+<a id='L41' name='L41'></a><em class='brace'>}</em>
+<a id='L42' name='L42'></a><em class='sharp'>#define</em> <a href='../R/1409.html' title='Multiple referred from 49 places.'>LDP_PRINT</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>,args...) <em class='brace'>{</em>                               \
+<a id='L43' name='L43'></a>  <strong class='reserved'>if</strong>(ldp_traceflags &amp; <a href='../S/409.html#L135' title='Defined at 135 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_DEBUG</a>) <em class='brace'>{</em>                   \
+<a id='L44' name='L44'></a>    fprintf(stderr, "PRT: " args);                              \
+<a id='L45' name='L45'></a>  <em class='brace'>}</em>                                                             \
+<a id='L46' name='L46'></a><em class='brace'>}</em>
+<a id='L47' name='L47'></a><em class='sharp'>#define</em> <a href='../R/1235.html' title='Multiple referred from 122 places.'>LDP_ENTER</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>,args...) <em class='brace'>{</em>                               \
+<a id='L48' name='L48'></a>  <strong class='reserved'>if</strong>(ldp_traceflags &amp; <a href='../S/409.html#L135' title='Defined at 135 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_DEBUG</a>) <em class='brace'>{</em>                   \
+<a id='L49' name='L49'></a>    fprintf(stderr, "ENTER: " args);                            \
+<a id='L50' name='L50'></a>    fprintf(stderr, "\n");                                      \
+<a id='L51' name='L51'></a>  <em class='brace'>}</em>                                                             \
+<a id='L52' name='L52'></a><em class='brace'>}</em>
+<a id='L53' name='L53'></a><em class='sharp'>#define</em> <a href='../R/1293.html' title='Multiple referred from 172 places.'>LDP_EXIT</a>(<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>,args...) <em class='brace'>{</em>                                \
+<a id='L54' name='L54'></a>  <strong class='reserved'>if</strong>(ldp_traceflags &amp; <a href='../S/409.html#L135' title='Defined at 135 in ldpd/ldp_struct.h.'>LDP_TRACE_FLAG_DEBUG</a>) <em class='brace'>{</em>                   \
+<a id='L55' name='L55'></a>    fprintf(stderr, "EXIT: " args);                             \
+<a id='L56' name='L56'></a>    fprintf(stderr, "\n");                                      \
+<a id='L57' name='L57'></a>  <em class='brace'>}</em>                                                             \
+<a id='L58' name='L58'></a><em class='brace'>}</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

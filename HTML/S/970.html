@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>zebra/client_main.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1038.html'>zebra</a>/client_main.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L45'>[^]</a><a href='#L193'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L45' title='Defined at 45.'>zebra_test_ipv4</a></li>
+<li><a href='#L86' title='Defined at 86.'>zebra_test_v6</a></li>
+<li><a href='#L103' title='Defined at 103.'>usage_exit</a></li>
+<li><a href='#L127' title='Defined at 127.'>zebra_sim</a></li>
+<li><a href='#L193' title='Defined at 193.'>main</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * $Quagga: $Format:%an, %ai, %h$ $</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * GNU Zebra client test main routine.</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 1997 Kunihiro Ishiguro</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L11' name='L11'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L12' name='L12'></a><em class='comment'> * later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L15' name='L15'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L16' name='L16'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L17' name='L17'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L18' name='L18'></a><em class='comment'> *</em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L20' name='L20'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L21' name='L21'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L22' name='L22'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L23' name='L23'></a><em class='comment'> */</em>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='210.html'>zclient.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='981.html'>zebra/rib.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='946.html'>zebra/zserv.h</a>"
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *master;
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='comment'>/* Zebra client structure. */</em>
+<a id='L38' name='L38'></a><strong class='reserved'>struct</strong> <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> *<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><em class='comment'>/* Zebra socket. */</em>
+<a id='L41' name='L41'></a><strong class='reserved'>int</strong> sock;
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><em class='comment'>/* IPv4 route add and delete test. */</em>
+<a id='L44' name='L44'></a><strong class='reserved'>void</strong>
+<a id='L45' name='L45'></a><a href='../R/10631.html' title='Multiple referred from 2 places.'>zebra_test_ipv4</a> (<strong class='reserved'>int</strong> <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, <strong class='reserved'>int</strong> type, <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, <strong class='reserved'>char</strong> *gateway,
+<a id='L46' name='L46'></a>                 u_char distance)
+<a id='L47' name='L47'></a><em class='brace'>{</em>
+<a id='L48' name='L48'></a>  <strong class='reserved'>struct</strong> <a href='../S/210.html#L106' title='Defined at 106 in lib/zclient.h.'>zapi_ipv4</a> api;
+<a id='L49' name='L49'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L50' name='L50'></a>  <strong class='reserved'>struct</strong> in_addr gate;
+<a id='L51' name='L51'></a>  <strong class='reserved'>struct</strong> in_addr *gpnt;
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a>  <a href='../S/250.html#L408' title='Defined at 408 in lib/prefix.c.'>str2prefix_ipv4</a> (<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, &amp;p);
+<a id='L54' name='L54'></a>  <a href='../S/213.html#L33' title='Defined at 33 in lib/sockunion.c.'>inet_aton</a> (gateway, &amp;gate);
+<a id='L55' name='L55'></a>  gpnt = &amp;gate;
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a>  api.type = type;
+<a id='L58' name='L58'></a>  api.<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a> = 0;
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a>  api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a> = 0;
+<a id='L61' name='L61'></a>  <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L88' title='Defined at 88 in lib/zclient.h.'>ZAPI_MESSAGE_NEXTHOP</a>);
+<a id='L62' name='L62'></a>  api.nexthop_num = 1;
+<a id='L63' name='L63'></a>  api.<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a> = &amp;gpnt;
+<a id='L64' name='L64'></a>  api.ifindex_num = 0;
+<a id='L65' name='L65'></a>  <strong class='reserved'>if</strong> (distance)
+<a id='L66' name='L66'></a>    <em class='brace'>{</em>
+<a id='L67' name='L67'></a>      <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (api.<a href='../S/263.html#L95' title='Defined at 95 in lib/log.h.'>message</a>, <a href='../S/210.html#L90' title='Defined at 90 in lib/zclient.h.'>ZAPI_MESSAGE_DISTANCE</a>);
+<a id='L68' name='L68'></a>      api.distance = distance;
+<a id='L69' name='L69'></a>    <em class='brace'>}</em>
+<a id='L70' name='L70'></a>  
+<a id='L71' name='L71'></a>
+<a id='L72' name='L72'></a>  <strong class='reserved'>switch</strong> (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>)
+<a id='L73' name='L73'></a>    <em class='brace'>{</em>
+<a id='L74' name='L74'></a>    <strong class='reserved'>case</strong> <a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>:
+<a id='L75' name='L75'></a>      zapi_ipv4_add (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, &amp;p, &amp;api);
+<a id='L76' name='L76'></a>      <strong class='reserved'>break</strong>;
+<a id='L77' name='L77'></a>    <strong class='reserved'>case</strong> <a href='../S/191.html#L412' title='Defined at 412 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_DELETE</a>:
+<a id='L78' name='L78'></a>      zapi_ipv4_delete (<a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>, &amp;p, &amp;api);
+<a id='L79' name='L79'></a>      <strong class='reserved'>break</strong>;
+<a id='L80' name='L80'></a>    <em class='brace'>}</em>
+<a id='L81' name='L81'></a><em class='brace'>}</em>
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L84' name='L84'></a><em class='comment'>/* IPv6 route add and delete test. */</em>
+<a id='L85' name='L85'></a><strong class='reserved'>void</strong>
+<a id='L86' name='L86'></a>zebra_test_v6 (<strong class='reserved'>int</strong> sock)
+<a id='L87' name='L87'></a><em class='brace'>{</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> p;
+<a id='L89' name='L89'></a>  <strong class='reserved'>struct</strong> in6_addr <a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>;
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a>  <a href='../S/250.html#L522' title='Defined at 522 in lib/prefix.c.'>str2prefix_ipv6</a> ("3ffe:506::2/128", &amp;p);
+<a id='L92' name='L92'></a>  <a href='../S/213.html#L74' title='Defined at 74 in lib/sockunion.c.'>inet_pton</a> (AF_INET6, "::1", &amp;<a href='../S/981.html#L241' title='Defined at 241 in zebra/rib.h.'>nexthop</a>);
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a>  <em class='comment'>/* zebra_ipv6_add (sock, ZEBRA_ROUTE_STATIC, 0, &amp;p, &amp;nexthop, 1); */</em>
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  sleep (5);
+<a id='L97' name='L97'></a>  <em class='comment'>/* zebra_ipv6_delete (sock, ZEBRA_ROUTE_STATIC, 0, &amp;p, &amp;nexthop, 1); */</em>
+<a id='L98' name='L98'></a><em class='brace'>}</em>
+<a id='L99' name='L99'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a><em class='comment'>/* Print out usage and exit. */</em>
+<a id='L102' name='L102'></a><strong class='reserved'>void</strong>
+<a id='L103' name='L103'></a><a href='../S/970.html#L198' title='Referred from 198 in zebra/client_main.c.'>usage_exit</a> ()
+<a id='L104' name='L104'></a><em class='brace'>{</em>
+<a id='L105' name='L105'></a>  fprintf (stderr, "Usage: client filename\n");
+<a id='L106' name='L106'></a>  exit (1);
+<a id='L107' name='L107'></a><em class='brace'>}</em>
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><strong class='reserved'>struct</strong> zebra_info 
+<a id='L110' name='L110'></a><em class='brace'>{</em>
+<a id='L111' name='L111'></a>  <strong class='reserved'>char</strong> *str;
+<a id='L112' name='L112'></a>  <strong class='reserved'>int</strong> type;
+<a id='L113' name='L113'></a><em class='brace'>}</em> zebra_type[] = 
+<a id='L114' name='L114'></a><em class='brace'>{</em>
+<a id='L115' name='L115'></a>  <em class='brace'>{</em> "static", <a href='../S/280.html#L11' title='Defined at 11 in lib/route_types.h.'>ZEBRA_ROUTE_STATIC</a> <em class='brace'>}</em>,
+<a id='L116' name='L116'></a>  <em class='brace'>{</em> "rip",    <a href='../S/280.html#L12' title='Defined at 12 in lib/route_types.h.'>ZEBRA_ROUTE_RIP</a> <em class='brace'>}</em>,
+<a id='L117' name='L117'></a>  <em class='brace'>{</em> "ripng",  <a href='../S/280.html#L13' title='Defined at 13 in lib/route_types.h.'>ZEBRA_ROUTE_RIPNG</a> <em class='brace'>}</em>,
+<a id='L118' name='L118'></a>  <em class='brace'>{</em> "babel",  <a href='../S/280.html#L20' title='Defined at 20 in lib/route_types.h.'>ZEBRA_ROUTE_BABEL</a> <em class='brace'>}</em>,
+<a id='L119' name='L119'></a>  <em class='brace'>{</em> "ospf",   <a href='../S/280.html#L14' title='Defined at 14 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF</a> <em class='brace'>}</em>,
+<a id='L120' name='L120'></a>  <em class='brace'>{</em> "ospf6",  <a href='../S/280.html#L15' title='Defined at 15 in lib/route_types.h.'>ZEBRA_ROUTE_OSPF6</a> <em class='brace'>}</em>,
+<a id='L121' name='L121'></a>  <em class='brace'>{</em> "bgp",    <a href='../S/280.html#L17' title='Defined at 17 in lib/route_types.h.'>ZEBRA_ROUTE_BGP</a> <em class='brace'>}</em>,
+<a id='L122' name='L122'></a>  <em class='brace'>{</em> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>,     0 <em class='brace'>}</em>
+<a id='L123' name='L123'></a><em class='brace'>}</em>;
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a><em class='comment'>/* Zebra route simulator. */</em>
+<a id='L126' name='L126'></a><strong class='reserved'>void</strong>
+<a id='L127' name='L127'></a><a href='../S/970.html#L218' title='Referred from 218 in zebra/client_main.c.'>zebra_sim</a> (FILE *fp)
+<a id='L128' name='L128'></a><em class='brace'>{</em>
+<a id='L129' name='L129'></a>  <strong class='reserved'>char</strong> buf[BUFSIZ];
+<a id='L130' name='L130'></a>  <strong class='reserved'>char</strong> distance_str[BUFSIZ];
+<a id='L131' name='L131'></a>  u_char distance;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <strong class='reserved'>while</strong> (fgets (buf, <strong class='reserved'>sizeof</strong> buf, fp))
+<a id='L134' name='L134'></a>    <em class='brace'>{</em>
+<a id='L135' name='L135'></a>      <strong class='reserved'>int</strong> i;
+<a id='L136' name='L136'></a>      <strong class='reserved'>int</strong> ret;
+<a id='L137' name='L137'></a>      <strong class='reserved'>int</strong> type;
+<a id='L138' name='L138'></a>      <strong class='reserved'>char</strong> str[BUFSIZ], <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>[BUFSIZ], <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>[BUFSIZ], gateway[BUFSIZ];
+<a id='L139' name='L139'></a>
+<a id='L140' name='L140'></a>      distance = 0;
+<a id='L141' name='L141'></a>
+<a id='L142' name='L142'></a>      <strong class='reserved'>if</strong> (*buf == '#')
+<a id='L143' name='L143'></a>        <strong class='reserved'>continue</strong>;
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a>      type = <a href='../S/280.html#L11' title='Defined at 11 in lib/route_types.h.'>ZEBRA_ROUTE_STATIC</a>;
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a>      ret = sscanf (buf, "%s %s %s %s %s\n", <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, str, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, gateway,
+<a id='L148' name='L148'></a>                    distance_str);
+<a id='L149' name='L149'></a>
+<a id='L150' name='L150'></a>      <strong class='reserved'>if</strong> (ret == 5)
+<a id='L151' name='L151'></a>        <em class='brace'>{</em>
+<a id='L152' name='L152'></a>          distance = atoi (distance_str);
+<a id='L153' name='L153'></a>        <em class='brace'>}</em>
+<a id='L154' name='L154'></a>      <strong class='reserved'>else</strong>
+<a id='L155' name='L155'></a>        <em class='brace'>{</em>
+<a id='L156' name='L156'></a>          ret = sscanf (buf, "%s %s %s %s\n", <a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, str, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, gateway);
+<a id='L157' name='L157'></a>
+<a id='L158' name='L158'></a>          <strong class='reserved'>if</strong> (ret != 4)
+<a id='L159' name='L159'></a>            <strong class='reserved'>continue</strong>;
+<a id='L160' name='L160'></a>        <em class='brace'>}</em>
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a>      <strong class='reserved'>for</strong> (i = 0; i &lt; 10; i++)
+<a id='L163' name='L163'></a>        <em class='brace'>{</em>
+<a id='L164' name='L164'></a>          <strong class='reserved'>if</strong> (!zebra_type[i].str)
+<a id='L165' name='L165'></a>            <strong class='reserved'>break</strong>;
+<a id='L166' name='L166'></a>          <strong class='reserved'>if</strong> (strcmp (zebra_type[i].str, str) == 0)
+<a id='L167' name='L167'></a>            <em class='brace'>{</em>
+<a id='L168' name='L168'></a>              type = zebra_type[i].type;
+<a id='L169' name='L169'></a>              <strong class='reserved'>break</strong>;
+<a id='L170' name='L170'></a>            <em class='brace'>}</em>
+<a id='L171' name='L171'></a>        <em class='brace'>}</em>
+<a id='L172' name='L172'></a>      
+<a id='L173' name='L173'></a>      <strong class='reserved'>if</strong> (strcmp (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, "add") == 0)
+<a id='L174' name='L174'></a>        <em class='brace'>{</em>
+<a id='L175' name='L175'></a>          <a href='../S/970.html#L45' title='Defined at 45 in zebra/client_main.c.'>zebra_test_ipv4</a> (<a href='../S/191.html#L411' title='Defined at 411 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_ADD</a>, type, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, gateway,
+<a id='L176' name='L176'></a>                           distance);
+<a id='L177' name='L177'></a>          printf ("%s", buf);
+<a id='L178' name='L178'></a>          <strong class='reserved'>continue</strong>;
+<a id='L179' name='L179'></a>        <em class='brace'>}</em>
+<a id='L180' name='L180'></a>
+<a id='L181' name='L181'></a>      <strong class='reserved'>if</strong> (strcmp (<a href='../S/137.html#L22' title='Defined at 22 in brctld/brctl.h.'>command</a>, "del") == 0)
+<a id='L182' name='L182'></a>        <em class='brace'>{</em>
+<a id='L183' name='L183'></a>          <a href='../S/970.html#L45' title='Defined at 45 in zebra/client_main.c.'>zebra_test_ipv4</a> (<a href='../S/191.html#L412' title='Defined at 412 in lib/zebra.h.'>ZEBRA_IPV4_ROUTE_DELETE</a>, type, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, gateway,
+<a id='L184' name='L184'></a>                           distance);
+<a id='L185' name='L185'></a>          printf ("%s", buf);
+<a id='L186' name='L186'></a>          <strong class='reserved'>continue</strong>;
+<a id='L187' name='L187'></a>        <em class='brace'>}</em>
+<a id='L188' name='L188'></a>    <em class='brace'>}</em>
+<a id='L189' name='L189'></a><em class='brace'>}</em>
+<a id='L190' name='L190'></a>
+<a id='L191' name='L191'></a><em class='comment'>/* Test zebra client main routine. */</em>
+<a id='L192' name='L192'></a><strong class='reserved'>int</strong>
+<a id='L193' name='L193'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> **argv)
+<a id='L194' name='L194'></a><em class='brace'>{</em>
+<a id='L195' name='L195'></a>  FILE *fp;
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a>  <strong class='reserved'>if</strong> (argc == 1)
+<a id='L198' name='L198'></a>      <a href='../S/970.html#L103' title='Defined at 103 in zebra/client_main.c.'>usage_exit</a> ();
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a>  <em class='comment'>/* Establish connection to zebra. */</em>
+<a id='L201' name='L201'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a> = <a href='../S/255.html#L51' title='Defined at 51 in lib/zclient.c.'>zclient_new</a> ();
+<a id='L202' name='L202'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;enable = 1;
+<a id='L203' name='L203'></a><em class='sharp'>#ifdef</em> HAVE_TCP_ZEBRA
+<a id='L204' name='L204'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;sock = <a href='../S/255.html#L152' title='Defined at 152 in lib/zclient.c.'>zclient_socket</a> ();
+<a id='L205' name='L205'></a><em class='sharp'>#else</em>
+<a id='L206' name='L206'></a>  <a href='../S/210.html#L38' title='Defined at 38 in lib/zclient.h.'>zclient</a>-&gt;sock = <a href='../S/255.html#L188' title='Defined at 188 in lib/zclient.c.'>zclient_socket_un</a> (<a href='../S/665.html#L831' title='Defined at 831 in config.h.'>ZEBRA_SERV_PATH</a>);
+<a id='L207' name='L207'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_TCP_ZEBRA */</em>
+<a id='L208' name='L208'></a>
+<a id='L209' name='L209'></a>  <em class='comment'>/* Open simulation file. */</em>
+<a id='L210' name='L210'></a>  fp = fopen (argv[1], "r");
+<a id='L211' name='L211'></a>  <strong class='reserved'>if</strong> (fp == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L212' name='L212'></a>    <em class='brace'>{</em>
+<a id='L213' name='L213'></a>      fprintf (stderr, "can't open %s\n", argv[1]);
+<a id='L214' name='L214'></a>      exit (1);
+<a id='L215' name='L215'></a>    <em class='brace'>}</em>
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  <em class='comment'>/* Do main work. */</em>
+<a id='L218' name='L218'></a>  <a href='../S/970.html#L127' title='Defined at 127 in zebra/client_main.c.'>zebra_sim</a> (fp);
+<a id='L219' name='L219'></a>
+<a id='L220' name='L220'></a>  sleep (100);
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a>  fclose (fp);
+<a id='L223' name='L223'></a>  close (sock);
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L226' name='L226'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L45'>[^]</a><a href='#L193'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

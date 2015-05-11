@@ -1,0 +1,409 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_main.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_main.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L128'>[^]</a><a href='#L231'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L128' title='Defined at 128.'>usage</a></li>
+<li><a href='#L156' title='Defined at 156.'>reload</a></li>
+<li><a href='#L168' title='Defined at 168.'>terminate</a></li>
+<li><a href='#L178' title='Defined at 178.'>sighup</a></li>
+<li><a href='#L187' title='Defined at 187.'>sigint</a></li>
+<li><a href='#L194' title='Defined at 194.'>sigterm</a></li>
+<li><a href='#L201' title='Defined at 201.'>sigusr1</a></li>
+<li><a href='#L231' title='Defined at 231.'>main</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_main.c</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L5' name='L5'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L7' name='L7'></a><em class='comment'> *</em>
+<a id='L8' name='L8'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L9' name='L9'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L10' name='L10'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L11' name='L11'></a><em class='comment'> * any later version.</em>
+<a id='L12' name='L12'></a><em class='comment'> *</em>
+<a id='L13' name='L13'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L14' name='L14'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L15' name='L15'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L16' name='L16'></a><em class='comment'> * more details.</em>
+<a id='L17' name='L17'></a><em class='comment'></em>
+<a id='L18' name='L18'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L19' name='L19'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L20' name='L20'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='196.html'>getopt.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> &lt;<a href='237.html'>lib/version.h</a>&gt;
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='284.html'>stream.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='217.html'>privs.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='254.html'>sigevent.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='199.html'>filter.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='210.html'>zclient.h</a>"
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a><em class='sharp'>#include</em> "<a href='480.html'>isisd/dict.h</a>"
+<a id='L40' name='L40'></a><em class='sharp'>#include</em> "<a href='504.html'>include-netbsd/iso.h</a>"
+<a id='L41' name='L41'></a><em class='sharp'>#include</em> "<a href='518.html'>isisd/isis_constants.h</a>"
+<a id='L42' name='L42'></a><em class='sharp'>#include</em> "<a href='488.html'>isisd/isis_common.h</a>"
+<a id='L43' name='L43'></a><em class='sharp'>#include</em> "<a href='497.html'>isisd/isis_flags.h</a>"
+<a id='L44' name='L44'></a><em class='sharp'>#include</em> "<a href='524.html'>isisd/isis_circuit.h</a>"
+<a id='L45' name='L45'></a><em class='sharp'>#include</em> "<a href='510.html'>isisd/isisd.h</a>"
+<a id='L46' name='L46'></a><em class='sharp'>#include</em> "<a href='520.html'>isisd/isis_dynhn.h</a>"
+<a id='L47' name='L47'></a><em class='sharp'>#include</em> "<a href='486.html'>isisd/isis_spf.h</a>"
+<a id='L48' name='L48'></a><em class='sharp'>#include</em> "<a href='525.html'>isisd/isis_route.h</a>"
+<a id='L49' name='L49'></a><em class='sharp'>#include</em> "<a href='512.html'>isisd/isis_zebra.h</a>"
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><em class='comment'>/* Default configuration file name */</em>
+<a id='L52' name='L52'></a><em class='sharp'>#define</em> <a href='../S/478.html#L95' title='Referred from 95 in isisd/isis_main.c.'>ISISD_DEFAULT_CONFIG</a> "isisd.conf"
+<a id='L53' name='L53'></a><em class='comment'>/* Default vty port */</em>
+<a id='L54' name='L54'></a><em class='sharp'>#define</em> <a href='../R/1029.html' title='Multiple referred from 2 places.'>ISISD_VTY_PORT</a>       2608
+<a id='L55' name='L55'></a>
+<a id='L56' name='L56'></a><em class='comment'>/* isisd privileges */</em>
+<a id='L57' name='L57'></a><a href='../S/217.html#L42' title='Defined at 42 in lib/privs.h.'>zebra_capabilities_t</a> _caps_p[] = <em class='brace'>{</em>
+<a id='L58' name='L58'></a>  <a href='../S/217.html#L32' title='Defined at 32 in lib/privs.h.'>ZCAP_NET_ADMIN</a>,
+<a id='L59' name='L59'></a>  <a href='../S/217.html#L34' title='Defined at 34 in lib/privs.h.'>ZCAP_NET_RAW</a>,
+<a id='L60' name='L60'></a>  <a href='../S/217.html#L31' title='Defined at 31 in lib/privs.h.'>ZCAP_BIND</a>
+<a id='L61' name='L61'></a><em class='brace'>}</em>;
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><strong class='reserved'>struct</strong> <a href='../S/217.html#L57' title='Defined at 57 in lib/privs.h.'>zebra_privs_t</a> isisd_privs = <em class='brace'>{</em>
+<a id='L64' name='L64'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong>(<a href='../S/665.html#L725' title='Defined at 725 in config.h.'>QUAGGA_USER</a>)
+<a id='L65' name='L65'></a>  .user = <a href='../S/665.html#L725' title='Defined at 725 in config.h.'>QUAGGA_USER</a>,
+<a id='L66' name='L66'></a><em class='sharp'>#endif</em>
+<a id='L67' name='L67'></a><em class='sharp'>#if</em> <strong class='reserved'>defined</strong> <a href='../S/665.html#L719' title='Defined at 719 in config.h.'>QUAGGA_GROUP</a>
+<a id='L68' name='L68'></a>  .group = <a href='../S/665.html#L719' title='Defined at 719 in config.h.'>QUAGGA_GROUP</a>,
+<a id='L69' name='L69'></a><em class='sharp'>#endif</em>
+<a id='L70' name='L70'></a><em class='sharp'>#ifdef</em> VTY_GROUP
+<a id='L71' name='L71'></a>  .vty_group = VTY_GROUP,
+<a id='L72' name='L72'></a><em class='sharp'>#endif</em>
+<a id='L73' name='L73'></a>  .caps_p = _caps_p,
+<a id='L74' name='L74'></a>  .cap_num_p = <strong class='reserved'>sizeof</strong> (_caps_p) / <strong class='reserved'>sizeof</strong> (*_caps_p),
+<a id='L75' name='L75'></a>  .cap_num_i = 0
+<a id='L76' name='L76'></a><em class='brace'>}</em>;
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a><em class='comment'>/* isisd options */</em>
+<a id='L79' name='L79'></a><strong class='reserved'>struct</strong> <a href='../S/196.html#L93' title='Defined at 93 in lib/getopt.h.'>option</a> longopts[] = <em class='brace'>{</em>
+<a id='L80' name='L80'></a>  <em class='brace'>{</em>"daemon",      <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'd'<em class='brace'>}</em>,
+<a id='L81' name='L81'></a>  <em class='brace'>{</em>"config_file", <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'f'<em class='brace'>}</em>,
+<a id='L82' name='L82'></a>  <em class='brace'>{</em>"pid_file",    <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'i'<em class='brace'>}</em>,
+<a id='L83' name='L83'></a>  <em class='brace'>{</em>"socket",      <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'z'<em class='brace'>}</em>,
+<a id='L84' name='L84'></a>  <em class='brace'>{</em>"vty_addr",    <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'A'<em class='brace'>}</em>,
+<a id='L85' name='L85'></a>  <em class='brace'>{</em>"vty_port",    <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'P'<em class='brace'>}</em>,
+<a id='L86' name='L86'></a>  <em class='brace'>{</em>"user",        <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'u'<em class='brace'>}</em>,
+<a id='L87' name='L87'></a>  <em class='brace'>{</em>"group",       <a href='../S/196.html#L110' title='Defined at 110 in lib/getopt.h.'>required_argument</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'g'<em class='brace'>}</em>,
+<a id='L88' name='L88'></a>  <em class='brace'>{</em>"version",     <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'v'<em class='brace'>}</em>,
+<a id='L89' name='L89'></a>  <em class='brace'>{</em>"dryrun",      <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'C'<em class='brace'>}</em>,
+<a id='L90' name='L90'></a>  <em class='brace'>{</em>"help",        <a href='../S/196.html#L109' title='Defined at 109 in lib/getopt.h.'>no_argument</a>,       <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, 'h'<em class='brace'>}</em>,
+<a id='L91' name='L91'></a>  <em class='brace'>{</em>0<em class='brace'>}</em>
+<a id='L92' name='L92'></a><em class='brace'>}</em>;
+<a id='L93' name='L93'></a>
+<a id='L94' name='L94'></a><em class='comment'>/* Configuration file and directory. */</em>
+<a id='L95' name='L95'></a><strong class='reserved'>char</strong> config_default[] = SYSCONFDIR <a href='../S/478.html#L52' title='Defined at 52 in isisd/isis_main.c.'>ISISD_DEFAULT_CONFIG</a>;
+<a id='L96' name='L96'></a><strong class='reserved'>char</strong> *config_file = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a><em class='comment'>/* isisd program name. */</em>
+<a id='L99' name='L99'></a><strong class='reserved'>char</strong> *progname;
+<a id='L100' name='L100'></a>
+<a id='L101' name='L101'></a><strong class='reserved'>int</strong> daemon_mode = 0;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><em class='comment'>/* Master of threads. */</em>
+<a id='L104' name='L104'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><em class='comment'>/* Process ID saved for use by init system */</em>
+<a id='L107' name='L107'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *pid_file = <a href='../S/665.html#L680' title='Defined at 680 in config.h.'>PATH_ISISD_PID</a>;
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><em class='comment'>/* for reload */</em>
+<a id='L110' name='L110'></a><strong class='reserved'>char</strong> _cwd[MAXPATHLEN];
+<a id='L111' name='L111'></a><strong class='reserved'>char</strong> _progpath[MAXPATHLEN];
+<a id='L112' name='L112'></a><strong class='reserved'>int</strong> _argc;
+<a id='L113' name='L113'></a><strong class='reserved'>char</strong> **_argv;
+<a id='L114' name='L114'></a><strong class='reserved'>char</strong> **_envp;
+<a id='L115' name='L115'></a>
+<a id='L116' name='L116'></a><em class='comment'>/*</em>
+<a id='L117' name='L117'></a><em class='comment'> * Prototypes.</em>
+<a id='L118' name='L118'></a><em class='comment'> */</em>
+<a id='L119' name='L119'></a><strong class='reserved'>void</strong> <a href='../S/478.html#L156' title='Defined at 156 in isisd/isis_main.c.'>reload</a>(<strong class='reserved'>void</strong>);
+<a id='L120' name='L120'></a><strong class='reserved'>void</strong> <a href='../D/10789.html' title='Multiple defined in 18 places.'>sighup</a>(<strong class='reserved'>void</strong>);
+<a id='L121' name='L121'></a><strong class='reserved'>void</strong> <a href='../D/10790.html' title='Multiple defined in 19 places.'>sigint</a>(<strong class='reserved'>void</strong>);
+<a id='L122' name='L122'></a><strong class='reserved'>void</strong> <a href='../D/10793.html' title='Multiple defined in 2 places.'>sigterm</a>(<strong class='reserved'>void</strong>);
+<a id='L123' name='L123'></a><strong class='reserved'>void</strong> <a href='../D/10795.html' title='Multiple defined in 18 places.'>sigusr1</a>(<strong class='reserved'>void</strong>);
+<a id='L124' name='L124'></a>
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a><em class='comment'>/* Help information display. */</em>
+<a id='L127' name='L127'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L128' name='L128'></a><a href='../R/10296.html' title='Multiple referred from 127 places.'>usage</a> (<strong class='reserved'>int</strong> status)
+<a id='L129' name='L129'></a><em class='brace'>{</em>
+<a id='L130' name='L130'></a>  <strong class='reserved'>if</strong> (status != 0)
+<a id='L131' name='L131'></a>    fprintf (stderr, "Try `%s --help' for more information.\n", progname);
+<a id='L132' name='L132'></a>  <strong class='reserved'>else</strong>
+<a id='L133' name='L133'></a>    <em class='brace'>{</em>
+<a id='L134' name='L134'></a>      printf ("Usage : %s [OPTION...]\n\n\
+<a id='L135' name='L135'></a>Daemon which manages IS-IS routing\n\n\
+<a id='L136' name='L136'></a>-d, --daemon       Runs in daemon mode\n\
+<a id='L137' name='L137'></a>-f, --config_file  Set configuration file name\n\
+<a id='L138' name='L138'></a>-i, --pid_file     Set process identifier file name\n\
+<a id='L139' name='L139'></a>-z, --socket       Set path of zebra socket\n\
+<a id='L140' name='L140'></a>-A, --vty_addr     Set vty's bind address\n\
+<a id='L141' name='L141'></a>-P, --vty_port     Set vty's port number\n\
+<a id='L142' name='L142'></a>-u, --user         User to run as\n\
+<a id='L143' name='L143'></a>-g, --group        Group to run as\n\
+<a id='L144' name='L144'></a>-v, --version      Print program version\n\
+<a id='L145' name='L145'></a>-C, --dryrun       Check configuration for validity and exit\n\
+<a id='L146' name='L146'></a>-h, --help         Display this help and exit\n\
+<a id='L147' name='L147'></a>\n\
+<a id='L148' name='L148'></a>Report bugs to http://bugzilla.quagga.net\n", progname);
+<a id='L149' name='L149'></a>    <em class='brace'>}</em>
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a>  exit (status);
+<a id='L152' name='L152'></a><em class='brace'>}</em>
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a><strong class='reserved'>void</strong>
+<a id='L156' name='L156'></a><a href='../R/8994.html' title='Multiple referred from 2 places.'>reload</a> ()
+<a id='L157' name='L157'></a><em class='brace'>{</em>
+<a id='L158' name='L158'></a>  zlog_debug ("Reload");
+<a id='L159' name='L159'></a>  <em class='comment'>/* FIXME: Clean up func call here */</em>
+<a id='L160' name='L160'></a>  <a href='../S/200.html#L2871' title='Defined at 2871 in lib/vty.c.'>vty_reset</a> ();
+<a id='L161' name='L161'></a>  (<strong class='reserved'>void</strong>) isisd_privs.change (<a href='../S/217.html#L53' title='Defined at 53 in lib/privs.h.'>ZPRIVS_RAISE</a>);
+<a id='L162' name='L162'></a>  execve (_progpath, _argv, _envp);
+<a id='L163' name='L163'></a>  zlog_err ("Reload failed: cannot exec %s: %s", _progpath,
+<a id='L164' name='L164'></a>      <a href='../S/205.html#L817' title='Defined at 817 in lib/log.c.'>safe_strerror</a> (errno));
+<a id='L165' name='L165'></a><em class='brace'>}</em>
+<a id='L166' name='L166'></a>
+<a id='L167' name='L167'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L168' name='L168'></a><a href='../R/10102.html' title='Multiple referred from 2 places.'>terminate</a> (<strong class='reserved'>int</strong> i)
+<a id='L169' name='L169'></a><em class='brace'>{</em>
+<a id='L170' name='L170'></a>  exit (i);
+<a id='L171' name='L171'></a><em class='brace'>}</em>
+<a id='L172' name='L172'></a>
+<a id='L173' name='L173'></a><em class='comment'>/*</em>
+<a id='L174' name='L174'></a><em class='comment'> * Signal handlers</em>
+<a id='L175' name='L175'></a><em class='comment'> */</em>
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a><strong class='reserved'>void</strong>
+<a id='L178' name='L178'></a><a href='../R/9880.html' title='Multiple referred from 20 places.'>sighup</a> (<strong class='reserved'>void</strong>)
+<a id='L179' name='L179'></a><em class='brace'>{</em>
+<a id='L180' name='L180'></a>  zlog_debug ("SIGHUP received");
+<a id='L181' name='L181'></a>  <a href='../S/478.html#L156' title='Defined at 156 in isisd/isis_main.c.'>reload</a> ();
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a>  <strong class='reserved'>return</strong>;
+<a id='L184' name='L184'></a><em class='brace'>}</em>
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a><strong class='reserved'>void</strong>
+<a id='L187' name='L187'></a><a href='../R/9881.html' title='Multiple referred from 37 places.'>sigint</a> (<strong class='reserved'>void</strong>)
+<a id='L188' name='L188'></a><em class='brace'>{</em>
+<a id='L189' name='L189'></a>  zlog_notice ("Terminating on signal SIGINT");
+<a id='L190' name='L190'></a>  <a href='../S/478.html#L168' title='Defined at 168 in isisd/isis_main.c.'>terminate</a> (0);
+<a id='L191' name='L191'></a><em class='brace'>}</em>
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a><strong class='reserved'>void</strong>
+<a id='L194' name='L194'></a><a href='../R/9884.html' title='Multiple referred from 3 places.'>sigterm</a> (<strong class='reserved'>void</strong>)
+<a id='L195' name='L195'></a><em class='brace'>{</em>
+<a id='L196' name='L196'></a>  zlog_notice ("Terminating on signal SIGTERM");
+<a id='L197' name='L197'></a>  <a href='../S/478.html#L168' title='Defined at 168 in isisd/isis_main.c.'>terminate</a> (0);
+<a id='L198' name='L198'></a><em class='brace'>}</em>
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a><strong class='reserved'>void</strong>
+<a id='L201' name='L201'></a><a href='../R/9886.html' title='Multiple referred from 20 places.'>sigusr1</a> (<strong class='reserved'>void</strong>)
+<a id='L202' name='L202'></a><em class='brace'>{</em>
+<a id='L203' name='L203'></a>  zlog_debug ("SIGUSR1 received");
+<a id='L204' name='L204'></a>  <a href='../S/205.html#L724' title='Defined at 724 in lib/log.c.'>zlog_rotate</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L205' name='L205'></a><em class='brace'>}</em>
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a><strong class='reserved'>struct</strong> <a href='../S/254.html#L31' title='Defined at 31 in lib/sigevent.h.'>quagga_signal_t</a> isisd_signals[] =
+<a id='L208' name='L208'></a><em class='brace'>{</em>
+<a id='L209' name='L209'></a>  <em class='brace'>{</em>
+<a id='L210' name='L210'></a>   .signal = SIGHUP,
+<a id='L211' name='L211'></a>   .handler = &amp;<a href='../D/10789.html' title='Multiple defined in 18 places.'>sighup</a>,
+<a id='L212' name='L212'></a>   <em class='brace'>}</em>,
+<a id='L213' name='L213'></a>  <em class='brace'>{</em>
+<a id='L214' name='L214'></a>   .signal = SIGUSR1,
+<a id='L215' name='L215'></a>   .handler = &amp;<a href='../D/10795.html' title='Multiple defined in 18 places.'>sigusr1</a>,
+<a id='L216' name='L216'></a>   <em class='brace'>}</em>,
+<a id='L217' name='L217'></a>  <em class='brace'>{</em>
+<a id='L218' name='L218'></a>   .signal = SIGINT,
+<a id='L219' name='L219'></a>   .handler = &amp;<a href='../D/10790.html' title='Multiple defined in 19 places.'>sigint</a>,
+<a id='L220' name='L220'></a>   <em class='brace'>}</em>,
+<a id='L221' name='L221'></a>  <em class='brace'>{</em>
+<a id='L222' name='L222'></a>   .signal = SIGTERM,
+<a id='L223' name='L223'></a>   .handler = &amp;<a href='../D/10793.html' title='Multiple defined in 2 places.'>sigterm</a>,
+<a id='L224' name='L224'></a>   <em class='brace'>}</em>,
+<a id='L225' name='L225'></a><em class='brace'>}</em>;
+<a id='L226' name='L226'></a>
+<a id='L227' name='L227'></a><em class='comment'>/*</em>
+<a id='L228' name='L228'></a><em class='comment'> * Main routine of isisd. Parse arguments and handle IS-IS state machine.</em>
+<a id='L229' name='L229'></a><em class='comment'> */</em>
+<a id='L230' name='L230'></a><strong class='reserved'>int</strong>
+<a id='L231' name='L231'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a> (<strong class='reserved'>int</strong> argc, <strong class='reserved'>char</strong> **argv, <strong class='reserved'>char</strong> **envp)
+<a id='L232' name='L232'></a><em class='brace'>{</em>
+<a id='L233' name='L233'></a>  <strong class='reserved'>char</strong> *p;
+<a id='L234' name='L234'></a>  <strong class='reserved'>int</strong> opt, vty_port = <a href='../S/478.html#L54' title='Defined at 54 in isisd/isis_main.c.'>ISISD_VTY_PORT</a>;
+<a id='L235' name='L235'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>;
+<a id='L236' name='L236'></a>  <strong class='reserved'>char</strong> *config_file = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L237' name='L237'></a>  <strong class='reserved'>char</strong> *vty_addr = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L238' name='L238'></a>  <strong class='reserved'>int</strong> dryrun = 0;
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a>  <em class='comment'>/* Get the programname without the preceding path. */</em>
+<a id='L241' name='L241'></a>  progname = ((p = strrchr (argv[0], '/')) ? ++p : argv[0]);
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a>  zlog_default = <a href='../S/205.html#L625' title='Defined at 625 in lib/log.c.'>openzlog</a> (progname, <a href='../S/263.html#L55' title='Defined at 55 in lib/log.h.'>ZLOG_ISIS</a>,
+<a id='L244' name='L244'></a>                           LOG_CONS | LOG_NDELAY | LOG_PID, LOG_DAEMON);
+<a id='L245' name='L245'></a>
+<a id='L246' name='L246'></a>  <em class='comment'>/* for reload */</em>
+<a id='L247' name='L247'></a>  _argc = argc;
+<a id='L248' name='L248'></a>  _argv = argv;
+<a id='L249' name='L249'></a>  _envp = envp;
+<a id='L250' name='L250'></a>  getcwd (_cwd, <strong class='reserved'>sizeof</strong> (_cwd));
+<a id='L251' name='L251'></a>  <strong class='reserved'>if</strong> (*argv[0] == '.')
+<a id='L252' name='L252'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (_progpath, <strong class='reserved'>sizeof</strong> (_progpath), "%s/%s", _cwd, _argv[0]);
+<a id='L253' name='L253'></a>  <strong class='reserved'>else</strong>
+<a id='L254' name='L254'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (_progpath, <strong class='reserved'>sizeof</strong> (_progpath), "%s", argv[0]);
+<a id='L255' name='L255'></a>
+<a id='L256' name='L256'></a>  <em class='comment'>/* Command line argument treatment. */</em>
+<a id='L257' name='L257'></a>  <strong class='reserved'>while</strong> (1)
+<a id='L258' name='L258'></a>    <em class='brace'>{</em>
+<a id='L259' name='L259'></a>      opt = <a href='../S/245.html#L70' title='Defined at 70 in lib/getopt1.c.'>getopt_long</a> (argc, argv, "df:i:z:hA:p:P:u:g:vC", longopts, 0);
+<a id='L260' name='L260'></a>
+<a id='L261' name='L261'></a>      <strong class='reserved'>if</strong> (opt == EOF)
+<a id='L262' name='L262'></a>        <strong class='reserved'>break</strong>;
+<a id='L263' name='L263'></a>
+<a id='L264' name='L264'></a>      <strong class='reserved'>switch</strong> (opt)
+<a id='L265' name='L265'></a>        <em class='brace'>{</em>
+<a id='L266' name='L266'></a>        <strong class='reserved'>case</strong> 0:
+<a id='L267' name='L267'></a>          <strong class='reserved'>break</strong>;
+<a id='L268' name='L268'></a>        <strong class='reserved'>case</strong> 'd':
+<a id='L269' name='L269'></a>          daemon_mode = 1;
+<a id='L270' name='L270'></a>          <strong class='reserved'>break</strong>;
+<a id='L271' name='L271'></a>        <strong class='reserved'>case</strong> 'f':
+<a id='L272' name='L272'></a>          config_file = optarg;
+<a id='L273' name='L273'></a>          <strong class='reserved'>break</strong>;
+<a id='L274' name='L274'></a>        <strong class='reserved'>case</strong> 'i':
+<a id='L275' name='L275'></a>          pid_file = optarg;
+<a id='L276' name='L276'></a>          <strong class='reserved'>break</strong>;
+<a id='L277' name='L277'></a>        <strong class='reserved'>case</strong> 'z':
+<a id='L278' name='L278'></a>          <a href='../S/255.html#L1141' title='Defined at 1141 in lib/zclient.c.'>zclient_serv_path_set</a> (optarg);
+<a id='L279' name='L279'></a>          <strong class='reserved'>break</strong>;
+<a id='L280' name='L280'></a>        <strong class='reserved'>case</strong> 'A':
+<a id='L281' name='L281'></a>          vty_addr = optarg;
+<a id='L282' name='L282'></a>          <strong class='reserved'>break</strong>;
+<a id='L283' name='L283'></a>        <strong class='reserved'>case</strong> 'P':
+<a id='L284' name='L284'></a>          <em class='comment'>/* Deal with atoi() returning 0 on failure, and isisd not</em>
+<a id='L285' name='L285'></a><em class='comment'>             listening on isisd port... */</em>
+<a id='L286' name='L286'></a>          <strong class='reserved'>if</strong> (strcmp (optarg, "0") == 0)
+<a id='L287' name='L287'></a>            <em class='brace'>{</em>
+<a id='L288' name='L288'></a>              vty_port = 0;
+<a id='L289' name='L289'></a>              <strong class='reserved'>break</strong>;
+<a id='L290' name='L290'></a>            <em class='brace'>}</em>
+<a id='L291' name='L291'></a>          vty_port = atoi (optarg);
+<a id='L292' name='L292'></a>          vty_port = (vty_port ? vty_port : <a href='../S/478.html#L54' title='Defined at 54 in isisd/isis_main.c.'>ISISD_VTY_PORT</a>);
+<a id='L293' name='L293'></a>          <strong class='reserved'>break</strong>;
+<a id='L294' name='L294'></a>        <strong class='reserved'>case</strong> 'u':
+<a id='L295' name='L295'></a>          isisd_privs.user = optarg;
+<a id='L296' name='L296'></a>          <strong class='reserved'>break</strong>;
+<a id='L297' name='L297'></a>        <strong class='reserved'>case</strong> 'g':
+<a id='L298' name='L298'></a>          isisd_privs.group = optarg;
+<a id='L299' name='L299'></a>          <strong class='reserved'>break</strong>;
+<a id='L300' name='L300'></a>        <strong class='reserved'>case</strong> 'v':
+<a id='L301' name='L301'></a>          printf ("ISISd version %s\n", <a href='../S/510.html#L26' title='Defined at 26 in isisd/isisd.h.'>ISISD_VERSION</a>);
+<a id='L302' name='L302'></a>          printf ("Copyright (c) 2001-2002 Sampo Saaristo,"
+<a id='L303' name='L303'></a>                  " Ofer Wald and Hannes Gredler\n");
+<a id='L304' name='L304'></a>          <a href='../S/264.html#L155' title='Defined at 155 in lib/command.c.'>print_version</a> ("Zebra");
+<a id='L305' name='L305'></a>          exit (0);
+<a id='L306' name='L306'></a>          <strong class='reserved'>break</strong>;
+<a id='L307' name='L307'></a>        <strong class='reserved'>case</strong> 'C':
+<a id='L308' name='L308'></a>          dryrun = 1;
+<a id='L309' name='L309'></a>          <strong class='reserved'>break</strong>;
+<a id='L310' name='L310'></a>        <strong class='reserved'>case</strong> 'h':
+<a id='L311' name='L311'></a>          <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a> (0);
+<a id='L312' name='L312'></a>          <strong class='reserved'>break</strong>;
+<a id='L313' name='L313'></a>        <strong class='reserved'>default</strong>:
+<a id='L314' name='L314'></a>          <a href='../D/11217.html' title='Multiple defined in 26 places.'>usage</a> (1);
+<a id='L315' name='L315'></a>          <strong class='reserved'>break</strong>;
+<a id='L316' name='L316'></a>        <em class='brace'>}</em>
+<a id='L317' name='L317'></a>    <em class='brace'>}</em>
+<a id='L318' name='L318'></a>
+<a id='L319' name='L319'></a>  <em class='comment'>/* thread master */</em>
+<a id='L320' name='L320'></a>  master = <a href='../S/208.html#L530' title='Defined at 530 in lib/thread.c.'>thread_master_create</a> ();
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a>  <em class='comment'>/* random seed from time */</em>
+<a id='L323' name='L323'></a>  srand (time (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>));
+<a id='L324' name='L324'></a>
+<a id='L325' name='L325'></a>  <em class='comment'>/*</em>
+<a id='L326' name='L326'></a><em class='comment'>   *  initializations</em>
+<a id='L327' name='L327'></a><em class='comment'>   */</em>
+<a id='L328' name='L328'></a>  <a href='../S/189.html#L591' title='Defined at 591 in lib/privs.c.'>zprivs_init</a> (&amp;isisd_privs);
+<a id='L329' name='L329'></a>  <a href='../D/10791.html' title='Multiple defined in 2 places.'>signal_init</a> (master, <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a> (isisd_signals), isisd_signals);
+<a id='L330' name='L330'></a>  <a href='../S/264.html#L3462' title='Defined at 3462 in lib/command.c.'>cmd_init</a> (1);
+<a id='L331' name='L331'></a>  <a href='../S/200.html#L2952' title='Defined at 2952 in lib/vty.c.'>vty_init</a> (master);
+<a id='L332' name='L332'></a>  <a href='../S/220.html#L525' title='Defined at 525 in lib/memory.c.'>memory_init</a> ();
+<a id='L333' name='L333'></a>  <a href='../S/203.html#L2021' title='Defined at 2021 in lib/filter.c.'>access_list_init</a>();
+<a id='L334' name='L334'></a>  <a href='../S/499.html#L3103' title='Defined at 3103 in isisd/isisd.c.'>isis_init</a> ();
+<a id='L335' name='L335'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L549' title='Defined at 549 in config.h.'>HAVE_TRILL</a>
+<a id='L336' name='L336'></a>  <a href='../D/11148.html' title='Multiple defined in 2 places.'>trill_init</a>();
+<a id='L337' name='L337'></a><em class='sharp'>#endif</em>
+<a id='L338' name='L338'></a>  <a href='../S/498.html#L2787' title='Defined at 2787 in isisd/isis_circuit.c.'>isis_circuit_init</a> ();
+<a id='L339' name='L339'></a>  <a href='../S/464.html#L1893' title='Defined at 1893 in isisd/isis_spf.c.'>isis_spf_cmds_init</a> ();
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a>  <em class='comment'>/* create the global 'isis' instance */</em>
+<a id='L342' name='L342'></a>  <a href='../S/499.html#L80' title='Defined at 80 in isisd/isisd.c.'>isis_new</a> (1);
+<a id='L343' name='L343'></a>
+<a id='L344' name='L344'></a>  <a href='../S/494.html#L591' title='Defined at 591 in isisd/isis_zebra.c.'>isis_zebra_init</a> ();
+<a id='L345' name='L345'></a>
+<a id='L346' name='L346'></a>  <a href='../S/264.html#L220' title='Defined at 220 in lib/command.c.'>sort_node</a> ();
+<a id='L347' name='L347'></a>
+<a id='L348' name='L348'></a>  <em class='comment'>/* parse config file */</em>
+<a id='L349' name='L349'></a>  <em class='comment'>/* this is needed three times! because we have interfaces before the areas */</em>
+<a id='L350' name='L350'></a>  <a href='../S/200.html#L2325' title='Defined at 2325 in lib/vty.c.'>vty_read_config</a> (config_file, config_default);
+<a id='L351' name='L351'></a>
+<a id='L352' name='L352'></a>  <em class='comment'>/* Start execution only if not in dry-run mode */</em>
+<a id='L353' name='L353'></a>  <strong class='reserved'>if</strong> (dryrun)
+<a id='L354' name='L354'></a>    <strong class='reserved'>return</strong>(0);
+<a id='L355' name='L355'></a>  
+<a id='L356' name='L356'></a>  <em class='comment'>/* demonize */</em>
+<a id='L357' name='L357'></a>  <strong class='reserved'>if</strong> (daemon_mode)
+<a id='L358' name='L358'></a>    <a href='../D/6258.html' title='Multiple defined in 2 places.'>daemon</a> (0, 0);
+<a id='L359' name='L359'></a>
+<a id='L360' name='L360'></a>  <em class='comment'>/* Process ID file creation. */</em>
+<a id='L361' name='L361'></a>  <strong class='reserved'>if</strong> (pid_file[0] != '\0')
+<a id='L362' name='L362'></a>    <a href='../D/9626.html' title='Multiple defined in 2 places.'>pid_output</a> (pid_file);
+<a id='L363' name='L363'></a>
+<a id='L364' name='L364'></a>  <em class='comment'>/* Make isis vty socket. */</em>
+<a id='L365' name='L365'></a>  <a href='../S/200.html#L2135' title='Defined at 2135 in lib/vty.c.'>vty_serv_sock</a> (vty_addr, vty_port, <a href='../S/665.html#L603' title='Defined at 603 in config.h.'>ISIS_VTYSH_PATH</a>);
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a>  <em class='comment'>/* Print banner. */</em>
+<a id='L368' name='L368'></a>  zlog_notice ("Quagga-ISISd %s starting: vty@%d", <a href='../S/237.html#L40' title='Defined at 40 in lib/version.h.'>QUAGGA_VERSION</a>, vty_port);
+<a id='L369' name='L369'></a>
+<a id='L370' name='L370'></a>  <em class='comment'>/* Start finite state machine. */</em>
+<a id='L371' name='L371'></a>  <strong class='reserved'>while</strong> (<a href='../S/208.html#L1050' title='Defined at 1050 in lib/thread.c.'>thread_fetch</a> (master, &amp;<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>))
+<a id='L372' name='L372'></a>    <a href='../S/208.html#L1233' title='Defined at 1233 in lib/thread.c.'>thread_call</a> (&amp;<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L373' name='L373'></a>
+<a id='L374' name='L374'></a>  <em class='comment'>/* Not reached. */</em>
+<a id='L375' name='L375'></a>  exit (0);
+<a id='L376' name='L376'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L128'>[^]</a><a href='#L231'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

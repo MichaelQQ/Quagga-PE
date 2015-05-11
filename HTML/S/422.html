@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/impl_ifmgr.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/impl_ifmgr.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L9'>[^]</a><a href='#L62'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L9' title='Defined at 9.'>mpls_ifmgr_open</a></li>
+<li><a href='#L16' title='Defined at 16.'>mpls_ifmgr_close</a></li>
+<li><a href='#L21' title='Defined at 21.'>mpls_ifmgr_get_mtu</a></li>
+<li><a href='#L28' title='Defined at 28.'>mpls_ifmgr_get_name</a></li>
+<li><a href='#L35' title='Defined at 35.'>mpls_ifmgr_getnext_address</a></li>
+<li><a href='#L62' title='Defined at 62.'>mpls_ifmgr_getfirst_address</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L3' name='L3'></a>
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='389.html'>ldp.h</a>"
+<a id='L5' name='L5'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L6' name='L6'></a>
+<a id='L7' name='L7'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> opened = 0;
+<a id='L8' name='L8'></a>
+<a id='L9' name='L9'></a><a href='../S/448.html#L37' title='Defined at 37 in ldpd/mpls_handle_type.h.'>mpls_ifmgr_handle</a> <a href='../R/7094.html' title='Multiple referred from 2 places.'>mpls_ifmgr_open</a>(<a href='../S/448.html#L29' title='Defined at 29 in ldpd/mpls_handle_type.h.'>mpls_instance_handle</a> handle,
+<a id='L10' name='L10'></a>  <a href='../S/383.html#L240' title='Defined at 240 in ldpd/mpls_struct.h.'>mpls_cfg_handle</a> cfg)
+<a id='L11' name='L11'></a><em class='brace'>{</em>
+<a id='L12' name='L12'></a>  opened = 1;
+<a id='L13' name='L13'></a>  <strong class='reserved'>return</strong> 0xdeadbeef;
+<a id='L14' name='L14'></a><em class='brace'>}</em>
+<a id='L15' name='L15'></a>
+<a id='L16' name='L16'></a><strong class='reserved'>void</strong> <a href='../R/7087.html' title='Multiple referred from 2 places.'>mpls_ifmgr_close</a>(<a href='../S/448.html#L37' title='Defined at 37 in ldpd/mpls_handle_type.h.'>mpls_ifmgr_handle</a> ifmgr_handle)
+<a id='L17' name='L17'></a><em class='brace'>{</em>
+<a id='L18' name='L18'></a>  opened = 0;
+<a id='L19' name='L19'></a><em class='brace'>}</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/351.html#L33' title='Referred from 33 in ldpd/mpls_ifmgr_impl.h.'>mpls_ifmgr_get_mtu</a>(<a href='../S/448.html#L37' title='Defined at 37 in ldpd/mpls_handle_type.h.'>mpls_ifmgr_handle</a> ifmgr_handle,
+<a id='L22' name='L22'></a>  <a href='../S/448.html#L41' title='Defined at 41 in ldpd/mpls_handle_type.h.'>mpls_if_handle</a> if_handle, <strong class='reserved'>int</strong> *mtu)
+<a id='L23' name='L23'></a><em class='brace'>{</em>
+<a id='L24' name='L24'></a>  *mtu = if_handle-&gt;mtu;
+<a id='L25' name='L25'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L26' name='L26'></a><em class='brace'>}</em>
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/351.html#L41' title='Referred from 41 in ldpd/mpls_ifmgr_impl.h.'>mpls_ifmgr_get_name</a>(<strong class='reserved'>const</strong> <a href='../S/448.html#L37' title='Defined at 37 in ldpd/mpls_handle_type.h.'>mpls_ifmgr_handle</a> handle,
+<a id='L29' name='L29'></a>  <strong class='reserved'>const</strong> <a href='../S/448.html#L41' title='Defined at 41 in ldpd/mpls_handle_type.h.'>mpls_if_handle</a> if_handle, <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>int</strong> len)
+<a id='L30' name='L30'></a><em class='brace'>{</em>
+<a id='L31' name='L31'></a>  strncpy(<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, if_handle-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, len);
+<a id='L32' name='L32'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L33' name='L33'></a><em class='brace'>}</em>
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/7091.html' title='Multiple referred from 2 places.'>mpls_ifmgr_getnext_address</a>(<a href='../S/448.html#L37' title='Defined at 37 in ldpd/mpls_handle_type.h.'>mpls_ifmgr_handle</a> ifmgr_handle,
+<a id='L36' name='L36'></a>  <a href='../S/448.html#L41' title='Defined at 41 in ldpd/mpls_handle_type.h.'>mpls_if_handle</a> *handle, <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> *addr)
+<a id='L37' name='L37'></a><em class='brace'>{</em>
+<a id='L38' name='L38'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *ifc;
+<a id='L39' name='L39'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L40' name='L40'></a>  <strong class='reserved'>int</strong> next = 0;
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a>  <strong class='reserved'>while</strong> ((*handle)) <em class='brace'>{</em>
+<a id='L43' name='L43'></a>    <strong class='reserved'>for</strong> (node = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a>((*handle)-&gt;<a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a>); node; <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a>(node)) <em class='brace'>{</em>
+<a id='L44' name='L44'></a>      ifc = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a>(node);
+<a id='L45' name='L45'></a>      <strong class='reserved'>if</strong> (ifc-&gt;address-&gt;family == AF_INET &amp;&amp;
+<a id='L46' name='L46'></a>        ifc-&gt;address-&gt;u.prefix4.s_addr != htonl(<a href='../S/191.html#L493' title='Defined at 493 in lib/zebra.h.'>INADDR_LOOPBACK</a>)) <em class='brace'>{</em>
+<a id='L47' name='L47'></a>        <strong class='reserved'>if</strong> (next) <em class='brace'>{</em>
+<a id='L48' name='L48'></a>          addr-&gt;type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L49' name='L49'></a>          addr-&gt;u.ipv4 = ntohl(ifc-&gt;address-&gt;u.prefix4.s_addr);
+<a id='L50' name='L50'></a>          <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L51' name='L51'></a>        <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (addr-&gt;u.ipv4 == ntohl(ifc-&gt;address-&gt;u.prefix4.s_addr)) <em class='brace'>{</em>
+<a id='L52' name='L52'></a>          next = 1;
+<a id='L53' name='L53'></a>        <em class='brace'>}</em>
+<a id='L54' name='L54'></a>      <em class='brace'>}</em>
+<a id='L55' name='L55'></a>    <em class='brace'>}</em>
+<a id='L56' name='L56'></a>    (*handle) = <a href='../S/240.html#L779' title='Defined at 779 in lib/if.c.'>if_getnext</a>(*handle);
+<a id='L57' name='L57'></a>    next = 1;
+<a id='L58' name='L58'></a>  <em class='brace'>}</em>
+<a id='L59' name='L59'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L25' title='Defined at 25 in ldpd/mpls_struct.h.'>MPLS_END_OF_LIST</a>;
+<a id='L60' name='L60'></a><em class='brace'>}</em>
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a><a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../R/7090.html' title='Multiple referred from 2 places.'>mpls_ifmgr_getfirst_address</a>(<a href='../S/448.html#L37' title='Defined at 37 in ldpd/mpls_handle_type.h.'>mpls_ifmgr_handle</a> ifmgr_handle,
+<a id='L63' name='L63'></a>  <a href='../S/448.html#L41' title='Defined at 41 in ldpd/mpls_handle_type.h.'>mpls_if_handle</a> *handle, <a href='../D/7919.html' title='Multiple defined in 2 places.'>mpls_inet_addr</a> *addr)
+<a id='L64' name='L64'></a><em class='brace'>{</em>
+<a id='L65' name='L65'></a>  <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *ifc;
+<a id='L66' name='L66'></a>  <strong class='reserved'>struct</strong> <a href='../S/262.html#L28' title='Defined at 28 in lib/linklist.h.'>listnode</a> *node;
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>  (*handle) = <a href='../S/240.html#L773' title='Defined at 773 in lib/if.c.'>if_getfirst</a>();
+<a id='L69' name='L69'></a>  <strong class='reserved'>while</strong> ((*handle)) <em class='brace'>{</em>
+<a id='L70' name='L70'></a>    <strong class='reserved'>for</strong> (node = <a href='../S/262.html#L58' title='Defined at 58 in lib/linklist.h.'>listhead</a>((*handle)-&gt;<a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a>); node; <a href='../S/262.html#L57' title='Defined at 57 in lib/linklist.h.'>listnextnode</a>(node)) <em class='brace'>{</em>
+<a id='L71' name='L71'></a>      ifc = <a href='../S/262.html#L62' title='Defined at 62 in lib/linklist.h.'>listgetdata</a>(node);
+<a id='L72' name='L72'></a>      <strong class='reserved'>if</strong> (ifc-&gt;address-&gt;family == AF_INET &amp;&amp;
+<a id='L73' name='L73'></a>        ifc-&gt;address-&gt;u.prefix4.s_addr != htonl(<a href='../S/191.html#L493' title='Defined at 493 in lib/zebra.h.'>INADDR_LOOPBACK</a>)) <em class='brace'>{</em>
+<a id='L74' name='L74'></a>        addr-&gt;type = <a href='../S/383.html#L139' title='Defined at 139 in ldpd/mpls_struct.h.'>MPLS_FAMILY_IPV4</a>;
+<a id='L75' name='L75'></a>        addr-&gt;u.ipv4 = ntohl(ifc-&gt;address-&gt;u.prefix4.s_addr);
+<a id='L76' name='L76'></a>        <strong class='reserved'>return</strong> <a href='../S/383.html#L20' title='Defined at 20 in ldpd/mpls_struct.h.'>MPLS_SUCCESS</a>;
+<a id='L77' name='L77'></a>      <em class='brace'>}</em>
+<a id='L78' name='L78'></a>    <em class='brace'>}</em>
+<a id='L79' name='L79'></a>    (*handle) = <a href='../S/240.html#L779' title='Defined at 779 in lib/if.c.'>if_getnext</a>(*handle);
+<a id='L80' name='L80'></a>  <em class='brace'>}</em>
+<a id='L81' name='L81'></a>  <strong class='reserved'>return</strong> <a href='../S/383.html#L25' title='Defined at 25 in ldpd/mpls_struct.h.'>MPLS_END_OF_LIST</a>;
+<a id='L82' name='L82'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L9'>[^]</a><a href='#L62'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

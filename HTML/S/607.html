@@ -1,0 +1,684 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_damp.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_damp.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L48'>[^]</a><a href='#L617'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L48' title='Defined at 48.'>bgp_reuse_index</a></li>
+<li><a href='#L65' title='Defined at 65.'>bgp_reuse_list_add</a></li>
+<li><a href='#L80' title='Defined at 80.'>bgp_reuse_list_delete</a></li>
+<li><a href='#L92' title='Defined at 92.'>bgp_damp_decay</a></li>
+<li><a href='#L110' title='Defined at 110.'>bgp_reuse_timer</a></li>
+<li><a href='#L177' title='Defined at 177.'>bgp_damp_withdraw</a></li>
+<li><a href='#L261' title='Defined at 261.'>bgp_damp_update</a></li>
+<li><a href='#L302' title='Defined at 302.'>bgp_damp_scan</a></li>
+<li><a href='#L350' title='Defined at 350.'>bgp_damp_info_free</a></li>
+<li><a href='#L374' title='Defined at 374.'>bgp_damp_parameter_set</a></li>
+<li><a href='#L431' title='Defined at 431.'>bgp_damp_enable</a></li>
+<li><a href='#L456' title='Defined at 456.'>bgp_damp_config_clean</a></li>
+<li><a href='#L470' title='Defined at 470.'>bgp_damp_info_clean</a></li>
+<li><a href='#L499' title='Defined at 499.'>bgp_damp_disable</a></li>
+<li><a href='#L521' title='Defined at 521.'>bgp_config_write_damp</a></li>
+<li><a href='#L545' title='Defined at 545.'>bgp_get_reuse_time</a></li>
+<li><a href='#L581' title='Defined at 581.'>bgp_damp_info_vty</a></li>
+<li><a href='#L617' title='Defined at 617.'>bgp_damp_reuse_time_vty</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP flap dampening</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 2001 IP Infusion Inc.</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;math.h&gt;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> "<a href='651.html'>bgpd/bgp_damp.h</a>"
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> "<a href='646.html'>bgpd/bgp_table.h</a>"
+<a id='L33' name='L33'></a><em class='sharp'>#include</em> "<a href='609.html'>bgpd/bgp_route.h</a>"
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='642.html'>bgpd/bgp_attr.h</a>" 
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='632.html'>bgpd/bgp_advertise.h</a>"
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a><em class='comment'>/* Global variable to access damping configuration */</em>
+<a id='L38' name='L38'></a><strong class='reserved'>struct</strong> <a href='../S/651.html#L66' title='Defined at 66 in bgpd/bgp_damp.h.'>bgp_damp_config</a> bgp_damp_cfg;
+<a id='L39' name='L39'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/651.html#L66' title='Defined at 66 in bgpd/bgp_damp.h.'>bgp_damp_config</a> *damp = &amp;bgp_damp_cfg;
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><em class='comment'>/* Utility macro to add and delete BGP dampening information to no</em>
+<a id='L42' name='L42'></a><em class='comment'>   used list.  */</em>
+<a id='L43' name='L43'></a><em class='sharp'>#define</em> <a href='../R/206.html' title='Multiple referred from 4 places.'>BGP_DAMP_LIST_ADD</a>(N,<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)  <a href='../S/632.html#L106' title='Defined at 106 in bgpd/bgp_advertise.h.'>BGP_INFO_ADD</a>(N,<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>,no_reuse_list)
+<a id='L44' name='L44'></a><em class='sharp'>#define</em> <a href='../R/207.html' title='Multiple referred from 2 places.'>BGP_DAMP_LIST_DEL</a>(N,<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>)  <a href='../S/632.html#L115' title='Defined at 115 in bgpd/bgp_advertise.h.'>BGP_INFO_DEL</a>(N,<a href='../D/1.html' title='Multiple defined in 2 places.'>A</a>,no_reuse_list)
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a><em class='comment'>/* Calculate reuse list index by penalty value.  */</em>
+<a id='L47' name='L47'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L48' name='L48'></a><a href='../S/607.html#L69' title='Referred from 69 in bgpd/bgp_damp.c.'>bgp_reuse_index</a> (<strong class='reserved'>int</strong> penalty)
+<a id='L49' name='L49'></a><em class='brace'>{</em>
+<a id='L50' name='L50'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L51' name='L51'></a>  <strong class='reserved'>int</strong> index;
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a>  i = (<strong class='reserved'>int</strong>)(((<strong class='reserved'>double</strong>) penalty / damp-&gt;reuse_limit - 1.0) * damp-&gt;scale_factor);
+<a id='L54' name='L54'></a>  
+<a id='L55' name='L55'></a>  <strong class='reserved'>if</strong> ( i &gt;= damp-&gt;reuse_index_size )
+<a id='L56' name='L56'></a>    i = damp-&gt;reuse_index_size - 1;
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>  index = damp-&gt;reuse_index[i] - damp-&gt;reuse_index[0];
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a>  <strong class='reserved'>return</strong> (damp-&gt;reuse_offset + index) % damp-&gt;reuse_list_size;  
+<a id='L61' name='L61'></a><em class='brace'>}</em>
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='comment'>/* Add BGP dampening information to reuse list.  */</em>
+<a id='L64' name='L64'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> 
+<a id='L65' name='L65'></a><a href='../R/5026.html' title='Multiple referred from 3 places.'>bgp_reuse_list_add</a> (<strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi)
+<a id='L66' name='L66'></a><em class='brace'>{</em>
+<a id='L67' name='L67'></a>  <strong class='reserved'>int</strong> index;
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a>  index = bdi-&gt;index = <a href='../S/607.html#L48' title='Defined at 48 in bgpd/bgp_damp.c.'>bgp_reuse_index</a> (bdi-&gt;penalty);
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a>  bdi-&gt;prev = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L72' name='L72'></a>  bdi-&gt;next = damp-&gt;reuse_list[index];
+<a id='L73' name='L73'></a>  <strong class='reserved'>if</strong> (damp-&gt;reuse_list[index])
+<a id='L74' name='L74'></a>    damp-&gt;reuse_list[index]-&gt;prev = bdi;
+<a id='L75' name='L75'></a>  damp-&gt;reuse_list[index] = bdi;
+<a id='L76' name='L76'></a><em class='brace'>}</em>
+<a id='L77' name='L77'></a>
+<a id='L78' name='L78'></a><em class='comment'>/* Delete BGP dampening information from reuse list.  */</em>
+<a id='L79' name='L79'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L80' name='L80'></a><a href='../R/5027.html' title='Multiple referred from 4 places.'>bgp_reuse_list_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi)
+<a id='L81' name='L81'></a><em class='brace'>{</em>
+<a id='L82' name='L82'></a>  <strong class='reserved'>if</strong> (bdi-&gt;next)
+<a id='L83' name='L83'></a>    bdi-&gt;next-&gt;prev = bdi-&gt;prev;
+<a id='L84' name='L84'></a>  <strong class='reserved'>if</strong> (bdi-&gt;prev)
+<a id='L85' name='L85'></a>    bdi-&gt;prev-&gt;next = bdi-&gt;next;
+<a id='L86' name='L86'></a>  <strong class='reserved'>else</strong>
+<a id='L87' name='L87'></a>    damp-&gt;reuse_list[bdi-&gt;index] = bdi-&gt;next;
+<a id='L88' name='L88'></a><em class='brace'>}</em>   
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a><em class='comment'>/* Return decayed penalty value.  */</em>
+<a id='L91' name='L91'></a><strong class='reserved'>int</strong> 
+<a id='L92' name='L92'></a><a href='../R/4806.html' title='Multiple referred from 7 places.'>bgp_damp_decay</a> (time_t tdiff, <strong class='reserved'>int</strong> penalty)
+<a id='L93' name='L93'></a><em class='brace'>{</em>
+<a id='L94' name='L94'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  i = (<strong class='reserved'>int</strong>) ((<strong class='reserved'>double</strong>) tdiff / <a href='../S/651.html#L121' title='Defined at 121 in bgpd/bgp_damp.h.'>DELTA_T</a>);
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a>  <strong class='reserved'>if</strong> (i == 0)
+<a id='L99' name='L99'></a>    <strong class='reserved'>return</strong> penalty; 
+<a id='L100' name='L100'></a>  
+<a id='L101' name='L101'></a>  <strong class='reserved'>if</strong> (i &gt;= damp-&gt;decay_array_size)
+<a id='L102' name='L102'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>  <strong class='reserved'>return</strong> (<strong class='reserved'>int</strong>) (penalty * damp-&gt;decay_array[i]);
+<a id='L105' name='L105'></a><em class='brace'>}</em>
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><em class='comment'>/* Handler of reuse timer event.  Each route in the current reuse-list</em>
+<a id='L108' name='L108'></a><em class='comment'>   is evaluated.  RFC2439 Section 4.8.7.  */</em>
+<a id='L109' name='L109'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L110' name='L110'></a><a href='../R/5028.html' title='Multiple referred from 2 places.'>bgp_reuse_timer</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t)
+<a id='L111' name='L111'></a><em class='brace'>{</em>
+<a id='L112' name='L112'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi;
+<a id='L113' name='L113'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *next;
+<a id='L114' name='L114'></a>  time_t t_now, t_diff;
+<a id='L115' name='L115'></a>    
+<a id='L116' name='L116'></a>  damp-&gt;t_reuse = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L117' name='L117'></a>  damp-&gt;t_reuse =
+<a id='L118' name='L118'></a>    <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/607.html#L110' title='Defined at 110 in bgpd/bgp_damp.c.'>bgp_reuse_timer</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/651.html#L118' title='Defined at 118 in bgpd/bgp_damp.h.'>DELTA_REUSE</a>);
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a>  t_now = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a>  <em class='comment'>/* 1.  save a pointer to the current zeroth queue head and zero the</em>
+<a id='L123' name='L123'></a><em class='comment'>     list head entry.  */</em>
+<a id='L124' name='L124'></a>  bdi = damp-&gt;reuse_list[damp-&gt;reuse_offset];
+<a id='L125' name='L125'></a>  damp-&gt;reuse_list[damp-&gt;reuse_offset] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L126' name='L126'></a>
+<a id='L127' name='L127'></a>  <em class='comment'>/* 2.  set offset = modulo reuse-list-size ( offset + 1 ), thereby</em>
+<a id='L128' name='L128'></a><em class='comment'>     rotating the circular queue of list-heads.  */</em>
+<a id='L129' name='L129'></a>  damp-&gt;reuse_offset = (damp-&gt;reuse_offset + 1) % damp-&gt;reuse_list_size;
+<a id='L130' name='L130'></a>
+<a id='L131' name='L131'></a>  <em class='comment'>/* 3. if ( the saved list head pointer is non-empty ) */</em>
+<a id='L132' name='L132'></a>  <strong class='reserved'>for</strong> (; bdi; bdi = next)
+<a id='L133' name='L133'></a>    <em class='brace'>{</em>
+<a id='L134' name='L134'></a>      <strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> = bdi-&gt;binfo-&gt;<a href='../S/608.html#L274' title='Defined at 274 in bgpd/bgpd.h.'>peer</a>-&gt;<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>;
+<a id='L135' name='L135'></a>      
+<a id='L136' name='L136'></a>      next = bdi-&gt;next;
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>      <em class='comment'>/* Set t-diff = t-now - t-updated.  */</em>
+<a id='L139' name='L139'></a>      t_diff = t_now - bdi-&gt;t_updated;
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a>      <em class='comment'>/* Set figure-of-merit = figure-of-merit * decay-array-ok [t-diff] */</em>
+<a id='L142' name='L142'></a>      bdi-&gt;penalty = <a href='../S/607.html#L92' title='Defined at 92 in bgpd/bgp_damp.c.'>bgp_damp_decay</a> (t_diff, bdi-&gt;penalty);   
+<a id='L143' name='L143'></a>
+<a id='L144' name='L144'></a>      <em class='comment'>/* Set t-updated = t-now.  */</em>
+<a id='L145' name='L145'></a>      bdi-&gt;t_updated = t_now;
+<a id='L146' name='L146'></a>
+<a id='L147' name='L147'></a>      <em class='comment'>/* if (figure-of-merit &lt; reuse).  */</em>
+<a id='L148' name='L148'></a>      <strong class='reserved'>if</strong> (bdi-&gt;penalty &lt; damp-&gt;reuse_limit)
+<a id='L149' name='L149'></a>        <em class='brace'>{</em>
+<a id='L150' name='L150'></a>          <em class='comment'>/* Reuse the route.  */</em>
+<a id='L151' name='L151'></a>          <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (bdi-&gt;rn, bdi-&gt;binfo, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>);
+<a id='L152' name='L152'></a>          bdi-&gt;suppress_time = 0;
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a>          <strong class='reserved'>if</strong> (bdi-&gt;lastrecord == <a href='../S/651.html#L58' title='Defined at 58 in bgpd/bgp_damp.h.'>BGP_RECORD_UPDATE</a>)
+<a id='L155' name='L155'></a>            <em class='brace'>{</em>
+<a id='L156' name='L156'></a>              <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (bdi-&gt;rn, bdi-&gt;binfo, <a href='../S/609.html#L74' title='Defined at 74 in bgpd/bgp_route.h.'>BGP_INFO_HISTORY</a>);
+<a id='L157' name='L157'></a>              <a href='../S/620.html#L4680' title='Defined at 4680 in bgpd/bgp_route.c.'>bgp_aggregate_increment</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, &amp;bdi-&gt;rn-&gt;p, bdi-&gt;binfo,
+<a id='L158' name='L158'></a>                                       bdi-&gt;afi, bdi-&gt;safi);   
+<a id='L159' name='L159'></a>              <a href='../S/620.html#L1663' title='Defined at 1663 in bgpd/bgp_route.c.'>bgp_process</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, bdi-&gt;rn, bdi-&gt;afi, bdi-&gt;safi);
+<a id='L160' name='L160'></a>            <em class='brace'>}</em>
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a>          <strong class='reserved'>if</strong> (bdi-&gt;penalty &lt;= damp-&gt;reuse_limit / 2.0)
+<a id='L163' name='L163'></a>            <a href='../S/607.html#L350' title='Defined at 350 in bgpd/bgp_damp.c.'>bgp_damp_info_free</a> (bdi, 1);
+<a id='L164' name='L164'></a>          <strong class='reserved'>else</strong>
+<a id='L165' name='L165'></a>            <a href='../S/607.html#L43' title='Defined at 43 in bgpd/bgp_damp.c.'>BGP_DAMP_LIST_ADD</a> (damp, bdi);
+<a id='L166' name='L166'></a>        <em class='brace'>}</em>
+<a id='L167' name='L167'></a>      <strong class='reserved'>else</strong>
+<a id='L168' name='L168'></a>        <em class='comment'>/* Re-insert into another list (See RFC2439 Section 4.8.6).  */</em>
+<a id='L169' name='L169'></a>        <a href='../S/607.html#L65' title='Defined at 65 in bgpd/bgp_damp.c.'>bgp_reuse_list_add</a> (bdi);
+<a id='L170' name='L170'></a>    <em class='brace'>}</em>
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L173' name='L173'></a><em class='brace'>}</em>
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a><em class='comment'>/* A route becomes unreachable (RFC2439 Section 4.8.2).  */</em>
+<a id='L176' name='L176'></a><strong class='reserved'>int</strong>
+<a id='L177' name='L177'></a><a href='../R/4817.html' title='Multiple referred from 3 places.'>bgp_damp_withdraw</a> (<strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo, <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn,
+<a id='L178' name='L178'></a>                   <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi, <strong class='reserved'>int</strong> attr_change)
+<a id='L179' name='L179'></a><em class='brace'>{</em>
+<a id='L180' name='L180'></a>  time_t t_now;
+<a id='L181' name='L181'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L182' name='L182'></a>  <strong class='reserved'>double</strong> last_penalty = 0;
+<a id='L183' name='L183'></a>  
+<a id='L184' name='L184'></a>  t_now = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a>  <em class='comment'>/* Processing Unreachable Messages.  */</em>
+<a id='L187' name='L187'></a>  <strong class='reserved'>if</strong> (binfo-&gt;extra)
+<a id='L188' name='L188'></a>    bdi = binfo-&gt;extra-&gt;damp_info;
+<a id='L189' name='L189'></a>  
+<a id='L190' name='L190'></a>  <strong class='reserved'>if</strong> (bdi == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L191' name='L191'></a>    <em class='brace'>{</em>
+<a id='L192' name='L192'></a>      <em class='comment'>/* If there is no previous stability history. */</em>
+<a id='L193' name='L193'></a>
+<a id='L194' name='L194'></a>      <em class='comment'>/* RFC2439 said:</em>
+<a id='L195' name='L195'></a><em class='comment'>         1. allocate a damping structure.</em>
+<a id='L196' name='L196'></a><em class='comment'>         2. set figure-of-merit = 1.</em>
+<a id='L197' name='L197'></a><em class='comment'>         3. withdraw the route.  */</em>
+<a id='L198' name='L198'></a>
+<a id='L199' name='L199'></a>      bdi =  <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_DAMP_INFO, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a>));
+<a id='L200' name='L200'></a>      bdi-&gt;binfo = binfo;
+<a id='L201' name='L201'></a>      bdi-&gt;rn = rn;
+<a id='L202' name='L202'></a>      bdi-&gt;penalty = (attr_change ? <a href='../S/651.html#L123' title='Defined at 123 in bgpd/bgp_damp.h.'>DEFAULT_PENALTY</a> / 2 : <a href='../S/651.html#L123' title='Defined at 123 in bgpd/bgp_damp.h.'>DEFAULT_PENALTY</a>);
+<a id='L203' name='L203'></a>      bdi-&gt;flap = 1;
+<a id='L204' name='L204'></a>      bdi-&gt;start_time = t_now;
+<a id='L205' name='L205'></a>      bdi-&gt;suppress_time = 0;
+<a id='L206' name='L206'></a>      bdi-&gt;index = -1;
+<a id='L207' name='L207'></a>      bdi-&gt;afi = afi;
+<a id='L208' name='L208'></a>      bdi-&gt;safi = safi;
+<a id='L209' name='L209'></a>      (<a href='../S/620.html#L122' title='Defined at 122 in bgpd/bgp_route.c.'>bgp_info_extra_get</a> (binfo))-&gt;damp_info = bdi;
+<a id='L210' name='L210'></a>      <a href='../S/607.html#L43' title='Defined at 43 in bgpd/bgp_damp.c.'>BGP_DAMP_LIST_ADD</a> (damp, bdi);
+<a id='L211' name='L211'></a>    <em class='brace'>}</em>
+<a id='L212' name='L212'></a>  <strong class='reserved'>else</strong>
+<a id='L213' name='L213'></a>    <em class='brace'>{</em>
+<a id='L214' name='L214'></a>      last_penalty = bdi-&gt;penalty;
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a>      <em class='comment'>/* 1. Set t-diff = t-now - t-updated.  */</em>
+<a id='L217' name='L217'></a>      bdi-&gt;penalty = 
+<a id='L218' name='L218'></a>        (<a href='../S/607.html#L92' title='Defined at 92 in bgpd/bgp_damp.c.'>bgp_damp_decay</a> (t_now - bdi-&gt;t_updated, bdi-&gt;penalty) 
+<a id='L219' name='L219'></a>         + (attr_change ? <a href='../S/651.html#L123' title='Defined at 123 in bgpd/bgp_damp.h.'>DEFAULT_PENALTY</a> / 2 : <a href='../S/651.html#L123' title='Defined at 123 in bgpd/bgp_damp.h.'>DEFAULT_PENALTY</a>));
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a>      <strong class='reserved'>if</strong> (bdi-&gt;penalty &gt; damp-&gt;ceiling)
+<a id='L222' name='L222'></a>        bdi-&gt;penalty = damp-&gt;ceiling;
+<a id='L223' name='L223'></a>
+<a id='L224' name='L224'></a>      bdi-&gt;flap++;
+<a id='L225' name='L225'></a>    <em class='brace'>}</em>
+<a id='L226' name='L226'></a>  
+<a id='L227' name='L227'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> ((rn == bdi-&gt;rn) &amp;&amp; (binfo == bdi-&gt;binfo));
+<a id='L228' name='L228'></a>  
+<a id='L229' name='L229'></a>  bdi-&gt;lastrecord = <a href='../S/651.html#L59' title='Defined at 59 in bgpd/bgp_damp.h.'>BGP_RECORD_WITHDRAW</a>;
+<a id='L230' name='L230'></a>  bdi-&gt;t_updated = t_now;
+<a id='L231' name='L231'></a>
+<a id='L232' name='L232'></a>  <em class='comment'>/* Make this route as historical status.  */</em>
+<a id='L233' name='L233'></a>  <a href='../S/620.html#L285' title='Defined at 285 in bgpd/bgp_route.c.'>bgp_info_set_flag</a> (rn, binfo, <a href='../S/609.html#L74' title='Defined at 74 in bgpd/bgp_route.h.'>BGP_INFO_HISTORY</a>);
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a>  <em class='comment'>/* Remove the route from a reuse list if it is on one.  */</em>
+<a id='L236' name='L236'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (bdi-&gt;binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>))
+<a id='L237' name='L237'></a>    <em class='brace'>{</em>
+<a id='L238' name='L238'></a>      <em class='comment'>/* If decay rate isn't equal to 0, reinsert brn. */</em>  
+<a id='L239' name='L239'></a>      <strong class='reserved'>if</strong> (bdi-&gt;penalty != last_penalty)
+<a id='L240' name='L240'></a>        <em class='brace'>{</em>
+<a id='L241' name='L241'></a>          <a href='../S/607.html#L80' title='Defined at 80 in bgpd/bgp_damp.c.'>bgp_reuse_list_delete</a> (bdi);
+<a id='L242' name='L242'></a>          <a href='../S/607.html#L65' title='Defined at 65 in bgpd/bgp_damp.c.'>bgp_reuse_list_add</a> (bdi);  
+<a id='L243' name='L243'></a>        <em class='brace'>}</em>
+<a id='L244' name='L244'></a>      <strong class='reserved'>return</strong> <a href='../S/651.html#L115' title='Defined at 115 in bgpd/bgp_damp.h.'>BGP_DAMP_SUPPRESSED</a>; 
+<a id='L245' name='L245'></a>    <em class='brace'>}</em>
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a>  <em class='comment'>/* If not suppressed before, do annonunce this withdraw and</em>
+<a id='L248' name='L248'></a><em class='comment'>     insert into reuse_list.  */</em>
+<a id='L249' name='L249'></a>  <strong class='reserved'>if</strong> (bdi-&gt;penalty &gt;= damp-&gt;suppress_value)
+<a id='L250' name='L250'></a>    <em class='brace'>{</em>
+<a id='L251' name='L251'></a>      <a href='../S/620.html#L285' title='Defined at 285 in bgpd/bgp_route.c.'>bgp_info_set_flag</a> (rn, binfo, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>);
+<a id='L252' name='L252'></a>      bdi-&gt;suppress_time = t_now;
+<a id='L253' name='L253'></a>      <a href='../S/607.html#L44' title='Defined at 44 in bgpd/bgp_damp.c.'>BGP_DAMP_LIST_DEL</a> (damp, bdi);
+<a id='L254' name='L254'></a>      <a href='../S/607.html#L65' title='Defined at 65 in bgpd/bgp_damp.c.'>bgp_reuse_list_add</a> (bdi);
+<a id='L255' name='L255'></a>    <em class='brace'>}</em>
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a>  <strong class='reserved'>return</strong> <a href='../S/651.html#L114' title='Defined at 114 in bgpd/bgp_damp.h.'>BGP_DAMP_USED</a>;
+<a id='L258' name='L258'></a><em class='brace'>}</em>
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a><strong class='reserved'>int</strong>
+<a id='L261' name='L261'></a><a href='../R/4816.html' title='Multiple referred from 3 places.'>bgp_damp_update</a> (<strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo, <strong class='reserved'>struct</strong> <a href='../S/646.html#L48' title='Defined at 48 in bgpd/bgp_table.h.'>bgp_node</a> *rn, 
+<a id='L262' name='L262'></a>                 <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi)
+<a id='L263' name='L263'></a><em class='brace'>{</em>
+<a id='L264' name='L264'></a>  time_t t_now;
+<a id='L265' name='L265'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi;
+<a id='L266' name='L266'></a>  <strong class='reserved'>int</strong> status;
+<a id='L267' name='L267'></a>
+<a id='L268' name='L268'></a>  <strong class='reserved'>if</strong> (!binfo-&gt;extra || !((bdi = binfo-&gt;extra-&gt;damp_info)))
+<a id='L269' name='L269'></a>    <strong class='reserved'>return</strong> <a href='../S/651.html#L114' title='Defined at 114 in bgpd/bgp_damp.h.'>BGP_DAMP_USED</a>;
+<a id='L270' name='L270'></a>
+<a id='L271' name='L271'></a>  t_now = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L272' name='L272'></a>  <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (rn, binfo, <a href='../S/609.html#L74' title='Defined at 74 in bgpd/bgp_route.h.'>BGP_INFO_HISTORY</a>);
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a>  bdi-&gt;lastrecord = <a href='../S/651.html#L58' title='Defined at 58 in bgpd/bgp_damp.h.'>BGP_RECORD_UPDATE</a>;
+<a id='L275' name='L275'></a>  bdi-&gt;penalty = <a href='../S/607.html#L92' title='Defined at 92 in bgpd/bgp_damp.c.'>bgp_damp_decay</a> (t_now - bdi-&gt;t_updated, bdi-&gt;penalty);
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a>  <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (bdi-&gt;binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>)
+<a id='L278' name='L278'></a>      &amp;&amp; (bdi-&gt;penalty &lt; damp-&gt;suppress_value))
+<a id='L279' name='L279'></a>    status = <a href='../S/651.html#L114' title='Defined at 114 in bgpd/bgp_damp.h.'>BGP_DAMP_USED</a>;
+<a id='L280' name='L280'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (bdi-&gt;binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>)
+<a id='L281' name='L281'></a>           &amp;&amp; (bdi-&gt;penalty &lt; damp-&gt;reuse_limit) )
+<a id='L282' name='L282'></a>    <em class='brace'>{</em>
+<a id='L283' name='L283'></a>      <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (rn, binfo, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>);
+<a id='L284' name='L284'></a>      <a href='../S/607.html#L80' title='Defined at 80 in bgpd/bgp_damp.c.'>bgp_reuse_list_delete</a> (bdi);
+<a id='L285' name='L285'></a>      <a href='../S/607.html#L43' title='Defined at 43 in bgpd/bgp_damp.c.'>BGP_DAMP_LIST_ADD</a> (damp, bdi);
+<a id='L286' name='L286'></a>      bdi-&gt;suppress_time = 0;
+<a id='L287' name='L287'></a>      status = <a href='../S/651.html#L114' title='Defined at 114 in bgpd/bgp_damp.h.'>BGP_DAMP_USED</a>;
+<a id='L288' name='L288'></a>    <em class='brace'>}</em>
+<a id='L289' name='L289'></a>  <strong class='reserved'>else</strong>
+<a id='L290' name='L290'></a>    status = <a href='../S/651.html#L115' title='Defined at 115 in bgpd/bgp_damp.h.'>BGP_DAMP_SUPPRESSED</a>;  
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a>  <strong class='reserved'>if</strong> (bdi-&gt;penalty &gt; damp-&gt;reuse_limit / 2.0)
+<a id='L293' name='L293'></a>    bdi-&gt;t_updated = t_now;
+<a id='L294' name='L294'></a>  <strong class='reserved'>else</strong>
+<a id='L295' name='L295'></a>    <a href='../S/607.html#L350' title='Defined at 350 in bgpd/bgp_damp.c.'>bgp_damp_info_free</a> (bdi, 0);
+<a id='L296' name='L296'></a>        
+<a id='L297' name='L297'></a>  <strong class='reserved'>return</strong> status;
+<a id='L298' name='L298'></a><em class='brace'>}</em>
+<a id='L299' name='L299'></a>
+<a id='L300' name='L300'></a><em class='comment'>/* Remove dampening information and history route.  */</em>
+<a id='L301' name='L301'></a><strong class='reserved'>int</strong> 
+<a id='L302' name='L302'></a><a href='../R/4815.html' title='Multiple referred from 2 places.'>bgp_damp_scan</a> (<strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi)
+<a id='L303' name='L303'></a><em class='brace'>{</em>
+<a id='L304' name='L304'></a>  time_t t_now, t_diff;
+<a id='L305' name='L305'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi;
+<a id='L306' name='L306'></a>  
+<a id='L307' name='L307'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (binfo-&gt;extra &amp;&amp; binfo-&gt;extra-&gt;damp_info);
+<a id='L308' name='L308'></a>  
+<a id='L309' name='L309'></a>  t_now = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L310' name='L310'></a>  bdi = binfo-&gt;extra-&gt;damp_info;
+<a id='L311' name='L311'></a> 
+<a id='L312' name='L312'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>))
+<a id='L313' name='L313'></a>    <em class='brace'>{</em>
+<a id='L314' name='L314'></a>      t_diff = t_now - bdi-&gt;suppress_time;
+<a id='L315' name='L315'></a>
+<a id='L316' name='L316'></a>      <strong class='reserved'>if</strong> (t_diff &gt;= damp-&gt;max_suppress_time)
+<a id='L317' name='L317'></a>        <em class='brace'>{</em>
+<a id='L318' name='L318'></a>          <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (bdi-&gt;rn, binfo, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>);
+<a id='L319' name='L319'></a>          <a href='../S/607.html#L80' title='Defined at 80 in bgpd/bgp_damp.c.'>bgp_reuse_list_delete</a> (bdi);
+<a id='L320' name='L320'></a>          <a href='../S/607.html#L43' title='Defined at 43 in bgpd/bgp_damp.c.'>BGP_DAMP_LIST_ADD</a> (damp, bdi);
+<a id='L321' name='L321'></a>          bdi-&gt;penalty = damp-&gt;reuse_limit;
+<a id='L322' name='L322'></a>          bdi-&gt;suppress_time = 0;
+<a id='L323' name='L323'></a>          bdi-&gt;t_updated = t_now;
+<a id='L324' name='L324'></a>          
+<a id='L325' name='L325'></a>          <em class='comment'>/* Need to announce UPDATE once this binfo is usable again. */</em>
+<a id='L326' name='L326'></a>          <strong class='reserved'>if</strong> (bdi-&gt;lastrecord == <a href='../S/651.html#L58' title='Defined at 58 in bgpd/bgp_damp.h.'>BGP_RECORD_UPDATE</a>)
+<a id='L327' name='L327'></a>            <strong class='reserved'>return</strong> 1;
+<a id='L328' name='L328'></a>          <strong class='reserved'>else</strong>
+<a id='L329' name='L329'></a>            <strong class='reserved'>return</strong> 0;
+<a id='L330' name='L330'></a>        <em class='brace'>}</em>
+<a id='L331' name='L331'></a>    <em class='brace'>}</em>
+<a id='L332' name='L332'></a>  <strong class='reserved'>else</strong>
+<a id='L333' name='L333'></a>    <em class='brace'>{</em>
+<a id='L334' name='L334'></a>      t_diff = t_now - bdi-&gt;t_updated;
+<a id='L335' name='L335'></a>      bdi-&gt;penalty = <a href='../S/607.html#L92' title='Defined at 92 in bgpd/bgp_damp.c.'>bgp_damp_decay</a> (t_diff, bdi-&gt;penalty);
+<a id='L336' name='L336'></a>
+<a id='L337' name='L337'></a>      <strong class='reserved'>if</strong> (bdi-&gt;penalty &lt;= damp-&gt;reuse_limit / 2.0)
+<a id='L338' name='L338'></a>        <em class='brace'>{</em>
+<a id='L339' name='L339'></a>          <em class='comment'>/* release the bdi, bdi-&gt;binfo. */</em>  
+<a id='L340' name='L340'></a>          <a href='../S/607.html#L350' title='Defined at 350 in bgpd/bgp_damp.c.'>bgp_damp_info_free</a> (bdi, 1);
+<a id='L341' name='L341'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L342' name='L342'></a>        <em class='brace'>}</em>            
+<a id='L343' name='L343'></a>      <strong class='reserved'>else</strong>
+<a id='L344' name='L344'></a>        bdi-&gt;t_updated = t_now;
+<a id='L345' name='L345'></a>    <em class='brace'>}</em>       
+<a id='L346' name='L346'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L347' name='L347'></a><em class='brace'>}</em>
+<a id='L348' name='L348'></a>
+<a id='L349' name='L349'></a><strong class='reserved'>void</strong>
+<a id='L350' name='L350'></a><a href='../R/4811.html' title='Multiple referred from 9 places.'>bgp_damp_info_free</a> (<strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi, <strong class='reserved'>int</strong> withdraw)
+<a id='L351' name='L351'></a><em class='brace'>{</em>
+<a id='L352' name='L352'></a>  <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo;
+<a id='L353' name='L353'></a>
+<a id='L354' name='L354'></a>  <strong class='reserved'>if</strong> (! bdi)
+<a id='L355' name='L355'></a>    <strong class='reserved'>return</strong>;
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a>  binfo = bdi-&gt;binfo;
+<a id='L358' name='L358'></a>  binfo-&gt;extra-&gt;damp_info = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L359' name='L359'></a>
+<a id='L360' name='L360'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>))
+<a id='L361' name='L361'></a>    <a href='../S/607.html#L80' title='Defined at 80 in bgpd/bgp_damp.c.'>bgp_reuse_list_delete</a> (bdi);
+<a id='L362' name='L362'></a>  <strong class='reserved'>else</strong>
+<a id='L363' name='L363'></a>    <a href='../S/607.html#L44' title='Defined at 44 in bgpd/bgp_damp.c.'>BGP_DAMP_LIST_DEL</a> (damp, bdi);
+<a id='L364' name='L364'></a>
+<a id='L365' name='L365'></a>  <a href='../S/620.html#L297' title='Defined at 297 in bgpd/bgp_route.c.'>bgp_info_unset_flag</a> (bdi-&gt;rn, binfo, <a href='../S/609.html#L74' title='Defined at 74 in bgpd/bgp_route.h.'>BGP_INFO_HISTORY</a>|<a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>);
+<a id='L366' name='L366'></a>
+<a id='L367' name='L367'></a>  <strong class='reserved'>if</strong> (bdi-&gt;lastrecord == <a href='../S/651.html#L59' title='Defined at 59 in bgpd/bgp_damp.h.'>BGP_RECORD_WITHDRAW</a> &amp;&amp; withdraw)
+<a id='L368' name='L368'></a>    <a href='../S/620.html#L221' title='Defined at 221 in bgpd/bgp_route.c.'>bgp_info_delete</a> (bdi-&gt;rn, binfo);
+<a id='L369' name='L369'></a>  
+<a id='L370' name='L370'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_DAMP_INFO, bdi);
+<a id='L371' name='L371'></a><em class='brace'>}</em>
+<a id='L372' name='L372'></a>
+<a id='L373' name='L373'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L374' name='L374'></a><a href='../S/607.html#L445' title='Referred from 445 in bgpd/bgp_damp.c.'>bgp_damp_parameter_set</a> (<strong class='reserved'>int</strong> hlife, <strong class='reserved'>int</strong> reuse, <strong class='reserved'>int</strong> sup, <strong class='reserved'>int</strong> maxsup)
+<a id='L375' name='L375'></a><em class='brace'>{</em>
+<a id='L376' name='L376'></a>  <strong class='reserved'>double</strong> reuse_max_ratio;
+<a id='L377' name='L377'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L378' name='L378'></a>  <strong class='reserved'>double</strong> j;
+<a id='L379' name='L379'></a>        
+<a id='L380' name='L380'></a>  damp-&gt;suppress_value = sup;
+<a id='L381' name='L381'></a>  damp-&gt;half_life = hlife;
+<a id='L382' name='L382'></a>  damp-&gt;reuse_limit = reuse;
+<a id='L383' name='L383'></a>  damp-&gt;max_suppress_time = maxsup;
+<a id='L384' name='L384'></a>
+<a id='L385' name='L385'></a>  <em class='comment'>/* Initialize params per bgp_damp_config. */</em>
+<a id='L386' name='L386'></a>  damp-&gt;reuse_index_size = <a href='../S/651.html#L130' title='Defined at 130 in bgpd/bgp_damp.h.'>REUSE_ARRAY_SIZE</a>;
+<a id='L387' name='L387'></a>
+<a id='L388' name='L388'></a>  damp-&gt;ceiling = (<strong class='reserved'>int</strong>)(damp-&gt;reuse_limit * (pow(2, (<strong class='reserved'>double</strong>)damp-&gt;max_suppress_time/damp-&gt;half_life))); 
+<a id='L389' name='L389'></a>
+<a id='L390' name='L390'></a>  <em class='comment'>/* Decay-array computations */</em>
+<a id='L391' name='L391'></a>  damp-&gt;decay_array_size = ceil ((<strong class='reserved'>double</strong>) damp-&gt;max_suppress_time / <a href='../S/651.html#L121' title='Defined at 121 in bgpd/bgp_damp.h.'>DELTA_T</a>);
+<a id='L392' name='L392'></a>  damp-&gt;decay_array = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_BGP_DAMP_ARRAY,
+<a id='L393' name='L393'></a>                               <strong class='reserved'>sizeof</strong>(<strong class='reserved'>double</strong>) * (damp-&gt;decay_array_size));
+<a id='L394' name='L394'></a>  damp-&gt;decay_array[0] = 1.0;
+<a id='L395' name='L395'></a>  damp-&gt;decay_array[1] = exp ((1.0/((<strong class='reserved'>double</strong>)damp-&gt;half_life/<a href='../S/651.html#L121' title='Defined at 121 in bgpd/bgp_damp.h.'>DELTA_T</a>)) * log(0.5));
+<a id='L396' name='L396'></a>
+<a id='L397' name='L397'></a>  <em class='comment'>/* Calculate decay values for all possible times */</em>
+<a id='L398' name='L398'></a>  <strong class='reserved'>for</strong> (i = 2; i &lt; damp-&gt;decay_array_size; i++)
+<a id='L399' name='L399'></a>    damp-&gt;decay_array[i] = damp-&gt;decay_array[i-1] * damp-&gt;decay_array[1];
+<a id='L400' name='L400'></a>        
+<a id='L401' name='L401'></a>  <em class='comment'>/* Reuse-list computations */</em>
+<a id='L402' name='L402'></a>  i = ceil ((<strong class='reserved'>double</strong>)damp-&gt;max_suppress_time / <a href='../S/651.html#L118' title='Defined at 118 in bgpd/bgp_damp.h.'>DELTA_REUSE</a>) + 1;
+<a id='L403' name='L403'></a>  <strong class='reserved'>if</strong> (i &gt; <a href='../S/651.html#L129' title='Defined at 129 in bgpd/bgp_damp.h.'>REUSE_LIST_SIZE</a> || i == 0)
+<a id='L404' name='L404'></a>    i = <a href='../S/651.html#L129' title='Defined at 129 in bgpd/bgp_damp.h.'>REUSE_LIST_SIZE</a>;
+<a id='L405' name='L405'></a>  damp-&gt;reuse_list_size = i; 
+<a id='L406' name='L406'></a>
+<a id='L407' name='L407'></a>  damp-&gt;reuse_list = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_DAMP_ARRAY, 
+<a id='L408' name='L408'></a>                              damp-&gt;reuse_list_size 
+<a id='L409' name='L409'></a>                              * <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> bgp_reuse_node *));
+<a id='L410' name='L410'></a>
+<a id='L411' name='L411'></a>  <em class='comment'>/* Reuse-array computations */</em>
+<a id='L412' name='L412'></a>  damp-&gt;reuse_index = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_BGP_DAMP_ARRAY,
+<a id='L413' name='L413'></a>                               <strong class='reserved'>sizeof</strong>(<strong class='reserved'>int</strong>) * damp-&gt;reuse_index_size);
+<a id='L414' name='L414'></a>
+<a id='L415' name='L415'></a>  reuse_max_ratio = (<strong class='reserved'>double</strong>)damp-&gt;ceiling/damp-&gt;reuse_limit;
+<a id='L416' name='L416'></a>  j = (exp((<strong class='reserved'>double</strong>)damp-&gt;max_suppress_time/damp-&gt;half_life) * log10(2.0));
+<a id='L417' name='L417'></a>  <strong class='reserved'>if</strong> ( reuse_max_ratio &gt; j &amp;&amp; j != 0 )
+<a id='L418' name='L418'></a>    reuse_max_ratio = j;
+<a id='L419' name='L419'></a>
+<a id='L420' name='L420'></a>  damp-&gt;scale_factor = (<strong class='reserved'>double</strong>)damp-&gt;reuse_index_size/(reuse_max_ratio - 1);
+<a id='L421' name='L421'></a>
+<a id='L422' name='L422'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; damp-&gt;reuse_index_size; i++)
+<a id='L423' name='L423'></a>    <em class='brace'>{</em>
+<a id='L424' name='L424'></a>      damp-&gt;reuse_index[i] = 
+<a id='L425' name='L425'></a>        (<strong class='reserved'>int</strong>)(((<strong class='reserved'>double</strong>)damp-&gt;half_life / <a href='../S/651.html#L118' title='Defined at 118 in bgpd/bgp_damp.h.'>DELTA_REUSE</a>)
+<a id='L426' name='L426'></a>              * log10 (1.0 / (damp-&gt;reuse_limit * ( 1.0 + ((<strong class='reserved'>double</strong>)i/damp-&gt;scale_factor)))) / log10(0.5));
+<a id='L427' name='L427'></a>    <em class='brace'>}</em>
+<a id='L428' name='L428'></a><em class='brace'>}</em>
+<a id='L429' name='L429'></a>
+<a id='L430' name='L430'></a><strong class='reserved'>int</strong>
+<a id='L431' name='L431'></a><a href='../R/4808.html' title='Multiple referred from 2 places.'>bgp_damp_enable</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi, time_t half,
+<a id='L432' name='L432'></a>                 <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> reuse, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> suppress, time_t max)
+<a id='L433' name='L433'></a><em class='brace'>{</em>
+<a id='L434' name='L434'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;af_flags[afi][safi], <a href='../S/608.html#L126' title='Defined at 126 in bgpd/bgpd.h.'>BGP_CONFIG_DAMPENING</a>))
+<a id='L435' name='L435'></a>    <em class='brace'>{</em>
+<a id='L436' name='L436'></a>      <strong class='reserved'>if</strong> (damp-&gt;half_life == half
+<a id='L437' name='L437'></a>          &amp;&amp; damp-&gt;reuse_limit == reuse
+<a id='L438' name='L438'></a>          &amp;&amp; damp-&gt;suppress_value == suppress
+<a id='L439' name='L439'></a>          &amp;&amp; damp-&gt;max_suppress_time == max)
+<a id='L440' name='L440'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L441' name='L441'></a>      <a href='../S/607.html#L499' title='Defined at 499 in bgpd/bgp_damp.c.'>bgp_damp_disable</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, afi, safi);
+<a id='L442' name='L442'></a>    <em class='brace'>}</em>
+<a id='L443' name='L443'></a>
+<a id='L444' name='L444'></a>  <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;af_flags[afi][safi], <a href='../S/608.html#L126' title='Defined at 126 in bgpd/bgpd.h.'>BGP_CONFIG_DAMPENING</a>);
+<a id='L445' name='L445'></a>  <a href='../S/607.html#L374' title='Defined at 374 in bgpd/bgp_damp.c.'>bgp_damp_parameter_set</a> (half, reuse, suppress, max);
+<a id='L446' name='L446'></a>
+<a id='L447' name='L447'></a>  <em class='comment'>/* Register reuse timer.  */</em>
+<a id='L448' name='L448'></a>  <strong class='reserved'>if</strong> (! damp-&gt;t_reuse)
+<a id='L449' name='L449'></a>    damp-&gt;t_reuse = 
+<a id='L450' name='L450'></a>      <a href='../S/279.html#L167' title='Defined at 167 in lib/thread.h.'>thread_add_timer</a> (master, <a href='../S/607.html#L110' title='Defined at 110 in bgpd/bgp_damp.c.'>bgp_reuse_timer</a>, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/651.html#L118' title='Defined at 118 in bgpd/bgp_damp.h.'>DELTA_REUSE</a>);
+<a id='L451' name='L451'></a>
+<a id='L452' name='L452'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L453' name='L453'></a><em class='brace'>}</em>
+<a id='L454' name='L454'></a>
+<a id='L455' name='L455'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L456' name='L456'></a><a href='../S/607.html#L514' title='Referred from 514 in bgpd/bgp_damp.c.'>bgp_damp_config_clean</a> (<strong class='reserved'>struct</strong> <a href='../S/651.html#L66' title='Defined at 66 in bgpd/bgp_damp.h.'>bgp_damp_config</a> *damp)
+<a id='L457' name='L457'></a><em class='brace'>{</em>
+<a id='L458' name='L458'></a>  <em class='comment'>/* Free decay array */</em>
+<a id='L459' name='L459'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_DAMP_ARRAY, damp-&gt;decay_array);
+<a id='L460' name='L460'></a>
+<a id='L461' name='L461'></a>  <em class='comment'>/* Free reuse index array */</em>
+<a id='L462' name='L462'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_DAMP_ARRAY, damp-&gt;reuse_index);
+<a id='L463' name='L463'></a>
+<a id='L464' name='L464'></a>  <em class='comment'>/* Free reuse list array. */</em>
+<a id='L465' name='L465'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_BGP_DAMP_ARRAY, damp-&gt;reuse_list);
+<a id='L466' name='L466'></a><em class='brace'>}</em>
+<a id='L467' name='L467'></a>
+<a id='L468' name='L468'></a><em class='comment'>/* Clean all the bgp_damp_info stored in reuse_list. */</em>
+<a id='L469' name='L469'></a><strong class='reserved'>void</strong>
+<a id='L470' name='L470'></a><a href='../R/4810.html' title='Multiple referred from 3 places.'>bgp_damp_info_clean</a> (<strong class='reserved'>void</strong>)
+<a id='L471' name='L471'></a><em class='brace'>{</em>
+<a id='L472' name='L472'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L473' name='L473'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi, *next;
+<a id='L474' name='L474'></a>
+<a id='L475' name='L475'></a>  damp-&gt;reuse_offset = 0;
+<a id='L476' name='L476'></a>
+<a id='L477' name='L477'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; damp-&gt;reuse_list_size; i++)
+<a id='L478' name='L478'></a>    <em class='brace'>{</em>
+<a id='L479' name='L479'></a>      <strong class='reserved'>if</strong> (! damp-&gt;reuse_list[i])
+<a id='L480' name='L480'></a>        <strong class='reserved'>continue</strong>;
+<a id='L481' name='L481'></a>
+<a id='L482' name='L482'></a>      <strong class='reserved'>for</strong> (bdi = damp-&gt;reuse_list[i]; bdi; bdi = next)
+<a id='L483' name='L483'></a>        <em class='brace'>{</em>
+<a id='L484' name='L484'></a>          next = bdi-&gt;next;
+<a id='L485' name='L485'></a>          <a href='../S/607.html#L350' title='Defined at 350 in bgpd/bgp_damp.c.'>bgp_damp_info_free</a> (bdi, 1);
+<a id='L486' name='L486'></a>        <em class='brace'>}</em>
+<a id='L487' name='L487'></a>      damp-&gt;reuse_list[i] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L488' name='L488'></a>    <em class='brace'>}</em>
+<a id='L489' name='L489'></a>
+<a id='L490' name='L490'></a>  <strong class='reserved'>for</strong> (bdi = damp-&gt;no_reuse_list; bdi; bdi = next)
+<a id='L491' name='L491'></a>    <em class='brace'>{</em>
+<a id='L492' name='L492'></a>      next = bdi-&gt;next;
+<a id='L493' name='L493'></a>      <a href='../S/607.html#L350' title='Defined at 350 in bgpd/bgp_damp.c.'>bgp_damp_info_free</a> (bdi, 1);
+<a id='L494' name='L494'></a>    <em class='brace'>}</em>
+<a id='L495' name='L495'></a>  damp-&gt;no_reuse_list = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L496' name='L496'></a><em class='brace'>}</em>
+<a id='L497' name='L497'></a>
+<a id='L498' name='L498'></a><strong class='reserved'>int</strong>
+<a id='L499' name='L499'></a><a href='../R/4807.html' title='Multiple referred from 3 places.'>bgp_damp_disable</a> (<strong class='reserved'>struct</strong> <a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a> *<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>, <a href='../S/191.html#L531' title='Defined at 531 in lib/zebra.h.'>afi_t</a> afi, <a href='../S/191.html#L532' title='Defined at 532 in lib/zebra.h.'>safi_t</a> safi)
+<a id='L500' name='L500'></a><em class='brace'>{</em>
+<a id='L501' name='L501'></a>  <em class='comment'>/* If it wasn't enabled, there's nothing to do. */</em>
+<a id='L502' name='L502'></a>  <strong class='reserved'>if</strong> (! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;af_flags[afi][safi], <a href='../S/608.html#L126' title='Defined at 126 in bgpd/bgpd.h.'>BGP_CONFIG_DAMPENING</a>))
+<a id='L503' name='L503'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L504' name='L504'></a>
+<a id='L505' name='L505'></a>  <em class='comment'>/* Cancel reuse thread. */</em>
+<a id='L506' name='L506'></a>  <strong class='reserved'>if</strong> (damp-&gt;t_reuse )
+<a id='L507' name='L507'></a>    <a href='../S/208.html#L879' title='Defined at 879 in lib/thread.c.'>thread_cancel</a> (damp-&gt;t_reuse);
+<a id='L508' name='L508'></a>  damp-&gt;t_reuse = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L509' name='L509'></a>
+<a id='L510' name='L510'></a>  <em class='comment'>/* Clean BGP dampening information.  */</em>
+<a id='L511' name='L511'></a>  <a href='../S/607.html#L470' title='Defined at 470 in bgpd/bgp_damp.c.'>bgp_damp_info_clean</a> ();
+<a id='L512' name='L512'></a>
+<a id='L513' name='L513'></a>  <em class='comment'>/* Clear configuration */</em>
+<a id='L514' name='L514'></a>  <a href='../S/607.html#L456' title='Defined at 456 in bgpd/bgp_damp.c.'>bgp_damp_config_clean</a> (&amp;bgp_damp_cfg);
+<a id='L515' name='L515'></a>
+<a id='L516' name='L516'></a>  <a href='../S/191.html#L528' title='Defined at 528 in lib/zebra.h.'>UNSET_FLAG</a> (<a href='../S/608.html#L66' title='Defined at 66 in bgpd/bgpd.h.'>bgp</a>-&gt;af_flags[afi][safi], <a href='../S/608.html#L126' title='Defined at 126 in bgpd/bgpd.h.'>BGP_CONFIG_DAMPENING</a>);
+<a id='L517' name='L517'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L518' name='L518'></a><em class='brace'>}</em>
+<a id='L519' name='L519'></a>
+<a id='L520' name='L520'></a><strong class='reserved'>void</strong>
+<a id='L521' name='L521'></a><a href='../R/4784.html' title='Multiple referred from 2 places.'>bgp_config_write_damp</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L522' name='L522'></a><em class='brace'>{</em>
+<a id='L523' name='L523'></a>  <strong class='reserved'>if</strong> (bgp_damp_cfg.half_life == <a href='../S/651.html#L125' title='Defined at 125 in bgpd/bgp_damp.h.'>DEFAULT_HALF_LIFE</a>*60
+<a id='L524' name='L524'></a>      &amp;&amp; bgp_damp_cfg.reuse_limit == <a href='../S/651.html#L126' title='Defined at 126 in bgpd/bgp_damp.h.'>DEFAULT_REUSE</a>
+<a id='L525' name='L525'></a>      &amp;&amp; bgp_damp_cfg.suppress_value == <a href='../S/651.html#L127' title='Defined at 127 in bgpd/bgp_damp.h.'>DEFAULT_SUPPRESS</a>
+<a id='L526' name='L526'></a>      &amp;&amp; bgp_damp_cfg.max_suppress_time == bgp_damp_cfg.half_life*4)
+<a id='L527' name='L527'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " bgp dampening%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L528' name='L528'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (bgp_damp_cfg.half_life != <a href='../S/651.html#L125' title='Defined at 125 in bgpd/bgp_damp.h.'>DEFAULT_HALF_LIFE</a>*60
+<a id='L529' name='L529'></a>           &amp;&amp; bgp_damp_cfg.reuse_limit == <a href='../S/651.html#L126' title='Defined at 126 in bgpd/bgp_damp.h.'>DEFAULT_REUSE</a>
+<a id='L530' name='L530'></a>           &amp;&amp; bgp_damp_cfg.suppress_value == <a href='../S/651.html#L127' title='Defined at 127 in bgpd/bgp_damp.h.'>DEFAULT_SUPPRESS</a>
+<a id='L531' name='L531'></a>           &amp;&amp; bgp_damp_cfg.max_suppress_time == bgp_damp_cfg.half_life*4)
+<a id='L532' name='L532'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " bgp dampening %ld%s",
+<a id='L533' name='L533'></a>             bgp_damp_cfg.half_life/60,
+<a id='L534' name='L534'></a>             <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L535' name='L535'></a>  <strong class='reserved'>else</strong>
+<a id='L536' name='L536'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " bgp dampening %ld %d %d %ld%s",
+<a id='L537' name='L537'></a>             bgp_damp_cfg.half_life/60,
+<a id='L538' name='L538'></a>             bgp_damp_cfg.reuse_limit,
+<a id='L539' name='L539'></a>             bgp_damp_cfg.suppress_value,
+<a id='L540' name='L540'></a>             bgp_damp_cfg.max_suppress_time/60,
+<a id='L541' name='L541'></a>             <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L542' name='L542'></a><em class='brace'>}</em>
+<a id='L543' name='L543'></a>
+<a id='L544' name='L544'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L545' name='L545'></a><a href='../R/4869.html' title='Multiple referred from 2 places.'>bgp_get_reuse_time</a> (<strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> penalty, <strong class='reserved'>char</strong> *buf, size_t len)
+<a id='L546' name='L546'></a><em class='brace'>{</em>
+<a id='L547' name='L547'></a>  time_t reuse_time = 0;
+<a id='L548' name='L548'></a>  <strong class='reserved'>struct</strong> tm *tm = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L549' name='L549'></a>
+<a id='L550' name='L550'></a>  <strong class='reserved'>if</strong> (penalty &gt; damp-&gt;reuse_limit)
+<a id='L551' name='L551'></a>    <em class='brace'>{</em>
+<a id='L552' name='L552'></a>      reuse_time = (<strong class='reserved'>int</strong>) (<a href='../S/651.html#L121' title='Defined at 121 in bgpd/bgp_damp.h.'>DELTA_T</a> * ((log((<strong class='reserved'>double</strong>)damp-&gt;reuse_limit/penalty))/(log(damp-&gt;decay_array[1])))); 
+<a id='L553' name='L553'></a>
+<a id='L554' name='L554'></a>      <strong class='reserved'>if</strong> (reuse_time &gt; damp-&gt;max_suppress_time)
+<a id='L555' name='L555'></a>        reuse_time = damp-&gt;max_suppress_time;
+<a id='L556' name='L556'></a>
+<a id='L557' name='L557'></a>      tm = gmtime (&amp;reuse_time);
+<a id='L558' name='L558'></a>    <em class='brace'>}</em>
+<a id='L559' name='L559'></a>  <strong class='reserved'>else</strong> 
+<a id='L560' name='L560'></a>    reuse_time = 0;
+<a id='L561' name='L561'></a>
+<a id='L562' name='L562'></a>  <em class='comment'>/* Making formatted timer strings. */</em>
+<a id='L563' name='L563'></a><em class='sharp'>#define</em> <a href='../R/2134.html' title='Multiple referred from 9 places.'>ONE_DAY_SECOND</a> 60*60*24
+<a id='L564' name='L564'></a><em class='sharp'>#define</em> <a href='../R/2135.html' title='Multiple referred from 9 places.'>ONE_WEEK_SECOND</a> 60*60*24*7
+<a id='L565' name='L565'></a>  <strong class='reserved'>if</strong> (reuse_time == 0)
+<a id='L566' name='L566'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "00:00:00");
+<a id='L567' name='L567'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (reuse_time &lt; <a href='../D/2546.html' title='Multiple defined in 9 places.'>ONE_DAY_SECOND</a>)
+<a id='L568' name='L568'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%02d:%02d:%02d", 
+<a id='L569' name='L569'></a>              tm-&gt;tm_hour, tm-&gt;tm_min, tm-&gt;tm_sec);
+<a id='L570' name='L570'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (reuse_time &lt; <a href='../D/2547.html' title='Multiple defined in 9 places.'>ONE_WEEK_SECOND</a>)
+<a id='L571' name='L571'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%dd%02dh%02dm", 
+<a id='L572' name='L572'></a>              tm-&gt;tm_yday, tm-&gt;tm_hour, tm-&gt;tm_min);
+<a id='L573' name='L573'></a>  <strong class='reserved'>else</strong>
+<a id='L574' name='L574'></a>    <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a> (buf, len, "%02dw%dd%02dh", 
+<a id='L575' name='L575'></a>              tm-&gt;tm_yday/7, tm-&gt;tm_yday - ((tm-&gt;tm_yday/7) * 7), tm-&gt;tm_hour); 
+<a id='L576' name='L576'></a>
+<a id='L577' name='L577'></a>  <strong class='reserved'>return</strong> buf;
+<a id='L578' name='L578'></a><em class='brace'>}</em>
+<a id='L579' name='L579'></a> 
+<a id='L580' name='L580'></a><strong class='reserved'>void</strong>
+<a id='L581' name='L581'></a><a href='../R/4812.html' title='Multiple referred from 2 places.'>bgp_damp_info_vty</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo)  
+<a id='L582' name='L582'></a><em class='brace'>{</em>
+<a id='L583' name='L583'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi;
+<a id='L584' name='L584'></a>  time_t t_now, t_diff;
+<a id='L585' name='L585'></a>  <strong class='reserved'>char</strong> timebuf[<a href='../S/608.html#L757' title='Defined at 757 in bgpd/bgpd.h.'>BGP_UPTIME_LEN</a>];
+<a id='L586' name='L586'></a>  <strong class='reserved'>int</strong> penalty;
+<a id='L587' name='L587'></a>
+<a id='L588' name='L588'></a>  <strong class='reserved'>if</strong> (!binfo-&gt;extra)
+<a id='L589' name='L589'></a>    <strong class='reserved'>return</strong>;
+<a id='L590' name='L590'></a>  
+<a id='L591' name='L591'></a>  <em class='comment'>/* BGP dampening information.  */</em>
+<a id='L592' name='L592'></a>  bdi = binfo-&gt;extra-&gt;damp_info;
+<a id='L593' name='L593'></a>
+<a id='L594' name='L594'></a>  <em class='comment'>/* If dampening is not enabled or there is no dampening information,</em>
+<a id='L595' name='L595'></a><em class='comment'>     return immediately.  */</em>
+<a id='L596' name='L596'></a>  <strong class='reserved'>if</strong> (! damp || ! bdi)
+<a id='L597' name='L597'></a>    <strong class='reserved'>return</strong>;
+<a id='L598' name='L598'></a>
+<a id='L599' name='L599'></a>  <em class='comment'>/* Calculate new penalty.  */</em>
+<a id='L600' name='L600'></a>  t_now = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L601' name='L601'></a>  t_diff = t_now - bdi-&gt;t_updated;
+<a id='L602' name='L602'></a>  penalty = <a href='../S/607.html#L92' title='Defined at 92 in bgpd/bgp_damp.c.'>bgp_damp_decay</a> (t_diff, bdi-&gt;penalty);
+<a id='L603' name='L603'></a>
+<a id='L604' name='L604'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "      Dampinfo: penalty %d, flapped %d times in %s",
+<a id='L605' name='L605'></a>           penalty, bdi-&gt;flap,
+<a id='L606' name='L606'></a>           <a href='../S/610.html#L4634' title='Defined at 4634 in bgpd/bgpd.c.'>peer_uptime</a> (bdi-&gt;start_time, timebuf, <a href='../S/608.html#L757' title='Defined at 757 in bgpd/bgpd.h.'>BGP_UPTIME_LEN</a>));
+<a id='L607' name='L607'></a>
+<a id='L608' name='L608'></a>  <strong class='reserved'>if</strong> (<a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L73' title='Defined at 73 in bgpd/bgp_route.h.'>BGP_INFO_DAMPED</a>)
+<a id='L609' name='L609'></a>      &amp;&amp; ! <a href='../S/191.html#L526' title='Defined at 526 in lib/zebra.h.'>CHECK_FLAG</a> (binfo-&gt;<a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <a href='../S/609.html#L74' title='Defined at 74 in bgpd/bgp_route.h.'>BGP_INFO_HISTORY</a>))
+<a id='L610' name='L610'></a>    <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, ", reuse in %s",
+<a id='L611' name='L611'></a>             <a href='../S/607.html#L545' title='Defined at 545 in bgpd/bgp_damp.c.'>bgp_get_reuse_time</a> (penalty, timebuf, <a href='../S/608.html#L757' title='Defined at 757 in bgpd/bgpd.h.'>BGP_UPTIME_LEN</a>));
+<a id='L612' name='L612'></a>
+<a id='L613' name='L613'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L614' name='L614'></a><em class='brace'>}</em>
+<a id='L615' name='L615'></a>
+<a id='L616' name='L616'></a><strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L617' name='L617'></a><a href='../R/4814.html' title='Multiple referred from 3 places.'>bgp_damp_reuse_time_vty</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>struct</strong> <a href='../S/609.html#L45' title='Defined at 45 in bgpd/bgp_route.h.'>bgp_info</a> *binfo,
+<a id='L618' name='L618'></a>                         <strong class='reserved'>char</strong> *timebuf, size_t len)
+<a id='L619' name='L619'></a><em class='brace'>{</em>
+<a id='L620' name='L620'></a>  <strong class='reserved'>struct</strong> <a href='../S/651.html#L25' title='Defined at 25 in bgpd/bgp_damp.h.'>bgp_damp_info</a> *bdi;
+<a id='L621' name='L621'></a>  time_t t_now, t_diff;
+<a id='L622' name='L622'></a>  <strong class='reserved'>int</strong> penalty;
+<a id='L623' name='L623'></a>  
+<a id='L624' name='L624'></a>  <strong class='reserved'>if</strong> (!binfo-&gt;extra)
+<a id='L625' name='L625'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L626' name='L626'></a>  
+<a id='L627' name='L627'></a>  <em class='comment'>/* BGP dampening information.  */</em>
+<a id='L628' name='L628'></a>  bdi = binfo-&gt;extra-&gt;damp_info;
+<a id='L629' name='L629'></a>
+<a id='L630' name='L630'></a>  <em class='comment'>/* If dampening is not enabled or there is no dampening information,</em>
+<a id='L631' name='L631'></a><em class='comment'>     return immediately.  */</em>
+<a id='L632' name='L632'></a>  <strong class='reserved'>if</strong> (! damp || ! bdi)
+<a id='L633' name='L633'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L634' name='L634'></a>
+<a id='L635' name='L635'></a>  <em class='comment'>/* Calculate new penalty.  */</em>
+<a id='L636' name='L636'></a>  t_now = <a href='../S/610.html#L249' title='Defined at 249 in bgpd/bgpd.c.'>bgp_clock</a> ();
+<a id='L637' name='L637'></a>  t_diff = t_now - bdi-&gt;t_updated;
+<a id='L638' name='L638'></a>  penalty = <a href='../S/607.html#L92' title='Defined at 92 in bgpd/bgp_damp.c.'>bgp_damp_decay</a> (t_diff, bdi-&gt;penalty);
+<a id='L639' name='L639'></a>
+<a id='L640' name='L640'></a>  <strong class='reserved'>return</strong>  <a href='../S/607.html#L545' title='Defined at 545 in bgpd/bgp_damp.c.'>bgp_get_reuse_time</a> (penalty, timebuf, len);
+<a id='L641' name='L641'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L48'>[^]</a><a href='#L617'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

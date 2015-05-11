@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>zebra/kernel_null.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1038.html'>zebra</a>/kernel_null.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L11'>[^]</a><a href='#L54'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L11' title='Defined at 11.'>kernel_add_ipv4</a></li>
+<li><a href='#L15' title='Defined at 15.'>kernel_delete_ipv4</a></li>
+<li><a href='#L18' title='Defined at 18.'>kernel_add_ipv6</a></li>
+<li><a href='#L22' title='Defined at 22.'>kernel_delete_ipv6</a></li>
+<li><a href='#L25' title='Defined at 25.'>kernel_delete_ipv6_old</a></li>
+<li><a href='#L29' title='Defined at 29.'>kernel_add_route</a></li>
+<li><a href='#L32' title='Defined at 32.'>kernel_address_add_ipv4</a></li>
+<li><a href='#L42' title='Defined at 42.'>kernel_address_delete_ipv4</a></li>
+<li><a href='#L50' title='Defined at 50.'>kernel_init</a></li>
+<li><a href='#L54' title='Defined at 54.'>route_read</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* NULL kernel methods for testing. */</em>
+<a id='L2' name='L2'></a>
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> &lt;<a href='263.html'>log.h</a>&gt;
+<a id='L5' name='L5'></a>
+<a id='L6' name='L6'></a><em class='sharp'>#include</em> "<a href='946.html'>zebra/zserv.h</a>"
+<a id='L7' name='L7'></a><em class='sharp'>#include</em> "<a href='983.html'>zebra/rt.h</a>"
+<a id='L8' name='L8'></a><em class='sharp'>#include</em> "<a href='960.html'>zebra/redistribute.h</a>"
+<a id='L9' name='L9'></a><em class='sharp'>#include</em> "<a href='951.html'>zebra/connected.h</a>"
+<a id='L10' name='L10'></a>
+<a id='L11' name='L11'></a><strong class='reserved'>int</strong> <a href='../R/6284.html' title='Multiple referred from 2 places.'>kernel_add_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) <em class='brace'>{</em> <strong class='reserved'>return</strong> 0; <em class='brace'>}</em>
+<a id='L12' name='L12'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L537' title='Defined at 537 in config.h.'>HAVE_SYS_WEAK_ALIAS_PRAGMA</a>
+<a id='L13' name='L13'></a><em class='sharp'>#pragma</em> weak kernel_delete_ipv4 = kernel_add_ipv4
+<a id='L14' name='L14'></a><em class='sharp'>#else</em>
+<a id='L15' name='L15'></a><strong class='reserved'>int</strong> <a href='../R/6289.html' title='Multiple referred from 2 places.'>kernel_delete_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) <em class='brace'>{</em> <strong class='reserved'>return</strong> 0; <em class='brace'>}</em>
+<a id='L16' name='L16'></a><em class='sharp'>#endif</em>
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a><strong class='reserved'>int</strong> <a href='../R/6285.html' title='Multiple referred from 2 places.'>kernel_add_ipv6</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) <em class='brace'>{</em> <strong class='reserved'>return</strong> 0; <em class='brace'>}</em>
+<a id='L19' name='L19'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L537' title='Defined at 537 in config.h.'>HAVE_SYS_WEAK_ALIAS_PRAGMA</a>
+<a id='L20' name='L20'></a><em class='sharp'>#pragma</em> weak kernel_delete_ipv6 = kernel_add_ipv6
+<a id='L21' name='L21'></a><em class='sharp'>#else</em>
+<a id='L22' name='L22'></a><strong class='reserved'>int</strong> <a href='../R/6290.html' title='Multiple referred from 2 places.'>kernel_delete_ipv6</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/981.html#L41' title='Defined at 41 in zebra/rib.h.'>rib</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>) <em class='brace'>{</em> <strong class='reserved'>return</strong> 0; <em class='brace'>}</em>
+<a id='L23' name='L23'></a><em class='sharp'>#endif</em>
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><strong class='reserved'>int</strong> <a href='../R/6291.html' title='Multiple referred from 2 places.'>kernel_delete_ipv6_old</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> *dest, <strong class='reserved'>struct</strong> in6_addr *gate,
+<a id='L26' name='L26'></a>                            <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> index, <strong class='reserved'>int</strong> <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>, <strong class='reserved'>int</strong> table)
+<a id='L27' name='L27'></a><em class='brace'>{</em> <strong class='reserved'>return</strong> 0; <em class='brace'>}</em>
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><strong class='reserved'>int</strong> <a href='../S/983.html#L32' title='Referred from 32 in zebra/rt.h.'>kernel_add_route</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> in_addr *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>, <strong class='reserved'>int</strong> c, <strong class='reserved'>int</strong> d)
+<a id='L30' name='L30'></a><em class='brace'>{</em> <strong class='reserved'>return</strong> 0; <em class='brace'>}</em>
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><strong class='reserved'>int</strong> <a href='../R/6287.html' title='Multiple referred from 3 places.'>kernel_address_add_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L33' name='L33'></a><em class='brace'>{</em>
+<a id='L34' name='L34'></a>  zlog_debug ("%s", __func__);
+<a id='L35' name='L35'></a>  <a href='../S/191.html#L527' title='Defined at 527 in lib/zebra.h.'>SET_FLAG</a> (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;conf, <a href='../S/252.html#L152' title='Defined at 152 in lib/if.h.'>ZEBRA_IFC_REAL</a>);
+<a id='L36' name='L36'></a>  <a href='../S/998.html#L202' title='Defined at 202 in zebra/connected.c.'>connected_add_ipv4</a> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, 0, &amp;<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;address-&gt;u.prefix4, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;address-&gt;prefixlen, 
+<a id='L37' name='L37'></a>                      (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;destination ? &amp;<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;destination-&gt;u.prefix4 : <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>), 
+<a id='L38' name='L38'></a>                      <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L39' name='L39'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L40' name='L40'></a><em class='brace'>}</em>
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><strong class='reserved'>int</strong> <a href='../R/6288.html' title='Multiple referred from 3 places.'>kernel_address_delete_ipv4</a> (<strong class='reserved'>struct</strong> <a href='../S/252.html#L72' title='Defined at 72 in lib/if.h.'>interface</a> *<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, <strong class='reserved'>struct</strong> <a href='../S/252.html#L145' title='Defined at 145 in lib/if.h.'>connected</a> *<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>)
+<a id='L43' name='L43'></a><em class='brace'>{</em>
+<a id='L44' name='L44'></a>  zlog_debug ("%s", __func__);
+<a id='L45' name='L45'></a>  <a href='../S/998.html#L310' title='Defined at 310 in zebra/connected.c.'>connected_delete_ipv4</a> (<a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>, 0, &amp;<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;address-&gt;u.prefix4, <a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;address-&gt;prefixlen, 
+<a id='L46' name='L46'></a>                         (<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;destination ? &amp;<a href='../S/98.html#L56' title='Defined at 56 in ripngd/ripng_nexthop.h.'>b</a>-&gt;destination-&gt;u.prefix4 : <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>));
+<a id='L47' name='L47'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L48' name='L48'></a><em class='brace'>}</em>
+<a id='L49' name='L49'></a>
+<a id='L50' name='L50'></a><strong class='reserved'>void</strong> <a href='../R/6292.html' title='Multiple referred from 3 places.'>kernel_init</a> (<strong class='reserved'>void</strong>) <em class='brace'>{</em> <strong class='reserved'>return</strong>; <em class='brace'>}</em>
+<a id='L51' name='L51'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L537' title='Defined at 537 in config.h.'>HAVE_SYS_WEAK_ALIAS_PRAGMA</a>
+<a id='L52' name='L52'></a><em class='sharp'>#pragma</em> weak route_read = kernel_init
+<a id='L53' name='L53'></a><em class='sharp'>#else</em>
+<a id='L54' name='L54'></a><strong class='reserved'>void</strong> <a href='../R/9524.html' title='Multiple referred from 3 places.'>route_read</a> (<strong class='reserved'>void</strong>) <em class='brace'>{</em> <strong class='reserved'>return</strong>; <em class='brace'>}</em>
+<a id='L55' name='L55'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L11'>[^]</a><a href='#L54'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ldpd/ldp_entity.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_entity.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/196.html' title='Multiple included from 20 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a>
+<a id='L2' name='L2'></a><em class='comment'>/*</em>
+<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2000</em>
+<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
+<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
+<a id='L8' name='L8'></a><em class='comment'> */</em>
+<a id='L9' name='L9'></a>
+<a id='L10' name='L10'></a><em class='sharp'>#ifndef</em> <a href='../S/459.html#L11' title='Defined at 11 in ldpd/ldp_entity.h.'>_LDP_ENTITY_H_</a>
+<a id='L11' name='L11'></a><em class='sharp'>#define</em> <a href='../S/459.html#L10' title='Referred from 10 in ldpd/ldp_entity.h.'>_LDP_ENTITY_H_</a>
+<a id='L12' name='L12'></a>
+<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
+<a id='L14' name='L14'></a>
+<a id='L15' name='L15'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L34' title='Defined at 34 in ldpd/ldp_entity.c.'>ldp_entity_set_defaults</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> *e);
+<a id='L16' name='L16'></a><strong class='reserved'>extern</strong> <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> *<a href='../S/386.html#L64' title='Defined at 64 in ldpd/ldp_entity.c.'>ldp_entity_create</a>();
+<a id='L17' name='L17'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L81' title='Defined at 81 in ldpd/ldp_entity.c.'>ldp_entity_delete</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L18' name='L18'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> <a href='../S/386.html#L103' title='Defined at 103 in ldpd/ldp_entity.c.'>ldp_entity_is_active</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L19' name='L19'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L76' title='Defined at 76 in ldpd/mpls_struct.h.'>mpls_bool</a> <a href='../S/386.html#L111' title='Defined at 111 in ldpd/ldp_entity.c.'>ldp_entity_is_ready</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L20' name='L20'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/386.html#L88' title='Defined at 88 in ldpd/ldp_entity.c.'>ldp_entity_label_space</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L21' name='L21'></a><strong class='reserved'>extern</strong> <a href='../D/7421.html' title='Multiple defined in 2 places.'>ldp_mesg</a> *ldp_entity_get_message(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/386.html#L130' title='Defined at 130 in ldpd/ldp_entity.c.'>ldp_entity_startup</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L24' name='L24'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> <a href='../S/386.html#L176' title='Defined at 176 in ldpd/ldp_entity.c.'>ldp_entity_shutdown</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e,
+<a id='L25' name='L25'></a>  <strong class='reserved'>int</strong> flag);
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> ldp_entity_register(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L28' name='L28'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> ldp_entity_unregister(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L225' title='Defined at 225 in ldpd/ldp_entity.c.'>ldp_entity_add_if</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7345.html' title='Multiple defined in 2 places.'>ldp_if</a> * i);
+<a id='L31' name='L31'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L236' title='Defined at 236 in ldpd/ldp_entity.c.'>ldp_entity_del_if</a>(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g, <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L246' title='Defined at 246 in ldpd/ldp_entity.c.'>ldp_entity_add_peer</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7468.html' title='Multiple defined in 2 places.'>ldp_peer</a> * p);
+<a id='L34' name='L34'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L257' title='Defined at 257 in ldpd/ldp_entity.c.'>ldp_entity_del_peer</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e);
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L267' title='Defined at 267 in ldpd/ldp_entity.c.'>ldp_entity_add_adj</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L37' name='L37'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/386.html#L286' title='Defined at 286 in ldpd/ldp_entity.c.'>ldp_entity_del_adj</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> * <a href='../S/98.html#L55' title='Defined at 55 in ripngd/ripng_nexthop.h.'>a</a>);
+<a id='L38' name='L38'></a><strong class='reserved'>extern</strong> <a href='../D/7148.html' title='Multiple defined in 2 places.'>ldp_adj</a> *<a href='../S/386.html#L294' title='Defined at 294 in ldpd/ldp_entity.c.'>ldp_entity_find_adj</a>(<a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../D/7421.html' title='Multiple defined in 2 places.'>ldp_mesg</a> * <a href='../S/785.html#L56' title='Defined at 56 in ospfd/ospf_api.h.'>msg</a>);
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>extern</strong> <a href='../S/383.html#L27' title='Defined at 27 in ldpd/mpls_struct.h.'>mpls_return_enum</a> ldp_entity_set_admin_state(<a href='../D/7307.html' title='Multiple defined in 2 places.'>ldp_global</a> * g,
+<a id='L41' name='L41'></a>  <a href='../D/7269.html' title='Multiple defined in 2 places.'>ldp_entity</a> * e, <a href='../S/383.html#L55' title='Defined at 55 in ldpd/mpls_struct.h.'>mpls_admin_state_enum</a> state);
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><strong class='reserved'>extern</strong> <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> <a href='../S/386.html#L214' title='Defined at 214 in ldpd/ldp_entity.c.'>_ldp_entity_get_next_index</a>();
+<a id='L44' name='L44'></a>
+<a id='L45' name='L45'></a><em class='sharp'>#endif</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

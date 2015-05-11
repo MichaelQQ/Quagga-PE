@@ -1,0 +1,799 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>bgpd/bgp_ecommunity.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1013.html'>bgpd</a>/bgp_ecommunity.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L37'>[^]</a><a href='#L728'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L37' title='Defined at 37.'>ecommunity_new</a></li>
+<li><a href='#L45' title='Defined at 45.'>ecommunity_free</a></li>
+<li><a href='#L61' title='Defined at 61.'>ecommunity_add_val</a></li>
+<li><a href='#L103' title='Defined at 103.'>ecommunity_uniq_sort</a></li>
+<li><a href='#L124' title='Defined at 124.'>ecommunity_parse</a></li>
+<li><a href='#L147' title='Defined at 147.'>ecommunity_dup</a></li>
+<li><a href='#L165' title='Defined at 165.'>ecommunity_str</a></li>
+<li><a href='#L174' title='Defined at 174.'>ecommunity_merge</a></li>
+<li><a href='#L192' title='Defined at 192.'>ecommunity_intern</a></li>
+<li><a href='#L213' title='Defined at 213.'>ecommunity_unintern</a></li>
+<li><a href='#L233' title='Defined at 233.'>ecommunity_hash_make</a></li>
+<li><a href='#L258' title='Defined at 258.'>ecommunity_cmp</a></li>
+<li><a href='#L269' title='Defined at 269.'>ecommunity_init</a></li>
+<li><a href='#L275' title='Defined at 275.'>ecommunity_finish</a></li>
+<li><a href='#L292' title='Defined at 292.'>ecommunity_gettoken</a></li>
+<li><a href='#L511' title='Defined at 511.'>ecommunity_str2com</a></li>
+<li><a href='#L589' title='Defined at 589.'>ecommunity_ecom2str</a></li>
+<li><a href='#L728' title='Defined at 728.'>ecommunity_match</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* BGP Extended Communities Attribute</em>
+<a id='L2' name='L2'></a><em class='comment'>   Copyright (C) 2000 Kunihiro Ishiguro &lt;kunihiro@zebra.org&gt;</em>
+<a id='L3' name='L3'></a><em class='comment'></em>
+<a id='L4' name='L4'></a><em class='comment'>This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'></em>
+<a id='L6' name='L6'></a><em class='comment'>GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'>under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'>Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'>later version.</em>
+<a id='L10' name='L10'></a><em class='comment'></em>
+<a id='L11' name='L11'></a><em class='comment'>GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'>WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'>General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'></em>
+<a id='L16' name='L16'></a><em class='comment'>You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'>along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'>Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'>02111-1307, USA.  */</em>
+<a id='L20' name='L20'></a>
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> "<a href='227.html'>hash.h</a>"
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='608.html'>bgpd/bgpd.h</a>"
+<a id='L29' name='L29'></a><em class='sharp'>#include</em> "<a href='637.html'>bgpd/bgp_ecommunity.h</a>"
+<a id='L30' name='L30'></a><em class='sharp'>#include</em> "<a href='656.html'>bgpd/bgp_aspath.h</a>"
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='comment'>/* Hash of community attribute. */</em>
+<a id='L33' name='L33'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a> *ecomhash;
+<a id='L34' name='L34'></a>
+<a id='L35' name='L35'></a><em class='comment'>/* Allocate a new ecommunities.  */</em>
+<a id='L36' name='L36'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L37' name='L37'></a><a href='../R/5677.html' title='Multiple referred from 2 places.'>ecommunity_new</a> (<strong class='reserved'>void</strong>)
+<a id='L38' name='L38'></a><em class='brace'>{</em>
+<a id='L39' name='L39'></a>  <strong class='reserved'>return</strong> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *) <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ECOMMUNITY,
+<a id='L40' name='L40'></a>                                        <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a>));
+<a id='L41' name='L41'></a><em class='brace'>}</em>
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><em class='comment'>/* Allocate ecommunities.  */</em>
+<a id='L44' name='L44'></a><strong class='reserved'>void</strong>
+<a id='L45' name='L45'></a><a href='../R/5669.html' title='Multiple referred from 11 places.'>ecommunity_free</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> **ecom)
+<a id='L46' name='L46'></a><em class='brace'>{</em>
+<a id='L47' name='L47'></a>  <strong class='reserved'>if</strong> ((*ecom)-&gt;val)
+<a id='L48' name='L48'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ECOMMUNITY_VAL, (*ecom)-&gt;val);
+<a id='L49' name='L49'></a>  <strong class='reserved'>if</strong> ((*ecom)-&gt;str)
+<a id='L50' name='L50'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ECOMMUNITY_STR, (*ecom)-&gt;str);
+<a id='L51' name='L51'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ECOMMUNITY, *ecom);
+<a id='L52' name='L52'></a>  ecom = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L53' name='L53'></a><em class='brace'>}</em>
+<a id='L54' name='L54'></a>
+<a id='L55' name='L55'></a><em class='comment'>/* Add a new Extended Communities value to Extended Communities</em>
+<a id='L56' name='L56'></a><em class='comment'>   Attribute structure.  When the value is already exists in the</em>
+<a id='L57' name='L57'></a><em class='comment'>   structure, we don't add the value.  Newly added value is sorted by</em>
+<a id='L58' name='L58'></a><em class='comment'>   numerical order.  When the value is added to the structure return 1</em>
+<a id='L59' name='L59'></a><em class='comment'>   else return 0.  */</em>
+<a id='L60' name='L60'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L61' name='L61'></a><a href='../R/5664.html' title='Multiple referred from 2 places.'>ecommunity_add_val</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom, <strong class='reserved'>struct</strong> <a href='../S/637.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.h.'>ecommunity_val</a> *eval)
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>  <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> *p;
+<a id='L64' name='L64'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L65' name='L65'></a>  <strong class='reserved'>int</strong> c;
+<a id='L66' name='L66'></a>
+<a id='L67' name='L67'></a>  <em class='comment'>/* When this is fist value, just add it.  */</em>
+<a id='L68' name='L68'></a>  <strong class='reserved'>if</strong> (ecom-&gt;val == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L69' name='L69'></a>    <em class='brace'>{</em>
+<a id='L70' name='L70'></a>      ecom-&gt;size++;
+<a id='L71' name='L71'></a>      ecom-&gt;val = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_ECOMMUNITY_VAL, <a href='../S/637.html#L66' title='Defined at 66 in bgpd/bgp_ecommunity.h.'>ecom_length</a> (ecom));
+<a id='L72' name='L72'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (ecom-&gt;val, eval-&gt;val, <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L73' name='L73'></a>      <strong class='reserved'>return</strong> 1;
+<a id='L74' name='L74'></a>    <em class='brace'>}</em>
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>  <em class='comment'>/* If the value already exists in the structure return 0.  */</em>
+<a id='L77' name='L77'></a>  c = 0;
+<a id='L78' name='L78'></a>  <strong class='reserved'>for</strong> (p = ecom-&gt;val; c &lt; ecom-&gt;size; p += <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>, c++)
+<a id='L79' name='L79'></a>    <em class='brace'>{</em>
+<a id='L80' name='L80'></a>      ret = <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (p, eval-&gt;val, <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L81' name='L81'></a>      <strong class='reserved'>if</strong> (ret == 0)
+<a id='L82' name='L82'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L83' name='L83'></a>      <strong class='reserved'>if</strong> (ret &gt; 0)
+<a id='L84' name='L84'></a>        <strong class='reserved'>break</strong>;
+<a id='L85' name='L85'></a>    <em class='brace'>}</em>
+<a id='L86' name='L86'></a>
+<a id='L87' name='L87'></a>  <em class='comment'>/* Add the value to the structure with numerical sorting.  */</em>
+<a id='L88' name='L88'></a>  ecom-&gt;size++;
+<a id='L89' name='L89'></a>  ecom-&gt;val = <a href='../D/4560.html' title='Multiple defined in 4 places.'>XREALLOC</a> (MTYPE_ECOMMUNITY_VAL, ecom-&gt;val, <a href='../S/637.html#L66' title='Defined at 66 in bgpd/bgp_ecommunity.h.'>ecom_length</a> (ecom));
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a>  memmove (ecom-&gt;val + (c + 1) * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>,
+<a id='L92' name='L92'></a>           ecom-&gt;val + c * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>,
+<a id='L93' name='L93'></a>           (ecom-&gt;size - 1 - c) * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L94' name='L94'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (ecom-&gt;val + c * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>, eval-&gt;val, <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L95' name='L95'></a>
+<a id='L96' name='L96'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L97' name='L97'></a><em class='brace'>}</em>
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><em class='comment'>/* This function takes pointer to Extended Communites strucutre then</em>
+<a id='L100' name='L100'></a><em class='comment'>   create a new Extended Communities structure by uniq and sort each</em>
+<a id='L101' name='L101'></a><em class='comment'>   Extended Communities value.  */</em>
+<a id='L102' name='L102'></a><strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L103' name='L103'></a><a href='../R/5684.html' title='Multiple referred from 3 places.'>ecommunity_uniq_sort</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom)
+<a id='L104' name='L104'></a><em class='brace'>{</em>
+<a id='L105' name='L105'></a>  <strong class='reserved'>int</strong> i;
+<a id='L106' name='L106'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *new;
+<a id='L107' name='L107'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.h.'>ecommunity_val</a> *eval;
+<a id='L108' name='L108'></a>  
+<a id='L109' name='L109'></a>  <strong class='reserved'>if</strong> (! ecom)
+<a id='L110' name='L110'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L111' name='L111'></a>  
+<a id='L112' name='L112'></a>  new = <a href='../S/629.html#L37' title='Defined at 37 in bgpd/bgp_ecommunity.c.'>ecommunity_new</a> ();
+<a id='L113' name='L113'></a>  
+<a id='L114' name='L114'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; ecom-&gt;size; i++)
+<a id='L115' name='L115'></a>    <em class='brace'>{</em>
+<a id='L116' name='L116'></a>      eval = (<strong class='reserved'>struct</strong> <a href='../S/637.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.h.'>ecommunity_val</a> *) (ecom-&gt;val + (i * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>));
+<a id='L117' name='L117'></a>      <a href='../S/629.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.c.'>ecommunity_add_val</a> (new, eval);
+<a id='L118' name='L118'></a>    <em class='brace'>}</em>
+<a id='L119' name='L119'></a>  <strong class='reserved'>return</strong> new;
+<a id='L120' name='L120'></a><em class='brace'>}</em>
+<a id='L121' name='L121'></a>
+<a id='L122' name='L122'></a><em class='comment'>/* Parse Extended Communites Attribute in BGP packet.  */</em>
+<a id='L123' name='L123'></a><strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L124' name='L124'></a><a href='../R/5678.html' title='Multiple referred from 3 places.'>ecommunity_parse</a> (<a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> *pnt, u_short length)
+<a id='L125' name='L125'></a><em class='brace'>{</em>
+<a id='L126' name='L126'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> tmp;
+<a id='L127' name='L127'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *new;
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a>  <em class='comment'>/* Length check.  */</em>
+<a id='L130' name='L130'></a>  <strong class='reserved'>if</strong> (length % <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>)
+<a id='L131' name='L131'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L132' name='L132'></a>
+<a id='L133' name='L133'></a>  <em class='comment'>/* Prepare tmporary structure for making a new Extended Communities</em>
+<a id='L134' name='L134'></a><em class='comment'>     Attribute.  */</em>
+<a id='L135' name='L135'></a>  tmp.size = length / <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>;
+<a id='L136' name='L136'></a>  tmp.val = pnt;
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <em class='comment'>/* Create a new Extended Communities Attribute by uniq and sort each</em>
+<a id='L139' name='L139'></a><em class='comment'>     Extended Communities value  */</em>
+<a id='L140' name='L140'></a>  new = <a href='../S/629.html#L103' title='Defined at 103 in bgpd/bgp_ecommunity.c.'>ecommunity_uniq_sort</a> (&amp;tmp);
+<a id='L141' name='L141'></a>
+<a id='L142' name='L142'></a>  <strong class='reserved'>return</strong> <a href='../S/629.html#L192' title='Defined at 192 in bgpd/bgp_ecommunity.c.'>ecommunity_intern</a> (new);
+<a id='L143' name='L143'></a><em class='brace'>}</em>
+<a id='L144' name='L144'></a>
+<a id='L145' name='L145'></a><em class='comment'>/* Duplicate the Extended Communities Attribute structure.  */</em>
+<a id='L146' name='L146'></a><strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L147' name='L147'></a><a href='../R/5666.html' title='Multiple referred from 7 places.'>ecommunity_dup</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom)
+<a id='L148' name='L148'></a><em class='brace'>{</em>
+<a id='L149' name='L149'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *new;
+<a id='L150' name='L150'></a>
+<a id='L151' name='L151'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ECOMMUNITY, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a>));
+<a id='L152' name='L152'></a>  new-&gt;size = ecom-&gt;size;
+<a id='L153' name='L153'></a>  <strong class='reserved'>if</strong> (new-&gt;size)
+<a id='L154' name='L154'></a>    <em class='brace'>{</em>
+<a id='L155' name='L155'></a>      new-&gt;val = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_ECOMMUNITY_VAL, ecom-&gt;size * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L156' name='L156'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (new-&gt;val, ecom-&gt;val, ecom-&gt;size * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L157' name='L157'></a>    <em class='brace'>}</em>
+<a id='L158' name='L158'></a>  <strong class='reserved'>else</strong>
+<a id='L159' name='L159'></a>    new-&gt;val = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L160' name='L160'></a>  <strong class='reserved'>return</strong> new;
+<a id='L161' name='L161'></a><em class='brace'>}</em>
+<a id='L162' name='L162'></a>
+<a id='L163' name='L163'></a><em class='comment'>/* Retrun string representation of communities attribute. */</em>
+<a id='L164' name='L164'></a><strong class='reserved'>char</strong> *
+<a id='L165' name='L165'></a><a href='../R/5680.html' title='Multiple referred from 4 places.'>ecommunity_str</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom)
+<a id='L166' name='L166'></a><em class='brace'>{</em>
+<a id='L167' name='L167'></a>  <strong class='reserved'>if</strong> (! ecom-&gt;str)
+<a id='L168' name='L168'></a>    ecom-&gt;str = <a href='../S/629.html#L589' title='Defined at 589 in bgpd/bgp_ecommunity.c.'>ecommunity_ecom2str</a> (ecom, <a href='../S/637.html#L36' title='Defined at 36 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_FORMAT_DISPLAY</a>);
+<a id='L169' name='L169'></a>  <strong class='reserved'>return</strong> ecom-&gt;str;
+<a id='L170' name='L170'></a><em class='brace'>}</em>
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a><em class='comment'>/* Merge two Extended Communities Attribute structure.  */</em>
+<a id='L173' name='L173'></a><strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L174' name='L174'></a><a href='../R/5676.html' title='Multiple referred from 4 places.'>ecommunity_merge</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom1, <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom2)
+<a id='L175' name='L175'></a><em class='brace'>{</em>
+<a id='L176' name='L176'></a>  <strong class='reserved'>if</strong> (ecom1-&gt;val)
+<a id='L177' name='L177'></a>    ecom1-&gt;val = <a href='../D/4560.html' title='Multiple defined in 4 places.'>XREALLOC</a> (MTYPE_ECOMMUNITY_VAL, ecom1-&gt;val, 
+<a id='L178' name='L178'></a>                           (ecom1-&gt;size + ecom2-&gt;size) * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L179' name='L179'></a>  <strong class='reserved'>else</strong>
+<a id='L180' name='L180'></a>    ecom1-&gt;val = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_ECOMMUNITY_VAL,
+<a id='L181' name='L181'></a>                          (ecom1-&gt;size + ecom2-&gt;size) * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a>  <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (ecom1-&gt;val + (ecom1-&gt;size * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>),
+<a id='L184' name='L184'></a>          ecom2-&gt;val, ecom2-&gt;size * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>);
+<a id='L185' name='L185'></a>  ecom1-&gt;size += ecom2-&gt;size;
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a>  <strong class='reserved'>return</strong> ecom1;
+<a id='L188' name='L188'></a><em class='brace'>}</em>
+<a id='L189' name='L189'></a>
+<a id='L190' name='L190'></a><em class='comment'>/* Intern Extended Communities Attribute.  */</em>
+<a id='L191' name='L191'></a><strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L192' name='L192'></a><a href='../R/5673.html' title='Multiple referred from 7 places.'>ecommunity_intern</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom)
+<a id='L193' name='L193'></a><em class='brace'>{</em>
+<a id='L194' name='L194'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *find;
+<a id='L195' name='L195'></a>
+<a id='L196' name='L196'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (ecom-&gt;refcnt == 0);
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>  find = (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *) <a href='../S/265.html#L66' title='Defined at 66 in lib/hash.c.'>hash_get</a> (ecomhash, ecom, <a href='../S/265.html#L57' title='Defined at 57 in lib/hash.c.'>hash_alloc_intern</a>);
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a>  <strong class='reserved'>if</strong> (find != ecom)
+<a id='L201' name='L201'></a>    <a href='../S/629.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.c.'>ecommunity_free</a> (&amp;ecom);
+<a id='L202' name='L202'></a>
+<a id='L203' name='L203'></a>  find-&gt;refcnt++;
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a>  <strong class='reserved'>if</strong> (! find-&gt;str)
+<a id='L206' name='L206'></a>    find-&gt;str = <a href='../S/629.html#L589' title='Defined at 589 in bgpd/bgp_ecommunity.c.'>ecommunity_ecom2str</a> (find, <a href='../S/637.html#L36' title='Defined at 36 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_FORMAT_DISPLAY</a>);
+<a id='L207' name='L207'></a>
+<a id='L208' name='L208'></a>  <strong class='reserved'>return</strong> find;
+<a id='L209' name='L209'></a><em class='brace'>}</em>
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a><em class='comment'>/* Unintern Extended Communities Attribute.  */</em>
+<a id='L212' name='L212'></a><strong class='reserved'>void</strong>
+<a id='L213' name='L213'></a><a href='../R/5683.html' title='Multiple referred from 7 places.'>ecommunity_unintern</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> **ecom)
+<a id='L214' name='L214'></a><em class='brace'>{</em>
+<a id='L215' name='L215'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ret;
+<a id='L216' name='L216'></a>
+<a id='L217' name='L217'></a>  <strong class='reserved'>if</strong> ((*ecom)-&gt;refcnt)
+<a id='L218' name='L218'></a>    (*ecom)-&gt;refcnt--;
+<a id='L219' name='L219'></a>    
+<a id='L220' name='L220'></a>  <em class='comment'>/* Pull off from hash.  */</em>
+<a id='L221' name='L221'></a>  <strong class='reserved'>if</strong> ((*ecom)-&gt;refcnt == 0)
+<a id='L222' name='L222'></a>    <em class='brace'>{</em>
+<a id='L223' name='L223'></a>      <em class='comment'>/* Extended community must be in the hash.  */</em>
+<a id='L224' name='L224'></a>      ret = (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *) <a href='../S/265.html#L119' title='Defined at 119 in lib/hash.c.'>hash_release</a> (ecomhash, *ecom);
+<a id='L225' name='L225'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (ret != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L226' name='L226'></a>
+<a id='L227' name='L227'></a>      <a href='../S/629.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.c.'>ecommunity_free</a> (ecom);
+<a id='L228' name='L228'></a>    <em class='brace'>}</em>
+<a id='L229' name='L229'></a><em class='brace'>}</em>
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a><em class='comment'>/* Utinity function to make hash key.  */</em>
+<a id='L232' name='L232'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>
+<a id='L233' name='L233'></a><a href='../R/5671.html' title='Multiple referred from 3 places.'>ecommunity_hash_make</a> (<strong class='reserved'>void</strong> *arg)
+<a id='L234' name='L234'></a><em class='brace'>{</em>
+<a id='L235' name='L235'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom = arg;
+<a id='L236' name='L236'></a>  <strong class='reserved'>int</strong> size = ecom-&gt;size * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>;
+<a id='L237' name='L237'></a>  <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> *pnt = ecom-&gt;val;
+<a id='L238' name='L238'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> = 0;
+<a id='L239' name='L239'></a>  <strong class='reserved'>int</strong> c;
+<a id='L240' name='L240'></a>
+<a id='L241' name='L241'></a>  <strong class='reserved'>for</strong> (c = 0; c &lt; size; c += <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>)
+<a id='L242' name='L242'></a>    <em class='brace'>{</em>
+<a id='L243' name='L243'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c];
+<a id='L244' name='L244'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 1];
+<a id='L245' name='L245'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 2];
+<a id='L246' name='L246'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 3];
+<a id='L247' name='L247'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 4];
+<a id='L248' name='L248'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 5];
+<a id='L249' name='L249'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 6];
+<a id='L250' name='L250'></a>      <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a> += pnt[c + 7];
+<a id='L251' name='L251'></a>    <em class='brace'>}</em>
+<a id='L252' name='L252'></a>
+<a id='L253' name='L253'></a>  <strong class='reserved'>return</strong> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>;
+<a id='L254' name='L254'></a><em class='brace'>}</em>
+<a id='L255' name='L255'></a>
+<a id='L256' name='L256'></a><em class='comment'>/* Compare two Extended Communities Attribute structure.  */</em>
+<a id='L257' name='L257'></a><strong class='reserved'>int</strong>
+<a id='L258' name='L258'></a><a href='../R/5665.html' title='Multiple referred from 4 places.'>ecommunity_cmp</a> (<strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *arg1, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *arg2)
+<a id='L259' name='L259'></a><em class='brace'>{</em>
+<a id='L260' name='L260'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom1 = arg1;
+<a id='L261' name='L261'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom2 = arg2;
+<a id='L262' name='L262'></a>  
+<a id='L263' name='L263'></a>  <strong class='reserved'>return</strong> (ecom1-&gt;size == ecom2-&gt;size
+<a id='L264' name='L264'></a>          &amp;&amp; <a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (ecom1-&gt;val, ecom2-&gt;val, ecom1-&gt;size * <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>) == 0);
+<a id='L265' name='L265'></a><em class='brace'>}</em>
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a><em class='comment'>/* Initialize Extended Comminities related hash. */</em>
+<a id='L268' name='L268'></a><strong class='reserved'>void</strong>
+<a id='L269' name='L269'></a><a href='../R/5672.html' title='Multiple referred from 3 places.'>ecommunity_init</a> (<strong class='reserved'>void</strong>)
+<a id='L270' name='L270'></a><em class='brace'>{</em>
+<a id='L271' name='L271'></a>  ecomhash = <a href='../S/265.html#L47' title='Defined at 47 in lib/hash.c.'>hash_create</a> (<a href='../S/629.html#L233' title='Defined at 233 in bgpd/bgp_ecommunity.c.'>ecommunity_hash_make</a>, <a href='../S/629.html#L258' title='Defined at 258 in bgpd/bgp_ecommunity.c.'>ecommunity_cmp</a>);
+<a id='L272' name='L272'></a><em class='brace'>}</em>
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a><strong class='reserved'>void</strong>
+<a id='L275' name='L275'></a><a href='../R/5668.html' title='Multiple referred from 2 places.'>ecommunity_finish</a> (<strong class='reserved'>void</strong>)
+<a id='L276' name='L276'></a><em class='brace'>{</em>
+<a id='L277' name='L277'></a>  <a href='../S/265.html#L196' title='Defined at 196 in lib/hash.c.'>hash_free</a> (ecomhash);
+<a id='L278' name='L278'></a>  ecomhash = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L279' name='L279'></a><em class='brace'>}</em>
+<a id='L280' name='L280'></a>
+<a id='L281' name='L281'></a><em class='comment'>/* Extended Communities token enum. */</em>
+<a id='L282' name='L282'></a><strong class='reserved'>enum</strong> <a href='../R/5682.html' title='Multiple referred from 2 places.'>ecommunity_token</a>
+<a id='L283' name='L283'></a><em class='brace'>{</em>
+<a id='L284' name='L284'></a>  ecommunity_token_rt,
+<a id='L285' name='L285'></a>  ecommunity_token_soo,
+<a id='L286' name='L286'></a>  ecommunity_token_val,
+<a id='L287' name='L287'></a>  ecommunity_token_unknown
+<a id='L288' name='L288'></a><em class='brace'>}</em>;
+<a id='L289' name='L289'></a>
+<a id='L290' name='L290'></a><em class='comment'>/* Get next Extended Communities token from the string. */</em>
+<a id='L291' name='L291'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *
+<a id='L292' name='L292'></a><a href='../S/629.html#L518' title='Referred from 518 in bgpd/bgp_ecommunity.c.'>ecommunity_gettoken</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, <strong class='reserved'>struct</strong> <a href='../S/637.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.h.'>ecommunity_val</a> *eval,
+<a id='L293' name='L293'></a>                     <strong class='reserved'>enum</strong> <a href='../S/629.html#L282' title='Defined at 282 in bgpd/bgp_ecommunity.c.'>ecommunity_token</a> *token)
+<a id='L294' name='L294'></a><em class='brace'>{</em>
+<a id='L295' name='L295'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L296' name='L296'></a>  <strong class='reserved'>int</strong> dot = 0;
+<a id='L297' name='L297'></a>  <strong class='reserved'>int</strong> digit = 0;
+<a id='L298' name='L298'></a>  <strong class='reserved'>int</strong> separator = 0;
+<a id='L299' name='L299'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *p = str;
+<a id='L300' name='L300'></a>  <strong class='reserved'>char</strong> *endptr;
+<a id='L301' name='L301'></a>  <strong class='reserved'>struct</strong> in_addr ip;
+<a id='L302' name='L302'></a>  <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a> as = 0;
+<a id='L303' name='L303'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> val = 0;
+<a id='L304' name='L304'></a>  <strong class='reserved'>char</strong> buf[<a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a> + 1];
+<a id='L305' name='L305'></a>
+<a id='L306' name='L306'></a>  <em class='comment'>/* Skip white space. */</em>
+<a id='L307' name='L307'></a>  <strong class='reserved'>while</strong> (isspace ((<strong class='reserved'>int</strong>) *p))
+<a id='L308' name='L308'></a>    <em class='brace'>{</em>
+<a id='L309' name='L309'></a>      p++;
+<a id='L310' name='L310'></a>      str++;
+<a id='L311' name='L311'></a>    <em class='brace'>}</em>
+<a id='L312' name='L312'></a>
+<a id='L313' name='L313'></a>  <em class='comment'>/* Check the end of the line. */</em>
+<a id='L314' name='L314'></a>  <strong class='reserved'>if</strong> (*p == '\0')
+<a id='L315' name='L315'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L316' name='L316'></a>
+<a id='L317' name='L317'></a>  <em class='comment'>/* "rt" and "soo" keyword parse. */</em>
+<a id='L318' name='L318'></a>  <strong class='reserved'>if</strong> (! isdigit ((<strong class='reserved'>int</strong>) *p)) 
+<a id='L319' name='L319'></a>    <em class='brace'>{</em>
+<a id='L320' name='L320'></a>      <em class='comment'>/* "rt" match check.  */</em>
+<a id='L321' name='L321'></a>      <strong class='reserved'>if</strong> (tolower ((<strong class='reserved'>int</strong>) *p) == 'r')
+<a id='L322' name='L322'></a>        <em class='brace'>{</em>
+<a id='L323' name='L323'></a>          p++;
+<a id='L324' name='L324'></a>          <strong class='reserved'>if</strong> (tolower ((<strong class='reserved'>int</strong>) *p) == 't')
+<a id='L325' name='L325'></a>            <em class='brace'>{</em>
+<a id='L326' name='L326'></a>              p++;
+<a id='L327' name='L327'></a>              *token = ecommunity_token_rt;
+<a id='L328' name='L328'></a>              <strong class='reserved'>return</strong> p;
+<a id='L329' name='L329'></a>            <em class='brace'>}</em>
+<a id='L330' name='L330'></a>          <strong class='reserved'>if</strong> (isspace ((<strong class='reserved'>int</strong>) *p) || *p == '\0')
+<a id='L331' name='L331'></a>            <em class='brace'>{</em>
+<a id='L332' name='L332'></a>              *token = ecommunity_token_rt;
+<a id='L333' name='L333'></a>              <strong class='reserved'>return</strong> p;
+<a id='L334' name='L334'></a>            <em class='brace'>}</em>
+<a id='L335' name='L335'></a>          <strong class='reserved'>goto</strong> error;
+<a id='L336' name='L336'></a>        <em class='brace'>}</em>
+<a id='L337' name='L337'></a>      <em class='comment'>/* "soo" match check.  */</em>
+<a id='L338' name='L338'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (tolower ((<strong class='reserved'>int</strong>) *p) == 's')
+<a id='L339' name='L339'></a>        <em class='brace'>{</em>
+<a id='L340' name='L340'></a>          p++;
+<a id='L341' name='L341'></a>          <strong class='reserved'>if</strong> (tolower ((<strong class='reserved'>int</strong>) *p) == 'o')
+<a id='L342' name='L342'></a>            <em class='brace'>{</em>
+<a id='L343' name='L343'></a>              p++;
+<a id='L344' name='L344'></a>              <strong class='reserved'>if</strong> (tolower ((<strong class='reserved'>int</strong>) *p) == 'o')
+<a id='L345' name='L345'></a>                <em class='brace'>{</em>
+<a id='L346' name='L346'></a>                  p++;
+<a id='L347' name='L347'></a>                  *token = ecommunity_token_soo;
+<a id='L348' name='L348'></a>                  <strong class='reserved'>return</strong> p;
+<a id='L349' name='L349'></a>                <em class='brace'>}</em>
+<a id='L350' name='L350'></a>              <strong class='reserved'>if</strong> (isspace ((<strong class='reserved'>int</strong>) *p) || *p == '\0')
+<a id='L351' name='L351'></a>                <em class='brace'>{</em>
+<a id='L352' name='L352'></a>                  *token = ecommunity_token_soo;
+<a id='L353' name='L353'></a>                  <strong class='reserved'>return</strong> p;
+<a id='L354' name='L354'></a>                <em class='brace'>}</em>
+<a id='L355' name='L355'></a>              <strong class='reserved'>goto</strong> error;
+<a id='L356' name='L356'></a>            <em class='brace'>}</em>
+<a id='L357' name='L357'></a>          <strong class='reserved'>if</strong> (isspace ((<strong class='reserved'>int</strong>) *p) || *p == '\0')
+<a id='L358' name='L358'></a>            <em class='brace'>{</em>
+<a id='L359' name='L359'></a>              *token = ecommunity_token_soo;
+<a id='L360' name='L360'></a>              <strong class='reserved'>return</strong> p;
+<a id='L361' name='L361'></a>            <em class='brace'>}</em>
+<a id='L362' name='L362'></a>          <strong class='reserved'>goto</strong> error;
+<a id='L363' name='L363'></a>        <em class='brace'>}</em>
+<a id='L364' name='L364'></a>      <strong class='reserved'>goto</strong> error;
+<a id='L365' name='L365'></a>    <em class='brace'>}</em>
+<a id='L366' name='L366'></a>  
+<a id='L367' name='L367'></a>  <em class='comment'>/* What a mess, there are several possibilities:</em>
+<a id='L368' name='L368'></a><em class='comment'>   *</em>
+<a id='L369' name='L369'></a><em class='comment'>   * a) A.B.C.D:MN</em>
+<a id='L370' name='L370'></a><em class='comment'>   * b) EF:OPQR</em>
+<a id='L371' name='L371'></a><em class='comment'>   * c) GHJK:MN</em>
+<a id='L372' name='L372'></a><em class='comment'>   *</em>
+<a id='L373' name='L373'></a><em class='comment'>   * A.B.C.D: Four Byte IP</em>
+<a id='L374' name='L374'></a><em class='comment'>   * EF:      Two byte ASN</em>
+<a id='L375' name='L375'></a><em class='comment'>   * GHJK:    Four-byte ASN</em>
+<a id='L376' name='L376'></a><em class='comment'>   * MN:      Two byte value</em>
+<a id='L377' name='L377'></a><em class='comment'>   * OPQR:    Four byte value</em>
+<a id='L378' name='L378'></a><em class='comment'>   *</em>
+<a id='L379' name='L379'></a><em class='comment'>   */</em>
+<a id='L380' name='L380'></a>  <strong class='reserved'>while</strong> (isdigit ((<strong class='reserved'>int</strong>) *p) || *p == ':' || *p == '.') 
+<a id='L381' name='L381'></a>    <em class='brace'>{</em>
+<a id='L382' name='L382'></a>      <strong class='reserved'>if</strong> (*p == ':')
+<a id='L383' name='L383'></a>        <em class='brace'>{</em>
+<a id='L384' name='L384'></a>          <strong class='reserved'>if</strong> (separator)
+<a id='L385' name='L385'></a>            <strong class='reserved'>goto</strong> error;
+<a id='L386' name='L386'></a>
+<a id='L387' name='L387'></a>          separator = 1;
+<a id='L388' name='L388'></a>          digit = 0;
+<a id='L389' name='L389'></a>          
+<a id='L390' name='L390'></a>          <strong class='reserved'>if</strong> ((p - str) &gt; <a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a>)
+<a id='L391' name='L391'></a>            <strong class='reserved'>goto</strong> error;
+<a id='L392' name='L392'></a>          memset (buf, 0, <a href='../S/249.html#L93' title='Defined at 93 in lib/prefix.h.'>INET_ADDRSTRLEN</a> + 1);
+<a id='L393' name='L393'></a>          <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (buf, str, p - str);
+<a id='L394' name='L394'></a>          
+<a id='L395' name='L395'></a>          <strong class='reserved'>if</strong> (dot)
+<a id='L396' name='L396'></a>            <em class='brace'>{</em>
+<a id='L397' name='L397'></a>              <em class='comment'>/* Parsing A.B.C.D in:</em>
+<a id='L398' name='L398'></a><em class='comment'>               * A.B.C.D:MN</em>
+<a id='L399' name='L399'></a><em class='comment'>               */</em>
+<a id='L400' name='L400'></a>              ret = <a href='../S/213.html#L33' title='Defined at 33 in lib/sockunion.c.'>inet_aton</a> (buf, &amp;ip);
+<a id='L401' name='L401'></a>              <strong class='reserved'>if</strong> (ret == 0)
+<a id='L402' name='L402'></a>                <strong class='reserved'>goto</strong> error;
+<a id='L403' name='L403'></a>            <em class='brace'>}</em>
+<a id='L404' name='L404'></a>          <strong class='reserved'>else</strong>
+<a id='L405' name='L405'></a>            <em class='brace'>{</em>
+<a id='L406' name='L406'></a>              <em class='comment'>/* ASN */</em>
+<a id='L407' name='L407'></a>              as = strtoul (buf, &amp;endptr, 10);
+<a id='L408' name='L408'></a>              <strong class='reserved'>if</strong> (*endptr != '\0' || as == <a href='../S/656.html#L36' title='Defined at 36 in bgpd/bgp_aspath.h.'>BGP_AS4_MAX</a>)
+<a id='L409' name='L409'></a>                <strong class='reserved'>goto</strong> error;
+<a id='L410' name='L410'></a>            <em class='brace'>}</em>
+<a id='L411' name='L411'></a>        <em class='brace'>}</em>
+<a id='L412' name='L412'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (*p == '.')
+<a id='L413' name='L413'></a>        <em class='brace'>{</em>
+<a id='L414' name='L414'></a>          <strong class='reserved'>if</strong> (separator)
+<a id='L415' name='L415'></a>            <strong class='reserved'>goto</strong> error;
+<a id='L416' name='L416'></a>          dot++;
+<a id='L417' name='L417'></a>          <strong class='reserved'>if</strong> (dot &gt; 4)
+<a id='L418' name='L418'></a>            <strong class='reserved'>goto</strong> error;
+<a id='L419' name='L419'></a>        <em class='brace'>}</em>
+<a id='L420' name='L420'></a>      <strong class='reserved'>else</strong>
+<a id='L421' name='L421'></a>        <em class='brace'>{</em>
+<a id='L422' name='L422'></a>          digit = 1;
+<a id='L423' name='L423'></a>          
+<a id='L424' name='L424'></a>          <em class='comment'>/* We're past the IP/ASN part */</em>
+<a id='L425' name='L425'></a>          <strong class='reserved'>if</strong> (separator)
+<a id='L426' name='L426'></a>            <em class='brace'>{</em>
+<a id='L427' name='L427'></a>              val *= 10;
+<a id='L428' name='L428'></a>              val += (*p - '0');
+<a id='L429' name='L429'></a>            <em class='brace'>}</em>
+<a id='L430' name='L430'></a>        <em class='brace'>}</em>
+<a id='L431' name='L431'></a>      p++;
+<a id='L432' name='L432'></a>    <em class='brace'>}</em>
+<a id='L433' name='L433'></a>
+<a id='L434' name='L434'></a>  <em class='comment'>/* Low digit part must be there. */</em>
+<a id='L435' name='L435'></a>  <strong class='reserved'>if</strong> (!digit || !separator)
+<a id='L436' name='L436'></a>    <strong class='reserved'>goto</strong> error;
+<a id='L437' name='L437'></a>
+<a id='L438' name='L438'></a>  <em class='comment'>/* Encode result into routing distinguisher.  */</em>
+<a id='L439' name='L439'></a>  <strong class='reserved'>if</strong> (dot)
+<a id='L440' name='L440'></a>    <em class='brace'>{</em>
+<a id='L441' name='L441'></a>      <strong class='reserved'>if</strong> (val &gt; <a href='../S/191.html#L238' title='Defined at 238 in lib/zebra.h.'>UINT16_MAX</a>)
+<a id='L442' name='L442'></a>        <strong class='reserved'>goto</strong> error;
+<a id='L443' name='L443'></a>      
+<a id='L444' name='L444'></a>      eval-&gt;val[0] = <a href='../S/637.html#L26' title='Defined at 26 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_IP</a>;
+<a id='L445' name='L445'></a>      eval-&gt;val[1] = 0;
+<a id='L446' name='L446'></a>      <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;eval-&gt;val[2], &amp;ip, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> in_addr));
+<a id='L447' name='L447'></a>      eval-&gt;val[6] = (val &gt;&gt; 8) &amp; 0xff;
+<a id='L448' name='L448'></a>      eval-&gt;val[7] = val &amp; 0xff;
+<a id='L449' name='L449'></a>    <em class='brace'>}</em>
+<a id='L450' name='L450'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (as &gt; <a href='../S/656.html#L35' title='Defined at 35 in bgpd/bgp_aspath.h.'>BGP_AS_MAX</a>)
+<a id='L451' name='L451'></a>    <em class='brace'>{</em>
+<a id='L452' name='L452'></a>      <strong class='reserved'>if</strong> (val &gt; <a href='../S/191.html#L238' title='Defined at 238 in lib/zebra.h.'>UINT16_MAX</a>)
+<a id='L453' name='L453'></a>        <strong class='reserved'>goto</strong> error;
+<a id='L454' name='L454'></a>      
+<a id='L455' name='L455'></a>      eval-&gt;val[0] = <a href='../S/637.html#L27' title='Defined at 27 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_AS4</a>;
+<a id='L456' name='L456'></a>      eval-&gt;val[1] = 0;
+<a id='L457' name='L457'></a>      eval-&gt;val[2] = (as &gt;&gt;24) &amp; 0xff;
+<a id='L458' name='L458'></a>      eval-&gt;val[3] = (as &gt;&gt;16) &amp; 0xff;
+<a id='L459' name='L459'></a>      eval-&gt;val[4] = (as &gt;&gt;8) &amp; 0xff;
+<a id='L460' name='L460'></a>      eval-&gt;val[5] =  as &amp; 0xff;
+<a id='L461' name='L461'></a>      eval-&gt;val[6] = (val &gt;&gt; 8) &amp; 0xff;
+<a id='L462' name='L462'></a>      eval-&gt;val[7] = val &amp; 0xff;
+<a id='L463' name='L463'></a>    <em class='brace'>}</em>
+<a id='L464' name='L464'></a>  <strong class='reserved'>else</strong>
+<a id='L465' name='L465'></a>    <em class='brace'>{</em>
+<a id='L466' name='L466'></a>      eval-&gt;val[0] = <a href='../S/637.html#L25' title='Defined at 25 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_AS</a>;
+<a id='L467' name='L467'></a>      eval-&gt;val[1] = 0;
+<a id='L468' name='L468'></a>      
+<a id='L469' name='L469'></a>      eval-&gt;val[2] = (as &gt;&gt;8) &amp; 0xff;
+<a id='L470' name='L470'></a>      eval-&gt;val[3] = as &amp; 0xff;
+<a id='L471' name='L471'></a>      eval-&gt;val[4] = (val &gt;&gt;24) &amp; 0xff;
+<a id='L472' name='L472'></a>      eval-&gt;val[5] = (val &gt;&gt;16) &amp; 0xff;
+<a id='L473' name='L473'></a>      eval-&gt;val[6] = (val &gt;&gt;8) &amp; 0xff;
+<a id='L474' name='L474'></a>      eval-&gt;val[7] = val &amp; 0xff;
+<a id='L475' name='L475'></a>    <em class='brace'>}</em>
+<a id='L476' name='L476'></a>  *token = ecommunity_token_val;
+<a id='L477' name='L477'></a>  <strong class='reserved'>return</strong> p;
+<a id='L478' name='L478'></a>
+<a id='L479' name='L479'></a> error:
+<a id='L480' name='L480'></a>  *token = ecommunity_token_unknown;
+<a id='L481' name='L481'></a>  <strong class='reserved'>return</strong> p;
+<a id='L482' name='L482'></a><em class='brace'>}</em>
+<a id='L483' name='L483'></a>
+<a id='L484' name='L484'></a><em class='comment'>/* Convert string to extended community attribute. </em>
+<a id='L485' name='L485'></a><em class='comment'></em>
+<a id='L486' name='L486'></a><em class='comment'>   When type is already known, please specify both str and type.  str</em>
+<a id='L487' name='L487'></a><em class='comment'>   should not include keyword such as "rt" and "soo".  Type is</em>
+<a id='L488' name='L488'></a><em class='comment'>   ECOMMUNITY_ROUTE_TARGET or ECOMMUNITY_SITE_ORIGIN.</em>
+<a id='L489' name='L489'></a><em class='comment'>   keyword_included should be zero.</em>
+<a id='L490' name='L490'></a><em class='comment'></em>
+<a id='L491' name='L491'></a><em class='comment'>   For example route-map's "set extcommunity" command case:</em>
+<a id='L492' name='L492'></a><em class='comment'></em>
+<a id='L493' name='L493'></a><em class='comment'>   "rt 100:1 100:2 100:3"        -&gt; str = "100:1 100:2 100:3"</em>
+<a id='L494' name='L494'></a><em class='comment'>                                    type = ECOMMUNITY_ROUTE_TARGET</em>
+<a id='L495' name='L495'></a><em class='comment'>                                    keyword_included = 0</em>
+<a id='L496' name='L496'></a><em class='comment'></em>
+<a id='L497' name='L497'></a><em class='comment'>   "soo 100:1"                   -&gt; str = "100:1"</em>
+<a id='L498' name='L498'></a><em class='comment'>                                    type = ECOMMUNITY_SITE_ORIGIN</em>
+<a id='L499' name='L499'></a><em class='comment'>                                    keyword_included = 0</em>
+<a id='L500' name='L500'></a><em class='comment'></em>
+<a id='L501' name='L501'></a><em class='comment'>   When string includes keyword for each extended community value.</em>
+<a id='L502' name='L502'></a><em class='comment'>   Please specify keyword_included as non-zero value.</em>
+<a id='L503' name='L503'></a><em class='comment'></em>
+<a id='L504' name='L504'></a><em class='comment'>   For example standard extcommunity-list case:</em>
+<a id='L505' name='L505'></a><em class='comment'></em>
+<a id='L506' name='L506'></a><em class='comment'>   "rt 100:1 rt 100:2 soo 100:1" -&gt; str = "rt 100:1 rt 100:2 soo 100:1"</em>
+<a id='L507' name='L507'></a><em class='comment'>                                    type = 0</em>
+<a id='L508' name='L508'></a><em class='comment'>                                    keyword_include = 1</em>
+<a id='L509' name='L509'></a><em class='comment'>*/</em>
+<a id='L510' name='L510'></a><strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *
+<a id='L511' name='L511'></a><a href='../R/5681.html' title='Multiple referred from 6 places.'>ecommunity_str2com</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, <strong class='reserved'>int</strong> type, <strong class='reserved'>int</strong> keyword_included)
+<a id='L512' name='L512'></a><em class='brace'>{</em>
+<a id='L513' name='L513'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L514' name='L514'></a>  <strong class='reserved'>enum</strong> <a href='../S/629.html#L282' title='Defined at 282 in bgpd/bgp_ecommunity.c.'>ecommunity_token</a> token;
+<a id='L515' name='L515'></a>  <strong class='reserved'>struct</strong> <a href='../S/637.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.h.'>ecommunity_val</a> eval;
+<a id='L516' name='L516'></a>  <strong class='reserved'>int</strong> keyword = 0;
+<a id='L517' name='L517'></a>
+<a id='L518' name='L518'></a>  <strong class='reserved'>while</strong> ((str = <a href='../S/629.html#L292' title='Defined at 292 in bgpd/bgp_ecommunity.c.'>ecommunity_gettoken</a> (str, &amp;eval, &amp;token)))
+<a id='L519' name='L519'></a>    <em class='brace'>{</em>
+<a id='L520' name='L520'></a>      <strong class='reserved'>switch</strong> (token)
+<a id='L521' name='L521'></a>        <em class='brace'>{</em>
+<a id='L522' name='L522'></a>        <strong class='reserved'>case</strong> ecommunity_token_rt:
+<a id='L523' name='L523'></a>        <strong class='reserved'>case</strong> ecommunity_token_soo:
+<a id='L524' name='L524'></a>          <strong class='reserved'>if</strong> (! keyword_included || keyword)
+<a id='L525' name='L525'></a>            <em class='brace'>{</em>
+<a id='L526' name='L526'></a>              <strong class='reserved'>if</strong> (ecom)
+<a id='L527' name='L527'></a>                <a href='../S/629.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.c.'>ecommunity_free</a> (&amp;ecom);
+<a id='L528' name='L528'></a>              <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L529' name='L529'></a>            <em class='brace'>}</em>
+<a id='L530' name='L530'></a>          keyword = 1;
+<a id='L531' name='L531'></a>
+<a id='L532' name='L532'></a>          <strong class='reserved'>if</strong> (token == ecommunity_token_rt)
+<a id='L533' name='L533'></a>            <em class='brace'>{</em>
+<a id='L534' name='L534'></a>              type = <a href='../S/637.html#L30' title='Defined at 30 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ROUTE_TARGET</a>;
+<a id='L535' name='L535'></a>            <em class='brace'>}</em>
+<a id='L536' name='L536'></a>          <strong class='reserved'>if</strong> (token == ecommunity_token_soo)
+<a id='L537' name='L537'></a>            <em class='brace'>{</em>
+<a id='L538' name='L538'></a>              type = <a href='../S/637.html#L31' title='Defined at 31 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SITE_ORIGIN</a>;
+<a id='L539' name='L539'></a>            <em class='brace'>}</em>
+<a id='L540' name='L540'></a>          <strong class='reserved'>break</strong>;
+<a id='L541' name='L541'></a>        <strong class='reserved'>case</strong> ecommunity_token_val:
+<a id='L542' name='L542'></a>          <strong class='reserved'>if</strong> (keyword_included)
+<a id='L543' name='L543'></a>            <em class='brace'>{</em>
+<a id='L544' name='L544'></a>              <strong class='reserved'>if</strong> (! keyword)
+<a id='L545' name='L545'></a>                <em class='brace'>{</em>
+<a id='L546' name='L546'></a>                  <strong class='reserved'>if</strong> (ecom)
+<a id='L547' name='L547'></a>                    <a href='../S/629.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.c.'>ecommunity_free</a> (&amp;ecom);
+<a id='L548' name='L548'></a>                  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L549' name='L549'></a>                <em class='brace'>}</em>
+<a id='L550' name='L550'></a>              keyword = 0;
+<a id='L551' name='L551'></a>            <em class='brace'>}</em>
+<a id='L552' name='L552'></a>          <strong class='reserved'>if</strong> (ecom == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L553' name='L553'></a>            ecom = <a href='../S/629.html#L37' title='Defined at 37 in bgpd/bgp_ecommunity.c.'>ecommunity_new</a> ();
+<a id='L554' name='L554'></a>          eval.val[1] = type;
+<a id='L555' name='L555'></a>          <a href='../S/629.html#L61' title='Defined at 61 in bgpd/bgp_ecommunity.c.'>ecommunity_add_val</a> (ecom, &amp;eval);
+<a id='L556' name='L556'></a>          <strong class='reserved'>break</strong>;
+<a id='L557' name='L557'></a>        <strong class='reserved'>case</strong> ecommunity_token_unknown:
+<a id='L558' name='L558'></a>        <strong class='reserved'>default</strong>:
+<a id='L559' name='L559'></a>          <strong class='reserved'>if</strong> (ecom)
+<a id='L560' name='L560'></a>            <a href='../S/629.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.c.'>ecommunity_free</a> (&amp;ecom);
+<a id='L561' name='L561'></a>          <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L562' name='L562'></a>        <em class='brace'>}</em>
+<a id='L563' name='L563'></a>    <em class='brace'>}</em>
+<a id='L564' name='L564'></a>  <strong class='reserved'>return</strong> ecom;
+<a id='L565' name='L565'></a><em class='brace'>}</em>
+<a id='L566' name='L566'></a>
+<a id='L567' name='L567'></a><em class='comment'>/* Convert extended community attribute to string.  </em>
+<a id='L568' name='L568'></a><em class='comment'></em>
+<a id='L569' name='L569'></a><em class='comment'>   Due to historical reason of industry standard implementation, there</em>
+<a id='L570' name='L570'></a><em class='comment'>   are three types of format.</em>
+<a id='L571' name='L571'></a><em class='comment'></em>
+<a id='L572' name='L572'></a><em class='comment'>   route-map set extcommunity format</em>
+<a id='L573' name='L573'></a><em class='comment'>        "rt 100:1 100:2"</em>
+<a id='L574' name='L574'></a><em class='comment'>        "soo 100:3"</em>
+<a id='L575' name='L575'></a><em class='comment'></em>
+<a id='L576' name='L576'></a><em class='comment'>   extcommunity-list</em>
+<a id='L577' name='L577'></a><em class='comment'>        "rt 100:1 rt 100:2 soo 100:3"</em>
+<a id='L578' name='L578'></a><em class='comment'></em>
+<a id='L579' name='L579'></a><em class='comment'>   "show ip bgp" and extcommunity-list regular expression matching</em>
+<a id='L580' name='L580'></a><em class='comment'>        "RT:100:1 RT:100:2 SoO:100:3"</em>
+<a id='L581' name='L581'></a><em class='comment'></em>
+<a id='L582' name='L582'></a><em class='comment'>   For each formath please use below definition for format:</em>
+<a id='L583' name='L583'></a><em class='comment'></em>
+<a id='L584' name='L584'></a><em class='comment'>   ECOMMUNITY_FORMAT_ROUTE_MAP</em>
+<a id='L585' name='L585'></a><em class='comment'>   ECOMMUNITY_FORMAT_COMMUNITY_LIST</em>
+<a id='L586' name='L586'></a><em class='comment'>   ECOMMUNITY_FORMAT_DISPLAY</em>
+<a id='L587' name='L587'></a><em class='comment'>*/</em>
+<a id='L588' name='L588'></a><strong class='reserved'>char</strong> *
+<a id='L589' name='L589'></a><a href='../R/5667.html' title='Multiple referred from 7 places.'>ecommunity_ecom2str</a> (<strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom, <strong class='reserved'>int</strong> format)
+<a id='L590' name='L590'></a><em class='brace'>{</em>
+<a id='L591' name='L591'></a>  <strong class='reserved'>int</strong> i;
+<a id='L592' name='L592'></a>  <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> *pnt;
+<a id='L593' name='L593'></a>  <strong class='reserved'>int</strong> encode = 0;
+<a id='L594' name='L594'></a>  <strong class='reserved'>int</strong> type = 0;
+<a id='L595' name='L595'></a><em class='sharp'>#define</em> <a href='../R/703.html' title='Multiple referred from 3 places.'>ECOMMUNITY_STR_DEFAULT_LEN</a>  27
+<a id='L596' name='L596'></a>  <strong class='reserved'>int</strong> str_size;
+<a id='L597' name='L597'></a>  <strong class='reserved'>int</strong> str_pnt;
+<a id='L598' name='L598'></a>  <strong class='reserved'>char</strong> *str_buf;
+<a id='L599' name='L599'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L600' name='L600'></a>  <strong class='reserved'>int</strong> len = 0;
+<a id='L601' name='L601'></a>  <strong class='reserved'>int</strong> first = 1;
+<a id='L602' name='L602'></a>
+<a id='L603' name='L603'></a>  <em class='comment'>/* For parse Extended Community attribute tupple. */</em>
+<a id='L604' name='L604'></a>  <strong class='reserved'>struct</strong> ecommunity_as
+<a id='L605' name='L605'></a>  <em class='brace'>{</em>
+<a id='L606' name='L606'></a>    <a href='../S/608.html#L28' title='Defined at 28 in bgpd/bgpd.h.'>as_t</a> as;
+<a id='L607' name='L607'></a>    <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> val;
+<a id='L608' name='L608'></a>  <em class='brace'>}</em> eas;
+<a id='L609' name='L609'></a>
+<a id='L610' name='L610'></a>  <strong class='reserved'>struct</strong> ecommunity_ip
+<a id='L611' name='L611'></a>  <em class='brace'>{</em>
+<a id='L612' name='L612'></a>    <strong class='reserved'>struct</strong> in_addr ip;
+<a id='L613' name='L613'></a>    <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> val;
+<a id='L614' name='L614'></a>  <em class='brace'>}</em> eip;
+<a id='L615' name='L615'></a>
+<a id='L616' name='L616'></a>  <strong class='reserved'>if</strong> (ecom-&gt;size == 0)
+<a id='L617' name='L617'></a>    <em class='brace'>{</em>
+<a id='L618' name='L618'></a>      str_buf = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_ECOMMUNITY_STR, 1);
+<a id='L619' name='L619'></a>      str_buf[0] = '\0';
+<a id='L620' name='L620'></a>      <strong class='reserved'>return</strong> str_buf;
+<a id='L621' name='L621'></a>    <em class='brace'>}</em>
+<a id='L622' name='L622'></a>
+<a id='L623' name='L623'></a>  <em class='comment'>/* Prepare buffer.  */</em>
+<a id='L624' name='L624'></a>  str_buf = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a> (MTYPE_ECOMMUNITY_STR, <a href='../S/629.html#L595' title='Defined at 595 in bgpd/bgp_ecommunity.c.'>ECOMMUNITY_STR_DEFAULT_LEN</a> + 1);
+<a id='L625' name='L625'></a>  str_size = <a href='../S/629.html#L595' title='Defined at 595 in bgpd/bgp_ecommunity.c.'>ECOMMUNITY_STR_DEFAULT_LEN</a> + 1;
+<a id='L626' name='L626'></a>  str_pnt = 0;
+<a id='L627' name='L627'></a>
+<a id='L628' name='L628'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; ecom-&gt;size; i++)
+<a id='L629' name='L629'></a>    <em class='brace'>{</em>
+<a id='L630' name='L630'></a>      <em class='comment'>/* Make it sure size is enough.  */</em>
+<a id='L631' name='L631'></a>      <strong class='reserved'>while</strong> (str_pnt + <a href='../S/629.html#L595' title='Defined at 595 in bgpd/bgp_ecommunity.c.'>ECOMMUNITY_STR_DEFAULT_LEN</a> &gt;= str_size)
+<a id='L632' name='L632'></a>        <em class='brace'>{</em>
+<a id='L633' name='L633'></a>          str_size *= 2;
+<a id='L634' name='L634'></a>          str_buf = <a href='../D/4560.html' title='Multiple defined in 4 places.'>XREALLOC</a> (MTYPE_ECOMMUNITY_STR, str_buf, str_size);
+<a id='L635' name='L635'></a>        <em class='brace'>}</em>
+<a id='L636' name='L636'></a>
+<a id='L637' name='L637'></a>      <em class='comment'>/* Space between each value.  */</em>
+<a id='L638' name='L638'></a>      <strong class='reserved'>if</strong> (! first)
+<a id='L639' name='L639'></a>        str_buf[str_pnt++] = ' ';
+<a id='L640' name='L640'></a>
+<a id='L641' name='L641'></a>      pnt = ecom-&gt;val + (i * 8);
+<a id='L642' name='L642'></a>
+<a id='L643' name='L643'></a>      <em class='comment'>/* High-order octet of type. */</em>
+<a id='L644' name='L644'></a>      encode = *pnt++;
+<a id='L645' name='L645'></a>      <strong class='reserved'>if</strong> (encode != <a href='../S/637.html#L25' title='Defined at 25 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_AS</a> &amp;&amp; encode != <a href='../S/637.html#L26' title='Defined at 26 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_IP</a>
+<a id='L646' name='L646'></a>                      &amp;&amp; encode != <a href='../S/637.html#L27' title='Defined at 27 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_AS4</a>)
+<a id='L647' name='L647'></a>        <em class='brace'>{</em>
+<a id='L648' name='L648'></a>          len = sprintf (str_buf + str_pnt, "?");
+<a id='L649' name='L649'></a>          str_pnt += len;
+<a id='L650' name='L650'></a>          first = 0;
+<a id='L651' name='L651'></a>          <strong class='reserved'>continue</strong>;
+<a id='L652' name='L652'></a>        <em class='brace'>}</em>
+<a id='L653' name='L653'></a>      
+<a id='L654' name='L654'></a>      <em class='comment'>/* Low-order octet of type. */</em>
+<a id='L655' name='L655'></a>      type = *pnt++;
+<a id='L656' name='L656'></a>      <strong class='reserved'>if</strong> (type !=  <a href='../S/637.html#L30' title='Defined at 30 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ROUTE_TARGET</a> &amp;&amp; type != <a href='../S/637.html#L31' title='Defined at 31 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SITE_ORIGIN</a>)
+<a id='L657' name='L657'></a>        <em class='brace'>{</em>
+<a id='L658' name='L658'></a>          len = sprintf (str_buf + str_pnt, "?");
+<a id='L659' name='L659'></a>          str_pnt += len;
+<a id='L660' name='L660'></a>          first = 0;
+<a id='L661' name='L661'></a>          <strong class='reserved'>continue</strong>;
+<a id='L662' name='L662'></a>        <em class='brace'>}</em>
+<a id='L663' name='L663'></a>
+<a id='L664' name='L664'></a>      <strong class='reserved'>switch</strong> (format)
+<a id='L665' name='L665'></a>        <em class='brace'>{</em>
+<a id='L666' name='L666'></a>        <strong class='reserved'>case</strong> <a href='../S/637.html#L35' title='Defined at 35 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_FORMAT_COMMUNITY_LIST</a>:
+<a id='L667' name='L667'></a>          <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = (type == <a href='../S/637.html#L30' title='Defined at 30 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ROUTE_TARGET</a> ? "rt " : "soo ");
+<a id='L668' name='L668'></a>          <strong class='reserved'>break</strong>;
+<a id='L669' name='L669'></a>        <strong class='reserved'>case</strong> <a href='../S/637.html#L36' title='Defined at 36 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_FORMAT_DISPLAY</a>:
+<a id='L670' name='L670'></a>          <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = (type == <a href='../S/637.html#L30' title='Defined at 30 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ROUTE_TARGET</a> ? "RT:" : "SoO:");
+<a id='L671' name='L671'></a>          <strong class='reserved'>break</strong>;
+<a id='L672' name='L672'></a>        <strong class='reserved'>case</strong> <a href='../S/637.html#L34' title='Defined at 34 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_FORMAT_ROUTE_MAP</a>:
+<a id='L673' name='L673'></a>          <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = "";
+<a id='L674' name='L674'></a>          <strong class='reserved'>break</strong>;
+<a id='L675' name='L675'></a>        <strong class='reserved'>default</strong>:
+<a id='L676' name='L676'></a>          <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = "";
+<a id='L677' name='L677'></a>          <strong class='reserved'>break</strong>;
+<a id='L678' name='L678'></a>        <em class='brace'>}</em>
+<a id='L679' name='L679'></a>
+<a id='L680' name='L680'></a>      <em class='comment'>/* Put string into buffer.  */</em>
+<a id='L681' name='L681'></a>      <strong class='reserved'>if</strong> (encode == <a href='../S/637.html#L27' title='Defined at 27 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_AS4</a>)
+<a id='L682' name='L682'></a>        <em class='brace'>{</em>
+<a id='L683' name='L683'></a>          eas.as = (*pnt++ &lt;&lt; 24);
+<a id='L684' name='L684'></a>          eas.as |= (*pnt++ &lt;&lt; 16);
+<a id='L685' name='L685'></a>          eas.as |= (*pnt++ &lt;&lt; 8);
+<a id='L686' name='L686'></a>          eas.as |= (*pnt++);
+<a id='L687' name='L687'></a>
+<a id='L688' name='L688'></a>          eas.val = (*pnt++ &lt;&lt; 8);
+<a id='L689' name='L689'></a>          eas.val |= (*pnt++);
+<a id='L690' name='L690'></a>
+<a id='L691' name='L691'></a>          len = sprintf( str_buf + str_pnt, "%s%u:%d", <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L692' name='L692'></a>                        eas.as, eas.val );
+<a id='L693' name='L693'></a>          str_pnt += len;
+<a id='L694' name='L694'></a>          first = 0;
+<a id='L695' name='L695'></a>        <em class='brace'>}</em>
+<a id='L696' name='L696'></a>      <strong class='reserved'>if</strong> (encode == <a href='../S/637.html#L25' title='Defined at 25 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_AS</a>)
+<a id='L697' name='L697'></a>        <em class='brace'>{</em>
+<a id='L698' name='L698'></a>          eas.as = (*pnt++ &lt;&lt; 8);
+<a id='L699' name='L699'></a>          eas.as |= (*pnt++);
+<a id='L700' name='L700'></a>
+<a id='L701' name='L701'></a>          eas.val = (*pnt++ &lt;&lt; 24);
+<a id='L702' name='L702'></a>          eas.val |= (*pnt++ &lt;&lt; 16);
+<a id='L703' name='L703'></a>          eas.val |= (*pnt++ &lt;&lt; 8);
+<a id='L704' name='L704'></a>          eas.val |= (*pnt++);
+<a id='L705' name='L705'></a>
+<a id='L706' name='L706'></a>          len = sprintf (str_buf + str_pnt, "%s%u:%d", <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L707' name='L707'></a>                         eas.as, eas.val);
+<a id='L708' name='L708'></a>          str_pnt += len;
+<a id='L709' name='L709'></a>          first = 0;
+<a id='L710' name='L710'></a>        <em class='brace'>}</em>
+<a id='L711' name='L711'></a>      <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (encode == <a href='../S/637.html#L26' title='Defined at 26 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_ENCODE_IP</a>)
+<a id='L712' name='L712'></a>        <em class='brace'>{</em>
+<a id='L713' name='L713'></a>          <a href='../S/266.html#L152' title='Defined at 152 in lib/regex.c.'>memcpy</a> (&amp;eip.ip, pnt, 4);
+<a id='L714' name='L714'></a>          pnt += 4;
+<a id='L715' name='L715'></a>          eip.val = (*pnt++ &lt;&lt; 8);
+<a id='L716' name='L716'></a>          eip.val |= (*pnt++);
+<a id='L717' name='L717'></a>
+<a id='L718' name='L718'></a>          len = sprintf (str_buf + str_pnt, "%s%s:%d", <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>,
+<a id='L719' name='L719'></a>                         inet_ntoa (eip.ip), eip.val);
+<a id='L720' name='L720'></a>          str_pnt += len;
+<a id='L721' name='L721'></a>          first = 0;
+<a id='L722' name='L722'></a>        <em class='brace'>}</em>
+<a id='L723' name='L723'></a>    <em class='brace'>}</em>
+<a id='L724' name='L724'></a>  <strong class='reserved'>return</strong> str_buf;
+<a id='L725' name='L725'></a><em class='brace'>}</em>
+<a id='L726' name='L726'></a>
+<a id='L727' name='L727'></a><strong class='reserved'>int</strong>
+<a id='L728' name='L728'></a><a href='../R/5675.html' title='Multiple referred from 2 places.'>ecommunity_match</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom1, 
+<a id='L729' name='L729'></a>                  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/637.html#L45' title='Defined at 45 in bgpd/bgp_ecommunity.h.'>ecommunity</a> *ecom2)
+<a id='L730' name='L730'></a><em class='brace'>{</em>
+<a id='L731' name='L731'></a>  <strong class='reserved'>int</strong> i = 0;
+<a id='L732' name='L732'></a>  <strong class='reserved'>int</strong> j = 0;
+<a id='L733' name='L733'></a>
+<a id='L734' name='L734'></a>  <strong class='reserved'>if</strong> (ecom1 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp; ecom2 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L735' name='L735'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L736' name='L736'></a>
+<a id='L737' name='L737'></a>  <strong class='reserved'>if</strong> (ecom1 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> || ecom2 == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L738' name='L738'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L739' name='L739'></a>
+<a id='L740' name='L740'></a>  <strong class='reserved'>if</strong> (ecom1-&gt;size &lt; ecom2-&gt;size)
+<a id='L741' name='L741'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L742' name='L742'></a>
+<a id='L743' name='L743'></a>  <em class='comment'>/* Every community on com2 needs to be on com1 for this to match */</em>
+<a id='L744' name='L744'></a>  <strong class='reserved'>while</strong> (i &lt; ecom1-&gt;size &amp;&amp; j &lt; ecom2-&gt;size)
+<a id='L745' name='L745'></a>    <em class='brace'>{</em>
+<a id='L746' name='L746'></a>      <strong class='reserved'>if</strong> (<a href='../S/266.html#L149' title='Defined at 149 in lib/regex.c.'>memcmp</a> (ecom1-&gt;val + i, ecom2-&gt;val + j, <a href='../S/637.html#L39' title='Defined at 39 in bgpd/bgp_ecommunity.h.'>ECOMMUNITY_SIZE</a>) == 0)
+<a id='L747' name='L747'></a>        j++;
+<a id='L748' name='L748'></a>      i++;
+<a id='L749' name='L749'></a>    <em class='brace'>}</em>
+<a id='L750' name='L750'></a>
+<a id='L751' name='L751'></a>  <strong class='reserved'>if</strong> (j == ecom2-&gt;size)
+<a id='L752' name='L752'></a>    <strong class='reserved'>return</strong> 1;
+<a id='L753' name='L753'></a>  <strong class='reserved'>else</strong>
+<a id='L754' name='L754'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L755' name='L755'></a><em class='brace'>}</em>
+<a id='L756' name='L756'></a>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L37'>[^]</a><a href='#L728'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

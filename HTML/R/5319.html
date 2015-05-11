@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>color</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/513.html#L193'>color</a>             193 isisd/dict.c   	if (root-&gt;color == dnode_red) {</span>
+<span class='curline'><a href='../S/513.html#L194'>color</a>             194 isisd/dict.c   	    if (root-&gt;left-&gt;color != dnode_black)</span>
+<span class='curline'><a href='../S/513.html#L196'>color</a>             196 isisd/dict.c   	    if (root-&gt;right-&gt;color != dnode_black)</span>
+<span class='curline'><a href='../S/513.html#L200'>color</a>             200 isisd/dict.c   	if (root-&gt;color != dnode_black)</span>
+<span class='curline'><a href='../S/513.html#L259'>color</a>             259 isisd/dict.c   	new-&gt;nilnode.color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L331'>color</a>             331 isisd/dict.c       dict-&gt;nilnode.color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L351'>color</a>             351 isisd/dict.c       dict-&gt;nilnode.color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L367'>color</a>             367 isisd/dict.c       assert (dict-&gt;nilnode.color == dnode_black);</span>
+<span class='curline'><a href='../S/513.html#L383'>color</a>             383 isisd/dict.c       if (root-&gt;color != dnode_black)</span>
+<span class='curline'><a href='../S/513.html#L385'>color</a>             385 isisd/dict.c       if (nil-&gt;color != dnode_black)</span>
+<span class='curline'><a href='../S/513.html#L616'>color</a>             616 isisd/dict.c       node-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L618'>color</a>             618 isisd/dict.c       while (parent-&gt;color == dnode_red) {</span>
+<span class='curline'><a href='../S/513.html#L622'>color</a>             622 isisd/dict.c   	    if (uncle-&gt;color == dnode_red) {	/* red parent, red uncle */</span>
+<span class='curline'><a href='../S/513.html#L623'>color</a>             623 isisd/dict.c   		parent-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L624'>color</a>             624 isisd/dict.c   		uncle-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L625'>color</a>             625 isisd/dict.c   		grandpa-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L635'>color</a>             635 isisd/dict.c   		parent-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L636'>color</a>             636 isisd/dict.c   		grandpa-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L642'>color</a>             642 isisd/dict.c   	    if (uncle-&gt;color == dnode_red) {</span>
+<span class='curline'><a href='../S/513.html#L643'>color</a>             643 isisd/dict.c   		parent-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L644'>color</a>             644 isisd/dict.c   		uncle-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L645'>color</a>             645 isisd/dict.c   		grandpa-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L654'>color</a>             654 isisd/dict.c   		parent-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L655'>color</a>             655 isisd/dict.c   		grandpa-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L662'>color</a>             662 isisd/dict.c       dict_root(dict)-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L697'>color</a>             697 isisd/dict.c   	dnode_color_t nextcolor = next-&gt;color;</span>
+<span class='curline'><a href='../S/513.html#L728'>color</a>             728 isisd/dict.c   	next-&gt;color = delete-&gt;color;</span>
+<span class='curline'><a href='../S/513.html#L729'>color</a>             729 isisd/dict.c   	delete-&gt;color = nextcolor;</span>
+<span class='curline'><a href='../S/513.html#L764'>color</a>             764 isisd/dict.c       if (delete-&gt;color == dnode_black) {</span>
+<span class='curline'><a href='../S/513.html#L767'>color</a>             767 isisd/dict.c   	dict_root(dict)-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L769'>color</a>             769 isisd/dict.c   	while (child-&gt;color == dnode_black) {</span>
+<span class='curline'><a href='../S/513.html#L774'>color</a>             774 isisd/dict.c   		if (sister-&gt;color == dnode_red) {</span>
+<span class='curline'><a href='../S/513.html#L775'>color</a>             775 isisd/dict.c   		    sister-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L776'>color</a>             776 isisd/dict.c   		    parent-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L781'>color</a>             781 isisd/dict.c   		if (sister-&gt;left-&gt;color == dnode_black</span>
+<span class='curline'><a href='../S/513.html#L782'>color</a>             782 isisd/dict.c   			&amp;&amp; sister-&gt;right-&gt;color == dnode_black) {</span>
+<span class='curline'><a href='../S/513.html#L783'>color</a>             783 isisd/dict.c   		    sister-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L786'>color</a>             786 isisd/dict.c   		    if (sister-&gt;right-&gt;color == dnode_black) {</span>
+<span class='curline'><a href='../S/513.html#L787'>color</a>             787 isisd/dict.c   			assert (sister-&gt;left-&gt;color == dnode_red);</span>
+<span class='curline'><a href='../S/513.html#L788'>color</a>             788 isisd/dict.c   			sister-&gt;left-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L789'>color</a>             789 isisd/dict.c   			sister-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L794'>color</a>             794 isisd/dict.c   		    sister-&gt;color = parent-&gt;color;</span>
+<span class='curline'><a href='../S/513.html#L795'>color</a>             795 isisd/dict.c   		    sister-&gt;right-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L796'>color</a>             796 isisd/dict.c   		    parent-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L804'>color</a>             804 isisd/dict.c   		if (sister-&gt;color == dnode_red) {</span>
+<span class='curline'><a href='../S/513.html#L805'>color</a>             805 isisd/dict.c   		    sister-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L806'>color</a>             806 isisd/dict.c   		    parent-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L811'>color</a>             811 isisd/dict.c   		if (sister-&gt;right-&gt;color == dnode_black</span>
+<span class='curline'><a href='../S/513.html#L812'>color</a>             812 isisd/dict.c   			&amp;&amp; sister-&gt;left-&gt;color == dnode_black) {</span>
+<span class='curline'><a href='../S/513.html#L813'>color</a>             813 isisd/dict.c   		    sister-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L816'>color</a>             816 isisd/dict.c   		    if (sister-&gt;left-&gt;color == dnode_black) {</span>
+<span class='curline'><a href='../S/513.html#L817'>color</a>             817 isisd/dict.c   			assert (sister-&gt;right-&gt;color == dnode_red);</span>
+<span class='curline'><a href='../S/513.html#L818'>color</a>             818 isisd/dict.c   			sister-&gt;right-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L819'>color</a>             819 isisd/dict.c   			sister-&gt;color = dnode_red;</span>
+<span class='curline'><a href='../S/513.html#L824'>color</a>             824 isisd/dict.c   		    sister-&gt;color = parent-&gt;color;</span>
+<span class='curline'><a href='../S/513.html#L825'>color</a>             825 isisd/dict.c   		    sister-&gt;left-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L826'>color</a>             826 isisd/dict.c   		    parent-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L833'>color</a>             833 isisd/dict.c   	child-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L834'>color</a>             834 isisd/dict.c   	dict_root(dict)-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L1132'>color</a>            1132 isisd/dict.c   	    curr-&gt;color = level % 2;</span>
+<span class='curline'><a href='../S/513.html#L1144'>color</a>            1144 isisd/dict.c   	    curr-&gt;color = (level + 1) % 2;</span>
+<span class='curline'><a href='../S/513.html#L1163'>color</a>            1163 isisd/dict.c       dictnil-&gt;color = dnode_black;</span>
+<span class='curline'><a href='../S/513.html#L1166'>color</a>            1166 isisd/dict.c       complete-&gt;color = dnode_black;</span>
+</pre>
+</body>
+</html>

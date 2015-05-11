@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>dict_t</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<pre>
+<span class='curline'><a href='../S/513.html#L128'>dict_t</a>            128 isisd/dict.c   static void free_nodes(dict_t *dict, dnode_t *node, dnode_t *nil)</span>
+<span class='curline'><a href='../S/513.html#L146'>dict_t</a>            146 isisd/dict.c   static int verify_bintree(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L244'>dict_t</a>            244 isisd/dict.c   dict_t *dict_create(dictcount_t maxcount, dict_comp_t comp)</span>
+<span class='curline'><a href='../S/513.html#L246'>dict_t</a>            246 isisd/dict.c       dict_t *new = XCALLOC(MTYPE_ISIS_DICT, sizeof(dict_t));</span>
+<span class='curline'><a href='../S/513.html#L269'>dict_t</a>            269 isisd/dict.c   void dict_set_allocator(dict_t *dict, dnode_alloc_t al,</span>
+<span class='curline'><a href='../S/513.html#L285'>dict_t</a>            285 isisd/dict.c   void dict_destroy(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L296'>dict_t</a>            296 isisd/dict.c   void dict_free_nodes(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L309'>dict_t</a>            309 isisd/dict.c   void dict_free(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L318'>dict_t</a>            318 isisd/dict.c   dict_t *dict_init(dict_t *dict, dictcount_t maxcount, dict_comp_t comp,</span>
+<span class='curline'><a href='../S/513.html#L340'>dict_t</a>            340 isisd/dict.c   void dict_init_like(dict_t *dict, const dict_t *template)</span>
+<span class='curline'><a href='../S/513.html#L361'>dict_t</a>            361 isisd/dict.c   static void dict_clear(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L378'>dict_t</a>            378 isisd/dict.c   int dict_verify(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L408'>dict_t</a>            408 isisd/dict.c   int dict_similar(const dict_t *left, const dict_t *right)</span>
+<span class='curline'><a href='../S/513.html#L435'>dict_t</a>            435 isisd/dict.c   dnode_t *dict_lookup(dict_t *dict, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L473'>dict_t</a>            473 isisd/dict.c   dnode_t *dict_lookup_length(dict_t *dict, const void *key, int length)</span>
+<span class='curline'><a href='../S/513.html#L509'>dict_t</a>            509 isisd/dict.c   dnode_t *dict_lower_bound(dict_t *dict, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L541'>dict_t</a>            541 isisd/dict.c   dnode_t *dict_upper_bound(dict_t *dict, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L576'>dict_t</a>            576 isisd/dict.c   void dict_insert(dict_t *dict, dnode_t *node, const void *key)</span>
+<span class='curline'><a href='../S/513.html#L673'>dict_t</a>            673 isisd/dict.c   dnode_t *dict_delete(dict_t *dict, dnode_t *delete)</span>
+<span class='curline'><a href='../S/513.html#L847'>dict_t</a>            847 isisd/dict.c   int dict_alloc_insert(dict_t *dict, const void *key, void *data)</span>
+<span class='curline'><a href='../S/513.html#L859'>dict_t</a>            859 isisd/dict.c   void dict_delete_free(dict_t *dict, dnode_t *node)</span>
+<span class='curline'><a href='../S/513.html#L870'>dict_t</a>            870 isisd/dict.c   dnode_t *dict_first(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L886'>dict_t</a>            886 isisd/dict.c   dnode_t *dict_last(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L904'>dict_t</a>            904 isisd/dict.c   dnode_t *dict_next(dict_t *dict, dnode_t *curr)</span>
+<span class='curline'><a href='../S/513.html#L930'>dict_t</a>            930 isisd/dict.c   dnode_t *dict_prev(dict_t *dict, dnode_t *curr)</span>
+<span class='curline'><a href='../S/513.html#L951'>dict_t</a>            951 isisd/dict.c   void dict_allow_dupes(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L963'>dict_t</a>            963 isisd/dict.c   dictcount_t dict_count(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L968'>dict_t</a>            968 isisd/dict.c   int dict_isempty(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L973'>dict_t</a>            973 isisd/dict.c   int dict_isfull(dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L978'>dict_t</a>            978 isisd/dict.c   int dict_contains(dict_t *dict, dnode_t *node)</span>
+<span class='curline'><a href='../S/513.html#L1040'>dict_t</a>           1040 isisd/dict.c   void dict_process(dict_t *dict, void *context, dnode_process_t function)</span>
+<span class='curline'><a href='../S/513.html#L1054'>dict_t</a>           1054 isisd/dict.c   static void load_begin_internal(dict_load_t *load, dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L1061'>dict_t</a>           1061 isisd/dict.c   void dict_load_begin(dict_load_t *load, dict_t *dict)</span>
+<span class='curline'><a href='../S/513.html#L1069'>dict_t</a>           1069 isisd/dict.c       dict_t *dict = load-&gt;dictptr;</span>
+<span class='curline'><a href='../S/513.html#L1093'>dict_t</a>           1093 isisd/dict.c       dict_t *dict = load-&gt;dictptr;</span>
+<span class='curline'><a href='../S/513.html#L1172'>dict_t</a>           1172 isisd/dict.c   void dict_merge(dict_t *dest, dict_t *source)</span>
+<span class='curline'><a href='../S/513.html#L1294'>dict_t</a>           1294 isisd/dict.c   static void construct(dict_t *d)</span>
+<span class='curline'><a href='../S/513.html#L1362'>dict_t</a>           1362 isisd/dict.c       dict_t darray[10];</span>
+<span class='curline'><a href='../S/513.html#L1363'>dict_t</a>           1363 isisd/dict.c       dict_t *d = &amp;darray[0];</span>
+<span class='curline'><a href='../S/480.html#L69'>dict_t</a>             69 isisd/dict.h   typedef void (*dnode_process_t)(dict_t *, dnode_t *, void *);</span>
+<span class='curline'><a href='../S/480.html#L72'>dict_t</a>             72 isisd/dict.h       dict_t *dict_dictptr;</span>
+<span class='curline'><a href='../S/480.html#L76'>dict_t</a>             76 isisd/dict.h   extern dict_t *dict_create(dictcount_t, dict_comp_t);</span>
+<span class='curline'><a href='../S/480.html#L77'>dict_t</a>             77 isisd/dict.h   extern void dict_set_allocator(dict_t *, dnode_alloc_t, dnode_free_t, void *);</span>
+<span class='curline'><a href='../S/480.html#L78'>dict_t</a>             78 isisd/dict.h   extern void dict_destroy(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L79'>dict_t</a>             79 isisd/dict.h   extern void dict_free_nodes(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L80'>dict_t</a>             80 isisd/dict.h   extern void dict_free(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L81'>dict_t</a>             81 isisd/dict.h   extern dict_t *dict_init(dict_t *, dictcount_t, dict_comp_t, dict_grep_t);</span>
+<span class='curline'><a href='../S/480.html#L82'>dict_t</a>             82 isisd/dict.h   extern void dict_init_like(dict_t *, const dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L83'>dict_t</a>             83 isisd/dict.h   extern int dict_verify(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L84'>dict_t</a>             84 isisd/dict.h   extern int dict_similar(const dict_t *, const dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L85'>dict_t</a>             85 isisd/dict.h   extern dnode_t *dict_lookup(dict_t *, const void *);</span>
+<span class='curline'><a href='../S/480.html#L86'>dict_t</a>             86 isisd/dict.h   extern dnode_t *dict_lookup_length(dict_t *, const void *, int);</span>
+<span class='curline'><a href='../S/480.html#L87'>dict_t</a>             87 isisd/dict.h   extern dnode_t *dict_lower_bound(dict_t *, const void *);</span>
+<span class='curline'><a href='../S/480.html#L88'>dict_t</a>             88 isisd/dict.h   extern dnode_t *dict_upper_bound(dict_t *, const void *);</span>
+<span class='curline'><a href='../S/480.html#L89'>dict_t</a>             89 isisd/dict.h   extern void dict_insert(dict_t *, dnode_t *, const void *);</span>
+<span class='curline'><a href='../S/480.html#L90'>dict_t</a>             90 isisd/dict.h   extern dnode_t *dict_delete(dict_t *, dnode_t *);</span>
+<span class='curline'><a href='../S/480.html#L91'>dict_t</a>             91 isisd/dict.h   extern int dict_alloc_insert(dict_t *, const void *, void *);</span>
+<span class='curline'><a href='../S/480.html#L92'>dict_t</a>             92 isisd/dict.h   extern void dict_delete_free(dict_t *, dnode_t *);</span>
+<span class='curline'><a href='../S/480.html#L93'>dict_t</a>             93 isisd/dict.h   extern dnode_t *dict_first(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L94'>dict_t</a>             94 isisd/dict.h   extern dnode_t *dict_last(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L95'>dict_t</a>             95 isisd/dict.h   extern dnode_t *dict_next(dict_t *, dnode_t *);</span>
+<span class='curline'><a href='../S/480.html#L96'>dict_t</a>             96 isisd/dict.h   extern dnode_t *dict_prev(dict_t *, dnode_t *);</span>
+<span class='curline'><a href='../S/480.html#L97'>dict_t</a>             97 isisd/dict.h   extern dictcount_t dict_count(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L98'>dict_t</a>             98 isisd/dict.h   extern int dict_isempty(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L99'>dict_t</a>             99 isisd/dict.h   extern int dict_isfull(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L100'>dict_t</a>            100 isisd/dict.h   extern int dict_contains(dict_t *, dnode_t *);</span>
+<span class='curline'><a href='../S/480.html#L101'>dict_t</a>            101 isisd/dict.h   extern void dict_allow_dupes(dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L109'>dict_t</a>            109 isisd/dict.h   extern void dict_process(dict_t *, void *, dnode_process_t);</span>
+<span class='curline'><a href='../S/480.html#L110'>dict_t</a>            110 isisd/dict.h   extern void dict_load_begin(dict_load_t *, dict_t *);</span>
+<span class='curline'><a href='../S/480.html#L113'>dict_t</a>            113 isisd/dict.h   extern void dict_merge(dict_t *, dict_t *);</span>
+<span class='curline'><a href='../S/511.html#L75'>dict_t</a>             75 isisd/isis_lsp.c dict_t *</span>
+<span class='curline'><a href='../S/511.html#L78'>dict_t</a>             78 isisd/isis_lsp.c   dict_t *dict;</span>
+<span class='curline'><a href='../S/511.html#L86'>dict_t</a>             86 isisd/isis_lsp.c lsp_search (u_char * id, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L171'>dict_t</a>            171 isisd/isis_lsp.c lsp_db_destroy (dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L195'>dict_t</a>            195 isisd/isis_lsp.c lsp_remove_frags (struct list *frags, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L214'>dict_t</a>            214 isisd/isis_lsp.c lsp_search_and_destroy (u_char * id, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L246'>dict_t</a>            246 isisd/isis_lsp.c adjacency_lsp_search_and_destroy (u_char * id, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L666'>dict_t</a>            666 isisd/isis_lsp.c lsp_insert (struct isis_lsp *lsp, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L683'>dict_t</a>            683 isisd/isis_lsp.c 			   struct list *list, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L716'>dict_t</a>            716 isisd/isis_lsp.c 		struct list *list, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L752'>dict_t</a>            752 isisd/isis_lsp.c                     struct list *list, dict_t * lspdb)</span>
+<span class='curline'><a href='../S/511.html#L1035'>dict_t</a>           1035 isisd/isis_lsp.c lsp_print_all (struct vty *vty, dict_t * lspdb, char detail, char dynhost)</span>
+<span class='curline'><a href='../S/511.html#L1681'>dict_t</a>           1681 isisd/isis_lsp.c   dict_t *lspdb;</span>
+<span class='curline'><a href='../S/511.html#L2012'>dict_t</a>           2012 isisd/isis_lsp.c   dict_t *lspdb = circuit-&gt;area-&gt;lspdb[level - 1];</span>
+<span class='curline'><a href='../S/511.html#L2075'>dict_t</a>           2075 isisd/isis_lsp.c   dict_t *lspdb = circuit-&gt;area-&gt;lspdb[level - 1];</span>
+<span class='curline'><a href='../S/501.html#L59'>dict_t</a>             59 isisd/isis_lsp.h dict_t *lsp_db_init (void);</span>
+<span class='curline'><a href='../S/501.html#L60'>dict_t</a>             60 isisd/isis_lsp.h void lsp_db_destroy (dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L77'>dict_t</a>             77 isisd/isis_lsp.h void lsp_insert (struct isis_lsp *lsp, dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L78'>dict_t</a>             78 isisd/isis_lsp.h struct isis_lsp *lsp_search (u_char * id, dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L81'>dict_t</a>             81 isisd/isis_lsp.h 		     struct list *list, dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L83'>dict_t</a>             83 isisd/isis_lsp.h 				struct list *list, dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L85'>dict_t</a>             85 isisd/isis_lsp.h                          struct list *list, dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L87'>dict_t</a>             87 isisd/isis_lsp.h void lsp_search_and_destroy (u_char * id, dict_t * lspdb);</span>
+<span class='curline'><a href='../S/501.html#L88'>dict_t</a>             88 isisd/isis_lsp.h void adjacency_lsp_search_and_destroy (u_char *, dict_t *);</span>
+<span class='curline'><a href='../S/501.html#L111'>dict_t</a>            111 isisd/isis_lsp.h int lsp_print_all (struct vty *vty, dict_t * lspdb, char detail,</span>
+<span class='curline'><a href='../S/510.html#L87'>dict_t</a>             87 isisd/isisd.h    dict_t *lspdb[ISIS_LEVELS];			  /* link-state dbs */</span>
+<span class='curline'><a href='../S/516.html#L63'>dict_t</a>             63 isisd/trilld.c static void trill_dict_delete_nodes (dict_t *dict1, dict_t *dict2,</span>
+<span class='curline'><a href='../S/516.html#L1153'>dict_t</a>           1153 isisd/trilld.c static void trill_dict_remnode ( dict_t *dict, dnode_t *dnode)</span>
+<span class='curline'><a href='../S/516.html#L1176'>dict_t</a>           1176 isisd/trilld.c static void trill_dict_delete_nodes (dict_t *dict1, dict_t *dict2,</span>
+<span class='curline'><a href='../S/485.html#L70'>dict_t</a>             70 isisd/trilld.h   dict_t *nickdb;		/* TRILL nickname database */</span>
+<span class='curline'><a href='../S/485.html#L71'>dict_t</a>             71 isisd/trilld.h   dict_t *sysidtonickdb;	/* TRILL sysid-to-nickname database */</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>brctld/libbridge_init.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1014.html'>brctld</a>/libbridge_init.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L32'>[^]</a><a href='#L204'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L32' title='Defined at 32.'>br_init</a></li>
+<li><a href='#L41' title='Defined at 41.'>br_refresh</a></li>
+<li><a href='#L51' title='Defined at 51.'>br_shutdown</a></li>
+<li><a href='#L61' title='Defined at 61.'>isbridge</a></li>
+<li><a href='#L72' title='Defined at 72.'>new_foreach_bridge</a></li>
+<li><a href='#L105' title='Defined at 105.'>old_foreach_bridge</a></li>
+<li><a href='#L142' title='Defined at 142.'>br_foreach_bridge</a></li>
+<li><a href='#L159' title='Defined at 159.'>old_foreach_port</a></li>
+<li><a href='#L204' title='Defined at 204.'>br_foreach_port</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 2000 Lennert Buytenhek</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This program is free software; you can redistribute it and/or</em>
+<a id='L5' name='L5'></a><em class='comment'> * modify it under the terms of the GNU General Public License as</em>
+<a id='L6' name='L6'></a><em class='comment'> * published by the Free Software Foundation; either version 2 of the</em>
+<a id='L7' name='L7'></a><em class='comment'> * License, or (at your option) any later version.</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is distributed in the hope that it will be useful, but</em>
+<a id='L10' name='L10'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L11' name='L11'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L12' name='L12'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L15' name='L15'></a><em class='comment'> * along with this program; if not, write to the Free Software</em>
+<a id='L16' name='L16'></a><em class='comment'> * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</em>
+<a id='L17' name='L17'></a><em class='comment'> */</em>
+<a id='L18' name='L18'></a>
+<a id='L19' name='L19'></a><em class='sharp'>#include</em> &lt;stdio.h&gt;
+<a id='L20' name='L20'></a><em class='sharp'>#include</em> &lt;stdlib.h&gt;
+<a id='L21' name='L21'></a><em class='sharp'>#include</em> &lt;unistd.h&gt;
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;errno.h&gt;
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;string.h&gt;
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> &lt;dirent.h&gt;
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='../I/91.html'>libbridge.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='../I/96.html'>libbridge_private.h</a>"
+<a id='L28' name='L28'></a>
+<a id='L29' name='L29'></a><strong class='reserved'>int</strong> br_socket_fd = -1;
+<a id='L30' name='L30'></a><strong class='reserved'>struct</strong> <a href='../D/10991.html' title='Multiple defined in 2 places.'>sysfs_class</a> *br_class_net;
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><strong class='reserved'>int</strong> <a href='../R/5177.html' title='Multiple referred from 5 places.'>br_init</a>(<strong class='reserved'>void</strong>)
+<a id='L33' name='L33'></a><em class='brace'>{</em>
+<a id='L34' name='L34'></a>        <strong class='reserved'>if</strong> ((br_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) &lt; 0)
+<a id='L35' name='L35'></a>                <strong class='reserved'>return</strong> errno;
+<a id='L36' name='L36'></a>
+<a id='L37' name='L37'></a>        br_class_net = <a href='../D/10993.html' title='Multiple defined in 2 places.'>sysfs_open_class</a>("net");
+<a id='L38' name='L38'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L39' name='L39'></a><em class='brace'>}</em>
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a><strong class='reserved'>int</strong> <a href='../S/132.html#L80' title='Referred from 80 in brctld/libbridge.h.'>br_refresh</a>(<strong class='reserved'>void</strong>)
+<a id='L42' name='L42'></a><em class='brace'>{</em>
+<a id='L43' name='L43'></a>        <strong class='reserved'>if</strong> (br_class_net) <em class='brace'>{</em>
+<a id='L44' name='L44'></a>                <a href='../S/121.html#L54' title='Defined at 54 in brctld/libbridge_private.h.'>sysfs_close_class</a>(br_class_net);
+<a id='L45' name='L45'></a>                br_class_net = <a href='../D/10993.html' title='Multiple defined in 2 places.'>sysfs_open_class</a>("net");
+<a id='L46' name='L46'></a>        <em class='brace'>}</em>
+<a id='L47' name='L47'></a>        
+<a id='L48' name='L48'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L49' name='L49'></a><em class='brace'>}</em>
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><strong class='reserved'>void</strong> <a href='../S/132.html#L81' title='Referred from 81 in brctld/libbridge.h.'>br_shutdown</a>(<strong class='reserved'>void</strong>)
+<a id='L52' name='L52'></a><em class='brace'>{</em>
+<a id='L53' name='L53'></a>        <a href='../S/121.html#L54' title='Defined at 54 in brctld/libbridge_private.h.'>sysfs_close_class</a>(br_class_net);
+<a id='L54' name='L54'></a>        br_class_net = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L55' name='L55'></a>        close(br_socket_fd);
+<a id='L56' name='L56'></a>        br_socket_fd = -1;
+<a id='L57' name='L57'></a><em class='brace'>}</em>
+<a id='L58' name='L58'></a>
+<a id='L59' name='L59'></a><em class='sharp'>#ifdef</em> HAVE_LIBSYSFS
+<a id='L60' name='L60'></a><em class='comment'>/* If /sys/class/net/XXX/bridge exists then it must be a bridge */</em>
+<a id='L61' name='L61'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L91' title='Referred from 91 in brctld/libbridge_init.c.'>isbridge</a>(<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> sysfs_class_device *dev) 
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>        <strong class='reserved'>char</strong> path[SYSFS_PATH_MAX];
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a>        <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(path, <strong class='reserved'>sizeof</strong>(path), "%s/bridge", dev-&gt;path);
+<a id='L66' name='L66'></a>        <strong class='reserved'>return</strong> !sysfs_path_is_dir(path);
+<a id='L67' name='L67'></a><em class='brace'>}</em>
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><em class='comment'>/*</em>
+<a id='L70' name='L70'></a><em class='comment'> * New interface uses sysfs to find bridges</em>
+<a id='L71' name='L71'></a><em class='comment'> */</em>
+<a id='L72' name='L72'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L148' title='Referred from 148 in brctld/libbridge_init.c.'>new_foreach_bridge</a>(<strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, <strong class='reserved'>void</strong> *),
+<a id='L73' name='L73'></a>                              <strong class='reserved'>void</strong> *arg)
+<a id='L74' name='L74'></a><em class='brace'>{</em>
+<a id='L75' name='L75'></a>        <strong class='reserved'>struct</strong> sysfs_class_device *dev;
+<a id='L76' name='L76'></a>        <strong class='reserved'>struct</strong> dlist *devlist;
+<a id='L77' name='L77'></a>        <strong class='reserved'>int</strong> count = 0;
+<a id='L78' name='L78'></a>
+<a id='L79' name='L79'></a>        <strong class='reserved'>if</strong> (!br_class_net) <em class='brace'>{</em>
+<a id='L80' name='L80'></a>                <a href='../S/121.html#L33' title='Defined at 33 in brctld/libbridge_private.h.'>dprintf</a>("no class /sys/class/net\n");
+<a id='L81' name='L81'></a>                <strong class='reserved'>return</strong> -EOPNOTSUPP;
+<a id='L82' name='L82'></a>        <em class='brace'>}</em>
+<a id='L83' name='L83'></a>
+<a id='L84' name='L84'></a>        devlist = sysfs_get_class_devices(br_class_net);
+<a id='L85' name='L85'></a>        <strong class='reserved'>if</strong> (!devlist) <em class='brace'>{</em>
+<a id='L86' name='L86'></a>                <a href='../S/121.html#L33' title='Defined at 33 in brctld/libbridge_private.h.'>dprintf</a>("Can't read devices from sysfs\n");
+<a id='L87' name='L87'></a>                <strong class='reserved'>return</strong> -errno;
+<a id='L88' name='L88'></a>        <em class='brace'>}</em>
+<a id='L89' name='L89'></a>
+<a id='L90' name='L90'></a>        dlist_for_each_data(devlist, dev, <strong class='reserved'>struct</strong> sysfs_class_device) <em class='brace'>{</em>
+<a id='L91' name='L91'></a>                <strong class='reserved'>if</strong> (<a href='../S/120.html#L61' title='Defined at 61 in brctld/libbridge_init.c.'>isbridge</a>(dev)) <em class='brace'>{</em>
+<a id='L92' name='L92'></a>                        ++count;
+<a id='L93' name='L93'></a>                        <strong class='reserved'>if</strong> (iterator(dev-&gt;<a href='../D/8153.html' title='Multiple defined in 5 places.'>name</a>, arg))
+<a id='L94' name='L94'></a>                                <strong class='reserved'>break</strong>;
+<a id='L95' name='L95'></a>                <em class='brace'>}</em>
+<a id='L96' name='L96'></a>        <em class='brace'>}</em>
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a>        <strong class='reserved'>return</strong> count;
+<a id='L99' name='L99'></a><em class='brace'>}</em>
+<a id='L100' name='L100'></a><em class='sharp'>#endif</em>
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><em class='comment'>/*</em>
+<a id='L103' name='L103'></a><em class='comment'> * Old interface uses ioctl</em>
+<a id='L104' name='L104'></a><em class='comment'> */</em>
+<a id='L105' name='L105'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L151' title='Referred from 151 in brctld/libbridge_init.c.'>old_foreach_bridge</a>(<strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>void</strong> *), 
+<a id='L106' name='L106'></a>                              <strong class='reserved'>void</strong> *iarg)
+<a id='L107' name='L107'></a><em class='brace'>{</em>
+<a id='L108' name='L108'></a>        <strong class='reserved'>int</strong> i, ret=0, num;
+<a id='L109' name='L109'></a>        <strong class='reserved'>char</strong> ifname[IFNAMSIZ];
+<a id='L110' name='L110'></a>        <strong class='reserved'>int</strong> ifindices[<a href='../S/121.html#L30' title='Defined at 30 in brctld/libbridge_private.h.'>MAX_BRIDGES</a>];
+<a id='L111' name='L111'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> args[3] = <em class='brace'>{</em> BRCTL_GET_BRIDGES, 
+<a id='L112' name='L112'></a>                                 (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>)ifindices, <a href='../S/121.html#L30' title='Defined at 30 in brctld/libbridge_private.h.'>MAX_BRIDGES</a> <em class='brace'>}</em>;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a>        num = ioctl(br_socket_fd, SIOCGIFBR, args);
+<a id='L115' name='L115'></a>        <strong class='reserved'>if</strong> (num &lt; 0) <em class='brace'>{</em>
+<a id='L116' name='L116'></a>                <a href='../S/121.html#L33' title='Defined at 33 in brctld/libbridge_private.h.'>dprintf</a>("Get bridge indices failed: %s\n",
+<a id='L117' name='L117'></a>                        strerror(errno));
+<a id='L118' name='L118'></a>                <strong class='reserved'>return</strong> -errno;
+<a id='L119' name='L119'></a>        <em class='brace'>}</em>
+<a id='L120' name='L120'></a>
+<a id='L121' name='L121'></a>        <strong class='reserved'>for</strong> (i = 0; i &lt; num; i++) <em class='brace'>{</em>
+<a id='L122' name='L122'></a>                <strong class='reserved'>if</strong> (!<a href='../S/240.html#L799' title='Defined at 799 in lib/if.c.'>if_indextoname</a>(ifindices[i], ifname)) <em class='brace'>{</em>
+<a id='L123' name='L123'></a>                        <a href='../S/121.html#L33' title='Defined at 33 in brctld/libbridge_private.h.'>dprintf</a>("get find name for ifindex %d\n",
+<a id='L124' name='L124'></a>                                ifindices[i]);
+<a id='L125' name='L125'></a>                        <strong class='reserved'>return</strong> -errno;
+<a id='L126' name='L126'></a>                <em class='brace'>}</em>
+<a id='L127' name='L127'></a>
+<a id='L128' name='L128'></a>                ++ret;
+<a id='L129' name='L129'></a>                <strong class='reserved'>if</strong>(iterator(ifname, iarg)) 
+<a id='L130' name='L130'></a>                        <strong class='reserved'>break</strong>;
+<a id='L131' name='L131'></a>                
+<a id='L132' name='L132'></a>        <em class='brace'>}</em>
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a>        <strong class='reserved'>return</strong> ret;
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><em class='brace'>}</em>
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a><em class='comment'>/*</em>
+<a id='L139' name='L139'></a><em class='comment'> * Go over all bridges and call iterator function.</em>
+<a id='L140' name='L140'></a><em class='comment'> * if iterator returns non-zero then stop.</em>
+<a id='L141' name='L141'></a><em class='comment'> */</em>
+<a id='L142' name='L142'></a><strong class='reserved'>int</strong> <a href='../R/5170.html' title='Multiple referred from 2 places.'>br_foreach_bridge</a>(<strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *, <strong class='reserved'>void</strong> *), 
+<a id='L143' name='L143'></a>                     <strong class='reserved'>void</strong> *arg)
+<a id='L144' name='L144'></a><em class='brace'>{</em>
+<a id='L145' name='L145'></a>        <strong class='reserved'>int</strong> ret;
+<a id='L146' name='L146'></a><em class='sharp'>#ifdef</em> HAVE_LIBSYSFS
+<a id='L147' name='L147'></a>
+<a id='L148' name='L148'></a>        ret = <a href='../S/120.html#L72' title='Defined at 72 in brctld/libbridge_init.c.'>new_foreach_bridge</a>(iterator, arg);
+<a id='L149' name='L149'></a>        <strong class='reserved'>if</strong> (ret &lt;= 0)
+<a id='L150' name='L150'></a><em class='sharp'>#endif</em>
+<a id='L151' name='L151'></a>                ret = <a href='../S/120.html#L105' title='Defined at 105 in brctld/libbridge_init.c.'>old_foreach_bridge</a>(iterator, arg);
+<a id='L152' name='L152'></a>
+<a id='L153' name='L153'></a>        <strong class='reserved'>return</strong> ret;
+<a id='L154' name='L154'></a><em class='brace'>}</em>
+<a id='L155' name='L155'></a>
+<a id='L156' name='L156'></a><em class='comment'>/* </em>
+<a id='L157' name='L157'></a><em class='comment'> * Only used if sysfs is not available.</em>
+<a id='L158' name='L158'></a><em class='comment'> */</em>
+<a id='L159' name='L159'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong> <a href='../S/120.html#L247' title='Referred from 247 in brctld/libbridge_init.c.'>old_foreach_port</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname,
+<a id='L160' name='L160'></a>                            <strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *port, 
+<a id='L161' name='L161'></a>                                            <strong class='reserved'>void</strong> *arg),
+<a id='L162' name='L162'></a>                            <strong class='reserved'>void</strong> *arg)
+<a id='L163' name='L163'></a><em class='brace'>{</em>
+<a id='L164' name='L164'></a>        <strong class='reserved'>int</strong> i, err, count;
+<a id='L165' name='L165'></a>        <strong class='reserved'>struct</strong> ifreq ifr;
+<a id='L166' name='L166'></a>        <strong class='reserved'>char</strong> ifname[IFNAMSIZ];
+<a id='L167' name='L167'></a>        <strong class='reserved'>int</strong> ifindices[<a href='../S/121.html#L31' title='Defined at 31 in brctld/libbridge_private.h.'>MAX_PORTS</a>];
+<a id='L168' name='L168'></a>        <strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong> args[4] = <em class='brace'>{</em> BRCTL_GET_PORT_LIST,
+<a id='L169' name='L169'></a>                                  (<strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>)ifindices, <a href='../S/121.html#L31' title='Defined at 31 in brctld/libbridge_private.h.'>MAX_PORTS</a>, 0 <em class='brace'>}</em>;
+<a id='L170' name='L170'></a>
+<a id='L171' name='L171'></a>        memset(ifindices, 0, <strong class='reserved'>sizeof</strong>(ifindices));
+<a id='L172' name='L172'></a>        strncpy(ifr.ifr_name, brname, IFNAMSIZ);
+<a id='L173' name='L173'></a>        ifr.ifr_data = (<strong class='reserved'>char</strong> *) &amp;args;
+<a id='L174' name='L174'></a>
+<a id='L175' name='L175'></a>        err = ioctl(br_socket_fd, SIOCDEVPRIVATE, &amp;ifr);
+<a id='L176' name='L176'></a>        <strong class='reserved'>if</strong> (err &lt; 0) <em class='brace'>{</em>
+<a id='L177' name='L177'></a>                <a href='../S/121.html#L33' title='Defined at 33 in brctld/libbridge_private.h.'>dprintf</a>("list ports for bridge:'%s' failed: %s\n",
+<a id='L178' name='L178'></a>                        brname, strerror(errno));
+<a id='L179' name='L179'></a>                <strong class='reserved'>return</strong> -errno;
+<a id='L180' name='L180'></a>        <em class='brace'>}</em>
+<a id='L181' name='L181'></a>
+<a id='L182' name='L182'></a>        count = 0;
+<a id='L183' name='L183'></a>        <strong class='reserved'>for</strong> (i = 0; i &lt; <a href='../S/121.html#L31' title='Defined at 31 in brctld/libbridge_private.h.'>MAX_PORTS</a>; i++) <em class='brace'>{</em>
+<a id='L184' name='L184'></a>                <strong class='reserved'>if</strong> (!ifindices[i])
+<a id='L185' name='L185'></a>                        <strong class='reserved'>continue</strong>;
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a>                <strong class='reserved'>if</strong> (!<a href='../S/240.html#L799' title='Defined at 799 in lib/if.c.'>if_indextoname</a>(ifindices[i], ifname)) <em class='brace'>{</em>
+<a id='L188' name='L188'></a>                        <a href='../S/121.html#L33' title='Defined at 33 in brctld/libbridge_private.h.'>dprintf</a>("can't find name for ifindex:%d\n",
+<a id='L189' name='L189'></a>                                ifindices[i]);
+<a id='L190' name='L190'></a>                        <strong class='reserved'>continue</strong>;
+<a id='L191' name='L191'></a>                <em class='brace'>}</em>
+<a id='L192' name='L192'></a>
+<a id='L193' name='L193'></a>                ++count;
+<a id='L194' name='L194'></a>                <strong class='reserved'>if</strong> (iterator(brname, ifname, arg))
+<a id='L195' name='L195'></a>                        <strong class='reserved'>break</strong>;
+<a id='L196' name='L196'></a>        <em class='brace'>}</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a>        <strong class='reserved'>return</strong> count;
+<a id='L199' name='L199'></a><em class='brace'>}</em>
+<a id='L200' name='L200'></a>        
+<a id='L201' name='L201'></a><em class='comment'>/*</em>
+<a id='L202' name='L202'></a><em class='comment'> * Iterate over all ports in bridge (using sysfs).</em>
+<a id='L203' name='L203'></a><em class='comment'> */</em>
+<a id='L204' name='L204'></a><strong class='reserved'>int</strong> <a href='../R/5171.html' title='Multiple referred from 3 places.'>br_foreach_port</a>(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *brname,
+<a id='L205' name='L205'></a>                    <strong class='reserved'>int</strong> (*iterator)(<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *br, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *port, <strong class='reserved'>void</strong> *arg),
+<a id='L206' name='L206'></a>                    <strong class='reserved'>void</strong> *arg)
+<a id='L207' name='L207'></a><em class='brace'>{</em>
+<a id='L208' name='L208'></a><em class='sharp'>#ifdef</em> HAVE_LIBSYSFS
+<a id='L209' name='L209'></a>        <strong class='reserved'>struct</strong> sysfs_class_device *dev;
+<a id='L210' name='L210'></a>        DIR *dir;
+<a id='L211' name='L211'></a>        <strong class='reserved'>struct</strong> dirent *dirent;
+<a id='L212' name='L212'></a>        <strong class='reserved'>int</strong> err = 0;
+<a id='L213' name='L213'></a>        <strong class='reserved'>char</strong> path[SYSFS_PATH_MAX];
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a>        <strong class='reserved'>if</strong> (!br_class_net ||
+<a id='L216' name='L216'></a>            !(dev = sysfs_get_class_device(br_class_net, (<strong class='reserved'>char</strong> *) brname)))
+<a id='L217' name='L217'></a>                <strong class='reserved'>goto</strong> old;
+<a id='L218' name='L218'></a>
+<a id='L219' name='L219'></a>        <a href='../S/305.html#L28' title='Defined at 28 in lib/str.c.'>snprintf</a>(path, <strong class='reserved'>sizeof</strong>(path), "%s/%s", 
+<a id='L220' name='L220'></a>                 dev-&gt;path, SYSFS_BRIDGE_PORT_SUBDIR);
+<a id='L221' name='L221'></a>
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>        dir = opendir(path);
+<a id='L224' name='L224'></a>        <strong class='reserved'>if</strong> (!dir) <em class='brace'>{</em>
+<a id='L225' name='L225'></a>                <em class='comment'>/* no /sys/class/net/ethX/brif subdirectory</em>
+<a id='L226' name='L226'></a><em class='comment'>                 * either: old kernel, or not really a bridge</em>
+<a id='L227' name='L227'></a><em class='comment'>                 */</em>
+<a id='L228' name='L228'></a>                <strong class='reserved'>goto</strong> old;
+<a id='L229' name='L229'></a>        <em class='brace'>}</em>
+<a id='L230' name='L230'></a>
+<a id='L231' name='L231'></a>        err = 0;
+<a id='L232' name='L232'></a>        <strong class='reserved'>while</strong> ((dirent = readdir(dir)) != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>) <em class='brace'>{</em>
+<a id='L233' name='L233'></a>                <strong class='reserved'>if</strong> (0 == strcmp(dirent-&gt;d_name, "."))
+<a id='L234' name='L234'></a>                         <strong class='reserved'>continue</strong>;
+<a id='L235' name='L235'></a>                <strong class='reserved'>if</strong> (0 == strcmp(dirent-&gt;d_name, ".."))
+<a id='L236' name='L236'></a>                        <strong class='reserved'>continue</strong>;
+<a id='L237' name='L237'></a>                ++err;
+<a id='L238' name='L238'></a>                <strong class='reserved'>if</strong> (iterator(brname, dirent-&gt;d_name, arg))
+<a id='L239' name='L239'></a>                        <strong class='reserved'>break</strong>;
+<a id='L240' name='L240'></a>        <em class='brace'>}</em>
+<a id='L241' name='L241'></a>        closedir(dir);
+<a id='L242' name='L242'></a>
+<a id='L243' name='L243'></a>        <strong class='reserved'>return</strong> err;
+<a id='L244' name='L244'></a>
+<a id='L245' name='L245'></a> old:
+<a id='L246' name='L246'></a><em class='sharp'>#endif</em>
+<a id='L247' name='L247'></a>        <strong class='reserved'>return</strong> <a href='../S/120.html#L159' title='Defined at 159 in brctld/libbridge_init.c.'>old_foreach_port</a>(brname, iterator, arg);
+<a id='L248' name='L248'></a>        
+<a id='L249' name='L249'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L32'>[^]</a><a href='#L204'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

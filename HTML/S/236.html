@@ -1,0 +1,916 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/table.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/table.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L38'>[^]</a><a href='#L845'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L38' title='Defined at 38.'>route_table_init_with_delegate</a></li>
+<li><a href='#L48' title='Defined at 48.'>route_table_finish</a></li>
+<li><a href='#L55' title='Defined at 55.'>route_node_new</a></li>
+<li><a href='#L62' title='Defined at 62.'>route_node_set</a></li>
+<li><a href='#L76' title='Defined at 76.'>route_node_free</a></li>
+<li><a href='#L83' title='Defined at 83.'>route_table_free</a></li>
+<li><a href='#L144' title='Defined at 144.'>route_common</a></li>
+<li><a href='#L178' title='Defined at 178.'>set_link</a></li>
+<li><a href='#L188' title='Defined at 188.'>route_lock_node</a></li>
+<li><a href='#L196' title='Defined at 196.'>route_unlock_node</a></li>
+<li><a href='#L207' title='Defined at 207.'>route_node_match</a></li>
+<li><a href='#L237' title='Defined at 237.'>route_node_match_ipv4</a></li>
+<li><a href='#L252' title='Defined at 252.'>route_node_match_ipv6</a></li>
+<li><a href='#L268' title='Defined at 268.'>route_node_lookup</a></li>
+<li><a href='#L289' title='Defined at 289.'>route_node_lookup2</a></li>
+<li><a href='#L321' title='Defined at 321.'>route_node_get</a></li>
+<li><a href='#L378' title='Defined at 378.'>route_node_delete</a></li>
+<li><a href='#L421' title='Defined at 421.'>route_top</a></li>
+<li><a href='#L434' title='Defined at 434.'>route_next</a></li>
+<li><a href='#L474' title='Defined at 474.'>route_next2</a></li>
+<li><a href='#L491' title='Defined at 491.'>route_next_until</a></li>
+<li><a href='#L531' title='Defined at 531.'>route_table_count</a></li>
+<li><a href='#L542' title='Defined at 542.'>route_node_create</a></li>
+<li><a href='#L556' title='Defined at 556.'>route_node_destroy</a></li>
+<li><a href='#L574' title='Defined at 574.'>route_table_init</a></li>
+<li><a href='#L590' title='Defined at 590.'>route_table_prefix_iter_cmp</a></li>
+<li><a href='#L650' title='Defined at 650.'>route_get_subtree_next</a></li>
+<li><a href='#L672' title='Defined at 672.'>route_table_get_next_internal</a></li>
+<li><a href='#L777' title='Defined at 777.'>route_table_get_next</a></li>
+<li><a href='#L794' title='Defined at 794.'>route_table_iter_init</a></li>
+<li><a href='#L810' title='Defined at 810.'>route_table_iter_pause</a></li>
+<li><a href='#L845' title='Defined at 845.'>route_table_iter_cleanup</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * Routing Table functions.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1998 Kunihiro Ishiguro</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> *</em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L8' name='L8'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L9' name='L9'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L10' name='L10'></a><em class='comment'> * later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L19' name='L19'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L20' name='L20'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L24' name='L24'></a>
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='249.html'>prefix.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='215.html'>table.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='293.html'>sockunion.h</a>"
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/236.html#L378' title='Defined at 378 in lib/table.c.'>route_node_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *);
+<a id='L31' name='L31'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> <a href='../S/236.html#L83' title='Defined at 83 in lib/table.c.'>route_table_free</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *);
+<a id='L32' name='L32'></a>
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='comment'>/*</em>
+<a id='L35' name='L35'></a><em class='comment'> * route_table_init_with_delegate</em>
+<a id='L36' name='L36'></a><em class='comment'> */</em>
+<a id='L37' name='L37'></a><strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *
+<a id='L38' name='L38'></a><a href='../R/9596.html' title='Multiple referred from 3 places.'>route_table_init_with_delegate</a> (<a href='../S/215.html#L38' title='Defined at 38 in lib/table.h.'>route_table_delegate_t</a> *delegate)
+<a id='L39' name='L39'></a><em class='brace'>{</em>
+<a id='L40' name='L40'></a>  <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt;
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a>  rt = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ROUTE_TABLE, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a>));
+<a id='L43' name='L43'></a>  rt-&gt;delegate = delegate;
+<a id='L44' name='L44'></a>  <strong class='reserved'>return</strong> rt;
+<a id='L45' name='L45'></a><em class='brace'>}</em>
+<a id='L46' name='L46'></a>
+<a id='L47' name='L47'></a><strong class='reserved'>void</strong>
+<a id='L48' name='L48'></a><a href='../R/9591.html' title='Multiple referred from 30 places.'>route_table_finish</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L49' name='L49'></a><em class='brace'>{</em>
+<a id='L50' name='L50'></a>  <a href='../S/236.html#L83' title='Defined at 83 in lib/table.c.'>route_table_free</a> (rt);
+<a id='L51' name='L51'></a><em class='brace'>}</em>
+<a id='L52' name='L52'></a>
+<a id='L53' name='L53'></a><em class='comment'>/* Allocate new route node. */</em>
+<a id='L54' name='L54'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L55' name='L55'></a><a href='../R/9520.html' title='Multiple referred from 2 places.'>route_node_new</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table)
+<a id='L56' name='L56'></a><em class='brace'>{</em>
+<a id='L57' name='L57'></a>  <strong class='reserved'>return</strong> table-&gt;delegate-&gt;create_node (table-&gt;delegate, table);
+<a id='L58' name='L58'></a><em class='brace'>}</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><em class='comment'>/* Allocate new route node with prefix set. */</em>
+<a id='L61' name='L61'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L62' name='L62'></a><a href='../R/9521.html' title='Multiple referred from 2 places.'>route_node_set</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>)
+<a id='L63' name='L63'></a><em class='brace'>{</em>
+<a id='L64' name='L64'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L65' name='L65'></a>  
+<a id='L66' name='L66'></a>  node = <a href='../S/236.html#L55' title='Defined at 55 in lib/table.c.'>route_node_new</a> (table);
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>  <a href='../S/250.html#L246' title='Defined at 246 in lib/prefix.c.'>prefix_copy</a> (&amp;node-&gt;p, <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>);
+<a id='L69' name='L69'></a>  node-&gt;table = table;
+<a id='L70' name='L70'></a>
+<a id='L71' name='L71'></a>  <strong class='reserved'>return</strong> node;
+<a id='L72' name='L72'></a><em class='brace'>}</em>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a><em class='comment'>/* Free route node. */</em>
+<a id='L75' name='L75'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L76' name='L76'></a><a href='../R/9513.html' title='Multiple referred from 2 places.'>route_node_free</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L77' name='L77'></a><em class='brace'>{</em>
+<a id='L78' name='L78'></a>  table-&gt;delegate-&gt;destroy_node (table-&gt;delegate, table, node);
+<a id='L79' name='L79'></a><em class='brace'>}</em>
+<a id='L80' name='L80'></a>
+<a id='L81' name='L81'></a><em class='comment'>/* Free route table. */</em>
+<a id='L82' name='L82'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L83' name='L83'></a><a href='../R/9592.html' title='Multiple referred from 2 places.'>route_table_free</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *rt)
+<a id='L84' name='L84'></a><em class='brace'>{</em>
+<a id='L85' name='L85'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *tmp_node;
+<a id='L86' name='L86'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L87' name='L87'></a> 
+<a id='L88' name='L88'></a>  <strong class='reserved'>if</strong> (rt == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L89' name='L89'></a>    <strong class='reserved'>return</strong>;
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a>  node = rt-&gt;top;
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a>  <em class='comment'>/* Bulk deletion of nodes remaining in this table.  This function is not</em>
+<a id='L94' name='L94'></a><em class='comment'>     called until workers have completed their dependency on this table.</em>
+<a id='L95' name='L95'></a><em class='comment'>     A final route_unlock_node() will not be called for these nodes. */</em>
+<a id='L96' name='L96'></a>  <strong class='reserved'>while</strong> (node)
+<a id='L97' name='L97'></a>    <em class='brace'>{</em>
+<a id='L98' name='L98'></a>      <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>)
+<a id='L99' name='L99'></a>        <em class='brace'>{</em>
+<a id='L100' name='L100'></a>          node = node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>;
+<a id='L101' name='L101'></a>          <strong class='reserved'>continue</strong>;
+<a id='L102' name='L102'></a>        <em class='brace'>}</em>
+<a id='L103' name='L103'></a>
+<a id='L104' name='L104'></a>      <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L105' name='L105'></a>        <em class='brace'>{</em>
+<a id='L106' name='L106'></a>          node = node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L107' name='L107'></a>          <strong class='reserved'>continue</strong>;
+<a id='L108' name='L108'></a>        <em class='brace'>}</em>
+<a id='L109' name='L109'></a>
+<a id='L110' name='L110'></a>      tmp_node = node;
+<a id='L111' name='L111'></a>      node = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L112' name='L112'></a>
+<a id='L113' name='L113'></a>      tmp_node-&gt;table-&gt;count--;
+<a id='L114' name='L114'></a>      tmp_node-&gt;lock = 0;  <em class='comment'>/* to cause assert if unlocked after this */</em>
+<a id='L115' name='L115'></a>      <a href='../S/236.html#L76' title='Defined at 76 in lib/table.c.'>route_node_free</a> (rt, tmp_node);
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a>      <strong class='reserved'>if</strong> (node != <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L118' name='L118'></a>        <em class='brace'>{</em>
+<a id='L119' name='L119'></a>          <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> == tmp_node)
+<a id='L120' name='L120'></a>            node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L121' name='L121'></a>          <strong class='reserved'>else</strong>
+<a id='L122' name='L122'></a>            node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a> = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L123' name='L123'></a>        <em class='brace'>}</em>
+<a id='L124' name='L124'></a>      <strong class='reserved'>else</strong>
+<a id='L125' name='L125'></a>        <em class='brace'>{</em>
+<a id='L126' name='L126'></a>          <strong class='reserved'>break</strong>;
+<a id='L127' name='L127'></a>        <em class='brace'>}</em>
+<a id='L128' name='L128'></a>    <em class='brace'>}</em>
+<a id='L129' name='L129'></a> 
+<a id='L130' name='L130'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (rt-&gt;count == 0);
+<a id='L131' name='L131'></a>
+<a id='L132' name='L132'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_TABLE, rt);
+<a id='L133' name='L133'></a>  <strong class='reserved'>return</strong>;
+<a id='L134' name='L134'></a><em class='brace'>}</em>
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a><em class='comment'>/* Utility mask array. */</em>
+<a id='L137' name='L137'></a><strong class='reserved'>static</strong> <strong class='reserved'>const</strong> u_char maskbit[] =
+<a id='L138' name='L138'></a><em class='brace'>{</em>
+<a id='L139' name='L139'></a>  0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff
+<a id='L140' name='L140'></a><em class='brace'>}</em>;
+<a id='L141' name='L141'></a>
+<a id='L142' name='L142'></a><em class='comment'>/* Common prefix route genaration. */</em>
+<a id='L143' name='L143'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L144' name='L144'></a><a href='../R/9393.html' title='Multiple referred from 2 places.'>route_common</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *n, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *new)
+<a id='L145' name='L145'></a><em class='brace'>{</em>
+<a id='L146' name='L146'></a>  <strong class='reserved'>int</strong> i;
+<a id='L147' name='L147'></a>  u_char diff;
+<a id='L148' name='L148'></a>  u_char mask;
+<a id='L149' name='L149'></a>
+<a id='L150' name='L150'></a>  u_char *np = (u_char *)&amp;n-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L151' name='L151'></a>  u_char *pp = (u_char *)&amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L152' name='L152'></a>  u_char *newp = (u_char *)&amp;new-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; p-&gt;prefixlen / 8; i++)
+<a id='L155' name='L155'></a>    <em class='brace'>{</em>
+<a id='L156' name='L156'></a>      <strong class='reserved'>if</strong> (np[i] == pp[i])
+<a id='L157' name='L157'></a>        newp[i] = np[i];
+<a id='L158' name='L158'></a>      <strong class='reserved'>else</strong>
+<a id='L159' name='L159'></a>        <strong class='reserved'>break</strong>;
+<a id='L160' name='L160'></a>    <em class='brace'>}</em>
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a>  new-&gt;prefixlen = i * 8;
+<a id='L163' name='L163'></a>
+<a id='L164' name='L164'></a>  <strong class='reserved'>if</strong> (new-&gt;prefixlen != p-&gt;prefixlen)
+<a id='L165' name='L165'></a>    <em class='brace'>{</em>
+<a id='L166' name='L166'></a>      diff = np[i] ^ pp[i];
+<a id='L167' name='L167'></a>      mask = 0x80;
+<a id='L168' name='L168'></a>      <strong class='reserved'>while</strong> (new-&gt;prefixlen &lt; p-&gt;prefixlen &amp;&amp; !(mask &amp; diff))
+<a id='L169' name='L169'></a>        <em class='brace'>{</em>
+<a id='L170' name='L170'></a>          mask &gt;&gt;= 1;
+<a id='L171' name='L171'></a>          new-&gt;prefixlen++;
+<a id='L172' name='L172'></a>        <em class='brace'>}</em>
+<a id='L173' name='L173'></a>      newp[i] = np[i] &amp; maskbit[new-&gt;prefixlen % 8];
+<a id='L174' name='L174'></a>    <em class='brace'>}</em>
+<a id='L175' name='L175'></a><em class='brace'>}</em>
+<a id='L176' name='L176'></a>
+<a id='L177' name='L177'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L178' name='L178'></a><a href='../R/9743.html' title='Multiple referred from 4 places.'>set_link</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node, <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *new)
+<a id='L179' name='L179'></a><em class='brace'>{</em>
+<a id='L180' name='L180'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> bit = <a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a> (&amp;new-&gt;p.u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, node-&gt;p.prefixlen);
+<a id='L181' name='L181'></a>
+<a id='L182' name='L182'></a>  node-&gt;link[bit] = new;
+<a id='L183' name='L183'></a>  new-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> = node;
+<a id='L184' name='L184'></a><em class='brace'>}</em>
+<a id='L185' name='L185'></a>
+<a id='L186' name='L186'></a><em class='comment'>/* Lock node. */</em>
+<a id='L187' name='L187'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L188' name='L188'></a><a href='../R/9400.html' title='Multiple referred from 40 places.'>route_lock_node</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L189' name='L189'></a><em class='brace'>{</em>
+<a id='L190' name='L190'></a>  node-&gt;lock++;
+<a id='L191' name='L191'></a>  <strong class='reserved'>return</strong> node;
+<a id='L192' name='L192'></a><em class='brace'>}</em>
+<a id='L193' name='L193'></a>
+<a id='L194' name='L194'></a><em class='comment'>/* Unlock node. */</em>
+<a id='L195' name='L195'></a><strong class='reserved'>void</strong>
+<a id='L196' name='L196'></a><a href='../R/9608.html' title='Multiple referred from 255 places.'>route_unlock_node</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L197' name='L197'></a><em class='brace'>{</em>
+<a id='L198' name='L198'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (node-&gt;lock &gt; 0);
+<a id='L199' name='L199'></a>  node-&gt;lock--;
+<a id='L200' name='L200'></a>
+<a id='L201' name='L201'></a>  <strong class='reserved'>if</strong> (node-&gt;lock == 0)
+<a id='L202' name='L202'></a>    <a href='../S/236.html#L378' title='Defined at 378 in lib/table.c.'>route_node_delete</a> (node);
+<a id='L203' name='L203'></a><em class='brace'>}</em>
+<a id='L204' name='L204'></a>
+<a id='L205' name='L205'></a><em class='comment'>/* Find matched prefix. */</em>
+<a id='L206' name='L206'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L207' name='L207'></a><a href='../R/9517.html' title='Multiple referred from 24 places.'>route_node_match</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L208' name='L208'></a><em class='brace'>{</em>
+<a id='L209' name='L209'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L210' name='L210'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *matched;
+<a id='L211' name='L211'></a>
+<a id='L212' name='L212'></a>  matched = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L213' name='L213'></a>  node = table-&gt;top;
+<a id='L214' name='L214'></a>
+<a id='L215' name='L215'></a>  <em class='comment'>/* Walk down tree.  If there is matched route then store it to</em>
+<a id='L216' name='L216'></a><em class='comment'>     matched. */</em>
+<a id='L217' name='L217'></a>  <strong class='reserved'>while</strong> (node &amp;&amp; node-&gt;p.prefixlen &lt;= p-&gt;prefixlen &amp;&amp; 
+<a id='L218' name='L218'></a>         <a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (&amp;node-&gt;p, p))
+<a id='L219' name='L219'></a>    <em class='brace'>{</em>
+<a id='L220' name='L220'></a>      <strong class='reserved'>if</strong> (node-&gt;info)
+<a id='L221' name='L221'></a>        matched = node;
+<a id='L222' name='L222'></a>      
+<a id='L223' name='L223'></a>      <strong class='reserved'>if</strong> (node-&gt;p.prefixlen == p-&gt;prefixlen)
+<a id='L224' name='L224'></a>        <strong class='reserved'>break</strong>;
+<a id='L225' name='L225'></a>      
+<a id='L226' name='L226'></a>      node = node-&gt;link[<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a>(&amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, node-&gt;p.prefixlen)];
+<a id='L227' name='L227'></a>    <em class='brace'>}</em>
+<a id='L228' name='L228'></a>
+<a id='L229' name='L229'></a>  <em class='comment'>/* If matched route found, return it. */</em>
+<a id='L230' name='L230'></a>  <strong class='reserved'>if</strong> (matched)
+<a id='L231' name='L231'></a>    <strong class='reserved'>return</strong> <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (matched);
+<a id='L232' name='L232'></a>
+<a id='L233' name='L233'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L234' name='L234'></a><em class='brace'>}</em>
+<a id='L235' name='L235'></a>
+<a id='L236' name='L236'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L237' name='L237'></a><a href='../R/9518.html' title='Multiple referred from 3 places.'>route_node_match_ipv4</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table,
+<a id='L238' name='L238'></a>                       <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> in_addr *addr)
+<a id='L239' name='L239'></a><em class='brace'>{</em>
+<a id='L240' name='L240'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a> p;
+<a id='L241' name='L241'></a>
+<a id='L242' name='L242'></a>  memset (&amp;p, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L59' title='Defined at 59 in lib/prefix.h.'>prefix_ipv4</a>));
+<a id='L243' name='L243'></a>  p.family = AF_INET;
+<a id='L244' name='L244'></a>  p.prefixlen = <a href='../S/249.html#L107' title='Defined at 107 in lib/prefix.h.'>IPV4_MAX_PREFIXLEN</a>;
+<a id='L245' name='L245'></a>  p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = *addr;
+<a id='L246' name='L246'></a>
+<a id='L247' name='L247'></a>  <strong class='reserved'>return</strong> <a href='../S/236.html#L207' title='Defined at 207 in lib/table.c.'>route_node_match</a> (table, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L248' name='L248'></a><em class='brace'>}</em>
+<a id='L249' name='L249'></a>
+<a id='L250' name='L250'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L153' title='Defined at 153 in config.h.'>HAVE_IPV6</a>
+<a id='L251' name='L251'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L252' name='L252'></a><a href='../R/9519.html' title='Multiple referred from 2 places.'>route_node_match_ipv6</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table,
+<a id='L253' name='L253'></a>                       <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> in6_addr *addr)
+<a id='L254' name='L254'></a><em class='brace'>{</em>
+<a id='L255' name='L255'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a> p;
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a>  memset (&amp;p, 0, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L68' title='Defined at 68 in lib/prefix.h.'>prefix_ipv6</a>));
+<a id='L258' name='L258'></a>  p.family = AF_INET6;
+<a id='L259' name='L259'></a>  p.prefixlen = <a href='../S/249.html#L120' title='Defined at 120 in lib/prefix.h.'>IPV6_MAX_PREFIXLEN</a>;
+<a id='L260' name='L260'></a>  p.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = *addr;
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>  <strong class='reserved'>return</strong> <a href='../S/236.html#L207' title='Defined at 207 in lib/table.c.'>route_node_match</a> (table, (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *) &amp;p);
+<a id='L263' name='L263'></a><em class='brace'>}</em>
+<a id='L264' name='L264'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_IPV6 */</em>
+<a id='L265' name='L265'></a>
+<a id='L266' name='L266'></a><em class='comment'>/* Lookup same prefix node.  Return NULL when we can't find route. */</em>
+<a id='L267' name='L267'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L268' name='L268'></a><a href='../R/9515.html' title='Multiple referred from 86 places.'>route_node_lookup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L269' name='L269'></a><em class='brace'>{</em>
+<a id='L270' name='L270'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L271' name='L271'></a>  u_char prefixlen = p-&gt;prefixlen;
+<a id='L272' name='L272'></a>  <strong class='reserved'>const</strong> u_char *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = &amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a>  node = table-&gt;top;
+<a id='L275' name='L275'></a>
+<a id='L276' name='L276'></a>  <strong class='reserved'>while</strong> (node &amp;&amp; node-&gt;p.prefixlen &lt;= prefixlen &amp;&amp;
+<a id='L277' name='L277'></a>         <a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (&amp;node-&gt;p, p))
+<a id='L278' name='L278'></a>    <em class='brace'>{</em>
+<a id='L279' name='L279'></a>      <strong class='reserved'>if</strong> (node-&gt;p.prefixlen == prefixlen)
+<a id='L280' name='L280'></a>        <strong class='reserved'>return</strong> node-&gt;info ? <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (node) : <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L281' name='L281'></a>
+<a id='L282' name='L282'></a>      node = node-&gt;link[<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a>(<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, node-&gt;p.prefixlen)];
+<a id='L283' name='L283'></a>    <em class='brace'>}</em>
+<a id='L284' name='L284'></a>
+<a id='L285' name='L285'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L286' name='L286'></a><em class='brace'>}</em>
+<a id='L287' name='L287'></a>
+<a id='L288' name='L288'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L289' name='L289'></a><a href='../R/9516.html' title='Multiple referred from 4 places.'>route_node_lookup2</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L290' name='L290'></a><em class='brace'>{</em>
+<a id='L291' name='L291'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn_in, *rn_tmp;
+<a id='L292' name='L292'></a>
+<a id='L293' name='L293'></a>  <strong class='reserved'>if</strong> (!(rn_in = <a href='../S/236.html#L268' title='Defined at 268 in lib/table.c.'>route_node_lookup</a>(table,p))) <em class='brace'>{</em>
+<a id='L294' name='L294'></a>        fprintf(stderr,"lookup2 is doing work\n");
+<a id='L295' name='L295'></a>    <em class='comment'>/* walk as far down the tree as we can */</em>
+<a id='L296' name='L296'></a>    rn_in = table-&gt;top;
+<a id='L297' name='L297'></a>    <strong class='reserved'>while</strong> (rn_in &amp;&amp; rn_in-&gt;p.prefixlen &lt;= p-&gt;prefixlen &amp;&amp;
+<a id='L298' name='L298'></a>      <a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a>(&amp;rn_in-&gt;p, p)) <em class='brace'>{</em>
+<a id='L299' name='L299'></a>      rn_tmp = rn_in-&gt;link[<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a>(&amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, rn_in-&gt;p.prefixlen)];
+<a id='L300' name='L300'></a>      <strong class='reserved'>if</strong> (!rn_tmp) <em class='brace'>{</em>
+<a id='L301' name='L301'></a>        <strong class='reserved'>break</strong>;
+<a id='L302' name='L302'></a>      <em class='brace'>}</em>
+<a id='L303' name='L303'></a>      rn_in = rn_tmp;
+<a id='L304' name='L304'></a>    <em class='brace'>}</em>
+<a id='L305' name='L305'></a>    <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a>(rn_in);
+<a id='L306' name='L306'></a>
+<a id='L307' name='L307'></a>    <em class='comment'>/* rn_in is either the actual node of the furthest node in the tree */</em>
+<a id='L308' name='L308'></a>    <em class='comment'>/* so get the 'next' one with 'info' */</em>
+<a id='L309' name='L309'></a>    rn_in = <a href='../S/236.html#L474' title='Defined at 474 in lib/table.c.'>route_next2</a>(rn_in);
+<a id='L310' name='L310'></a>  <em class='brace'>}</em>
+<a id='L311' name='L311'></a>
+<a id='L312' name='L312'></a>  <strong class='reserved'>if</strong> (rn_in &amp;&amp; !rn_in-&gt;info) <em class='brace'>{</em>
+<a id='L313' name='L313'></a>    <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a>(rn_in);
+<a id='L314' name='L314'></a>    rn_in = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L315' name='L315'></a>  <em class='brace'>}</em>
+<a id='L316' name='L316'></a>  <strong class='reserved'>return</strong> rn_in;
+<a id='L317' name='L317'></a><em class='brace'>}</em>
+<a id='L318' name='L318'></a>
+<a id='L319' name='L319'></a><em class='comment'>/* Add node to routing table. */</em>
+<a id='L320' name='L320'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L321' name='L321'></a><a href='../R/9514.html' title='Multiple referred from 69 places.'>route_node_get</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *<strong class='reserved'>const</strong> table, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L322' name='L322'></a><em class='brace'>{</em>
+<a id='L323' name='L323'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *new;
+<a id='L324' name='L324'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L325' name='L325'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *match;
+<a id='L326' name='L326'></a>  u_char prefixlen = p-&gt;prefixlen;
+<a id='L327' name='L327'></a>  <strong class='reserved'>const</strong> u_char *<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> = &amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>;
+<a id='L328' name='L328'></a>
+<a id='L329' name='L329'></a>  match = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L330' name='L330'></a>  node = table-&gt;top;
+<a id='L331' name='L331'></a>  <strong class='reserved'>while</strong> (node &amp;&amp; node-&gt;p.prefixlen &lt;= prefixlen &amp;&amp;
+<a id='L332' name='L332'></a>         <a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (&amp;node-&gt;p, p))
+<a id='L333' name='L333'></a>    <em class='brace'>{</em>
+<a id='L334' name='L334'></a>      <strong class='reserved'>if</strong> (node-&gt;p.prefixlen == prefixlen)
+<a id='L335' name='L335'></a>        <strong class='reserved'>return</strong> <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (node);
+<a id='L336' name='L336'></a>
+<a id='L337' name='L337'></a>      match = node;
+<a id='L338' name='L338'></a>      node = node-&gt;link[<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a>(<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, node-&gt;p.prefixlen)];
+<a id='L339' name='L339'></a>    <em class='brace'>}</em>
+<a id='L340' name='L340'></a>
+<a id='L341' name='L341'></a>  <strong class='reserved'>if</strong> (node == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L342' name='L342'></a>    <em class='brace'>{</em>
+<a id='L343' name='L343'></a>      new = <a href='../S/236.html#L62' title='Defined at 62 in lib/table.c.'>route_node_set</a> (table, p);
+<a id='L344' name='L344'></a>      <strong class='reserved'>if</strong> (match)
+<a id='L345' name='L345'></a>        <a href='../S/236.html#L178' title='Defined at 178 in lib/table.c.'>set_link</a> (match, new);
+<a id='L346' name='L346'></a>      <strong class='reserved'>else</strong>
+<a id='L347' name='L347'></a>        table-&gt;top = new;
+<a id='L348' name='L348'></a>    <em class='brace'>}</em>
+<a id='L349' name='L349'></a>  <strong class='reserved'>else</strong>
+<a id='L350' name='L350'></a>    <em class='brace'>{</em>
+<a id='L351' name='L351'></a>      new = <a href='../S/236.html#L55' title='Defined at 55 in lib/table.c.'>route_node_new</a> (table);
+<a id='L352' name='L352'></a>      <a href='../S/236.html#L144' title='Defined at 144 in lib/table.c.'>route_common</a> (&amp;node-&gt;p, p, &amp;new-&gt;p);
+<a id='L353' name='L353'></a>      new-&gt;p.family = p-&gt;family;
+<a id='L354' name='L354'></a>      new-&gt;table = table;
+<a id='L355' name='L355'></a>      <a href='../S/236.html#L178' title='Defined at 178 in lib/table.c.'>set_link</a> (new, node);
+<a id='L356' name='L356'></a>
+<a id='L357' name='L357'></a>      <strong class='reserved'>if</strong> (match)
+<a id='L358' name='L358'></a>        <a href='../S/236.html#L178' title='Defined at 178 in lib/table.c.'>set_link</a> (match, new);
+<a id='L359' name='L359'></a>      <strong class='reserved'>else</strong>
+<a id='L360' name='L360'></a>        table-&gt;top = new;
+<a id='L361' name='L361'></a>
+<a id='L362' name='L362'></a>      <strong class='reserved'>if</strong> (new-&gt;p.prefixlen != p-&gt;prefixlen)
+<a id='L363' name='L363'></a>        <em class='brace'>{</em>
+<a id='L364' name='L364'></a>          match = new;
+<a id='L365' name='L365'></a>          new = <a href='../S/236.html#L62' title='Defined at 62 in lib/table.c.'>route_node_set</a> (table, p);
+<a id='L366' name='L366'></a>          <a href='../S/236.html#L178' title='Defined at 178 in lib/table.c.'>set_link</a> (match, new);
+<a id='L367' name='L367'></a>          table-&gt;count++;
+<a id='L368' name='L368'></a>        <em class='brace'>}</em>
+<a id='L369' name='L369'></a>    <em class='brace'>}</em>
+<a id='L370' name='L370'></a>  table-&gt;count++;
+<a id='L371' name='L371'></a>  <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (new);
+<a id='L372' name='L372'></a>  
+<a id='L373' name='L373'></a>  <strong class='reserved'>return</strong> new;
+<a id='L374' name='L374'></a><em class='brace'>}</em>
+<a id='L375' name='L375'></a>
+<a id='L376' name='L376'></a><em class='comment'>/* Delete node from the routing table. */</em>
+<a id='L377' name='L377'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L378' name='L378'></a><a href='../R/9511.html' title='Multiple referred from 3 places.'>route_node_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L379' name='L379'></a><em class='brace'>{</em>
+<a id='L380' name='L380'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *child;
+<a id='L381' name='L381'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L382' name='L382'></a>
+<a id='L383' name='L383'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (node-&gt;lock == 0);
+<a id='L384' name='L384'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (node-&gt;info == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>);
+<a id='L385' name='L385'></a>
+<a id='L386' name='L386'></a>  <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> &amp;&amp; node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L387' name='L387'></a>    <strong class='reserved'>return</strong>;
+<a id='L388' name='L388'></a>
+<a id='L389' name='L389'></a>  <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>)
+<a id='L390' name='L390'></a>    child = node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>;
+<a id='L391' name='L391'></a>  <strong class='reserved'>else</strong>
+<a id='L392' name='L392'></a>    child = node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L393' name='L393'></a>
+<a id='L394' name='L394'></a>  <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L395' name='L395'></a>
+<a id='L396' name='L396'></a>  <strong class='reserved'>if</strong> (child)
+<a id='L397' name='L397'></a>    child-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> = <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L398' name='L398'></a>
+<a id='L399' name='L399'></a>  <strong class='reserved'>if</strong> (<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>)
+<a id='L400' name='L400'></a>    <em class='brace'>{</em>
+<a id='L401' name='L401'></a>      <strong class='reserved'>if</strong> (<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> == node)
+<a id='L402' name='L402'></a>        <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> = child;
+<a id='L403' name='L403'></a>      <strong class='reserved'>else</strong>
+<a id='L404' name='L404'></a>        <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a> = child;
+<a id='L405' name='L405'></a>    <em class='brace'>}</em>
+<a id='L406' name='L406'></a>  <strong class='reserved'>else</strong>
+<a id='L407' name='L407'></a>    node-&gt;table-&gt;top = child;
+<a id='L408' name='L408'></a>
+<a id='L409' name='L409'></a>  node-&gt;table-&gt;count--;
+<a id='L410' name='L410'></a>
+<a id='L411' name='L411'></a>  <a href='../S/236.html#L76' title='Defined at 76 in lib/table.c.'>route_node_free</a> (node-&gt;table, node);
+<a id='L412' name='L412'></a>
+<a id='L413' name='L413'></a>  <em class='comment'>/* If parent node is stub then delete it also. */</em>
+<a id='L414' name='L414'></a>  <strong class='reserved'>if</strong> (<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> &amp;&amp; <a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;lock == 0)
+<a id='L415' name='L415'></a>    <a href='../S/236.html#L378' title='Defined at 378 in lib/table.c.'>route_node_delete</a> (<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>);
+<a id='L416' name='L416'></a><em class='brace'>}</em>
+<a id='L417' name='L417'></a>
+<a id='L418' name='L418'></a><em class='comment'>/* Get fist node and lock it.  This function is useful when one want</em>
+<a id='L419' name='L419'></a><em class='comment'>   to lookup all the node exist in the routing table. */</em>
+<a id='L420' name='L420'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L421' name='L421'></a><a href='../R/9607.html' title='Multiple referred from 175 places.'>route_top</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table)
+<a id='L422' name='L422'></a><em class='brace'>{</em>
+<a id='L423' name='L423'></a>  <em class='comment'>/* If there is no node in the routing table return NULL. */</em>
+<a id='L424' name='L424'></a>  <strong class='reserved'>if</strong> (table-&gt;top == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L425' name='L425'></a>    <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L426' name='L426'></a>
+<a id='L427' name='L427'></a>  <em class='comment'>/* Lock the top node and return it. */</em>
+<a id='L428' name='L428'></a>  <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (table-&gt;top);
+<a id='L429' name='L429'></a>  <strong class='reserved'>return</strong> table-&gt;top;
+<a id='L430' name='L430'></a><em class='brace'>}</em>
+<a id='L431' name='L431'></a>
+<a id='L432' name='L432'></a><em class='comment'>/* Unlock current node and lock next node then return it. */</em>
+<a id='L433' name='L433'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L434' name='L434'></a><a href='../R/9506.html' title='Multiple referred from 190 places.'>route_next</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L435' name='L435'></a><em class='brace'>{</em>
+<a id='L436' name='L436'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *next;
+<a id='L437' name='L437'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *start;
+<a id='L438' name='L438'></a>
+<a id='L439' name='L439'></a>  <em class='comment'>/* Node may be deleted from route_unlock_node so we have to preserve</em>
+<a id='L440' name='L440'></a><em class='comment'>     next node's pointer. */</em>
+<a id='L441' name='L441'></a>
+<a id='L442' name='L442'></a>  <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>)
+<a id='L443' name='L443'></a>    <em class='brace'>{</em>
+<a id='L444' name='L444'></a>      next = node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>;
+<a id='L445' name='L445'></a>      <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (next);
+<a id='L446' name='L446'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (node);
+<a id='L447' name='L447'></a>      <strong class='reserved'>return</strong> next;
+<a id='L448' name='L448'></a>    <em class='brace'>}</em>
+<a id='L449' name='L449'></a>  <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L450' name='L450'></a>    <em class='brace'>{</em>
+<a id='L451' name='L451'></a>      next = node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L452' name='L452'></a>      <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (next);
+<a id='L453' name='L453'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (node);
+<a id='L454' name='L454'></a>      <strong class='reserved'>return</strong> next;
+<a id='L455' name='L455'></a>    <em class='brace'>}</em>
+<a id='L456' name='L456'></a>
+<a id='L457' name='L457'></a>  start = node;
+<a id='L458' name='L458'></a>  <strong class='reserved'>while</strong> (node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>)
+<a id='L459' name='L459'></a>    <em class='brace'>{</em>
+<a id='L460' name='L460'></a>      <strong class='reserved'>if</strong> (node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> == node &amp;&amp; node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L461' name='L461'></a>        <em class='brace'>{</em>
+<a id='L462' name='L462'></a>          next = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L463' name='L463'></a>          <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (next);
+<a id='L464' name='L464'></a>          <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (start);
+<a id='L465' name='L465'></a>          <strong class='reserved'>return</strong> next;
+<a id='L466' name='L466'></a>        <em class='brace'>}</em>
+<a id='L467' name='L467'></a>      node = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L468' name='L468'></a>    <em class='brace'>}</em>
+<a id='L469' name='L469'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (start);
+<a id='L470' name='L470'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L471' name='L471'></a><em class='brace'>}</em>
+<a id='L472' name='L472'></a>
+<a id='L473' name='L473'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L474' name='L474'></a><a href='../R/9507.html' title='Multiple referred from 6 places.'>route_next2</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn_in)
+<a id='L475' name='L475'></a><em class='brace'>{</em>
+<a id='L476' name='L476'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn = rn_in;
+<a id='L477' name='L477'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *rn2;
+<a id='L478' name='L478'></a>  <strong class='reserved'>do</strong> <em class='brace'>{</em>
+<a id='L479' name='L479'></a>    rn2 = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a>(rn);
+<a id='L480' name='L480'></a>    rn = rn2;
+<a id='L481' name='L481'></a>  <em class='brace'>}</em> <strong class='reserved'>while</strong>(rn &amp;&amp; !rn-&gt;info);
+<a id='L482' name='L482'></a>
+<a id='L483' name='L483'></a>  <strong class='reserved'>if</strong> (rn &amp;&amp; rn-&gt;info) <em class='brace'>{</em>
+<a id='L484' name='L484'></a>    <strong class='reserved'>return</strong> rn;
+<a id='L485' name='L485'></a>  <em class='brace'>}</em>
+<a id='L486' name='L486'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L487' name='L487'></a><em class='brace'>}</em>
+<a id='L488' name='L488'></a>
+<a id='L489' name='L489'></a><em class='comment'>/* Unlock current node and lock next node until limit. */</em>
+<a id='L490' name='L490'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L491' name='L491'></a><a href='../R/9508.html' title='Multiple referred from 5 places.'>route_next_until</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node, <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *limit)
+<a id='L492' name='L492'></a><em class='brace'>{</em>
+<a id='L493' name='L493'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *next;
+<a id='L494' name='L494'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *start;
+<a id='L495' name='L495'></a>
+<a id='L496' name='L496'></a>  <em class='comment'>/* Node may be deleted from route_unlock_node so we have to preserve</em>
+<a id='L497' name='L497'></a><em class='comment'>     next node's pointer. */</em>
+<a id='L498' name='L498'></a>
+<a id='L499' name='L499'></a>  <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>)
+<a id='L500' name='L500'></a>    <em class='brace'>{</em>
+<a id='L501' name='L501'></a>      next = node-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a>;
+<a id='L502' name='L502'></a>      <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (next);
+<a id='L503' name='L503'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (node);
+<a id='L504' name='L504'></a>      <strong class='reserved'>return</strong> next;
+<a id='L505' name='L505'></a>    <em class='brace'>}</em>
+<a id='L506' name='L506'></a>  <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L507' name='L507'></a>    <em class='brace'>{</em>
+<a id='L508' name='L508'></a>      next = node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L509' name='L509'></a>      <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (next);
+<a id='L510' name='L510'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (node);
+<a id='L511' name='L511'></a>      <strong class='reserved'>return</strong> next;
+<a id='L512' name='L512'></a>    <em class='brace'>}</em>
+<a id='L513' name='L513'></a>
+<a id='L514' name='L514'></a>  start = node;
+<a id='L515' name='L515'></a>  <strong class='reserved'>while</strong> (node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a> &amp;&amp; node != limit)
+<a id='L516' name='L516'></a>    <em class='brace'>{</em>
+<a id='L517' name='L517'></a>      <strong class='reserved'>if</strong> (node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> == node &amp;&amp; node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L518' name='L518'></a>        <em class='brace'>{</em>
+<a id='L519' name='L519'></a>          next = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L520' name='L520'></a>          <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (next);
+<a id='L521' name='L521'></a>          <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (start);
+<a id='L522' name='L522'></a>          <strong class='reserved'>return</strong> next;
+<a id='L523' name='L523'></a>        <em class='brace'>}</em>
+<a id='L524' name='L524'></a>      node = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L525' name='L525'></a>    <em class='brace'>}</em>
+<a id='L526' name='L526'></a>  <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (start);
+<a id='L527' name='L527'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L528' name='L528'></a><em class='brace'>}</em>
+<a id='L529' name='L529'></a>
+<a id='L530' name='L530'></a><strong class='reserved'>unsigned</strong> <strong class='reserved'>long</strong>
+<a id='L531' name='L531'></a><a href='../R/9588.html' title='Multiple referred from 3 places.'>route_table_count</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table)
+<a id='L532' name='L532'></a><em class='brace'>{</em>
+<a id='L533' name='L533'></a>  <strong class='reserved'>return</strong> table-&gt;count;
+<a id='L534' name='L534'></a><em class='brace'>}</em>
+<a id='L535' name='L535'></a>
+<a id='L536' name='L536'></a><em class='comment'>/**</em>
+<a id='L537' name='L537'></a><em class='comment'> * route_node_create</em>
+<a id='L538' name='L538'></a><em class='comment'> *</em>
+<a id='L539' name='L539'></a><em class='comment'> * Default function for creating a route node.</em>
+<a id='L540' name='L540'></a><em class='comment'> */</em>
+<a id='L541' name='L541'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L542' name='L542'></a><a href='../S/236.html#L566' title='Referred from 566 in lib/table.c.'>route_node_create</a> (<a href='../S/215.html#L38' title='Defined at 38 in lib/table.h.'>route_table_delegate_t</a> *delegate,
+<a id='L543' name='L543'></a>                   <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table)
+<a id='L544' name='L544'></a><em class='brace'>{</em>
+<a id='L545' name='L545'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L546' name='L546'></a>  node = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_ROUTE_NODE, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a>));
+<a id='L547' name='L547'></a>  <strong class='reserved'>return</strong> node;
+<a id='L548' name='L548'></a><em class='brace'>}</em>
+<a id='L549' name='L549'></a>
+<a id='L550' name='L550'></a><em class='comment'>/**</em>
+<a id='L551' name='L551'></a><em class='comment'> * route_node_destroy</em>
+<a id='L552' name='L552'></a><em class='comment'> *</em>
+<a id='L553' name='L553'></a><em class='comment'> * Default function for destroying a route node.</em>
+<a id='L554' name='L554'></a><em class='comment'> */</em>
+<a id='L555' name='L555'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L556' name='L556'></a><a href='../S/236.html#L567' title='Referred from 567 in lib/table.c.'>route_node_destroy</a> (<a href='../S/215.html#L38' title='Defined at 38 in lib/table.h.'>route_table_delegate_t</a> *delegate,
+<a id='L557' name='L557'></a>                    <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L558' name='L558'></a><em class='brace'>{</em>
+<a id='L559' name='L559'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_ROUTE_NODE, node);
+<a id='L560' name='L560'></a><em class='brace'>}</em>
+<a id='L561' name='L561'></a>
+<a id='L562' name='L562'></a><em class='comment'>/*</em>
+<a id='L563' name='L563'></a><em class='comment'> * Default delegate.</em>
+<a id='L564' name='L564'></a><em class='comment'> */</em>
+<a id='L565' name='L565'></a><strong class='reserved'>static</strong> <a href='../S/215.html#L38' title='Defined at 38 in lib/table.h.'>route_table_delegate_t</a> default_delegate = <em class='brace'>{</em>
+<a id='L566' name='L566'></a>  .create_node = <a href='../S/236.html#L542' title='Defined at 542 in lib/table.c.'>route_node_create</a>,
+<a id='L567' name='L567'></a>  .destroy_node = <a href='../S/236.html#L556' title='Defined at 556 in lib/table.c.'>route_node_destroy</a>
+<a id='L568' name='L568'></a><em class='brace'>}</em>;
+<a id='L569' name='L569'></a>
+<a id='L570' name='L570'></a><em class='comment'>/*</em>
+<a id='L571' name='L571'></a><em class='comment'> * route_table_init</em>
+<a id='L572' name='L572'></a><em class='comment'> */</em>
+<a id='L573' name='L573'></a><strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *
+<a id='L574' name='L574'></a><a href='../R/9595.html' title='Multiple referred from 53 places.'>route_table_init</a> (<strong class='reserved'>void</strong>)
+<a id='L575' name='L575'></a><em class='brace'>{</em>
+<a id='L576' name='L576'></a>  <strong class='reserved'>return</strong> <a href='../S/236.html#L38' title='Defined at 38 in lib/table.c.'>route_table_init_with_delegate</a> (&amp;default_delegate);
+<a id='L577' name='L577'></a><em class='brace'>}</em>
+<a id='L578' name='L578'></a>
+<a id='L579' name='L579'></a><em class='comment'>/**</em>
+<a id='L580' name='L580'></a><em class='comment'> * route_table_prefix_iter_cmp</em>
+<a id='L581' name='L581'></a><em class='comment'> *</em>
+<a id='L582' name='L582'></a><em class='comment'> * Compare two prefixes according to the order in which they appear in</em>
+<a id='L583' name='L583'></a><em class='comment'> * an iteration over a tree.</em>
+<a id='L584' name='L584'></a><em class='comment'> * </em>
+<a id='L585' name='L585'></a><em class='comment'> * @return -1 if p1 occurs before p2 (p1 &lt; p2)</em>
+<a id='L586' name='L586'></a><em class='comment'> *          0 if the prefixes are identical (p1 == p2)</em>
+<a id='L587' name='L587'></a><em class='comment'> *         +1 if p1 occurs after p2 (p1 &gt; p2)</em>
+<a id='L588' name='L588'></a><em class='comment'> */</em>
+<a id='L589' name='L589'></a><strong class='reserved'>int</strong>
+<a id='L590' name='L590'></a><a href='../R/9606.html' title='Multiple referred from 6 places.'>route_table_prefix_iter_cmp</a> (<strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p1, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p2)
+<a id='L591' name='L591'></a><em class='brace'>{</em>
+<a id='L592' name='L592'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> common_space;
+<a id='L593' name='L593'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *common = &amp;common_space;
+<a id='L594' name='L594'></a>
+<a id='L595' name='L595'></a>  <strong class='reserved'>if</strong> (p1-&gt;prefixlen &lt;= p2-&gt;prefixlen)
+<a id='L596' name='L596'></a>    <em class='brace'>{</em>
+<a id='L597' name='L597'></a>      <strong class='reserved'>if</strong> (<a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (p1, p2))
+<a id='L598' name='L598'></a>        <em class='brace'>{</em>
+<a id='L599' name='L599'></a>
+<a id='L600' name='L600'></a>          <em class='comment'>/*</em>
+<a id='L601' name='L601'></a><em class='comment'>           * p1 contains p2, or is equal to it.</em>
+<a id='L602' name='L602'></a><em class='comment'>           */</em>
+<a id='L603' name='L603'></a>          <strong class='reserved'>return</strong> (p1-&gt;prefixlen == p2-&gt;prefixlen) ? 0 : -1;
+<a id='L604' name='L604'></a>        <em class='brace'>}</em>
+<a id='L605' name='L605'></a>    <em class='brace'>}</em>
+<a id='L606' name='L606'></a>  <strong class='reserved'>else</strong>
+<a id='L607' name='L607'></a>    <em class='brace'>{</em>
+<a id='L608' name='L608'></a>
+<a id='L609' name='L609'></a>      <em class='comment'>/*</em>
+<a id='L610' name='L610'></a><em class='comment'>       * Check if p2 contains p1.</em>
+<a id='L611' name='L611'></a><em class='comment'>       */</em>
+<a id='L612' name='L612'></a>      <strong class='reserved'>if</strong> (<a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (p2, p1))
+<a id='L613' name='L613'></a>          <strong class='reserved'>return</strong> 1;
+<a id='L614' name='L614'></a>    <em class='brace'>}</em>
+<a id='L615' name='L615'></a>
+<a id='L616' name='L616'></a>  <a href='../S/236.html#L144' title='Defined at 144 in lib/table.c.'>route_common</a> (p1, p2, common);
+<a id='L617' name='L617'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (common-&gt;prefixlen &lt; p1-&gt;prefixlen);
+<a id='L618' name='L618'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (common-&gt;prefixlen &lt; p2-&gt;prefixlen);
+<a id='L619' name='L619'></a>
+<a id='L620' name='L620'></a>  <em class='comment'>/*</em>
+<a id='L621' name='L621'></a><em class='comment'>   * Both prefixes are longer than the common prefix.</em>
+<a id='L622' name='L622'></a><em class='comment'>   *</em>
+<a id='L623' name='L623'></a><em class='comment'>   * We need to check the bit after the common prefixlen to determine</em>
+<a id='L624' name='L624'></a><em class='comment'>   * which one comes later.</em>
+<a id='L625' name='L625'></a><em class='comment'>   */</em>
+<a id='L626' name='L626'></a>  <strong class='reserved'>if</strong> (<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a> (&amp;p1-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, common-&gt;prefixlen))
+<a id='L627' name='L627'></a>    <em class='brace'>{</em>
+<a id='L628' name='L628'></a>
+<a id='L629' name='L629'></a>      <em class='comment'>/*</em>
+<a id='L630' name='L630'></a><em class='comment'>       * We branch to the right to get to p1 from the common prefix.</em>
+<a id='L631' name='L631'></a><em class='comment'>       */</em>
+<a id='L632' name='L632'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (!<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a> (&amp;p2-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, common-&gt;prefixlen));
+<a id='L633' name='L633'></a>      <strong class='reserved'>return</strong> 1;
+<a id='L634' name='L634'></a>    <em class='brace'>}</em>
+<a id='L635' name='L635'></a>
+<a id='L636' name='L636'></a>  <em class='comment'>/*</em>
+<a id='L637' name='L637'></a><em class='comment'>   * We branch to the right to get to p2 from the common prefix.</em>
+<a id='L638' name='L638'></a><em class='comment'>   */</em>
+<a id='L639' name='L639'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a> (&amp;p2-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, common-&gt;prefixlen));
+<a id='L640' name='L640'></a>  <strong class='reserved'>return</strong> -1;
+<a id='L641' name='L641'></a><em class='brace'>}</em>
+<a id='L642' name='L642'></a>
+<a id='L643' name='L643'></a><em class='comment'>/*</em>
+<a id='L644' name='L644'></a><em class='comment'> * route_get_subtree_next</em>
+<a id='L645' name='L645'></a><em class='comment'> *</em>
+<a id='L646' name='L646'></a><em class='comment'> * Helper function that returns the first node that follows the nodes</em>
+<a id='L647' name='L647'></a><em class='comment'> * in the sub-tree under 'node' in iteration order.</em>
+<a id='L648' name='L648'></a><em class='comment'> */</em>
+<a id='L649' name='L649'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L650' name='L650'></a><a href='../R/9398.html' title='Multiple referred from 2 places.'>route_get_subtree_next</a> (<strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node)
+<a id='L651' name='L651'></a><em class='brace'>{</em>
+<a id='L652' name='L652'></a>  <strong class='reserved'>while</strong> (node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>)
+<a id='L653' name='L653'></a>    <em class='brace'>{</em>
+<a id='L654' name='L654'></a>      <strong class='reserved'>if</strong> (node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L97' title='Defined at 97 in lib/table.h.'>l_left</a> == node &amp;&amp; node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L655' name='L655'></a>        <strong class='reserved'>return</strong> node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L656' name='L656'></a>
+<a id='L657' name='L657'></a>      node = node-&gt;<a href='../S/513.html#L38' title='Defined at 38 in isisd/dict.c.'>parent</a>;
+<a id='L658' name='L658'></a>    <em class='brace'>}</em>
+<a id='L659' name='L659'></a>
+<a id='L660' name='L660'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L661' name='L661'></a><em class='brace'>}</em>
+<a id='L662' name='L662'></a>
+<a id='L663' name='L663'></a><em class='comment'>/**</em>
+<a id='L664' name='L664'></a><em class='comment'> * route_table_get_next_internal</em>
+<a id='L665' name='L665'></a><em class='comment'> *</em>
+<a id='L666' name='L666'></a><em class='comment'> * Helper function to find the node that occurs after the given prefix in</em>
+<a id='L667' name='L667'></a><em class='comment'> * order of iteration.</em>
+<a id='L668' name='L668'></a><em class='comment'> *</em>
+<a id='L669' name='L669'></a><em class='comment'> * @see route_table_get_next</em>
+<a id='L670' name='L670'></a><em class='comment'> */</em>
+<a id='L671' name='L671'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L672' name='L672'></a><a href='../S/236.html#L781' title='Referred from 781 in lib/table.c.'>route_table_get_next_internal</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table,
+<a id='L673' name='L673'></a>                               <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L674' name='L674'></a><em class='brace'>{</em>
+<a id='L675' name='L675'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node, *tmp_node;
+<a id='L676' name='L676'></a>  u_char prefixlen;
+<a id='L677' name='L677'></a>  <strong class='reserved'>int</strong> <a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a>;
+<a id='L678' name='L678'></a>
+<a id='L679' name='L679'></a>  prefixlen = p-&gt;prefixlen;
+<a id='L680' name='L680'></a>
+<a id='L681' name='L681'></a>  node = table-&gt;top;
+<a id='L682' name='L682'></a>
+<a id='L683' name='L683'></a>  <strong class='reserved'>while</strong> (node)
+<a id='L684' name='L684'></a>    <em class='brace'>{</em>
+<a id='L685' name='L685'></a>      <strong class='reserved'>int</strong> match;
+<a id='L686' name='L686'></a>
+<a id='L687' name='L687'></a>      <strong class='reserved'>if</strong> (node-&gt;p.prefixlen &lt; p-&gt;prefixlen)
+<a id='L688' name='L688'></a>        match = <a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (&amp;node-&gt;p, p);
+<a id='L689' name='L689'></a>      <strong class='reserved'>else</strong>
+<a id='L690' name='L690'></a>        match = <a href='../S/250.html#L217' title='Defined at 217 in lib/prefix.c.'>prefix_match</a> (p, &amp;node-&gt;p);
+<a id='L691' name='L691'></a>
+<a id='L692' name='L692'></a>      <strong class='reserved'>if</strong> (match)
+<a id='L693' name='L693'></a>        <em class='brace'>{</em>
+<a id='L694' name='L694'></a>          <strong class='reserved'>if</strong> (node-&gt;p.prefixlen == p-&gt;prefixlen)
+<a id='L695' name='L695'></a>            <em class='brace'>{</em>
+<a id='L696' name='L696'></a>
+<a id='L697' name='L697'></a>              <em class='comment'>/*</em>
+<a id='L698' name='L698'></a><em class='comment'>               * The prefix p exists in the tree, just return the next</em>
+<a id='L699' name='L699'></a><em class='comment'>               * node.</em>
+<a id='L700' name='L700'></a><em class='comment'>               */</em>
+<a id='L701' name='L701'></a>              <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (node);
+<a id='L702' name='L702'></a>              node = <a href='../S/236.html#L434' title='Defined at 434 in lib/table.c.'>route_next</a> (node);
+<a id='L703' name='L703'></a>              <strong class='reserved'>if</strong> (node)
+<a id='L704' name='L704'></a>                <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (node);
+<a id='L705' name='L705'></a>
+<a id='L706' name='L706'></a>              <strong class='reserved'>return</strong> (node);
+<a id='L707' name='L707'></a>            <em class='brace'>}</em>
+<a id='L708' name='L708'></a>
+<a id='L709' name='L709'></a>          <strong class='reserved'>if</strong> (node-&gt;p.prefixlen &gt; p-&gt;prefixlen)
+<a id='L710' name='L710'></a>            <em class='brace'>{</em>
+<a id='L711' name='L711'></a>
+<a id='L712' name='L712'></a>              <em class='comment'>/*</em>
+<a id='L713' name='L713'></a><em class='comment'>               * Node is in the subtree of p, and hence greater than p.</em>
+<a id='L714' name='L714'></a><em class='comment'>               */</em>
+<a id='L715' name='L715'></a>              <strong class='reserved'>return</strong> node;
+<a id='L716' name='L716'></a>            <em class='brace'>}</em>
+<a id='L717' name='L717'></a>
+<a id='L718' name='L718'></a>          <em class='comment'>/*</em>
+<a id='L719' name='L719'></a><em class='comment'>           * p is in the sub-tree under node.</em>
+<a id='L720' name='L720'></a><em class='comment'>           */</em>
+<a id='L721' name='L721'></a>          tmp_node = node-&gt;link[<a href='../S/250.html#L176' title='Defined at 176 in lib/prefix.c.'>prefix_bit</a> (&amp;p-&gt;u.<a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a>, node-&gt;p.prefixlen)];
+<a id='L722' name='L722'></a>
+<a id='L723' name='L723'></a>          <strong class='reserved'>if</strong> (tmp_node)
+<a id='L724' name='L724'></a>            <em class='brace'>{</em>
+<a id='L725' name='L725'></a>              node = tmp_node;
+<a id='L726' name='L726'></a>              <strong class='reserved'>continue</strong>;
+<a id='L727' name='L727'></a>            <em class='brace'>}</em>
+<a id='L728' name='L728'></a>
+<a id='L729' name='L729'></a>          <em class='comment'>/*</em>
+<a id='L730' name='L730'></a><em class='comment'>           * There are no nodes in the direction where p should be. If</em>
+<a id='L731' name='L731'></a><em class='comment'>           * node has a right child, then it must be greater than p.</em>
+<a id='L732' name='L732'></a><em class='comment'>           */</em>
+<a id='L733' name='L733'></a>          <strong class='reserved'>if</strong> (node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>)
+<a id='L734' name='L734'></a>            <strong class='reserved'>return</strong> node-&gt;<a href='../S/215.html#L98' title='Defined at 98 in lib/table.h.'>l_right</a>;
+<a id='L735' name='L735'></a>
+<a id='L736' name='L736'></a>          <em class='comment'>/*</em>
+<a id='L737' name='L737'></a><em class='comment'>           * No more children to follow, go upwards looking for the next</em>
+<a id='L738' name='L738'></a><em class='comment'>           * node.</em>
+<a id='L739' name='L739'></a><em class='comment'>           */</em>
+<a id='L740' name='L740'></a>          <strong class='reserved'>return</strong> <a href='../S/236.html#L650' title='Defined at 650 in lib/table.c.'>route_get_subtree_next</a> (node);
+<a id='L741' name='L741'></a>        <em class='brace'>}</em>
+<a id='L742' name='L742'></a>
+<a id='L743' name='L743'></a>      <em class='comment'>/*</em>
+<a id='L744' name='L744'></a><em class='comment'>       * Neither node prefix nor 'p' contains the other.</em>
+<a id='L745' name='L745'></a><em class='comment'>       */</em>
+<a id='L746' name='L746'></a>      <a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> = <a href='../S/236.html#L590' title='Defined at 590 in lib/table.c.'>route_table_prefix_iter_cmp</a> (&amp;node-&gt;p, p);
+<a id='L747' name='L747'></a>      <strong class='reserved'>if</strong> (<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> &gt; 0)
+<a id='L748' name='L748'></a>        <em class='brace'>{</em>
+<a id='L749' name='L749'></a>
+<a id='L750' name='L750'></a>          <em class='comment'>/*</em>
+<a id='L751' name='L751'></a><em class='comment'>           * Node follows p in iteration order. Return it.</em>
+<a id='L752' name='L752'></a><em class='comment'>           */</em>
+<a id='L753' name='L753'></a>          <strong class='reserved'>return</strong> node;
+<a id='L754' name='L754'></a>        <em class='brace'>}</em>
+<a id='L755' name='L755'></a>
+<a id='L756' name='L756'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/805.html#L59' title='Defined at 59 in ospfd/ospf_spf.c.'>cmp</a> &lt; 0);
+<a id='L757' name='L757'></a>
+<a id='L758' name='L758'></a>      <em class='comment'>/*</em>
+<a id='L759' name='L759'></a><em class='comment'>       * Node and the subtree under it come before prefix p in</em>
+<a id='L760' name='L760'></a><em class='comment'>       * iteration order. Prefix p and its sub-tree are not present in</em>
+<a id='L761' name='L761'></a><em class='comment'>       * the tree. Go upwards and find the first node that follows the</em>
+<a id='L762' name='L762'></a><em class='comment'>       * subtree. That node will also succeed p.</em>
+<a id='L763' name='L763'></a><em class='comment'>       */</em>
+<a id='L764' name='L764'></a>      <strong class='reserved'>return</strong> <a href='../S/236.html#L650' title='Defined at 650 in lib/table.c.'>route_get_subtree_next</a> (node);
+<a id='L765' name='L765'></a>    <em class='brace'>}</em>
+<a id='L766' name='L766'></a>
+<a id='L767' name='L767'></a>  <strong class='reserved'>return</strong> <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L768' name='L768'></a><em class='brace'>}</em>
+<a id='L769' name='L769'></a>
+<a id='L770' name='L770'></a><em class='comment'>/**</em>
+<a id='L771' name='L771'></a><em class='comment'> * route_table_get_next</em>
+<a id='L772' name='L772'></a><em class='comment'> *</em>
+<a id='L773' name='L773'></a><em class='comment'> * Find the node that occurs after the given prefix in order of</em>
+<a id='L774' name='L774'></a><em class='comment'> * iteration.</em>
+<a id='L775' name='L775'></a><em class='comment'> */</em>
+<a id='L776' name='L776'></a><strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *
+<a id='L777' name='L777'></a><a href='../R/9593.html' title='Multiple referred from 4 places.'>route_table_get_next</a> (<strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *p)
+<a id='L778' name='L778'></a><em class='brace'>{</em>
+<a id='L779' name='L779'></a>  <strong class='reserved'>struct</strong> <a href='../S/215.html#L93' title='Defined at 93 in lib/table.h.'>route_node</a> *node;
+<a id='L780' name='L780'></a>
+<a id='L781' name='L781'></a>  node = <a href='../S/236.html#L672' title='Defined at 672 in lib/table.c.'>route_table_get_next_internal</a> (table, p);
+<a id='L782' name='L782'></a>  <strong class='reserved'>if</strong> (node)
+<a id='L783' name='L783'></a>    <em class='brace'>{</em>
+<a id='L784' name='L784'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (<a href='../S/236.html#L590' title='Defined at 590 in lib/table.c.'>route_table_prefix_iter_cmp</a> (&amp;node-&gt;p, p) &gt; 0);
+<a id='L785' name='L785'></a>      <a href='../S/236.html#L188' title='Defined at 188 in lib/table.c.'>route_lock_node</a> (node);
+<a id='L786' name='L786'></a>    <em class='brace'>}</em>
+<a id='L787' name='L787'></a>  <strong class='reserved'>return</strong> node;
+<a id='L788' name='L788'></a><em class='brace'>}</em>
+<a id='L789' name='L789'></a>
+<a id='L790' name='L790'></a><em class='comment'>/*</em>
+<a id='L791' name='L791'></a><em class='comment'> * route_table_iter_init</em>
+<a id='L792' name='L792'></a><em class='comment'> */</em>
+<a id='L793' name='L793'></a><strong class='reserved'>void</strong>
+<a id='L794' name='L794'></a><a href='../R/9598.html' title='Multiple referred from 7 places.'>route_table_iter_init</a> (<a href='../S/215.html#L101' title='Defined at 101 in lib/table.h.'>route_table_iter_t</a> * iter, <strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *table)
+<a id='L795' name='L795'></a><em class='brace'>{</em>
+<a id='L796' name='L796'></a>  memset (iter, 0, <strong class='reserved'>sizeof</strong> (*iter));
+<a id='L797' name='L797'></a>  iter-&gt;state = <a href='../S/215.html#L105' title='Defined at 105 in lib/table.h.'>RT_ITER_STATE_INIT</a>;
+<a id='L798' name='L798'></a>  iter-&gt;table = table;
+<a id='L799' name='L799'></a><em class='brace'>}</em>
+<a id='L800' name='L800'></a>
+<a id='L801' name='L801'></a><em class='comment'>/*</em>
+<a id='L802' name='L802'></a><em class='comment'> * route_table_iter_pause</em>
+<a id='L803' name='L803'></a><em class='comment'> *</em>
+<a id='L804' name='L804'></a><em class='comment'> * Pause an iteration over the table. This allows the iteration to be</em>
+<a id='L805' name='L805'></a><em class='comment'> * resumed point after arbitrary additions/deletions from the table.</em>
+<a id='L806' name='L806'></a><em class='comment'> * An iteration can be resumed by just calling route_table_iter_next()</em>
+<a id='L807' name='L807'></a><em class='comment'> * on the iterator.</em>
+<a id='L808' name='L808'></a><em class='comment'> */</em>
+<a id='L809' name='L809'></a><strong class='reserved'>void</strong>
+<a id='L810' name='L810'></a><a href='../R/9601.html' title='Multiple referred from 5 places.'>route_table_iter_pause</a> (<a href='../S/215.html#L101' title='Defined at 101 in lib/table.h.'>route_table_iter_t</a> * iter)
+<a id='L811' name='L811'></a><em class='brace'>{</em>
+<a id='L812' name='L812'></a>  <strong class='reserved'>switch</strong> (iter-&gt;state)
+<a id='L813' name='L813'></a>    <em class='brace'>{</em>
+<a id='L814' name='L814'></a>
+<a id='L815' name='L815'></a>    <strong class='reserved'>case</strong> <a href='../S/215.html#L105' title='Defined at 105 in lib/table.h.'>RT_ITER_STATE_INIT</a>:
+<a id='L816' name='L816'></a>    <strong class='reserved'>case</strong> <a href='../S/215.html#L107' title='Defined at 107 in lib/table.h.'>RT_ITER_STATE_PAUSED</a>:
+<a id='L817' name='L817'></a>    <strong class='reserved'>case</strong> RT_ITER_STATE_DONE:
+<a id='L818' name='L818'></a>      <strong class='reserved'>return</strong>;
+<a id='L819' name='L819'></a>
+<a id='L820' name='L820'></a>    <strong class='reserved'>case</strong> <a href='../S/215.html#L106' title='Defined at 106 in lib/table.h.'>RT_ITER_STATE_ITERATING</a>:
+<a id='L821' name='L821'></a>
+<a id='L822' name='L822'></a>      <em class='comment'>/*</em>
+<a id='L823' name='L823'></a><em class='comment'>       * Save the prefix that we are currently at. The next call to</em>
+<a id='L824' name='L824'></a><em class='comment'>       * route_table_iter_next() will return the node after this prefix</em>
+<a id='L825' name='L825'></a><em class='comment'>       * in the tree.</em>
+<a id='L826' name='L826'></a><em class='comment'>       */</em>
+<a id='L827' name='L827'></a>      <a href='../S/250.html#L246' title='Defined at 246 in lib/prefix.c.'>prefix_copy</a> (&amp;iter-&gt;pause_prefix, &amp;iter-&gt;current-&gt;p);
+<a id='L828' name='L828'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (iter-&gt;current);
+<a id='L829' name='L829'></a>      iter-&gt;current = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L830' name='L830'></a>      iter-&gt;state = <a href='../S/215.html#L107' title='Defined at 107 in lib/table.h.'>RT_ITER_STATE_PAUSED</a>;
+<a id='L831' name='L831'></a>      <strong class='reserved'>return</strong>;
+<a id='L832' name='L832'></a>
+<a id='L833' name='L833'></a>    <strong class='reserved'>default</strong>:
+<a id='L834' name='L834'></a>      <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (0);
+<a id='L835' name='L835'></a>    <em class='brace'>}</em>
+<a id='L836' name='L836'></a>
+<a id='L837' name='L837'></a><em class='brace'>}</em>
+<a id='L838' name='L838'></a>
+<a id='L839' name='L839'></a><em class='comment'>/*</em>
+<a id='L840' name='L840'></a><em class='comment'> * route_table_iter_cleanup</em>
+<a id='L841' name='L841'></a><em class='comment'> *</em>
+<a id='L842' name='L842'></a><em class='comment'> * Release any resources held by the iterator.</em>
+<a id='L843' name='L843'></a><em class='comment'> */</em>
+<a id='L844' name='L844'></a><strong class='reserved'>void</strong>
+<a id='L845' name='L845'></a><a href='../R/9597.html' title='Multiple referred from 8 places.'>route_table_iter_cleanup</a> (<a href='../S/215.html#L101' title='Defined at 101 in lib/table.h.'>route_table_iter_t</a> * iter)
+<a id='L846' name='L846'></a><em class='brace'>{</em>
+<a id='L847' name='L847'></a>  <strong class='reserved'>if</strong> (iter-&gt;state == <a href='../S/215.html#L106' title='Defined at 106 in lib/table.h.'>RT_ITER_STATE_ITERATING</a>)
+<a id='L848' name='L848'></a>    <em class='brace'>{</em>
+<a id='L849' name='L849'></a>      <a href='../S/236.html#L196' title='Defined at 196 in lib/table.c.'>route_unlock_node</a> (iter-&gt;current);
+<a id='L850' name='L850'></a>      iter-&gt;current = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L851' name='L851'></a>    <em class='brace'>}</em>
+<a id='L852' name='L852'></a>  <a href='../D/5283.html' title='Multiple defined in 4 places.'>assert</a> (!iter-&gt;current);
+<a id='L853' name='L853'></a>
+<a id='L854' name='L854'></a>  <em class='comment'>/*</em>
+<a id='L855' name='L855'></a><em class='comment'>   * Set the state to RT_ITER_STATE_DONE to make any</em>
+<a id='L856' name='L856'></a><em class='comment'>   * route_table_iter_next() calls on this iterator return NULL.</em>
+<a id='L857' name='L857'></a><em class='comment'>   */</em>
+<a id='L858' name='L858'></a>  iter-&gt;state = RT_ITER_STATE_DONE;
+<a id='L859' name='L859'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L38'>[^]</a><a href='#L845'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>tests/heavy-thread.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1034.html'>tests</a>/heavy-thread.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L58'>[^]</a><a href='#L142'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L58' title='Defined at 58.'>slow_func</a></li>
+<li><a href='#L78' title='Defined at 78.'>clear_something</a></li>
+<li><a href='#L103' title='Defined at 103.'>DEFUN</a></li>
+<li><a href='#L142' title='Defined at 142.'>test_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * $Id: heavy-thread.c,v 1.2 2005/04/25 16:42:24 paul Exp $</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of Quagga.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * Quagga is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * Quagga is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with Quagga; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'> * 02111-1307, USA.</em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='comment'>/* This programme shows the effects of 'heavy' long-running functions</em>
+<a id='L23' name='L23'></a><em class='comment'> * on the cooperative threading model, as demonstrated by heavy.c, and how</em>
+<a id='L24' name='L24'></a><em class='comment'> * they can be mitigated using a background thread.</em>
+<a id='L25' name='L25'></a><em class='comment'> *</em>
+<a id='L26' name='L26'></a><em class='comment'> * Run it with a config file containing 'password whatever', telnet to it</em>
+<a id='L27' name='L27'></a><em class='comment'> * (it defaults to port 4000) and enter the 'clear foo string' command.</em>
+<a id='L28' name='L28'></a><em class='comment'> * then type whatever and observe that, unlike heavy.c, the vty interface</em>
+<a id='L29' name='L29'></a><em class='comment'> * remains responsive.</em>
+<a id='L30' name='L30'></a><em class='comment'> */</em>
+<a id='L31' name='L31'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L32' name='L32'></a><em class='sharp'>#include</em> &lt;math.h&gt;
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a><em class='sharp'>#include</em> "<a href='279.html'>thread.h</a>"
+<a id='L35' name='L35'></a><em class='sharp'>#include</em> "<a href='304.html'>vty.h</a>"
+<a id='L36' name='L36'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L37' name='L37'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L38' name='L38'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a><strong class='reserved'>enum</strong>
+<a id='L43' name='L43'></a><em class='brace'>{</em>
+<a id='L44' name='L44'></a>  ITERS_FIRST = 0,
+<a id='L45' name='L45'></a>  ITERS_ERR = 100,
+<a id='L46' name='L46'></a>  ITERS_LATER = 400,
+<a id='L47' name='L47'></a>  ITERS_PRINT = 10,
+<a id='L48' name='L48'></a>  ITERS_MAX = 1000,
+<a id='L49' name='L49'></a><em class='brace'>}</em>;
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><strong class='reserved'>struct</strong> <a href='../R/10533.html' title='Multiple referred from 2 places.'>work_state</a> <em class='brace'>{</em>
+<a id='L52' name='L52'></a>  <strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>;
+<a id='L53' name='L53'></a>  <strong class='reserved'>char</strong> *str;
+<a id='L54' name='L54'></a>  <strong class='reserved'>int</strong> i;
+<a id='L55' name='L55'></a><em class='brace'>}</em>;
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L58' name='L58'></a><a href='../R/9892.html' title='Multiple referred from 3 places.'>slow_func</a> (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *str, <strong class='reserved'>const</strong> <strong class='reserved'>int</strong> i)
+<a id='L59' name='L59'></a><em class='brace'>{</em>
+<a id='L60' name='L60'></a>  <strong class='reserved'>double</strong> <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> = 1;
+<a id='L61' name='L61'></a>  <strong class='reserved'>int</strong> j;
+<a id='L62' name='L62'></a>  
+<a id='L63' name='L63'></a>  <strong class='reserved'>for</strong> (j = 0; j &lt; 300; j++)
+<a id='L64' name='L64'></a>    <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a> += sin(<a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>)*j;
+<a id='L65' name='L65'></a>  
+<a id='L66' name='L66'></a>  <strong class='reserved'>if</strong> ((i % ITERS_LATER) == 0)
+<a id='L67' name='L67'></a>    printf ("%s: %d, temporary error, save this somehow and do it later..\n",
+<a id='L68' name='L68'></a>            __func__, i);
+<a id='L69' name='L69'></a>  
+<a id='L70' name='L70'></a>  <strong class='reserved'>if</strong> ((i % ITERS_ERR) == 0)
+<a id='L71' name='L71'></a>    printf ("%s: hard error\n", __func__);
+<a id='L72' name='L72'></a>  
+<a id='L73' name='L73'></a>  <strong class='reserved'>if</strong> ((i % ITERS_PRINT) == 0)
+<a id='L74' name='L74'></a>    printf ("%s did %d, x = %g\n", str, i, <a href='../D/11467.html' title='Multiple defined in 12 places.'>x</a>);
+<a id='L75' name='L75'></a><em class='brace'>}</em>
+<a id='L76' name='L76'></a>
+<a id='L77' name='L77'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L78' name='L78'></a><a href='../R/5263.html' title='Multiple referred from 4 places.'>clear_something</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>)
+<a id='L79' name='L79'></a><em class='brace'>{</em>
+<a id='L80' name='L80'></a>  <strong class='reserved'>struct</strong> <a href='../S/76.html#L51' title='Defined at 51 in tests/heavy-thread.c.'>work_state</a> *ws = <a href='../S/279.html#L124' title='Defined at 124 in lib/thread.h.'>THREAD_ARG</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L81' name='L81'></a>  
+<a id='L82' name='L82'></a>  <em class='comment'>/* this could be like iterating through 150k of route_table </em>
+<a id='L83' name='L83'></a><em class='comment'>   * or worse, iterating through a list of peers, to bgp_stop them with</em>
+<a id='L84' name='L84'></a><em class='comment'>   * each having 150k route tables to process...</em>
+<a id='L85' name='L85'></a><em class='comment'>   */</em>
+<a id='L86' name='L86'></a>  <strong class='reserved'>while</strong> (ws-&gt;i &lt; ITERS_MAX)
+<a id='L87' name='L87'></a>    <em class='brace'>{</em>
+<a id='L88' name='L88'></a>      <a href='../D/10802.html' title='Multiple defined in 3 places.'>slow_func</a>(ws-&gt;<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, ws-&gt;str, ws-&gt;i);
+<a id='L89' name='L89'></a>      ws-&gt;i++;
+<a id='L90' name='L90'></a>      <strong class='reserved'>if</strong> (<a href='../S/208.html#L1204' title='Defined at 1204 in lib/thread.c.'>thread_should_yield</a>(<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>))
+<a id='L91' name='L91'></a>        <em class='brace'>{</em>
+<a id='L92' name='L92'></a>          <a href='../S/279.html#L173' title='Defined at 173 in lib/thread.h.'>thread_add_background</a>(master, <a href='../D/6013.html' title='Multiple defined in 3 places.'>clear_something</a>, ws, 0);
+<a id='L93' name='L93'></a>          <strong class='reserved'>return</strong> 0;
+<a id='L94' name='L94'></a>        <em class='brace'>}</em>
+<a id='L95' name='L95'></a>    <em class='brace'>}</em>
+<a id='L96' name='L96'></a>  
+<a id='L97' name='L97'></a>  <em class='comment'>/* All done! */</em>
+<a id='L98' name='L98'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, ws-&gt;str);
+<a id='L99' name='L99'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, ws);
+<a id='L100' name='L100'></a>  <strong class='reserved'>return</strong> 0;
+<a id='L101' name='L101'></a><em class='brace'>}</em>
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (clear_foo,
+<a id='L104' name='L104'></a>       clear_foo_cmd,
+<a id='L105' name='L105'></a>       "clear foo .LINE",
+<a id='L106' name='L106'></a>       "clear command\n"
+<a id='L107' name='L107'></a>       "arbitrary string\n")
+<a id='L108' name='L108'></a><em class='brace'>{</em>
+<a id='L109' name='L109'></a>  <strong class='reserved'>char</strong> *str;
+<a id='L110' name='L110'></a>  <strong class='reserved'>struct</strong> <a href='../S/76.html#L51' title='Defined at 51 in tests/heavy-thread.c.'>work_state</a> *ws;
+<a id='L111' name='L111'></a>
+<a id='L112' name='L112'></a>  <strong class='reserved'>if</strong> (!argc)
+<a id='L113' name='L113'></a>    <em class='brace'>{</em>
+<a id='L114' name='L114'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "%% string argument required%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L115' name='L115'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L116' name='L116'></a>    <em class='brace'>}</em>
+<a id='L117' name='L117'></a>  
+<a id='L118' name='L118'></a>  str = <a href='../S/264.html#L165' title='Defined at 165 in lib/command.c.'>argv_concat</a> (argv, argc, 0);
+<a id='L119' name='L119'></a>  
+<a id='L120' name='L120'></a>  <strong class='reserved'>if</strong> ((ws = <a href='../D/4559.html' title='Multiple defined in 4 places.'>XMALLOC</a>(MTYPE_TMP, <strong class='reserved'>sizeof</strong>(*ws))) == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L121' name='L121'></a>    <em class='brace'>{</em>
+<a id='L122' name='L122'></a>      zlog_err ("%s: unable to allocate work_state", __func__);
+<a id='L123' name='L123'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L124' name='L124'></a>    <em class='brace'>}</em>
+<a id='L125' name='L125'></a>  
+<a id='L126' name='L126'></a>  <strong class='reserved'>if</strong> (!(ws-&gt;str = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_TMP, str)))
+<a id='L127' name='L127'></a>    <em class='brace'>{</em>
+<a id='L128' name='L128'></a>      zlog_err ("%s: unable to xstrdup", __func__);
+<a id='L129' name='L129'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_TMP, ws);
+<a id='L130' name='L130'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L131' name='L131'></a>    <em class='brace'>}</em>
+<a id='L132' name='L132'></a>  
+<a id='L133' name='L133'></a>  ws-&gt;<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> = <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>;
+<a id='L134' name='L134'></a>  ws-&gt;i = ITERS_FIRST;
+<a id='L135' name='L135'></a>
+<a id='L136' name='L136'></a>  <a href='../S/279.html#L173' title='Defined at 173 in lib/thread.h.'>thread_add_background</a>(master, <a href='../D/6013.html' title='Multiple defined in 3 places.'>clear_something</a>, ws, 0);
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L139' name='L139'></a><em class='brace'>}</em>
+<a id='L140' name='L140'></a>
+<a id='L141' name='L141'></a><strong class='reserved'>void</strong>
+<a id='L142' name='L142'></a><a href='../R/10106.html' title='Multiple referred from 2 places.'>test_init</a>()
+<a id='L143' name='L143'></a><em class='brace'>{</em>
+<a id='L144' name='L144'></a>  <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;clear_foo_cmd);
+<a id='L145' name='L145'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L58'>[^]</a><a href='#L142'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

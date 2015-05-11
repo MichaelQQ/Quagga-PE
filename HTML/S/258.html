@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>lib/if_rmap.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1022.html'>lib</a>/if_rmap.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L37'>[^]</a><a href='#L320'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L37' title='Defined at 37.'>if_rmap_new</a></li>
+<li><a href='#L47' title='Defined at 47.'>if_rmap_free</a></li>
+<li><a href='#L61' title='Defined at 61.'>if_rmap_lookup</a></li>
+<li><a href='#L75' title='Defined at 75.'>if_rmap_hook_add</a></li>
+<li><a href='#L81' title='Defined at 81.'>if_rmap_hook_delete</a></li>
+<li><a href='#L87' title='Defined at 87.'>if_rmap_hash_alloc</a></li>
+<li><a href='#L99' title='Defined at 99.'>if_rmap_get</a></li>
+<li><a href='#L110' title='Defined at 110.'>if_rmap_hash_make</a></li>
+<li><a href='#L118' title='Defined at 118.'>if_rmap_hash_cmp</a></li>
+<li><a href='#L127' title='Defined at 127.'>if_rmap_set</a></li>
+<li><a href='#L156' title='Defined at 156.'>if_rmap_unset</a></li>
+<li><a href='#L200' title='Defined at 200.'>DEFUN</a></li>
+<li><a href='#L226' title='Defined at 226.'>ALIAS</a></li>
+<li><a href='#L267' title='Defined at 267.'>ALIAS</a></li>
+<li><a href='#L314' title='Defined at 314.'>if_rmap_reset</a></li>
+<li><a href='#L320' title='Defined at 320.'>if_rmap_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/* route-map for interface.</em>
+<a id='L2' name='L2'></a><em class='comment'> * Copyright (C) 1999 Kunihiro Ishiguro</em>
+<a id='L3' name='L3'></a><em class='comment'> *</em>
+<a id='L4' name='L4'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L5' name='L5'></a><em class='comment'> *</em>
+<a id='L6' name='L6'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify it</em>
+<a id='L7' name='L7'></a><em class='comment'> * under the terms of the GNU General Public License as published by the</em>
+<a id='L8' name='L8'></a><em class='comment'> * Free Software Foundation; either version 2, or (at your option) any</em>
+<a id='L9' name='L9'></a><em class='comment'> * later version.</em>
+<a id='L10' name='L10'></a><em class='comment'> *</em>
+<a id='L11' name='L11'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L12' name='L12'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L13' name='L13'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L14' name='L14'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L15' name='L15'></a><em class='comment'> *</em>
+<a id='L16' name='L16'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L17' name='L17'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the Free</em>
+<a id='L18' name='L18'></a><em class='comment'> * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA</em>
+<a id='L19' name='L19'></a><em class='comment'> * 02111-1307, USA.  </em>
+<a id='L20' name='L20'></a><em class='comment'> */</em>
+<a id='L21' name='L21'></a>
+<a id='L22' name='L22'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#include</em> "<a href='227.html'>hash.h</a>"
+<a id='L25' name='L25'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> "<a href='194.html'>memory.h</a>"
+<a id='L27' name='L27'></a><em class='sharp'>#include</em> "<a href='252.html'>if.h</a>"
+<a id='L28' name='L28'></a><em class='sharp'>#include</em> "<a href='267.html'>if_rmap.h</a>"
+<a id='L29' name='L29'></a>
+<a id='L30' name='L30'></a><strong class='reserved'>struct</strong> <a href='../S/227.html#L39' title='Defined at 39 in lib/hash.h.'>hash</a> *ifrmaphash;
+<a id='L31' name='L31'></a>
+<a id='L32' name='L32'></a><em class='comment'>/* Hook functions. */</em>
+<a id='L33' name='L33'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> (*if_rmap_add_hook) (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L34' name='L34'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> (*if_rmap_delete_hook) (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *) = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;
+<a id='L35' name='L35'></a>
+<a id='L36' name='L36'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *
+<a id='L37' name='L37'></a><a href='../S/258.html#L92' title='Referred from 92 in lib/if_rmap.c.'>if_rmap_new</a> (<strong class='reserved'>void</strong>)
+<a id='L38' name='L38'></a><em class='brace'>{</em>
+<a id='L39' name='L39'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *new;
+<a id='L40' name='L40'></a>
+<a id='L41' name='L41'></a>  new = <a href='../D/4557.html' title='Multiple defined in 4 places.'>XCALLOC</a> (MTYPE_IF_RMAP, <strong class='reserved'>sizeof</strong> (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>));
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a>  <strong class='reserved'>return</strong> new;
+<a id='L44' name='L44'></a><em class='brace'>}</em>
+<a id='L45' name='L45'></a>
+<a id='L46' name='L46'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong>
+<a id='L47' name='L47'></a><a href='../R/5957.html' title='Multiple referred from 2 places.'>if_rmap_free</a> (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>)
+<a id='L48' name='L48'></a><em class='brace'>{</em>
+<a id='L49' name='L49'></a>  <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;ifname)
+<a id='L50' name='L50'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;ifname);
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a>  <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN])
+<a id='L53' name='L53'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN]);
+<a id='L54' name='L54'></a>  <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT])
+<a id='L55' name='L55'></a>    <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT]);
+<a id='L56' name='L56'></a>
+<a id='L57' name='L57'></a>  <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>);
+<a id='L58' name='L58'></a><em class='brace'>}</em>
+<a id='L59' name='L59'></a>
+<a id='L60' name='L60'></a><strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *
+<a id='L61' name='L61'></a><a href='../R/5965.html' title='Multiple referred from 4 places.'>if_rmap_lookup</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L62' name='L62'></a><em class='brace'>{</em>
+<a id='L63' name='L63'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>;
+<a id='L64' name='L64'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L65' name='L65'></a>
+<a id='L66' name='L66'></a>  <em class='comment'>/* temporary copy */</em>
+<a id='L67' name='L67'></a>  <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>.ifname = (<strong class='reserved'>char</strong> *)ifname;
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a>  <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> = <a href='../S/265.html#L99' title='Defined at 99 in lib/hash.c.'>hash_lookup</a> (ifrmaphash, &amp;<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>);
+<a id='L70' name='L70'></a>  
+<a id='L71' name='L71'></a>  <strong class='reserved'>return</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L72' name='L72'></a><em class='brace'>}</em>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a><strong class='reserved'>void</strong>
+<a id='L75' name='L75'></a><a href='../R/5962.html' title='Multiple referred from 3 places.'>if_rmap_hook_add</a> (<strong class='reserved'>void</strong> (*func) (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *))
+<a id='L76' name='L76'></a><em class='brace'>{</em>
+<a id='L77' name='L77'></a>  if_rmap_add_hook = func;
+<a id='L78' name='L78'></a><em class='brace'>}</em>
+<a id='L79' name='L79'></a>
+<a id='L80' name='L80'></a><strong class='reserved'>void</strong>
+<a id='L81' name='L81'></a><a href='../R/5963.html' title='Multiple referred from 3 places.'>if_rmap_hook_delete</a> (<strong class='reserved'>void</strong> (*func) (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *))
+<a id='L82' name='L82'></a><em class='brace'>{</em>
+<a id='L83' name='L83'></a>  if_rmap_delete_hook = func;
+<a id='L84' name='L84'></a><em class='brace'>}</em>
+<a id='L85' name='L85'></a>
+<a id='L86' name='L86'></a><strong class='reserved'>static</strong> <strong class='reserved'>void</strong> *
+<a id='L87' name='L87'></a><a href='../S/258.html#L106' title='Referred from 106 in lib/if_rmap.c.'>if_rmap_hash_alloc</a> (<strong class='reserved'>void</strong> *arg)
+<a id='L88' name='L88'></a><em class='brace'>{</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *ifarg = arg;
+<a id='L90' name='L90'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L91' name='L91'></a>
+<a id='L92' name='L92'></a>  <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> = <a href='../S/258.html#L37' title='Defined at 37 in lib/if_rmap.c.'>if_rmap_new</a> ();
+<a id='L93' name='L93'></a>  <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;ifname = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_IF_RMAP_NAME, ifarg-&gt;ifname);
+<a id='L94' name='L94'></a>
+<a id='L95' name='L95'></a>  <strong class='reserved'>return</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L96' name='L96'></a><em class='brace'>}</em>
+<a id='L97' name='L97'></a>
+<a id='L98' name='L98'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *
+<a id='L99' name='L99'></a><a href='../S/258.html#L132' title='Referred from 132 in lib/if_rmap.c.'>if_rmap_get</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname)
+<a id='L100' name='L100'></a><em class='brace'>{</em>
+<a id='L101' name='L101'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>;
+<a id='L102' name='L102'></a>
+<a id='L103' name='L103'></a>  <em class='comment'>/* temporary copy */</em>
+<a id='L104' name='L104'></a>  <a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>.ifname = (<strong class='reserved'>char</strong> *)ifname;
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a>  <strong class='reserved'>return</strong> (<strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *) <a href='../S/265.html#L66' title='Defined at 66 in lib/hash.c.'>hash_get</a> (ifrmaphash, &amp;<a href='../D/7087.html' title='Multiple defined in 2 places.'>key</a>, <a href='../S/258.html#L87' title='Defined at 87 in lib/if_rmap.c.'>if_rmap_hash_alloc</a>);
+<a id='L107' name='L107'></a><em class='brace'>}</em>
+<a id='L108' name='L108'></a>
+<a id='L109' name='L109'></a><strong class='reserved'>static</strong> <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong>
+<a id='L110' name='L110'></a><a href='../S/258.html#L322' title='Referred from 322 in lib/if_rmap.c.'>if_rmap_hash_make</a> (<strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>)
+<a id='L111' name='L111'></a><em class='brace'>{</em>
+<a id='L112' name='L112'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> = <a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L113' name='L113'></a>
+<a id='L114' name='L114'></a>  <strong class='reserved'>return</strong> <a href='../S/265.html#L105' title='Defined at 105 in lib/hash.c.'>string_hash_make</a> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;ifname);
+<a id='L115' name='L115'></a><em class='brace'>}</em>
+<a id='L116' name='L116'></a>
+<a id='L117' name='L117'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L118' name='L118'></a><a href='../S/258.html#L322' title='Referred from 322 in lib/if_rmap.c.'>if_rmap_hash_cmp</a> (<strong class='reserved'>const</strong> <strong class='reserved'>void</strong> *arg1, <strong class='reserved'>const</strong> <strong class='reserved'>void</strong>* arg2)
+<a id='L119' name='L119'></a><em class='brace'>{</em>
+<a id='L120' name='L120'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *if_rmap1 = arg1;
+<a id='L121' name='L121'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *if_rmap2 = arg2;
+<a id='L122' name='L122'></a>
+<a id='L123' name='L123'></a>  <strong class='reserved'>return</strong> strcmp (if_rmap1-&gt;ifname, if_rmap2-&gt;ifname) == 0;
+<a id='L124' name='L124'></a><em class='brace'>}</em>
+<a id='L125' name='L125'></a>
+<a id='L126' name='L126'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *
+<a id='L127' name='L127'></a><a href='../S/258.html#L221' title='Referred from 221 in lib/if_rmap.c.'>if_rmap_set</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname, <strong class='reserved'>enum</strong> <a href='../S/267.html#L25' title='Defined at 25 in lib/if_rmap.h.'>if_rmap_type</a> type, 
+<a id='L128' name='L128'></a>             <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *routemap_name)
+<a id='L129' name='L129'></a><em class='brace'>{</em>
+<a id='L130' name='L130'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L131' name='L131'></a>
+<a id='L132' name='L132'></a>  <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> = <a href='../S/258.html#L99' title='Defined at 99 in lib/if_rmap.c.'>if_rmap_get</a> (ifname);
+<a id='L133' name='L133'></a>
+<a id='L134' name='L134'></a>  <strong class='reserved'>if</strong> (type == IF_RMAP_IN)
+<a id='L135' name='L135'></a>    <em class='brace'>{</em>
+<a id='L136' name='L136'></a>      <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN])
+<a id='L137' name='L137'></a>        <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN]);
+<a id='L138' name='L138'></a>      <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN] 
+<a id='L139' name='L139'></a>        = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_IF_RMAP_NAME, routemap_name);
+<a id='L140' name='L140'></a>    <em class='brace'>}</em>
+<a id='L141' name='L141'></a>  <strong class='reserved'>if</strong> (type == IF_RMAP_OUT)
+<a id='L142' name='L142'></a>    <em class='brace'>{</em>
+<a id='L143' name='L143'></a>      <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT])
+<a id='L144' name='L144'></a>        <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT]);
+<a id='L145' name='L145'></a>      <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT] 
+<a id='L146' name='L146'></a>        = <a href='../D/4561.html' title='Multiple defined in 2 places.'>XSTRDUP</a> (MTYPE_IF_RMAP_NAME, routemap_name);
+<a id='L147' name='L147'></a>    <em class='brace'>}</em>
+<a id='L148' name='L148'></a>
+<a id='L149' name='L149'></a>  <strong class='reserved'>if</strong> (if_rmap_add_hook)
+<a id='L150' name='L150'></a>    (*if_rmap_add_hook) (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>);
+<a id='L151' name='L151'></a>  
+<a id='L152' name='L152'></a>  <strong class='reserved'>return</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L153' name='L153'></a><em class='brace'>}</em>
+<a id='L154' name='L154'></a>
+<a id='L155' name='L155'></a><strong class='reserved'>static</strong> <strong class='reserved'>int</strong>
+<a id='L156' name='L156'></a><a href='../S/258.html#L258' title='Referred from 258 in lib/if_rmap.c.'>if_rmap_unset</a> (<strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *ifname, <strong class='reserved'>enum</strong> <a href='../S/267.html#L25' title='Defined at 25 in lib/if_rmap.h.'>if_rmap_type</a> type, 
+<a id='L157' name='L157'></a>               <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *routemap_name)
+<a id='L158' name='L158'></a><em class='brace'>{</em>
+<a id='L159' name='L159'></a>  <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L160' name='L160'></a>
+<a id='L161' name='L161'></a>  <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> = <a href='../S/258.html#L61' title='Defined at 61 in lib/if_rmap.c.'>if_rmap_lookup</a> (ifname);
+<a id='L162' name='L162'></a>  <strong class='reserved'>if</strong> (!<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>)
+<a id='L163' name='L163'></a>    <strong class='reserved'>return</strong> 0;
+<a id='L164' name='L164'></a>
+<a id='L165' name='L165'></a>  <strong class='reserved'>if</strong> (type == IF_RMAP_IN)
+<a id='L166' name='L166'></a>    <em class='brace'>{</em>
+<a id='L167' name='L167'></a>      <strong class='reserved'>if</strong> (!<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN])
+<a id='L168' name='L168'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L169' name='L169'></a>      <strong class='reserved'>if</strong> (strcmp (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN], routemap_name) != 0)
+<a id='L170' name='L170'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L171' name='L171'></a>
+<a id='L172' name='L172'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN]);
+<a id='L173' name='L173'></a>      <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;      
+<a id='L174' name='L174'></a>    <em class='brace'>}</em>
+<a id='L175' name='L175'></a>
+<a id='L176' name='L176'></a>  <strong class='reserved'>if</strong> (type == IF_RMAP_OUT)
+<a id='L177' name='L177'></a>    <em class='brace'>{</em>
+<a id='L178' name='L178'></a>      <strong class='reserved'>if</strong> (!<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT])
+<a id='L179' name='L179'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L180' name='L180'></a>      <strong class='reserved'>if</strong> (strcmp (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT], routemap_name) != 0)
+<a id='L181' name='L181'></a>        <strong class='reserved'>return</strong> 0;
+<a id='L182' name='L182'></a>
+<a id='L183' name='L183'></a>      <a href='../D/4558.html' title='Multiple defined in 4 places.'>XFREE</a> (MTYPE_IF_RMAP_NAME, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT]);
+<a id='L184' name='L184'></a>      <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT] = <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>;      
+<a id='L185' name='L185'></a>    <em class='brace'>}</em>
+<a id='L186' name='L186'></a>
+<a id='L187' name='L187'></a>  <strong class='reserved'>if</strong> (if_rmap_delete_hook)
+<a id='L188' name='L188'></a>    (*if_rmap_delete_hook) (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>);
+<a id='L189' name='L189'></a>
+<a id='L190' name='L190'></a>  <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN] == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> &amp;&amp;
+<a id='L191' name='L191'></a>      <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT] == <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>)
+<a id='L192' name='L192'></a>    <em class='brace'>{</em>
+<a id='L193' name='L193'></a>      <a href='../S/265.html#L119' title='Defined at 119 in lib/hash.c.'>hash_release</a> (ifrmaphash, <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>);
+<a id='L194' name='L194'></a>      <a href='../S/258.html#L47' title='Defined at 47 in lib/if_rmap.c.'>if_rmap_free</a> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>);
+<a id='L195' name='L195'></a>    <em class='brace'>}</em>
+<a id='L196' name='L196'></a>
+<a id='L197' name='L197'></a>  <strong class='reserved'>return</strong> 1;
+<a id='L198' name='L198'></a><em class='brace'>}</em>
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>,
+<a id='L201' name='L201'></a>       if_rmap_cmd,
+<a id='L202' name='L202'></a>       "route-map RMAP_NAME (in|out) IFNAME",
+<a id='L203' name='L203'></a>       "Route map set\n"
+<a id='L204' name='L204'></a>       "Route map name\n"
+<a id='L205' name='L205'></a>       "Route map set for input filtering\n"
+<a id='L206' name='L206'></a>       "Route map set for output filtering\n"
+<a id='L207' name='L207'></a>       "Route map interface name\n")
+<a id='L208' name='L208'></a><em class='brace'>{</em>
+<a id='L209' name='L209'></a>  <strong class='reserved'>enum</strong> <a href='../S/267.html#L25' title='Defined at 25 in lib/if_rmap.h.'>if_rmap_type</a> type;
+<a id='L210' name='L210'></a>
+<a id='L211' name='L211'></a>  <strong class='reserved'>if</strong> (strncmp (argv[1], "i", 1) == 0)
+<a id='L212' name='L212'></a>    type = IF_RMAP_IN;
+<a id='L213' name='L213'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (argv[1], "o", 1) == 0)
+<a id='L214' name='L214'></a>    type = IF_RMAP_OUT;
+<a id='L215' name='L215'></a>  <strong class='reserved'>else</strong>
+<a id='L216' name='L216'></a>    <em class='brace'>{</em>
+<a id='L217' name='L217'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "route-map direction must be [in|out]%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L218' name='L218'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L219' name='L219'></a>    <em class='brace'>}</em>
+<a id='L220' name='L220'></a>
+<a id='L221' name='L221'></a>  <a href='../S/258.html#L127' title='Defined at 127 in lib/if_rmap.c.'>if_rmap_set</a> (argv[2], type, argv[0]);
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L224' name='L224'></a><em class='brace'>}</em>      
+<a id='L225' name='L225'></a>
+<a id='L226' name='L226'></a><a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>,
+<a id='L227' name='L227'></a>       if_ipv6_rmap_cmd,
+<a id='L228' name='L228'></a>       "route-map RMAP_NAME (in|out) IFNAME",
+<a id='L229' name='L229'></a>       "Route map set\n"
+<a id='L230' name='L230'></a>       "Route map name\n"
+<a id='L231' name='L231'></a>       "Route map set for input filtering\n"
+<a id='L232' name='L232'></a>       "Route map set for output filtering\n"
+<a id='L233' name='L233'></a>       "Route map interface name\n")
+<a id='L234' name='L234'></a>
+<a id='L235' name='L235'></a><a href='../D/726.html' title='Multiple defined in 1524 places.'>DEFUN</a> (no_if_rmap,
+<a id='L236' name='L236'></a>       no_if_rmap_cmd,
+<a id='L237' name='L237'></a>       "no route-map ROUTEMAP_NAME (in|out) IFNAME",
+<a id='L238' name='L238'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L239' name='L239'></a>       "Route map unset\n"
+<a id='L240' name='L240'></a>       "Route map name\n"
+<a id='L241' name='L241'></a>       "Route map for input filtering\n"
+<a id='L242' name='L242'></a>       "Route map for output filtering\n"
+<a id='L243' name='L243'></a>       "Route map interface name\n")
+<a id='L244' name='L244'></a><em class='brace'>{</em>
+<a id='L245' name='L245'></a>  <strong class='reserved'>int</strong> ret;
+<a id='L246' name='L246'></a>  <strong class='reserved'>enum</strong> <a href='../S/267.html#L25' title='Defined at 25 in lib/if_rmap.h.'>if_rmap_type</a> type;
+<a id='L247' name='L247'></a>
+<a id='L248' name='L248'></a>  <strong class='reserved'>if</strong> (strncmp (argv[1], "i", 1) == 0)
+<a id='L249' name='L249'></a>    type = IF_RMAP_IN;
+<a id='L250' name='L250'></a>  <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (strncmp (argv[1], "o", 1) == 0)
+<a id='L251' name='L251'></a>    type = IF_RMAP_OUT;
+<a id='L252' name='L252'></a>  <strong class='reserved'>else</strong>
+<a id='L253' name='L253'></a>    <em class='brace'>{</em>
+<a id='L254' name='L254'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "route-map direction must be [in|out]%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L255' name='L255'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L256' name='L256'></a>    <em class='brace'>}</em>
+<a id='L257' name='L257'></a>
+<a id='L258' name='L258'></a>  ret = <a href='../S/258.html#L156' title='Defined at 156 in lib/if_rmap.c.'>if_rmap_unset</a> (argv[2], type, argv[0]);
+<a id='L259' name='L259'></a>  <strong class='reserved'>if</strong> (! ret)
+<a id='L260' name='L260'></a>    <em class='brace'>{</em>
+<a id='L261' name='L261'></a>      <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, "route-map doesn't exist%s", <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L262' name='L262'></a>      <strong class='reserved'>return</strong> <a href='../S/214.html#L166' title='Defined at 166 in lib/command.h.'>CMD_WARNING</a>;
+<a id='L263' name='L263'></a>    <em class='brace'>}</em>
+<a id='L264' name='L264'></a>  <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L265' name='L265'></a><em class='brace'>}</em>      
+<a id='L266' name='L266'></a>
+<a id='L267' name='L267'></a><a href='../R/21.html' title='Multiple referred from 229 places.'>ALIAS</a> (no_if_rmap,
+<a id='L268' name='L268'></a>       no_if_ipv6_rmap_cmd,
+<a id='L269' name='L269'></a>       "no route-map ROUTEMAP_NAME (in|out) IFNAME",
+<a id='L270' name='L270'></a>       <a href='../S/214.html#L286' title='Defined at 286 in lib/command.h.'>NO_STR</a>
+<a id='L271' name='L271'></a>       "Route map unset\n"
+<a id='L272' name='L272'></a>       "Route map name\n"
+<a id='L273' name='L273'></a>       "Route map for input filtering\n"
+<a id='L274' name='L274'></a>       "Route map for output filtering\n"
+<a id='L275' name='L275'></a>       "Route map interface name\n")
+<a id='L276' name='L276'></a>
+<a id='L277' name='L277'></a><em class='comment'>/* Configuration write function. */</em>
+<a id='L278' name='L278'></a><strong class='reserved'>int</strong>
+<a id='L279' name='L279'></a>config_write_if_rmap (<strong class='reserved'>struct</strong> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a> *<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>)
+<a id='L280' name='L280'></a><em class='brace'>{</em>
+<a id='L281' name='L281'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> i;
+<a id='L282' name='L282'></a>  <strong class='reserved'>struct</strong> <a href='../S/227.html#L27' title='Defined at 27 in lib/hash.h.'>hash_backet</a> *mp;
+<a id='L283' name='L283'></a>  <strong class='reserved'>int</strong> write = 0;
+<a id='L284' name='L284'></a>
+<a id='L285' name='L285'></a>  <strong class='reserved'>for</strong> (i = 0; i &lt; ifrmaphash-&gt;size; i++)
+<a id='L286' name='L286'></a>    <strong class='reserved'>for</strong> (mp = ifrmaphash-&gt;index[i]; mp; mp = mp-&gt;next)
+<a id='L287' name='L287'></a>      <em class='brace'>{</em>
+<a id='L288' name='L288'></a>        <strong class='reserved'>struct</strong> <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> *<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>;
+<a id='L289' name='L289'></a>
+<a id='L290' name='L290'></a>        <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a> = mp-&gt;<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>;
+<a id='L291' name='L291'></a>
+<a id='L292' name='L292'></a>        <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN])
+<a id='L293' name='L293'></a>          <em class='brace'>{</em>
+<a id='L294' name='L294'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " route-map %s in %s%s", 
+<a id='L295' name='L295'></a>                     <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_IN],
+<a id='L296' name='L296'></a>                     <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;ifname,
+<a id='L297' name='L297'></a>                     <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L298' name='L298'></a>            write++;
+<a id='L299' name='L299'></a>          <em class='brace'>}</em>
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a>        <strong class='reserved'>if</strong> (<a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT])
+<a id='L302' name='L302'></a>          <em class='brace'>{</em>
+<a id='L303' name='L303'></a>            <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a> (<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>, " route-map %s out %s%s", 
+<a id='L304' name='L304'></a>                     <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;routemap[IF_RMAP_OUT],
+<a id='L305' name='L305'></a>                     <a href='../S/267.html#L32' title='Defined at 32 in lib/if_rmap.h.'>if_rmap</a>-&gt;ifname,
+<a id='L306' name='L306'></a>                     <a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L307' name='L307'></a>            write++;
+<a id='L308' name='L308'></a>          <em class='brace'>}</em>
+<a id='L309' name='L309'></a>      <em class='brace'>}</em>
+<a id='L310' name='L310'></a>  <strong class='reserved'>return</strong> write;
+<a id='L311' name='L311'></a><em class='brace'>}</em>
+<a id='L312' name='L312'></a>
+<a id='L313' name='L313'></a><strong class='reserved'>void</strong>
+<a id='L314' name='L314'></a><a href='../S/267.html#L41' title='Referred from 41 in lib/if_rmap.h.'>if_rmap_reset</a> ()
+<a id='L315' name='L315'></a><em class='brace'>{</em>
+<a id='L316' name='L316'></a>  <a href='../S/265.html#L171' title='Defined at 171 in lib/hash.c.'>hash_clean</a> (ifrmaphash, (<strong class='reserved'>void</strong> (*) (<strong class='reserved'>void</strong> *)) <a href='../S/258.html#L47' title='Defined at 47 in lib/if_rmap.c.'>if_rmap_free</a>);
+<a id='L317' name='L317'></a><em class='brace'>}</em>
+<a id='L318' name='L318'></a>
+<a id='L319' name='L319'></a><strong class='reserved'>void</strong>
+<a id='L320' name='L320'></a><a href='../R/5964.html' title='Multiple referred from 3 places.'>if_rmap_init</a> (<strong class='reserved'>int</strong> node)
+<a id='L321' name='L321'></a><em class='brace'>{</em>
+<a id='L322' name='L322'></a>  ifrmaphash = <a href='../S/265.html#L47' title='Defined at 47 in lib/hash.c.'>hash_create</a> (<a href='../S/258.html#L110' title='Defined at 110 in lib/if_rmap.c.'>if_rmap_hash_make</a>, <a href='../S/258.html#L118' title='Defined at 118 in lib/if_rmap.c.'>if_rmap_hash_cmp</a>);
+<a id='L323' name='L323'></a>  <strong class='reserved'>if</strong> (node == RIPNG_NODE) <em class='brace'>{</em>
+<a id='L324' name='L324'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIPNG_NODE, &amp;if_ipv6_rmap_cmd);
+<a id='L325' name='L325'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIPNG_NODE, &amp;no_if_ipv6_rmap_cmd);
+<a id='L326' name='L326'></a>  <em class='brace'>}</em> <strong class='reserved'>else</strong> <strong class='reserved'>if</strong> (node == RIP_NODE) <em class='brace'>{</em>
+<a id='L327' name='L327'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIP_NODE, &amp;if_rmap_cmd);
+<a id='L328' name='L328'></a>    <a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (RIP_NODE, &amp;no_if_rmap_cmd);
+<a id='L329' name='L329'></a>  <em class='brace'>}</em>
+<a id='L330' name='L330'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L37'>[^]</a><a href='#L320'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

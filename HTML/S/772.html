@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ospfd/ospf_neighbor.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1029.html'>ospfd</a>/ospf_neighbor.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/467.html' title='Multiple included from 23 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * OSPF Neighbor functions.</em>
+<a id='L3' name='L3'></a><em class='comment'> * Copyright (C) 1999, 2000 Toshiaki Takada</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * This file is part of GNU Zebra.</em>
+<a id='L6' name='L6'></a><em class='comment'> * </em>
+<a id='L7' name='L7'></a><em class='comment'> * GNU Zebra is free software; you can redistribute it and/or modify</em>
+<a id='L8' name='L8'></a><em class='comment'> * it under the terms of the GNU General Public License as published</em>
+<a id='L9' name='L9'></a><em class='comment'> * by the Free Software Foundation; either version 2, or (at your</em>
+<a id='L10' name='L10'></a><em class='comment'> * option) any later version.</em>
+<a id='L11' name='L11'></a><em class='comment'> *</em>
+<a id='L12' name='L12'></a><em class='comment'> * GNU Zebra is distributed in the hope that it will be useful, but</em>
+<a id='L13' name='L13'></a><em class='comment'> * WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a id='L14' name='L14'></a><em class='comment'> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a id='L15' name='L15'></a><em class='comment'> * General Public License for more details.</em>
+<a id='L16' name='L16'></a><em class='comment'> *</em>
+<a id='L17' name='L17'></a><em class='comment'> * You should have received a copy of the GNU General Public License</em>
+<a id='L18' name='L18'></a><em class='comment'> * along with GNU Zebra; see the file COPYING.  If not, write to the</em>
+<a id='L19' name='L19'></a><em class='comment'> * Free Software Foundation, Inc., 59 Temple Place - Suite 330,</em>
+<a id='L20' name='L20'></a><em class='comment'> * Boston, MA 02111-1307, USA.</em>
+<a id='L21' name='L21'></a><em class='comment'> */</em>
+<a id='L22' name='L22'></a>
+<a id='L23' name='L23'></a><em class='sharp'>#ifndef</em> <a href='../S/772.html#L24' title='Defined at 24 in ospfd/ospf_neighbor.h.'>_ZEBRA_OSPF_NEIGHBOR_H</a>
+<a id='L24' name='L24'></a><em class='sharp'>#define</em> <a href='../S/772.html#L23' title='Referred from 23 in ospfd/ospf_neighbor.h.'>_ZEBRA_OSPF_NEIGHBOR_H</a>
+<a id='L25' name='L25'></a>
+<a id='L26' name='L26'></a><em class='sharp'>#include</em> &lt;<a href='806.html'>ospfd/ospf_packet.h</a>&gt;
+<a id='L27' name='L27'></a>
+<a id='L28' name='L28'></a><em class='comment'>/* Neighbor Data Structure */</em>
+<a id='L29' name='L29'></a><strong class='reserved'>struct</strong> <a href='../R/8335.html' title='Multiple referred from 196 places.'>ospf_neighbor</a>
+<a id='L30' name='L30'></a><em class='brace'>{</em>
+<a id='L31' name='L31'></a>  <em class='comment'>/* This neighbor's parent ospf interface. */</em>
+<a id='L32' name='L32'></a>  <strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *oi;
+<a id='L33' name='L33'></a>
+<a id='L34' name='L34'></a>  <em class='comment'>/* OSPF neighbor Information */</em>
+<a id='L35' name='L35'></a>  u_char state;                         <em class='comment'>/* NSM status. */</em>
+<a id='L36' name='L36'></a>  u_char dd_flags;                      <em class='comment'>/* DD bit flags. */</em>
+<a id='L37' name='L37'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> dd_seqnum;                  <em class='comment'>/* DD Sequence Number. */</em>
+<a id='L38' name='L38'></a>
+<a id='L39' name='L39'></a>  <em class='comment'>/* Neighbor Information from Hello. */</em>
+<a id='L40' name='L40'></a>  <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> address;                <em class='comment'>/* Neighbor Interface Address. */</em>
+<a id='L41' name='L41'></a>
+<a id='L42' name='L42'></a>  <strong class='reserved'>struct</strong> in_addr src;                   <em class='comment'>/* Src address. */</em>
+<a id='L43' name='L43'></a>  <strong class='reserved'>struct</strong> in_addr router_id;             <em class='comment'>/* Router ID. */</em>
+<a id='L44' name='L44'></a>  u_char options;                       <em class='comment'>/* Options. */</em>
+<a id='L45' name='L45'></a>  <strong class='reserved'>int</strong> priority;                         <em class='comment'>/* Router Priority. */</em>
+<a id='L46' name='L46'></a>  <strong class='reserved'>struct</strong> in_addr d_router;              <em class='comment'>/* Designated Router. */</em>
+<a id='L47' name='L47'></a>  <strong class='reserved'>struct</strong> in_addr bd_router;             <em class='comment'>/* Backup Designated Router. */</em>
+<a id='L48' name='L48'></a>
+<a id='L49' name='L49'></a>  <em class='comment'>/* Last sent Database Description packet. */</em>
+<a id='L50' name='L50'></a>  <strong class='reserved'>struct</strong> <a href='../S/806.html#L53' title='Defined at 53 in ospfd/ospf_packet.h.'>ospf_packet</a> *last_send;
+<a id='L51' name='L51'></a>  <em class='comment'>/* Timestemp when last Database Description packet was sent */</em>
+<a id='L52' name='L52'></a>  <strong class='reserved'>struct</strong> timeval last_send_ts;
+<a id='L53' name='L53'></a>
+<a id='L54' name='L54'></a>  <em class='comment'>/* Last received Databse Description packet. */</em>
+<a id='L55' name='L55'></a>  <strong class='reserved'>struct</strong>
+<a id='L56' name='L56'></a>  <em class='brace'>{</em>
+<a id='L57' name='L57'></a>    u_char options;
+<a id='L58' name='L58'></a>    u_char <a href='../S/497.html#L34' title='Defined at 34 in isisd/isis_flags.h.'>flags</a>;
+<a id='L59' name='L59'></a>    <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> dd_seqnum;
+<a id='L60' name='L60'></a>  <em class='brace'>}</em> last_recv;
+<a id='L61' name='L61'></a>
+<a id='L62' name='L62'></a>  <em class='comment'>/* LSA data. */</em>
+<a id='L63' name='L63'></a>  <strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> ls_rxmt;
+<a id='L64' name='L64'></a>  <strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> db_sum;
+<a id='L65' name='L65'></a>  <strong class='reserved'>struct</strong> <a href='../S/755.html#L27' title='Defined at 27 in ospfd/ospf_lsdb.h.'>ospf_lsdb</a> ls_req;
+<a id='L66' name='L66'></a>  <strong class='reserved'>struct</strong> <a href='../S/733.html#L73' title='Defined at 73 in ospfd/ospf_lsa.h.'>ospf_lsa</a> *ls_req_last;
+<a id='L67' name='L67'></a>
+<a id='L68' name='L68'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> crypt_seqnum;           <em class='comment'>/* Cryptographic Sequence Number. */</em>
+<a id='L69' name='L69'></a>
+<a id='L70' name='L70'></a>  <em class='comment'>/* Timer values. */</em>
+<a id='L71' name='L71'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> v_inactivity;
+<a id='L72' name='L72'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> v_db_desc;
+<a id='L73' name='L73'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> v_ls_req;
+<a id='L74' name='L74'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> v_ls_upd;
+<a id='L75' name='L75'></a>
+<a id='L76' name='L76'></a>  <em class='comment'>/* Threads. */</em>
+<a id='L77' name='L77'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_inactivity;
+<a id='L78' name='L78'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_db_desc;
+<a id='L79' name='L79'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_ls_req;
+<a id='L80' name='L80'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_ls_upd;
+<a id='L81' name='L81'></a>  <strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *t_hello_reply;
+<a id='L82' name='L82'></a>
+<a id='L83' name='L83'></a>  <em class='comment'>/* NBMA configured neighbour */</em>
+<a id='L84' name='L84'></a>  <strong class='reserved'>struct</strong> <a href='../S/790.html#L468' title='Defined at 468 in ospfd/ospfd.h.'>ospf_nbr_nbma</a> *nbr_nbma;
+<a id='L85' name='L85'></a>
+<a id='L86' name='L86'></a>  <em class='comment'>/* Statistics */</em>
+<a id='L87' name='L87'></a>  <strong class='reserved'>struct</strong> timeval ts_last_progress;  <em class='comment'>/* last advance of NSM            */</em>
+<a id='L88' name='L88'></a>  <strong class='reserved'>struct</strong> timeval ts_last_regress;   <em class='comment'>/* last regressive NSM change     */</em>
+<a id='L89' name='L89'></a>  <strong class='reserved'>const</strong> <strong class='reserved'>char</strong> *last_regress_str;     <em class='comment'>/* Event which last regressed NSM */</em>
+<a id='L90' name='L90'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> state_change;           <em class='comment'>/* NSM state change counter       */</em>
+<a id='L91' name='L91'></a><em class='brace'>}</em>;
+<a id='L92' name='L92'></a>
+<a id='L93' name='L93'></a><em class='comment'>/* Macros. */</em>
+<a id='L94' name='L94'></a><em class='sharp'>#define</em> <a href='../R/2024.html' title='Multiple referred from 5 places.'>NBR_IS_DR</a>(n)    <a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;n-&gt;address.u.prefix4, &amp;n-&gt;d_router)
+<a id='L95' name='L95'></a><em class='sharp'>#define</em> <a href='../R/2023.html' title='Multiple referred from 2 places.'>NBR_IS_BDR</a>(n)   <a href='../S/249.html#L109' title='Defined at 109 in lib/prefix.h.'>IPV4_ADDR_SAME</a> (&amp;n-&gt;address.u.prefix4, &amp;n-&gt;bd_router)
+<a id='L96' name='L96'></a>
+<a id='L97' name='L97'></a><em class='comment'>/* Prototypes. */</em>
+<a id='L98' name='L98'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *<a href='../S/756.html#L67' title='Defined at 67 in ospfd/ospf_neighbor.c.'>ospf_nbr_new</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *);
+<a id='L99' name='L99'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/756.html#L105' title='Defined at 105 in ospfd/ospf_neighbor.c.'>ospf_nbr_free</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *);
+<a id='L100' name='L100'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/756.html#L149' title='Defined at 149 in ospfd/ospf_neighbor.c.'>ospf_nbr_delete</a> (<strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *);
+<a id='L101' name='L101'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/756.html#L190' title='Defined at 190 in ospfd/ospf_neighbor.c.'>ospf_nbr_bidirectional</a> (<strong class='reserved'>struct</strong> in_addr *, <strong class='reserved'>struct</strong> in_addr *, <strong class='reserved'>int</strong>);
+<a id='L102' name='L102'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/756.html#L207' title='Defined at 207 in ospfd/ospf_neighbor.c.'>ospf_nbr_add_self</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *);
+<a id='L103' name='L103'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/756.html#L250' title='Defined at 250 in ospfd/ospf_neighbor.c.'>ospf_nbr_count</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *, <strong class='reserved'>int</strong>);
+<a id='L104' name='L104'></a><em class='sharp'>#ifdef</em> <a href='../S/665.html#L267' title='Defined at 267 in config.h.'>HAVE_OPAQUE_LSA</a>
+<a id='L105' name='L105'></a><strong class='reserved'>extern</strong> <strong class='reserved'>int</strong> <a href='../S/756.html#L267' title='Defined at 267 in ospfd/ospf_neighbor.c.'>ospf_nbr_count_opaque_capable</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *);
+<a id='L106' name='L106'></a><em class='sharp'>#endif</em> <em class='comment'>/* HAVE_OPAQUE_LSA */</em>
+<a id='L107' name='L107'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *<a href='../S/756.html#L428' title='Defined at 428 in ospfd/ospf_neighbor.c.'>ospf_nbr_get</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *,
+<a id='L108' name='L108'></a>                                           <strong class='reserved'>struct</strong> <a href='../S/806.html#L77' title='Defined at 77 in ospfd/ospf_packet.h.'>ospf_header</a> *,
+<a id='L109' name='L109'></a>                                           <strong class='reserved'>struct</strong> ip *, <strong class='reserved'>struct</strong> <a href='../S/249.html#L38' title='Defined at 38 in lib/prefix.h.'>prefix</a> *);
+<a id='L110' name='L110'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *<a href='../S/756.html#L375' title='Defined at 375 in ospfd/ospf_neighbor.c.'>ospf_nbr_lookup</a> (<strong class='reserved'>struct</strong> <a href='../S/791.html#L122' title='Defined at 122 in ospfd/ospf_interface.h.'>ospf_interface</a> *,
+<a id='L111' name='L111'></a>                                              <strong class='reserved'>struct</strong> ip *,
+<a id='L112' name='L112'></a>                                              <strong class='reserved'>struct</strong> <a href='../S/806.html#L77' title='Defined at 77 in ospfd/ospf_packet.h.'>ospf_header</a> *);
+<a id='L113' name='L113'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *<a href='../S/756.html#L289' title='Defined at 289 in ospfd/ospf_neighbor.c.'>ospf_nbr_lookup_by_addr</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a> *,
+<a id='L114' name='L114'></a>                                                      <strong class='reserved'>struct</strong> in_addr *);
+<a id='L115' name='L115'></a><strong class='reserved'>extern</strong> <strong class='reserved'>struct</strong> <a href='../S/772.html#L29' title='Defined at 29 in ospfd/ospf_neighbor.h.'>ospf_neighbor</a> *<a href='../S/756.html#L320' title='Defined at 320 in ospfd/ospf_neighbor.c.'>ospf_nbr_lookup_by_routerid</a> (<strong class='reserved'>struct</strong> <a href='../D/10487.html' title='Multiple defined in 2 places.'>route_table</a>
+<a id='L116' name='L116'></a>                                                          *,
+<a id='L117' name='L117'></a>                                                          <strong class='reserved'>struct</strong> in_addr *);
+<a id='L118' name='L118'></a><strong class='reserved'>extern</strong> <strong class='reserved'>void</strong> <a href='../S/756.html#L338' title='Defined at 338 in ospfd/ospf_neighbor.c.'>ospf_renegotiate_optional_capabilities</a> (<strong class='reserved'>struct</strong> <a href='../S/790.html#L155' title='Defined at 155 in ospfd/ospfd.h.'>ospf</a> *top);
+<a id='L119' name='L119'></a>
+<a id='L120' name='L120'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_OSPF_NEIGHBOR_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

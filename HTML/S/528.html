@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>isisd/isis_pdu.h</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1018.html'>isisd</a>/isis_pdu.h</h2>
+<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'><a href='../J/141.html' title='Multiple included from 15 places.'>INCLUDED FROM</a></h2>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='comment'>/*</em>
+<a id='L2' name='L2'></a><em class='comment'> * IS-IS Rout(e)ing protocol - isis_pdu.h</em>
+<a id='L3' name='L3'></a><em class='comment'> *                             PDU processing</em>
+<a id='L4' name='L4'></a><em class='comment'> *</em>
+<a id='L5' name='L5'></a><em class='comment'> * Copyright (C) 2001,2002   Sampo Saaristo</em>
+<a id='L6' name='L6'></a><em class='comment'> *                           Tampere University of Technology      </em>
+<a id='L7' name='L7'></a><em class='comment'> *                           Institute of Communications Engineering</em>
+<a id='L8' name='L8'></a><em class='comment'> *</em>
+<a id='L9' name='L9'></a><em class='comment'> * This program is free software; you can redistribute it and/or modify it </em>
+<a id='L10' name='L10'></a><em class='comment'> * under the terms of the GNU General Public Licenseas published by the Free </em>
+<a id='L11' name='L11'></a><em class='comment'> * Software Foundation; either version 2 of the License, or (at your option) </em>
+<a id='L12' name='L12'></a><em class='comment'> * any later version.</em>
+<a id='L13' name='L13'></a><em class='comment'> *</em>
+<a id='L14' name='L14'></a><em class='comment'> * This program is distributed in the hope that it will be useful,but WITHOUT </em>
+<a id='L15' name='L15'></a><em class='comment'> * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or </em>
+<a id='L16' name='L16'></a><em class='comment'> * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for </em>
+<a id='L17' name='L17'></a><em class='comment'> * more details.</em>
+<a id='L18' name='L18'></a><em class='comment'></em>
+<a id='L19' name='L19'></a><em class='comment'> * You should have received a copy of the GNU General Public License along </em>
+<a id='L20' name='L20'></a><em class='comment'> * with this program; if not, write to the Free Software Foundation, Inc., </em>
+<a id='L21' name='L21'></a><em class='comment'> * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</em>
+<a id='L22' name='L22'></a><em class='comment'> */</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><em class='sharp'>#ifndef</em> <a href='../S/528.html#L25' title='Defined at 25 in isisd/isis_pdu.h.'>_ZEBRA_ISIS_PDU_H</a>
+<a id='L25' name='L25'></a><em class='sharp'>#define</em> <a href='../S/528.html#L24' title='Referred from 24 in isisd/isis_pdu.h.'>_ZEBRA_ISIS_PDU_H</a>
+<a id='L26' name='L26'></a>
+<a id='L27' name='L27'></a><em class='sharp'>#ifdef</em> __SUNPRO_C
+<a id='L28' name='L28'></a><em class='sharp'>#pragma</em> pack(1)
+<a id='L29' name='L29'></a><em class='sharp'>#endif</em>
+<a id='L30' name='L30'></a>
+<a id='L31' name='L31'></a><em class='comment'>/*</em>
+<a id='L32' name='L32'></a><em class='comment'> *                    ISO 9542 - 7.5,7.6</em>
+<a id='L33' name='L33'></a><em class='comment'> *</em>
+<a id='L34' name='L34'></a><em class='comment'> *                       ES to IS Fixed Header</em>
+<a id='L35' name='L35'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L36' name='L36'></a><em class='comment'> *  |         Intradomain Routeing Protocol Discriminator           |</em>
+<a id='L37' name='L37'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L38' name='L38'></a><em class='comment'> *  |                       Length Indicator                        |</em>
+<a id='L39' name='L39'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L40' name='L40'></a><em class='comment'> *  |                  Version/Protocol ID extension                |</em>
+<a id='L41' name='L41'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L42' name='L42'></a><em class='comment'> *  |                         Reserved = 0                          |</em>
+<a id='L43' name='L43'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L44' name='L44'></a><em class='comment'> *  |   0   |   0   |   0   |              PDU Type                 |</em>
+<a id='L45' name='L45'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L46' name='L46'></a><em class='comment'> *  |                         Holding Time                          | 2</em>
+<a id='L47' name='L47'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L48' name='L48'></a><em class='comment'> *  |                          Checksum                             | 2</em>
+<a id='L49' name='L49'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L50' name='L50'></a><em class='comment'> */</em>
+<a id='L51' name='L51'></a>
+<a id='L52' name='L52'></a><strong class='reserved'>struct</strong> esis_fixed_hdr
+<a id='L53' name='L53'></a><em class='brace'>{</em>
+<a id='L54' name='L54'></a>  u_char idrp;
+<a id='L55' name='L55'></a>  u_char length;
+<a id='L56' name='L56'></a>  u_char version;
+<a id='L57' name='L57'></a>  u_char id_len;
+<a id='L58' name='L58'></a>  u_char pdu_type;
+<a id='L59' name='L59'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> holdtime;
+<a id='L60' name='L60'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>;
+<a id='L61' name='L61'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L62' name='L62'></a>
+<a id='L63' name='L63'></a><em class='sharp'>#define</em> ESIS_FIXED_HDR_LEN   9
+<a id='L64' name='L64'></a>
+<a id='L65' name='L65'></a><em class='sharp'>#define</em> ESH_PDU              2
+<a id='L66' name='L66'></a><em class='sharp'>#define</em> ISH_PDU              4
+<a id='L67' name='L67'></a><em class='sharp'>#define</em> RD_PDU               5
+<a id='L68' name='L68'></a>
+<a id='L69' name='L69'></a><em class='comment'>/*</em>
+<a id='L70' name='L70'></a><em class='comment'> *                       IS to IS Fixed Header</em>
+<a id='L71' name='L71'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L72' name='L72'></a><em class='comment'> *  |         Intradomain Routeing Protocol Discriminator           | </em>
+<a id='L73' name='L73'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L74' name='L74'></a><em class='comment'> *  |                       Length Indicator                        |</em>
+<a id='L75' name='L75'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L76' name='L76'></a><em class='comment'> *  |                  Version/Protocol ID extension                |</em>
+<a id='L77' name='L77'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L78' name='L78'></a><em class='comment'> *  |   R   |   R   |   R   |              PDU Type                 |      </em>
+<a id='L79' name='L79'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L80' name='L80'></a><em class='comment'> *  |                            Version                            |</em>
+<a id='L81' name='L81'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L82' name='L82'></a><em class='comment'> *  |                            Reserved                           |</em>
+<a id='L83' name='L83'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L84' name='L84'></a><em class='comment'> *  |                       Maximum Area Addresses                  |      </em>
+<a id='L85' name='L85'></a><em class='comment'> *  +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L86' name='L86'></a><em class='comment'> */</em>
+<a id='L87' name='L87'></a>
+<a id='L88' name='L88'></a><strong class='reserved'>struct</strong> <a href='../R/6173.html' title='Multiple referred from 14 places.'>isis_fixed_hdr</a>
+<a id='L89' name='L89'></a><em class='brace'>{</em>
+<a id='L90' name='L90'></a>  u_char idrp;
+<a id='L91' name='L91'></a>  u_char length;
+<a id='L92' name='L92'></a>  u_char version1;
+<a id='L93' name='L93'></a>  u_char id_len;
+<a id='L94' name='L94'></a>  u_char pdu_type;
+<a id='L95' name='L95'></a>  u_char version2;
+<a id='L96' name='L96'></a>  u_char reserved;
+<a id='L97' name='L97'></a>  u_char max_area_addrs;
+<a id='L98' name='L98'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L99' name='L99'></a>
+<a id='L100' name='L100'></a><em class='sharp'>#define</em> <a href='../R/1041.html' title='Multiple referred from 25 places.'>ISIS_FIXED_HDR_LEN</a> 8
+<a id='L101' name='L101'></a>
+<a id='L102' name='L102'></a><em class='comment'>/*</em>
+<a id='L103' name='L103'></a><em class='comment'> * IS-IS PDU types.</em>
+<a id='L104' name='L104'></a><em class='comment'> */</em>
+<a id='L105' name='L105'></a>
+<a id='L106' name='L106'></a><em class='sharp'>#define</em> <a href='../R/1182.html' title='Multiple referred from 3 places.'>L1_LAN_HELLO</a>         15
+<a id='L107' name='L107'></a><em class='sharp'>#define</em> <a href='../R/1187.html' title='Multiple referred from 3 places.'>L2_LAN_HELLO</a>         16
+<a id='L108' name='L108'></a><em class='comment'>/*</em>
+<a id='L109' name='L109'></a><em class='comment'> *              L1 and L2 LAN IS to IS Hello PDU header</em>
+<a id='L110' name='L110'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L111' name='L111'></a><em class='comment'> * |                       Reserved                | Circuit Type  | 1</em>
+<a id='L112' name='L112'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L113' name='L113'></a><em class='comment'> * +                        Source ID                              + id_len   </em>
+<a id='L114' name='L114'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L115' name='L115'></a><em class='comment'> * |                        Holding  Time                          | 2     </em>
+<a id='L116' name='L116'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L117' name='L117'></a><em class='comment'> * |                        PDU Length                             | 2    </em>
+<a id='L118' name='L118'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L119' name='L119'></a><em class='comment'> * |   R   |                Priority                               | 1</em>
+<a id='L120' name='L120'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L121' name='L121'></a><em class='comment'> * |                        LAN ID                                 | id_len + 1</em>
+<a id='L122' name='L122'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L123' name='L123'></a><em class='comment'> */</em>
+<a id='L124' name='L124'></a><strong class='reserved'>struct</strong> <a href='../R/6180.html' title='Multiple referred from 3 places.'>isis_lan_hello_hdr</a>
+<a id='L125' name='L125'></a><em class='brace'>{</em>
+<a id='L126' name='L126'></a>  u_char circuit_t;
+<a id='L127' name='L127'></a>  u_char source_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>];
+<a id='L128' name='L128'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> hold_time;
+<a id='L129' name='L129'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> pdu_len;
+<a id='L130' name='L130'></a>  u_char prio;
+<a id='L131' name='L131'></a>  u_char lan_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1];
+<a id='L132' name='L132'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L133' name='L133'></a><em class='sharp'>#define</em> <a href='../R/1043.html' title='Multiple referred from 5 places.'>ISIS_LANHELLO_HDRLEN</a>  19
+<a id='L134' name='L134'></a>
+<a id='L135' name='L135'></a><em class='sharp'>#define</em> <a href='../R/2867.html' title='Multiple referred from 3 places.'>P2P_HELLO</a>            17
+<a id='L136' name='L136'></a><em class='comment'>/*</em>
+<a id='L137' name='L137'></a><em class='comment'> *           Point-to-point IS to IS hello PDU header</em>
+<a id='L138' name='L138'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L139' name='L139'></a><em class='comment'> * |                        Reserved               | Circuit Type  | 1</em>
+<a id='L140' name='L140'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L141' name='L141'></a><em class='comment'> * +                        Source ID                              + id_len   </em>
+<a id='L142' name='L142'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L143' name='L143'></a><em class='comment'> * +                        Holding  Time                          + 2     </em>
+<a id='L144' name='L144'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L145' name='L145'></a><em class='comment'> * +                        PDU Length                             + 2    </em>
+<a id='L146' name='L146'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L147' name='L147'></a><em class='comment'> * |                        Local Circuit ID                       | 1</em>
+<a id='L148' name='L148'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L149' name='L149'></a><em class='comment'> */</em>
+<a id='L150' name='L150'></a><strong class='reserved'>struct</strong> <a href='../R/6193.html' title='Multiple referred from 3 places.'>isis_p2p_hello_hdr</a>
+<a id='L151' name='L151'></a><em class='brace'>{</em>
+<a id='L152' name='L152'></a>  u_char circuit_t;
+<a id='L153' name='L153'></a>  u_char source_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a>];
+<a id='L154' name='L154'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> hold_time;
+<a id='L155' name='L155'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> pdu_len;
+<a id='L156' name='L156'></a>  u_char local_id;
+<a id='L157' name='L157'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L158' name='L158'></a><em class='sharp'>#define</em> <a href='../R/1060.html' title='Multiple referred from 6 places.'>ISIS_P2PHELLO_HDRLEN</a> 12
+<a id='L159' name='L159'></a>
+<a id='L160' name='L160'></a><em class='sharp'>#define</em> <a href='../R/1183.html' title='Multiple referred from 4 places.'>L1_LINK_STATE</a>        18
+<a id='L161' name='L161'></a><em class='sharp'>#define</em> <a href='../R/1188.html' title='Multiple referred from 4 places.'>L2_LINK_STATE</a>        20
+<a id='L162' name='L162'></a><em class='comment'>/*</em>
+<a id='L163' name='L163'></a><em class='comment'> *              L1 and L2 IS to IS link state PDU header</em>
+<a id='L164' name='L164'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L165' name='L165'></a><em class='comment'> * +                        PDU Length                             + 2</em>
+<a id='L166' name='L166'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L167' name='L167'></a><em class='comment'> * +                        Remaining Lifetime                     + 2 </em>
+<a id='L168' name='L168'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L169' name='L169'></a><em class='comment'> * |                        LSP ID                                 | id_len + 2</em>
+<a id='L170' name='L170'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L171' name='L171'></a><em class='comment'> * +                        Sequence Number                        + 4</em>
+<a id='L172' name='L172'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L173' name='L173'></a><em class='comment'> * +                        Checksum                               + 2</em>
+<a id='L174' name='L174'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L175' name='L175'></a><em class='comment'> * |   P   |              ATT              |LSPDBOL|    ISTYPE     |</em>
+<a id='L176' name='L176'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L177' name='L177'></a><em class='comment'> */</em>
+<a id='L178' name='L178'></a><strong class='reserved'>struct</strong> <a href='../R/6181.html' title='Multiple referred from 12 places.'>isis_link_state_hdr</a>
+<a id='L179' name='L179'></a><em class='brace'>{</em>
+<a id='L180' name='L180'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> pdu_len;
+<a id='L181' name='L181'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> rem_lifetime;
+<a id='L182' name='L182'></a>  u_char lsp_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 2];
+<a id='L183' name='L183'></a>  <a href='../S/191.html#L31' title='Defined at 31 in lib/zebra.h.'>u_int32_t</a> seq_num;
+<a id='L184' name='L184'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> <a href='../S/483.html#L446' title='Defined at 446 in isisd/isis_tlv.h.'>checksum</a>;
+<a id='L185' name='L185'></a>  <a href='../S/191.html#L33' title='Defined at 33 in lib/zebra.h.'>u_int8_t</a> lsp_bits;
+<a id='L186' name='L186'></a><em class='brace'>}</em> <strong class='reserved'>__attribute__</strong> ((packed));
+<a id='L187' name='L187'></a><em class='sharp'>#define</em> <a href='../R/1047.html' title='Multiple referred from 18 places.'>ISIS_LSP_HDR_LEN</a> 19
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a><em class='comment'>/*</em>
+<a id='L190' name='L190'></a><em class='comment'> * Since the length field of LSP Entries TLV is one byte long, and each LSP</em>
+<a id='L191' name='L191'></a><em class='comment'> * entry is LSP_ENTRIES_LEN (16) bytes long, the maximum number of LSP entries</em>
+<a id='L192' name='L192'></a><em class='comment'> * can be accomodated in a TLV is</em>
+<a id='L193' name='L193'></a><em class='comment'> * 255 / 16 = 15.</em>
+<a id='L194' name='L194'></a><em class='comment'> * </em>
+<a id='L195' name='L195'></a><em class='comment'> * Therefore, the maximum length of the LSP Entries TLV is</em>
+<a id='L196' name='L196'></a><em class='comment'> * 16 * 15 + 2 (header) = 242 bytes.</em>
+<a id='L197' name='L197'></a><em class='comment'> */</em>
+<a id='L198' name='L198'></a><em class='sharp'>#define</em> <a href='../R/1573.html' title='Multiple referred from 3 places.'>MAX_LSP_ENTRIES_TLV_SIZE</a> 242
+<a id='L199' name='L199'></a>
+<a id='L200' name='L200'></a><em class='sharp'>#define</em> <a href='../R/1181.html' title='Multiple referred from 3 places.'>L1_COMPLETE_SEQ_NUM</a>  24
+<a id='L201' name='L201'></a><em class='sharp'>#define</em> <a href='../R/1186.html' title='Multiple referred from 3 places.'>L2_COMPLETE_SEQ_NUM</a>  25
+<a id='L202' name='L202'></a><em class='comment'>/*</em>
+<a id='L203' name='L203'></a><em class='comment'> *      L1 and L2 IS to IS complete sequence numbers PDU header</em>
+<a id='L204' name='L204'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L205' name='L205'></a><em class='comment'> * +                        PDU Length                             + 2    </em>
+<a id='L206' name='L206'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L207' name='L207'></a><em class='comment'> * +                        Source ID                              + id_len + 1</em>
+<a id='L208' name='L208'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L209' name='L209'></a><em class='comment'> * +                        Start LSP ID                           + id_len + 2</em>
+<a id='L210' name='L210'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L211' name='L211'></a><em class='comment'> * +                        End LSP ID                             + id_len + 2</em>
+<a id='L212' name='L212'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L213' name='L213'></a><em class='comment'> */</em>
+<a id='L214' name='L214'></a><strong class='reserved'>struct</strong> <a href='../R/6153.html' title='Multiple referred from 2 places.'>isis_complete_seqnum_hdr</a>
+<a id='L215' name='L215'></a><em class='brace'>{</em>
+<a id='L216' name='L216'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> pdu_len;
+<a id='L217' name='L217'></a>  u_char source_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1];
+<a id='L218' name='L218'></a>  u_char start_lsp_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 2];
+<a id='L219' name='L219'></a>  u_char stop_lsp_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 2];
+<a id='L220' name='L220'></a><em class='brace'>}</em>;
+<a id='L221' name='L221'></a><em class='sharp'>#define</em> <a href='../R/1037.html' title='Multiple referred from 6 places.'>ISIS_CSNP_HDRLEN</a> 25
+<a id='L222' name='L222'></a>
+<a id='L223' name='L223'></a><em class='sharp'>#define</em> <a href='../R/1184.html' title='Multiple referred from 4 places.'>L1_PARTIAL_SEQ_NUM</a>   26
+<a id='L224' name='L224'></a><em class='sharp'>#define</em> <a href='../R/1189.html' title='Multiple referred from 4 places.'>L2_PARTIAL_SEQ_NUM</a>   27
+<a id='L225' name='L225'></a><em class='comment'>/*</em>
+<a id='L226' name='L226'></a><em class='comment'> *      L1 and L2 IS to IS partial sequence numbers PDU header</em>
+<a id='L227' name='L227'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L228' name='L228'></a><em class='comment'> * +                        PDU Length                             + 2</em>
+<a id='L229' name='L229'></a><em class='comment'> * +-------+-------+-------+-------+-------+-------+-------+-------+</em>
+<a id='L230' name='L230'></a><em class='comment'> * +                        Source ID                              + id_len + 1</em>
+<a id='L231' name='L231'></a><em class='comment'> * +---------------------------------------------------------------+</em>
+<a id='L232' name='L232'></a><em class='comment'> */</em>
+<a id='L233' name='L233'></a><strong class='reserved'>struct</strong> <a href='../R/6195.html' title='Multiple referred from 2 places.'>isis_partial_seqnum_hdr</a>
+<a id='L234' name='L234'></a><em class='brace'>{</em>
+<a id='L235' name='L235'></a>  <a href='../S/191.html#L32' title='Defined at 32 in lib/zebra.h.'>u_int16_t</a> pdu_len;
+<a id='L236' name='L236'></a>  u_char source_id[<a href='../S/518.html#L137' title='Defined at 137 in isisd/isis_constants.h.'>ISIS_SYS_ID_LEN</a> + 1];
+<a id='L237' name='L237'></a><em class='brace'>}</em>;
+<a id='L238' name='L238'></a><em class='sharp'>#define</em> <a href='../R/1064.html' title='Multiple referred from 6 places.'>ISIS_PSNP_HDRLEN</a> 9
+<a id='L239' name='L239'></a>
+<a id='L240' name='L240'></a><em class='sharp'>#ifdef</em> __SUNPRO_C
+<a id='L241' name='L241'></a><em class='sharp'>#pragma</em> pack()
+<a id='L242' name='L242'></a><em class='sharp'>#endif</em>
+<a id='L243' name='L243'></a>
+<a id='L244' name='L244'></a><em class='comment'>/*</em>
+<a id='L245' name='L245'></a><em class='comment'> * Function for receiving IS-IS PDUs</em>
+<a id='L246' name='L246'></a><em class='comment'> */</em>
+<a id='L247' name='L247'></a><strong class='reserved'>int</strong> <a href='../D/6978.html' title='Multiple defined in 2 places.'>isis_receive</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L248' name='L248'></a>
+<a id='L249' name='L249'></a><em class='comment'>/*</em>
+<a id='L250' name='L250'></a><em class='comment'> * calling arguments for snp_process ()</em>
+<a id='L251' name='L251'></a><em class='comment'> */</em>
+<a id='L252' name='L252'></a><em class='sharp'>#define</em> <a href='../R/1070.html' title='Multiple referred from 3 places.'>ISIS_SNP_PSNP_FLAG</a> 0
+<a id='L253' name='L253'></a><em class='sharp'>#define</em> <a href='../R/1069.html' title='Multiple referred from 6 places.'>ISIS_SNP_CSNP_FLAG</a> 1
+<a id='L254' name='L254'></a>
+<a id='L255' name='L255'></a><em class='sharp'>#define</em> <a href='../R/1030.html' title='Multiple referred from 27 places.'>ISIS_AUTH_MD5_SIZE</a>       16U
+<a id='L256' name='L256'></a>
+<a id='L257' name='L257'></a><em class='comment'>/*</em>
+<a id='L258' name='L258'></a><em class='comment'> * Sending functions</em>
+<a id='L259' name='L259'></a><em class='comment'> */</em>
+<a id='L260' name='L260'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L2433' title='Defined at 2433 in isisd/isis_pdu.c.'>send_lan_l1_hello</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L261' name='L261'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L2461' title='Defined at 2461 in isisd/isis_pdu.c.'>send_lan_l2_hello</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L262' name='L262'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L2491' title='Defined at 2491 in isisd/isis_pdu.c.'>send_p2p_hello</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L263' name='L263'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L2696' title='Defined at 2696 in isisd/isis_pdu.c.'>send_csnp</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level);
+<a id='L264' name='L264'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L2796' title='Defined at 2796 in isisd/isis_pdu.c.'>send_l1_csnp</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L265' name='L265'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L2823' title='Defined at 2823 in isisd/isis_pdu.c.'>send_l2_csnp</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L266' name='L266'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L3038' title='Defined at 3038 in isisd/isis_pdu.c.'>send_l1_psnp</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L267' name='L267'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L3067' title='Defined at 3067 in isisd/isis_pdu.c.'>send_l2_psnp</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L268' name='L268'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L3095' title='Defined at 3095 in isisd/isis_pdu.c.'>send_lsp</a> (<strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> *<a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a>);
+<a id='L269' name='L269'></a><strong class='reserved'>int</strong> <a href='../S/527.html#L3191' title='Defined at 3191 in isisd/isis_pdu.c.'>ack_lsp</a> (<strong class='reserved'>struct</strong> <a href='../S/528.html#L178' title='Defined at 178 in isisd/isis_pdu.h.'>isis_link_state_hdr</a> *hdr,
+<a id='L270' name='L270'></a>             <strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level);
+<a id='L271' name='L271'></a><strong class='reserved'>void</strong> <a href='../S/527.html#L2182' title='Defined at 2182 in isisd/isis_pdu.c.'>fill_fixed_hdr</a> (<strong class='reserved'>struct</strong> <a href='../S/528.html#L88' title='Defined at 88 in isisd/isis_pdu.h.'>isis_fixed_hdr</a> *hdr, u_char pdu_type);
+<a id='L272' name='L272'></a><strong class='reserved'>int</strong> <a href='../D/10613.html' title='Multiple defined in 2 places.'>send_hello</a> (<strong class='reserved'>struct</strong> <a href='../S/524.html#L63' title='Defined at 63 in isisd/isis_circuit.h.'>isis_circuit</a> *circuit, <strong class='reserved'>int</strong> level);
+<a id='L273' name='L273'></a>
+<a id='L274' name='L274'></a><em class='sharp'>#endif</em> <em class='comment'>/* _ZEBRA_ISIS_PDU_H */</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

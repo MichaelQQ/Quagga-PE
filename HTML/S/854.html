@@ -1,0 +1,404 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>mplsadmd/mplsadmd_vty.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1024.html'>mplsadmd</a>/mplsadmd_vty.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L8'>[^]</a><a href='#L301'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L8' title='Defined at 8.'>DEFUN</a></li>
+<li><a href='#L23' title='Defined at 23.'>DEFUN</a></li>
+<li><a href='#L38' title='Defined at 38.'>DEFUN</a></li>
+<li><a href='#L51' title='Defined at 51.'>DEFUN</a></li>
+<li><a href='#L64' title='Defined at 64.'>DEFUN</a></li>
+<li><a href='#L74' title='Defined at 74.'>DEFUN</a></li>
+<li><a href='#L82' title='Defined at 82.'>DEFUN</a></li>
+<li><a href='#L91' title='Defined at 91.'>DEFUN</a></li>
+<li><a href='#L99' title='Defined at 99.'>DEFUN</a></li>
+<li><a href='#L107' title='Defined at 107.'>DEFUN</a></li>
+<li><a href='#L120' title='Defined at 120.'>DEFUN</a></li>
+<li><a href='#L129' title='Defined at 129.'>DEFUN</a></li>
+<li><a href='#L138' title='Defined at 138.'>DEFUN</a></li>
+<li><a href='#L146' title='Defined at 146.'>DEFUN</a></li>
+<li><a href='#L154' title='Defined at 154.'>DEFUN</a></li>
+<li><a href='#L162' title='Defined at 162.'>DEFUN</a></li>
+<li><a href='#L171' title='Defined at 171.'>DEFUN</a></li>
+<li><a href='#L180' title='Defined at 180.'>DEFUN</a></li>
+<li><a href='#L189' title='Defined at 189.'>DEFUN</a></li>
+<li><a href='#L198' title='Defined at 198.'>DEFUN</a></li>
+<li><a href='#L208' title='Defined at 208.'>DEFUN</a></li>
+<li><a href='#L216' title='Defined at 216.'>DEFUN</a></li>
+<li><a href='#L225' title='Defined at 225.'>DEFUN</a></li>
+<li><a href='#L234' title='Defined at 234.'>DEFUN</a></li>
+<li><a href='#L243' title='Defined at 243.'>DEFUN</a></li>
+<li><a href='#L251' title='Defined at 251.'>DEFUN</a></li>
+<li><a href='#L263' title='Defined at 263.'>DEFUN</a></li>
+<li><a href='#L271' title='Defined at 271.'>DEFUN</a></li>
+<li><a href='#L279' title='Defined at 279.'>DEFUN</a></li>
+<li><a href='#L287' title='Defined at 287.'>DEFUN</a></li>
+<li><a href='#L301' title='Defined at 301.'>mplsadmd_init</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> "<a href='191.html'>zebra.h</a>"
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> "<a href='214.html'>command.h</a>"
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='263.html'>log.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='../I/373.html'>libmpls.h</a>"
+<a id='L5' name='L5'></a><em class='comment'>//#include "mpls.h"</em>
+<a id='L6' name='L6'></a><strong class='reserved'>int</strong> retval=0;
+<a id='L7' name='L7'></a>
+<a id='L8' name='L8'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  show_mpls_nhlfe ,
+<a id='L9' name='L9'></a>        show_mpls_nhlfe_cmd     ,
+<a id='L10' name='L10'></a>        "show mpls nhlfe "      ,
+<a id='L11' name='L11'></a>        "show mpls nhlfe table informations"    ) <em class='brace'>{</em>
+<a id='L12' name='L12'></a>                
+<a id='L13' name='L13'></a>        <a href='../S/835.html#L1492' title='Defined at 1492 in mplsadmd/mpls.c.'>flush_mpls_buffer</a>();
+<a id='L14' name='L14'></a>        <strong class='reserved'>char</strong> buf[1024]=<em class='brace'>{</em>0<em class='brace'>}</em>;     
+<a id='L15' name='L15'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L16' name='L16'></a>  retval=<a href='../S/834.html#L1012' title='Defined at 1012 in mplsadmd/libmpls.c.'>show_mplsd_nhlfe</a>();
+<a id='L17' name='L17'></a>  sprintf(buf,"%s",<a href='../S/835.html#L1467' title='Defined at 1467 in mplsadmd/mpls.c.'>get_mpls_table</a>());
+<a id='L18' name='L18'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s",buf,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);  
+<a id='L19' name='L19'></a>        
+<a id='L20' name='L20'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L21' name='L21'></a><em class='brace'>}</em>
+<a id='L22' name='L22'></a>        
+<a id='L23' name='L23'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  show_mpls_ilm   ,
+<a id='L24' name='L24'></a>        show_mpls_ilm_cmd       ,
+<a id='L25' name='L25'></a>        "show mpls ilm "        ,
+<a id='L26' name='L26'></a>        "show mpls ilm table informations"      ) <em class='brace'>{</em>
+<a id='L27' name='L27'></a>                
+<a id='L28' name='L28'></a>        <a href='../S/835.html#L1492' title='Defined at 1492 in mplsadmd/mpls.c.'>flush_mpls_buffer</a>();
+<a id='L29' name='L29'></a>        <strong class='reserved'>char</strong> buf[1024]=<em class='brace'>{</em>0<em class='brace'>}</em>;     
+<a id='L30' name='L30'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L31' name='L31'></a>  retval=<a href='../S/834.html#L1002' title='Defined at 1002 in mplsadmd/libmpls.c.'>show_mplsd_ilm</a>();
+<a id='L32' name='L32'></a>  sprintf(buf,"%s",<a href='../S/835.html#L1467' title='Defined at 1467 in mplsadmd/mpls.c.'>get_mpls_table</a>());
+<a id='L33' name='L33'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s",buf,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);  
+<a id='L34' name='L34'></a>        
+<a id='L35' name='L35'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L36' name='L36'></a><em class='brace'>}</em>
+<a id='L37' name='L37'></a>
+<a id='L38' name='L38'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  show_mpls_labelspace    ,
+<a id='L39' name='L39'></a>        show_mpls_labelspace_cmd        ,
+<a id='L40' name='L40'></a>        "show mpls labelspace " ,
+<a id='L41' name='L41'></a>        "show mpls NIC labelspace informations" ) <em class='brace'>{</em>
+<a id='L42' name='L42'></a>        <a href='../S/835.html#L1492' title='Defined at 1492 in mplsadmd/mpls.c.'>flush_mpls_buffer</a>();
+<a id='L43' name='L43'></a>        <strong class='reserved'>char</strong> buf[1024]=<em class='brace'>{</em>0<em class='brace'>}</em>;     
+<a id='L44' name='L44'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L45' name='L45'></a>  retval=<a href='../S/834.html#L982' title='Defined at 982 in mplsadmd/libmpls.c.'>show_mplsd_labelspace</a>();
+<a id='L46' name='L46'></a>  sprintf(buf,"%s",<a href='../S/835.html#L1467' title='Defined at 1467 in mplsadmd/mpls.c.'>get_mpls_table</a>());
+<a id='L47' name='L47'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s",buf,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);  
+<a id='L48' name='L48'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L49' name='L49'></a><em class='brace'>}</em>
+<a id='L50' name='L50'></a>
+<a id='L51' name='L51'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  show_mpls_xc    ,
+<a id='L52' name='L52'></a>        show_mpls_xc_cmd        ,
+<a id='L53' name='L53'></a>        "show mpls xc " ,
+<a id='L54' name='L54'></a>        "show mpls cross-connect table informations"    ) <em class='brace'>{</em>
+<a id='L55' name='L55'></a>        <a href='../S/835.html#L1492' title='Defined at 1492 in mplsadmd/mpls.c.'>flush_mpls_buffer</a>();
+<a id='L56' name='L56'></a>  <strong class='reserved'>char</strong> buf[1024]=<em class='brace'>{</em>0<em class='brace'>}</em>;   
+<a id='L57' name='L57'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L58' name='L58'></a>        retval=<a href='../S/834.html#L992' title='Defined at 992 in mplsadmd/libmpls.c.'>show_mplsd_xc</a>();
+<a id='L59' name='L59'></a>        sprintf(buf,"%s",<a href='../S/835.html#L1467' title='Defined at 1467 in mplsadmd/mpls.c.'>get_mpls_table</a>());
+<a id='L60' name='L60'></a>  <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s",buf,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);  
+<a id='L61' name='L61'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L62' name='L62'></a><em class='brace'>}</em>
+<a id='L63' name='L63'></a><em class='comment'>//New commands to support VPLS technology capability</em>
+<a id='L64' name='L64'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(mplsd_add_label_to_packet ,
+<a id='L65' name='L65'></a>        mplsd_add_label_to_packet_cmd   ,
+<a id='L66' name='L66'></a>        "add_label_to_packet il &lt;0-65535&gt; labelspace &lt;0-65535&gt;" ,
+<a id='L67' name='L67'></a>        "add_label_to_packet il-int labelspace-int "    ) <em class='brace'>{</em>
+<a id='L68' name='L68'></a>        <strong class='reserved'>int</strong> retval=-1;
+<a id='L69' name='L69'></a>        retval=<a href='../D/5118.html' title='Multiple defined in 2 places.'>add_label_to_packet</a>(atoi(argv[0]),atoi(argv[1]));
+<a id='L70' name='L70'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L71' name='L71'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L72' name='L72'></a><em class='brace'>}</em>
+<a id='L73' name='L73'></a>
+<a id='L74' name='L74'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsd_add_otunnel_packet        ,
+<a id='L75' name='L75'></a>        mplsd_add_otunnel_packet_cmd    ,
+<a id='L76' name='L76'></a>        "add_otunnel_packet iface WORD "        ,
+<a id='L77' name='L77'></a>        "add_otunnel_packet iface-string "      ) <em class='brace'>{</em>
+<a id='L78' name='L78'></a>        retval=<a href='../D/5126.html' title='Multiple defined in 2 places.'>add_otunnel_packet</a>(argv[0]);
+<a id='L79' name='L79'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L80' name='L80'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L81' name='L81'></a>        
+<a id='L82' name='L82'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsd_add_label_stack   ,
+<a id='L83' name='L83'></a>        mplsd_add_label_stack_cmd       ,
+<a id='L84' name='L84'></a>        "add_label_stack label_key &lt;1-65535&gt; label &lt;0-65535&gt;"   ,
+<a id='L85' name='L85'></a>        "add_label_stack label_key-int label-int"       ) <em class='brace'>{</em>
+<a id='L86' name='L86'></a>        retval=<a href='../D/5111.html' title='Multiple defined in 2 places.'>add_label_stack</a>(atoi(argv[0]),atoi(argv[1]));
+<a id='L87' name='L87'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L88' name='L88'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L89' name='L89'></a><em class='comment'>//end for VPLS technology capability</em>
+<a id='L90' name='L90'></a>
+<a id='L91' name='L91'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_label_space    ,
+<a id='L92' name='L92'></a>        mplsadmd_vty_add_label_space_cmd        ,
+<a id='L93' name='L93'></a>        "add_label_space interface WORD label_space_no &lt;0-65535&gt;"       ,
+<a id='L94' name='L94'></a>        "add_label_space interface-string label_space_no-int"   ) <em class='brace'>{</em>
+<a id='L95' name='L95'></a>        retval=<a href='../D/5110.html' title='Multiple defined in 2 places.'>add_label_space</a>( argv[0], atoi(argv[1]) );
+<a id='L96' name='L96'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L97' name='L97'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L98' name='L98'></a>
+<a id='L99' name='L99'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_label_space    ,
+<a id='L100' name='L100'></a>        mplsadmd_vty_del_label_space_cmd        ,
+<a id='L101' name='L101'></a>        "del_label_space interface WORD"        ,
+<a id='L102' name='L102'></a>        "del_label_space interface-string"      ) <em class='brace'>{</em>
+<a id='L103' name='L103'></a>        retval=<a href='../D/6280.html' title='Multiple defined in 2 places.'>del_label_space</a>( argv[0] );
+<a id='L104' name='L104'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L105' name='L105'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L106' name='L106'></a>
+<a id='L107' name='L107'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_fec_to_label   ,
+<a id='L108' name='L108'></a>        mplsadmd_vty_add_fec_to_label_cmd       ,
+<a id='L109' name='L109'></a>        "add_fec_to_label table &lt;1-65535&gt; fec WORD label &lt;1-65535&gt; exp &lt;1-65535&gt; iface WORD nh WORD"    ,
+<a id='L110' name='L110'></a>        "add_fec_to_label table-int fec-string label-int exp-int iface-string nh-string"        ) <em class='brace'>{</em>
+<a id='L111' name='L111'></a>        <em class='comment'>//only for test</em>
+<a id='L112' name='L112'></a>        <em class='comment'>//vty_out (vty, "Down to mplsadmd node%s", VTY_NEWLINE);</em>
+<a id='L113' name='L113'></a>        <em class='comment'>/*int retKey=add_fec_to_label( atoi(argv[0]), argv[1], atoi(argv[2]), atoi(argv[3]), argv[4], argv[5],vty );</em>
+<a id='L114' name='L114'></a><em class='comment'>        printf("retKey :%d\n",retKey);  </em>
+<a id='L115' name='L115'></a><em class='comment'>        vty_out(vty,"%d%s",retKey,VTY_NEWLINE);*/</em>
+<a id='L116' name='L116'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s","This command doesn't supported.",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L117' name='L117'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L118' name='L118'></a>        
+<a id='L119' name='L119'></a><em class='comment'>//not used on rsvpd </em>
+<a id='L120' name='L120'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_fec_to_label   ,
+<a id='L121' name='L121'></a>        mplsadmd_vty_del_fec_to_label_cmd       ,
+<a id='L122' name='L122'></a>        "del_fec_to_label table &lt;1-65535&gt; fec WORD label &lt;1-65535&gt; exp &lt;1-65535&gt; iface WORD"    ,
+<a id='L123' name='L123'></a>        "del_fec_to_label table-int fec-string label-int exp-int iface-string"  ) <em class='brace'>{</em>
+<a id='L124' name='L124'></a>        <em class='comment'>/*retval=del_fec_to_label( atoi(argv[0]), argv[1], atoi(argv[2]), atoi(argv[3]), argv[4] );</em>
+<a id='L125' name='L125'></a><em class='comment'>        vty_out(vty,"%d%s",retval,VTY_NEWLINE);*/</em>
+<a id='L126' name='L126'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s","This command doesn't supported.",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L127' name='L127'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L128' name='L128'></a>
+<a id='L129' name='L129'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_olabel_exp     ,
+<a id='L130' name='L130'></a>        mplsadmd_vty_add_olabel_exp_cmd ,
+<a id='L131' name='L131'></a>        "add_olabel_exp label &lt;1-65535&gt; exp &lt;0-7&gt; iface WORD nh WORD"   ,
+<a id='L132' name='L132'></a>        "add_olabel_exp label-int exp-int iface-string nh-string"       ) <em class='brace'>{</em>
+<a id='L133' name='L133'></a>        retval=<a href='../D/5123.html' title='Multiple defined in 2 places.'>add_olabel_exp</a>( atoi(argv[0]), atoi(argv[1]), argv[2], argv[3] );
+<a id='L134' name='L134'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L135' name='L135'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L136' name='L136'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L137' name='L137'></a>
+<a id='L138' name='L138'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_olabel_tc      ,
+<a id='L139' name='L139'></a>        mplsadmd_vty_add_olabel_tc_cmd  ,
+<a id='L140' name='L140'></a>        "add_olabel_tc label &lt;1-65535&gt; tc &lt;1-65535&gt; iface WORD nh WORD" ,
+<a id='L141' name='L141'></a>        "add_olabel_tc label-int tc-int iface-string nh-string" ) <em class='brace'>{</em>
+<a id='L142' name='L142'></a>        retval=<a href='../D/5124.html' title='Multiple defined in 2 places.'>add_olabel_tc</a>( atoi(argv[0]), atoi(argv[1]), argv[2], argv[3] );
+<a id='L143' name='L143'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L144' name='L144'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L145' name='L145'></a>
+<a id='L146' name='L146'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_olabel ,
+<a id='L147' name='L147'></a>        mplsadmd_vty_add_olabel_cmd     ,
+<a id='L148' name='L148'></a>        "add_olabel label &lt;1-65535&gt; iface WORD nh WORD" ,
+<a id='L149' name='L149'></a>        "add_olabel label-int iface-string nh-string"   ) <em class='brace'>{</em>
+<a id='L150' name='L150'></a>        retval=<a href='../D/5122.html' title='Multiple defined in 2 places.'>add_olabel</a>( atoi(argv[0]), argv[1], argv[2] );
+<a id='L151' name='L151'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L152' name='L152'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L153' name='L153'></a>
+<a id='L154' name='L154'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_olabel ,
+<a id='L155' name='L155'></a>        mplsadmd_vty_del_olabel_cmd     ,
+<a id='L156' name='L156'></a>        "del_olabel labelkey &lt;1-65535&gt;" ,
+<a id='L157' name='L157'></a>        "del_olabel labelkey-int"       ) <em class='brace'>{</em>
+<a id='L158' name='L158'></a>        retval=<a href='../D/6287.html' title='Multiple defined in 2 places.'>del_olabel</a>( atoi(argv[0]) );
+<a id='L159' name='L159'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L160' name='L160'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L161' name='L161'></a>
+<a id='L162' name='L162'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_bind_olabel        ,
+<a id='L163' name='L163'></a>        mplsadmd_vty_bind_olabel_cmd    ,
+<a id='L164' name='L164'></a>        "bind_olabel ilabel &lt;1-65535&gt; olabelkey &lt;1-65535&gt; labelspace &lt;0-65535&gt;" ,
+<a id='L165' name='L165'></a>        "bind_olabel ilabel-int olabelkey-int labelspace-int"   ) <em class='brace'>{</em>
+<a id='L166' name='L166'></a>        retval=<a href='../D/5889.html' title='Multiple defined in 3 places.'>bind_olabel</a>( atoi(argv[0]), atoi(argv[1]) ,atoi(argv[2]));
+<a id='L167' name='L167'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L168' name='L168'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L169' name='L169'></a>        
+<a id='L170' name='L170'></a><em class='comment'>//not used on rsvpd </em>
+<a id='L171' name='L171'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_unbind_fec_to_label        ,
+<a id='L172' name='L172'></a>        mplsadmd_vty_unbind_fec_to_label_cmd    ,
+<a id='L173' name='L173'></a>        "unbind_fec_to_label table &lt;1-65535&gt; fec WORD label &lt;1-65535&gt; exp &lt;1-65535&gt; iface WORD" ,
+<a id='L174' name='L174'></a>        "unbind_fec_to_label table-int fec-string label-int exp-int iface-string"       ) <em class='brace'>{</em>
+<a id='L175' name='L175'></a>        <em class='comment'>/*retval=unbind_fec_to_label( atoi(argv[0]), argv[1], atoi(argv[2]), atoi(argv[3]), argv[4] );</em>
+<a id='L176' name='L176'></a><em class='comment'>        vty_out(vty,"%d%s",retval,VTY_NEWLINE);*/</em>
+<a id='L177' name='L177'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s","This command doesn't supported.",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L178' name='L178'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L179' name='L179'></a>
+<a id='L180' name='L180'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_label_to_label ,
+<a id='L181' name='L181'></a>        mplsadmd_vty_add_label_to_label_cmd     ,
+<a id='L182' name='L182'></a>        "add_label_to_label il &lt;0-65535&gt; ol &lt;1-65535&gt; iface WORD nh WORD"       ,
+<a id='L183' name='L183'></a>        "add_label_to_label il-int ol-int iface-string nh-string"       ) <em class='brace'>{</em>
+<a id='L184' name='L184'></a>        retval=<a href='../D/5116.html' title='Multiple defined in 2 places.'>add_label_to_label</a>( atoi(argv[0]), atoi(argv[1]), argv[2], argv[3] );
+<a id='L185' name='L185'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L186' name='L186'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L187' name='L187'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L188' name='L188'></a>
+<a id='L189' name='L189'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_label_to_label_tc      ,
+<a id='L190' name='L190'></a>        mplsadmd_vty_add_label_to_label_tc_cmd  ,
+<a id='L191' name='L191'></a>        "add_label_to_label_tc il &lt;1-65535&gt; ol &lt;1-65535&gt; tc &lt;1-65535&gt; iface WORD nh WORD"       ,
+<a id='L192' name='L192'></a>        "add_label_to_label_tc il-int ol-int tc-int iface-string nh-string"     ) <em class='brace'>{</em>
+<a id='L193' name='L193'></a>        retval=<a href='../D/5117.html' title='Multiple defined in 2 places.'>add_label_to_label_tc</a>( atoi(argv[0]), atoi(argv[1]), atoi(argv[2]), argv[3], argv[4] );
+<a id='L194' name='L194'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L195' name='L195'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L196' name='L196'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L197' name='L197'></a>
+<a id='L198' name='L198'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_label_to_label ,
+<a id='L199' name='L199'></a>        mplsadmd_vty_del_label_to_label_cmd     ,
+<a id='L200' name='L200'></a>        "del_label_to_label ilabel &lt;1-65535&gt; okey &lt;1-65535&gt;"    ,
+<a id='L201' name='L201'></a>        "del_label_to_label ilabel-int okey-int"        ) <em class='brace'>{</em>
+<a id='L202' name='L202'></a>        retval=<a href='../D/6283.html' title='Multiple defined in 3 places.'>del_label_to_label</a>( atoi(argv[0]), atoi(argv[1]) );
+<a id='L203' name='L203'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L204' name='L204'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L205' name='L205'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L206' name='L206'></a>
+<a id='L207' name='L207'></a><em class='comment'>//not used on rsvpd </em>
+<a id='L208' name='L208'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_ilabel ,
+<a id='L209' name='L209'></a>        mplsadmd_vty_del_ilabel_cmd     ,
+<a id='L210' name='L210'></a>        "del_ilabel il &lt;1-65535&gt; iexp &lt;1-65535&gt; labelspace &lt;0-65535&gt;"   ,
+<a id='L211' name='L211'></a>        "del_ilabel il-int iexp-int labelspace-int"     ) <em class='brace'>{</em>
+<a id='L212' name='L212'></a>        retval=<a href='../D/6278.html' title='Multiple defined in 2 places.'>del_ilabel</a>( atoi(argv[0]), atoi(argv[1]),atoi(argv[2]) );
+<a id='L213' name='L213'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L214' name='L214'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L215' name='L215'></a>
+<a id='L216' name='L216'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_label_to_ipv4  ,
+<a id='L217' name='L217'></a>        mplsadmd_vty_add_label_to_ipv4_cmd      ,
+<a id='L218' name='L218'></a>        "add_label_to_ipv4 il &lt;1-65535&gt;"        ,
+<a id='L219' name='L219'></a>        "add_label_to_ipv4 il-int"      ) <em class='brace'>{</em>
+<a id='L220' name='L220'></a>        retval=<a href='../D/5112.html' title='Multiple defined in 2 places.'>add_label_to_ipv4</a>( atoi(argv[0]) );
+<a id='L221' name='L221'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L222' name='L222'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L223' name='L223'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L224' name='L224'></a>
+<a id='L225' name='L225'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_label_to_ipv4_setdscp  ,
+<a id='L226' name='L226'></a>        mplsadmd_vty_add_label_to_ipv4_setdscp_cmd      ,
+<a id='L227' name='L227'></a>        "add_label_to_ipv4_setdscp il &lt;1-65535&gt;"        ,
+<a id='L228' name='L228'></a>        "add_label_to_ipv4_setdscp il-int"      ) <em class='brace'>{</em>
+<a id='L229' name='L229'></a>        retval=<a href='../D/5115.html' title='Multiple defined in 2 places.'>add_label_to_ipv4_setdscp</a>( atoi(argv[0]) );
+<a id='L230' name='L230'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L231' name='L231'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L232' name='L232'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L233' name='L233'></a>
+<a id='L234' name='L234'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_label_to_ipv4  ,
+<a id='L235' name='L235'></a>        mplsadmd_vty_del_label_to_ipv4_cmd      ,
+<a id='L236' name='L236'></a>        "del_label_to_ipv4 il &lt;1-65535&gt;"        ,
+<a id='L237' name='L237'></a>        "del_label_to_ipv4 il-int"      ) <em class='brace'>{</em>
+<a id='L238' name='L238'></a>        retval=<a href='../D/6281.html' title='Multiple defined in 2 places.'>del_label_to_ipv4</a>( atoi(argv[0]) );
+<a id='L239' name='L239'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L240' name='L240'></a>        <em class='comment'>//vty_out(vty,"%s%s","This command doesn't supported.",VTY_NEWLINE);</em>
+<a id='L241' name='L241'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L242' name='L242'></a><em class='comment'>//add by here . To suitable for ldpd/impl_mpls.c file</em>
+<a id='L243' name='L243'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_add_label_to_ipv4_labelspace ,
+<a id='L244' name='L244'></a>        mplsadmd_vty_add_label_to_ipv4_labelspace_cmd   ,
+<a id='L245' name='L245'></a>        "add_label_to_ipv4_labelspace il &lt;1-65535&gt; label_space_no &lt;0-65535&gt;"    ,
+<a id='L246' name='L246'></a>        "add_label_to_ipv4_labelspace il-int label_space_no-int"        ) <em class='brace'>{</em>
+<a id='L247' name='L247'></a>        <em class='comment'>/*retval=add_label_to_ipv4_labelspace( atoi(argv[0]), atoi(argv[1]) );</em>
+<a id='L248' name='L248'></a><em class='comment'>        vty_out(vty,"%d%s",retval,VTY_NEWLINE);*/</em>
+<a id='L249' name='L249'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s","This command doesn't supported.",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L250' name='L250'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L251' name='L251'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_label_to_ipv4_labelspace       ,
+<a id='L252' name='L252'></a>        mplsadmd_vty_del_label_to_ipv4_labelspace_cmd   ,
+<a id='L253' name='L253'></a>        "del_label_to_ipv4_labelspace il &lt;1-65535&gt; label_space_no &lt;0-65535&gt;"    ,
+<a id='L254' name='L254'></a>        "del_label_to_ipv4_labelspace il-int label_space_no-int"        ) <em class='brace'>{</em>
+<a id='L255' name='L255'></a>        <em class='comment'>/*retval=del_label_to_ipv4_labelspace( atoi(argv[0]), atoi(argv[1]) );</em>
+<a id='L256' name='L256'></a><em class='comment'>        vty_out(vty,"%d%s",retval,VTY_NEWLINE);*/</em>
+<a id='L257' name='L257'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%s%s","This command doesn't supported.",<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L258' name='L258'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L259' name='L259'></a>
+<a id='L260' name='L260'></a><em class='comment'>//end by here</em>
+<a id='L261' name='L261'></a>
+<a id='L262' name='L262'></a>
+<a id='L263' name='L263'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_create_tunnel_interface    ,
+<a id='L264' name='L264'></a>        mplsadmd_vty_create_tunnel_interface_cmd        ,
+<a id='L265' name='L265'></a>        "create_tunnel_interface mplsiface WORD"        ,
+<a id='L266' name='L266'></a>        "create_tunnel_interface mplsiface-string"      ) <em class='brace'>{</em>
+<a id='L267' name='L267'></a>        retval=<a href='../D/6255.html' title='Multiple defined in 3 places.'>create_tunnel_interface</a>( argv[0] );
+<a id='L268' name='L268'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L269' name='L269'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L270' name='L270'></a>
+<a id='L271' name='L271'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_map_label_tunnel   ,
+<a id='L272' name='L272'></a>        mplsadmd_vty_map_label_tunnel_cmd       ,
+<a id='L273' name='L273'></a>        "map_label_tunnel labelref &lt;1-65535&gt; mplsiface WORD"    ,
+<a id='L274' name='L274'></a>        "map_label_tunnel labelref-int mplsiface-string"        ) <em class='brace'>{</em>
+<a id='L275' name='L275'></a>        retval=<a href='../D/7689.html' title='Multiple defined in 3 places.'>map_label_tunnel</a>( atoi(argv[0]), argv[1] );
+<a id='L276' name='L276'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L277' name='L277'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L278' name='L278'></a>
+<a id='L279' name='L279'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  mplsadmd_vty_del_tunnel ,
+<a id='L280' name='L280'></a>        mplsadmd_vty_del_tunnel_cmd     ,
+<a id='L281' name='L281'></a>        "del_tunnel mplsiface WORD"     ,
+<a id='L282' name='L282'></a>        "del_tunnel mplsiface-string"   ) <em class='brace'>{</em>
+<a id='L283' name='L283'></a>        retval=<a href='../D/6292.html' title='Multiple defined in 3 places.'>del_tunnel</a>( argv[0] );
+<a id='L284' name='L284'></a>        <a href='../S/200.html#L95' title='Defined at 95 in lib/vty.c.'>vty_out</a>(<a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>,"%d%s",retval,<a href='../S/304.html#L128' title='Defined at 128 in lib/vty.h.'>VTY_NEWLINE</a>);
+<a id='L285' name='L285'></a>        <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;<em class='brace'>}</em>
+<a id='L286' name='L286'></a>
+<a id='L287' name='L287'></a><a href='../R/640.html' title='Multiple referred from 378 places.'>DEFUN</a>(  router_mplsadmd,
+<a id='L288' name='L288'></a>        router_mplsadmd_cmd,
+<a id='L289' name='L289'></a>        "router mplsadmd",
+<a id='L290' name='L290'></a>        "Enable a routing process"
+<a id='L291' name='L291'></a>        "MPLSADMD protocol")
+<a id='L292' name='L292'></a><em class='brace'>{</em>
+<a id='L293' name='L293'></a> <a href='../S/304.html#L32' title='Defined at 32 in lib/vty.h.'>vty</a>-&gt;node = MPLSADMD_NODE;
+<a id='L294' name='L294'></a> <em class='comment'>//vty_out (vty, "Down to mplsadmd node%s", VTY_NEWLINE);</em>
+<a id='L295' name='L295'></a> <strong class='reserved'>return</strong> <a href='../D/570.html' title='Multiple defined in 3 places.'>CMD_SUCCESS</a>;
+<a id='L296' name='L296'></a><em class='brace'>}</em>
+<a id='L297' name='L297'></a>
+<a id='L298' name='L298'></a><strong class='reserved'>static</strong> <strong class='reserved'>struct</strong> <a href='../S/214.html#L119' title='Defined at 119 in lib/command.h.'>cmd_node</a> mplsadmd_node =
+<a id='L299' name='L299'></a><em class='brace'>{</em> MPLSADMD_NODE, "%s(config-mplsadmd)# ", 1 <em class='brace'>}</em>;
+<a id='L300' name='L300'></a>
+<a id='L301' name='L301'></a><strong class='reserved'>void</strong> <a href='../R/7245.html' title='Multiple referred from 5 places.'>mplsadmd_init</a>(<strong class='reserved'>void</strong>)
+<a id='L302' name='L302'></a><em class='brace'>{</em>
+<a id='L303' name='L303'></a><a href='../S/264.html#L191' title='Defined at 191 in lib/command.c.'>install_node</a>( &amp;mplsadmd_node, <a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a> );
+<a id='L304' name='L304'></a><a href='../S/264.html#L3445' title='Defined at 3445 in lib/command.c.'>install_default</a>( MPLSADMD_NODE );
+<a id='L305' name='L305'></a>
+<a id='L306' name='L306'></a><em class='comment'>//install_element (VIEW_NODE,   &amp;router_mplsadmd_cmd);</em>
+<a id='L307' name='L307'></a><em class='comment'>//install_element (ENABLE_NODE, &amp;router_mplsadmd_cmd);</em>
+<a id='L308' name='L308'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_mpls_nhlfe_cmd);
+<a id='L309' name='L309'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_mpls_nhlfe_cmd);
+<a id='L310' name='L310'></a>
+<a id='L311' name='L311'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_mpls_ilm_cmd);
+<a id='L312' name='L312'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_mpls_ilm_cmd);
+<a id='L313' name='L313'></a>
+<a id='L314' name='L314'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_mpls_labelspace_cmd);
+<a id='L315' name='L315'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_mpls_labelspace_cmd);
+<a id='L316' name='L316'></a>
+<a id='L317' name='L317'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (VIEW_NODE, &amp;show_mpls_xc_cmd);
+<a id='L318' name='L318'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (ENABLE_NODE, &amp;show_mpls_xc_cmd);
+<a id='L319' name='L319'></a>
+<a id='L320' name='L320'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a> (CONFIG_NODE, &amp;router_mplsadmd_cmd);
+<a id='L321' name='L321'></a>
+<a id='L322' name='L322'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_label_space_cmd        );
+<a id='L323' name='L323'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_label_space_cmd        );
+<a id='L324' name='L324'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_fec_to_label_cmd       );
+<a id='L325' name='L325'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_fec_to_label_cmd       );
+<a id='L326' name='L326'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_olabel_exp_cmd );
+<a id='L327' name='L327'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_olabel_tc_cmd  );
+<a id='L328' name='L328'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_olabel_cmd     );
+<a id='L329' name='L329'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_olabel_cmd     );
+<a id='L330' name='L330'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_bind_olabel_cmd    );
+<a id='L331' name='L331'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_unbind_fec_to_label_cmd    );
+<a id='L332' name='L332'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_label_to_label_cmd     );
+<a id='L333' name='L333'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_label_to_label_tc_cmd  );
+<a id='L334' name='L334'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_label_to_label_cmd     );
+<a id='L335' name='L335'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_ilabel_cmd     );
+<a id='L336' name='L336'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_label_to_ipv4_cmd      );
+<a id='L337' name='L337'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_label_to_ipv4_setdscp_cmd      );
+<a id='L338' name='L338'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_label_to_ipv4_cmd      );
+<a id='L339' name='L339'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_add_label_to_ipv4_labelspace_cmd   );
+<a id='L340' name='L340'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_label_to_ipv4_labelspace_cmd   );
+<a id='L341' name='L341'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_create_tunnel_interface_cmd        );
+<a id='L342' name='L342'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_map_label_tunnel_cmd       );
+<a id='L343' name='L343'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsadmd_vty_del_tunnel_cmd     );
+<a id='L344' name='L344'></a>
+<a id='L345' name='L345'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsd_add_label_to_packet_cmd   );
+<a id='L346' name='L346'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsd_add_otunnel_packet_cmd    );
+<a id='L347' name='L347'></a><a href='../S/264.html#L482' title='Defined at 482 in lib/command.c.'>install_element</a>( MPLSADMD_NODE,   &amp;     mplsd_add_label_stack_cmd       );
+<a id='L348' name='L348'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L8'>[^]</a><a href='#L301'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>

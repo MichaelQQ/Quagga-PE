@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>tests/test-sig.c</title>
+<meta name='robots' content='noindex,nofollow' />
+<meta name='generator' content='GLOBAL-6.4' />
+<meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel='stylesheet' type='text/css' href='../style.css' />
+</head>
+<body>
+<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1034.html'>tests</a>/test-sig.c</h2>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L7'>[^]</a><a href='#L44'>[v]</a>[top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+<hr />
+<h2 class='header'>DEFINITIONS</h2>
+This source file includes following definitions.
+<ol>
+<li><a href='#L7' title='Defined at 7.'>sighup</a></li>
+<li><a href='#L13' title='Defined at 13.'>sigusr1</a></li>
+<li><a href='#L19' title='Defined at 19.'>sigusr2</a></li>
+<li><a href='#L44' title='Defined at 44.'>main</a></li>
+</ol>
+<hr />
+<pre>
+<a id='L1' name='L1'></a><em class='sharp'>#include</em> &lt;<a href='191.html'>zebra.h</a>&gt;
+<a id='L2' name='L2'></a><em class='sharp'>#include</em> &lt;<a href='254.html'>sigevent.h</a>&gt;
+<a id='L3' name='L3'></a><em class='sharp'>#include</em> "<a href='263.html'>lib/log.h</a>"
+<a id='L4' name='L4'></a><em class='sharp'>#include</em> "<a href='194.html'>lib/memory.h</a>"
+<a id='L5' name='L5'></a>
+<a id='L6' name='L6'></a><strong class='reserved'>void</strong>
+<a id='L7' name='L7'></a><a href='../R/9880.html' title='Multiple referred from 20 places.'>sighup</a> (<strong class='reserved'>void</strong>)
+<a id='L8' name='L8'></a><em class='brace'>{</em>
+<a id='L9' name='L9'></a>  printf ("processed hup\n");
+<a id='L10' name='L10'></a><em class='brace'>}</em>
+<a id='L11' name='L11'></a>
+<a id='L12' name='L12'></a><strong class='reserved'>void</strong>
+<a id='L13' name='L13'></a><a href='../R/9886.html' title='Multiple referred from 20 places.'>sigusr1</a> (<strong class='reserved'>void</strong>)
+<a id='L14' name='L14'></a><em class='brace'>{</em>
+<a id='L15' name='L15'></a>  printf ("processed usr1\n");
+<a id='L16' name='L16'></a><em class='brace'>}</em>
+<a id='L17' name='L17'></a>
+<a id='L18' name='L18'></a><strong class='reserved'>void</strong>
+<a id='L19' name='L19'></a><a href='../S/66.html#L36' title='Referred from 36 in tests/test-sig.c.'>sigusr2</a> (<strong class='reserved'>void</strong>)
+<a id='L20' name='L20'></a><em class='brace'>{</em>
+<a id='L21' name='L21'></a>  printf ("processed usr2\n");
+<a id='L22' name='L22'></a><em class='brace'>}</em>
+<a id='L23' name='L23'></a>
+<a id='L24' name='L24'></a><strong class='reserved'>struct</strong> <a href='../S/254.html#L31' title='Defined at 31 in lib/sigevent.h.'>quagga_signal_t</a> sigs[] = 
+<a id='L25' name='L25'></a><em class='brace'>{</em>
+<a id='L26' name='L26'></a>  <em class='brace'>{</em>
+<a id='L27' name='L27'></a>    .signal = SIGHUP,
+<a id='L28' name='L28'></a>    .handler = &amp;<a href='../D/10789.html' title='Multiple defined in 18 places.'>sighup</a>,
+<a id='L29' name='L29'></a>  <em class='brace'>}</em>,
+<a id='L30' name='L30'></a>  <em class='brace'>{</em>
+<a id='L31' name='L31'></a>    .signal = SIGUSR1,
+<a id='L32' name='L32'></a>    .handler = &amp;<a href='../D/10795.html' title='Multiple defined in 18 places.'>sigusr1</a>,
+<a id='L33' name='L33'></a>  <em class='brace'>}</em>,
+<a id='L34' name='L34'></a>  <em class='brace'>{</em>
+<a id='L35' name='L35'></a>    .signal = SIGUSR2,
+<a id='L36' name='L36'></a>    .handler = &amp;<a href='../S/66.html#L19' title='Defined at 19 in tests/test-sig.c.'>sigusr2</a>,
+<a id='L37' name='L37'></a>  <em class='brace'>}</em>
+<a id='L38' name='L38'></a><em class='brace'>}</em>;
+<a id='L39' name='L39'></a>
+<a id='L40' name='L40'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L48' title='Defined at 48 in lib/thread.h.'>thread_master</a> *master;
+<a id='L41' name='L41'></a><strong class='reserved'>struct</strong> <a href='../S/279.html#L69' title='Defined at 69 in lib/thread.h.'>thread</a> t;
+<a id='L42' name='L42'></a>
+<a id='L43' name='L43'></a><strong class='reserved'>int</strong>
+<a id='L44' name='L44'></a><a href='../S/862.html#L605' title='Referred from 605 in mplsadmd/old_mplsadmd/mplsadm.c.'>main</a> (<strong class='reserved'>void</strong>)
+<a id='L45' name='L45'></a><em class='brace'>{</em>
+<a id='L46' name='L46'></a>  master = <a href='../S/208.html#L530' title='Defined at 530 in lib/thread.c.'>thread_master_create</a> ();
+<a id='L47' name='L47'></a>  <a href='../D/10791.html' title='Multiple defined in 2 places.'>signal_init</a> (master, <a href='../S/194.html#L24' title='Defined at 24 in lib/memory.h.'>array_size</a>(sigs), sigs);
+<a id='L48' name='L48'></a>  
+<a id='L49' name='L49'></a>  zlog_default = <a href='../S/205.html#L625' title='Defined at 625 in lib/log.c.'>openzlog</a>("testsig", <a href='../S/263.html#L46' title='Defined at 46 in lib/log.h.'>ZLOG_NONE</a>,
+<a id='L50' name='L50'></a>                          LOG_CONS|LOG_NDELAY|LOG_PID, LOG_DAEMON);
+<a id='L51' name='L51'></a>  <a href='../S/205.html#L665' title='Defined at 665 in lib/log.c.'>zlog_set_level</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/263.html#L71' title='Defined at 71 in lib/log.h.'>ZLOG_DEST_SYSLOG</a>, <a href='../S/263.html#L67' title='Defined at 67 in lib/log.h.'>ZLOG_DISABLED</a>);
+<a id='L52' name='L52'></a>  <a href='../S/205.html#L665' title='Defined at 665 in lib/log.c.'>zlog_set_level</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/263.html#L72' title='Defined at 72 in lib/log.h.'>ZLOG_DEST_STDOUT</a>, LOG_DEBUG);
+<a id='L53' name='L53'></a>  <a href='../S/205.html#L665' title='Defined at 665 in lib/log.c.'>zlog_set_level</a> (<a href='../D/2526.html' title='Multiple defined in 2 places.'>NULL</a>, <a href='../S/263.html#L73' title='Defined at 73 in lib/log.h.'>ZLOG_DEST_MONITOR</a>, <a href='../S/263.html#L67' title='Defined at 67 in lib/log.h.'>ZLOG_DISABLED</a>);
+<a id='L54' name='L54'></a>  
+<a id='L55' name='L55'></a>  <strong class='reserved'>while</strong> (<a href='../S/208.html#L1050' title='Defined at 1050 in lib/thread.c.'>thread_fetch</a> (master, &amp;t))
+<a id='L56' name='L56'></a>    <a href='../S/208.html#L1233' title='Defined at 1233 in lib/thread.c.'>thread_call</a> (&amp;t);
+<a id='L57' name='L57'></a>
+<a id='L58' name='L58'></a>  exit (0);
+<a id='L59' name='L59'></a><em class='brace'>}</em>
+</pre>
+<hr />
+<a id='BOTTOM' name='BOTTOM'></a>
+<em class='comment'>/* [&lt;][&gt;]<a href='#L7'>[^]</a><a href='#L44'>[v]</a><a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
+</body>
+</html>
