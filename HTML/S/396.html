@@ -1,111 +1,0 @@
-<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
-<html xmlns='http://www.w3.org/1999/xhtml'>
-<head>
-<title>ldpd/ldp_pdu_setup.h</title>
-<meta name='robots' content='noindex,nofollow' />
-<meta name='generator' content='GLOBAL-6.4' />
-<meta http-equiv='Content-Style-Type' content='text/css' />
-<link rel='stylesheet' type='text/css' href='../style.css' />
-</head>
-<body>
-<a id='TOP' name='TOP'></a><h2 class='header'><a href='../mains.html'>root</a>/<a href='../files/1021.html'>ldpd</a>/ldp_pdu_setup.h</h2>
-<em class='comment'>/* [&lt;][&gt;][^][v][top]<a href='#BOTTOM'>[bottom]</a><a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
-<hr />
-<h2 class='header'><a href='../J/240.html' title='Multiple included from 11 places.'>INCLUDED FROM</a></h2>
-<hr />
-<pre>
-<a id='L1' name='L1'></a>
-<a id='L2' name='L2'></a><em class='comment'>/*</em>
-<a id='L3' name='L3'></a><em class='comment'> *  Copyright (C) James R. Leu 2000</em>
-<a id='L4' name='L4'></a><em class='comment'> *  jleu@mindspring.com</em>
-<a id='L5' name='L5'></a><em class='comment'> *</em>
-<a id='L6' name='L6'></a><em class='comment'> *  This software is covered under the LGPL, for more</em>
-<a id='L7' name='L7'></a><em class='comment'> *  info check out http://www.gnu.org/copyleft/lgpl.html</em>
-<a id='L8' name='L8'></a><em class='comment'> */</em>  
-<a id='L9' name='L9'></a>  
-<a id='L10' name='L10'></a><em class='sharp'>#ifndef</em> <a href='../S/396.html#L11' title='Defined at 11 in ldpd/ldp_pdu_setup.h.'>_PDU_SETUP_</a>
-<a id='L11' name='L11'></a><em class='sharp'>#define</em> <a href='../S/396.html#L10' title='Referred from 10 in ldpd/ldp_pdu_setup.h.'>_PDU_SETUP_</a>
-<a id='L12' name='L12'></a>  
-<a id='L13' name='L13'></a><em class='sharp'>#include</em> "<a href='409.html'>ldp_struct.h</a>"
-<a id='L14' name='L14'></a><em class='sharp'>#include</em> "<a href='401.html'>ldp_nortel.h</a>"
-<a id='L15' name='L15'></a><strong class='reserved'>void</strong> <a href='../S/462.html#L13' title='Defined at 13 in ldpd/ldp_pdu_setup.c.'>setBaseMsgId</a>(<a href='../S/401.html#L453' title='Defined at 453 in ldpd/ldp_nortel.h.'>mplsLdpMsg_t</a> * baseMsg, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> msgId);
-<a id='L16' name='L16'></a><strong class='reserved'>void</strong> <a href='../S/462.html#L18' title='Defined at 18 in ldpd/ldp_pdu_setup.c.'>setupBaseMsg</a>(<a href='../S/401.html#L453' title='Defined at 453 in ldpd/ldp_nortel.h.'>mplsLdpMsg_t</a> * baseMsg, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> type, <strong class='reserved'>int</strong> uBit,
-<a id='L17' name='L17'></a>
-<a id='L18' name='L18'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> msgId);
-<a id='L19' name='L19'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L27' title='Defined at 27 in ldpd/ldp_pdu_setup.c.'>setupChpTlv</a>(<a href='../S/401.html#L852' title='Defined at 852 in ldpd/ldp_nortel.h.'>mplsLdpChpTlv_t</a> * chpTlv, <strong class='reserved'>int</strong> target, <strong class='reserved'>int</strong> request, <strong class='reserved'>int</strong> res,
-<a id='L20' name='L20'></a>
-<a id='L21' name='L21'></a>  <strong class='reserved'>int</strong> holdTime);
-<a id='L22' name='L22'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L41' title='Defined at 41 in ldpd/ldp_pdu_setup.c.'>setupPinningTlv</a>(<a href='../S/401.html#L1531' title='Defined at 1531 in ldpd/ldp_nortel.h.'>mplsLdpPinningTlv_t</a> * pinningTlv, <strong class='reserved'>int</strong> pBit, <strong class='reserved'>int</strong> res);
-<a id='L23' name='L23'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L52' title='Defined at 52 in ldpd/ldp_pdu_setup.c.'>setupResClassTlv</a>(<a href='../S/401.html#L1277' title='Defined at 1277 in ldpd/ldp_nortel.h.'>mplsLdpResClsTlv_t</a> * resClsTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> rsCls);
-<a id='L24' name='L24'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L62' title='Defined at 62 in ldpd/ldp_pdu_setup.c.'>setupPreemptTlv</a>(<a href='../S/401.html#L1259' title='Defined at 1259 in ldpd/ldp_nortel.h.'>mplsLdpPreemptTlv_t</a> * preemptTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> setPrio,
-<a id='L25' name='L25'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> holdPrio, <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> res);
-<a id='L26' name='L26'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L75' title='Defined at 75 in ldpd/ldp_pdu_setup.c.'>addErHop2ErHopTvl</a>(<a href='../S/401.html#L1440' title='Defined at 1440 in ldpd/ldp_nortel.h.'>mplsLdpErTlv_t</a> * erHopTlv, <a href='../S/401.html#L1430' title='Defined at 1430 in ldpd/ldp_nortel.h.'>mplsLdpErHop_t</a> * erHop,
-<a id='L27' name='L27'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>short</strong> type); <strong class='reserved'>int</strong> <a href='../S/462.html#L101' title='Defined at 101 in ldpd/ldp_pdu_setup.c.'>setupErHopTlv</a>(<a href='../S/401.html#L1440' title='Defined at 1440 in ldpd/ldp_nortel.h.'>mplsLdpErTlv_t</a> * erHopTlv);
-<a id='L28' name='L28'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L110' title='Defined at 110 in ldpd/ldp_pdu_setup.c.'>setupTrAddrTlv</a>(<a href='../S/401.html#L862' title='Defined at 862 in ldpd/ldp_nortel.h.'>mplsLdpTrAdrTlv_t</a> * trAddrTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> trAddr);
-<a id='L29' name='L29'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L120' title='Defined at 120 in ldpd/ldp_pdu_setup.c.'>setupCsnTlv</a>(<a href='../S/401.html#L872' title='Defined at 872 in ldpd/ldp_nortel.h.'>mplsLdpCsnTlv_t</a> * csnTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> confSeqNum);
-<a id='L30' name='L30'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L130' title='Defined at 130 in ldpd/ldp_pdu_setup.c.'>setupCspTlv</a>(<a href='../S/401.html#L537' title='Defined at 537 in ldpd/ldp_nortel.h.'>mplsLdpCspTlv_t</a> * cspTlv, <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> keepalive,
-<a id='L31' name='L31'></a>  <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> adv_discp, <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> loop, <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> pvl, <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> mtu,
-<a id='L32' name='L32'></a>  <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> remote_lsraddr, <a href='../S/448.html#L9' title='Defined at 9 in ldpd/mpls_handle_type.h.'>uint16_t</a> remote_labelspace, <a href='../S/448.html#L10' title='Defined at 10 in ldpd/mpls_handle_type.h.'>uint32_t</a> res);
-<a id='L33' name='L33'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L150' title='Defined at 150 in ldpd/ldp_pdu_setup.c.'>addLblRng2AspTlv</a>(<a href='../S/401.html#L612' title='Defined at 612 in ldpd/ldp_nortel.h.'>mplsLdpAspTlv_t</a> * aspTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> minvpi,
-<a id='L34' name='L34'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> minvci, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> maxvpi, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> maxvci);
-<a id='L35' name='L35'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L165' title='Defined at 165 in ldpd/ldp_pdu_setup.c.'>addLblRng2FspTlv</a>(<a href='../S/401.html#L667' title='Defined at 667 in ldpd/ldp_nortel.h.'>mplsLdpFspTlv_t</a> * fspTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> resmin,
-<a id='L36' name='L36'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> len, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> mindlci, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> resmax,
-<a id='L37' name='L37'></a>
-<a id='L38' name='L38'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> maxdlci);
-<a id='L39' name='L39'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L180' title='Defined at 180 in ldpd/ldp_pdu_setup.c.'>setupAspTlv</a>(<a href='../S/401.html#L612' title='Defined at 612 in ldpd/ldp_nortel.h.'>mplsLdpAspTlv_t</a> * aspTlv, <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> merge, <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> direction);
-<a id='L40' name='L40'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L191' title='Defined at 191 in ldpd/ldp_pdu_setup.c.'>setupFspTlv</a>(<a href='../S/401.html#L667' title='Defined at 667 in ldpd/ldp_nortel.h.'>mplsLdpFspTlv_t</a> * fspTlv, <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> merge, <a href='../S/448.html#L8' title='Defined at 8 in ldpd/mpls_handle_type.h.'>uint8_t</a> direction);
-<a id='L41' name='L41'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L202' title='Defined at 202 in ldpd/ldp_pdu_setup.c.'>setupFecTlv</a>(<a href='../S/401.html#L1114' title='Defined at 1114 in ldpd/ldp_nortel.h.'>mplsLdpFecTlv_t</a> * fecTlv);
-<a id='L42' name='L42'></a>
-<a id='L43' name='L43'></a>
-<a id='L44' name='L44'></a><em class='sharp'>#if</em> 0
-<a id='L45' name='L45'></a>  <a href='../S/401.html#L1105' title='Defined at 1105 in ldpd/ldp_nortel.h.'>mplsFecElement_t</a> * <a href='../S/462.html#L215' title='Defined at 215 in ldpd/ldp_pdu_setup.c.'>createFecElemFromFecType</a>(<strong class='reserved'>struct</strong> <a href='../D/7884.html' title='Multiple defined in 2 places.'>mpls_fec</a> *fec);
-<a id='L46' name='L46'></a>
-<a id='L47' name='L47'></a><a href='../S/401.html#L1105' title='Defined at 1105 in ldpd/ldp_nortel.h.'>mplsFecElement_t</a> * <a href='../S/462.html#L226' title='Defined at 226 in ldpd/ldp_pdu_setup.c.'>createFecElemFromRoute</a>(routeT * r);
-<a id='L48' name='L48'></a><strong class='reserved'>void</strong> <a href='../S/462.html#L270' title='Defined at 270 in ldpd/ldp_pdu_setup.c.'>copyLabelType2MapLabelTlv</a>(<strong class='reserved'>struct</strong> <a href='../S/859.html#L142' title='Defined at 142 in mplsadmd/old_mplsadmd/linux/mpls.h.'>mpls_label</a> *label,
-<a id='L49' name='L49'></a>
-<a id='L50' name='L50'></a>  <a href='../S/401.html#L1583' title='Defined at 1583 in ldpd/ldp_nortel.h.'>mplsLdpLblMapMsg_t</a> * lblMap);
-<a id='L51' name='L51'></a><strong class='reserved'>void</strong> <a href='../S/462.html#L300' title='Defined at 300 in ldpd/ldp_pdu_setup.c.'>copyAtmLblTlv2MplsLabel</a>(<a href='../S/401.html#L1160' title='Defined at 1160 in ldpd/ldp_nortel.h.'>mplsLdpAtmLblTlv_t</a> * atmLblTlv,
-<a id='L52' name='L52'></a>
-<a id='L53' name='L53'></a>  <strong class='reserved'>struct</strong> <a href='../S/859.html#L142' title='Defined at 142 in mplsadmd/old_mplsadmd/linux/mpls.h.'>mpls_label</a> *label);
-<a id='L54' name='L54'></a><strong class='reserved'>void</strong> <a href='../S/462.html#L327' title='Defined at 327 in ldpd/ldp_pdu_setup.c.'>copyFrLblTlv2MplsLabel</a>(<a href='../S/401.html#L1187' title='Defined at 1187 in ldpd/ldp_nortel.h.'>mplsLdpFrLblTlv_t</a> * frLblTlv,
-<a id='L55' name='L55'></a>
-<a id='L56' name='L56'></a>  <strong class='reserved'>struct</strong> <a href='../S/859.html#L142' title='Defined at 142 in mplsadmd/old_mplsadmd/linux/mpls.h.'>mpls_label</a> *label);
-<a id='L57' name='L57'></a><strong class='reserved'>void</strong> <a href='../S/462.html#L352' title='Defined at 352 in ldpd/ldp_pdu_setup.c.'>copyGenLblTlv2MplsLabel</a>(<a href='../S/401.html#L1132' title='Defined at 1132 in ldpd/ldp_nortel.h.'>mplsLdpGenLblTlv_t</a> * genLblTlv,
-<a id='L58' name='L58'></a>
-<a id='L59' name='L59'></a>  <strong class='reserved'>struct</strong> <a href='../S/859.html#L142' title='Defined at 142 in mplsadmd/old_mplsadmd/linux/mpls.h.'>mpls_label</a> *label); 
-<a id='L60' name='L60'></a><em class='sharp'>#endif</em> <em class='comment'>/*  */</em>
-<a id='L61' name='L61'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L240' title='Defined at 240 in ldpd/ldp_pdu_setup.c.'>addFecElem2FecTlv</a>(<a href='../S/401.html#L1114' title='Defined at 1114 in ldpd/ldp_nortel.h.'>mplsLdpFecTlv_t</a> * fecTlv, <a href='../S/401.html#L1105' title='Defined at 1105 in ldpd/ldp_nortel.h.'>mplsFecElement_t</a> * elem);
-<a id='L62' name='L62'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L311' title='Defined at 311 in ldpd/ldp_pdu_setup.c.'>setupAtmLblTlv</a>(<a href='../S/401.html#L1160' title='Defined at 1160 in ldpd/ldp_nortel.h.'>mplsLdpAtmLblTlv_t</a> * atmLblTlv, <strong class='reserved'>int</strong> res, <strong class='reserved'>int</strong> v,
-<a id='L63' name='L63'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> vpi, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> vci);
-<a id='L64' name='L64'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L337' title='Defined at 337 in ldpd/ldp_pdu_setup.c.'>setupFrLblTlv</a>(<a href='../S/401.html#L1187' title='Defined at 1187 in ldpd/ldp_nortel.h.'>mplsLdpFrLblTlv_t</a> * frLblTlv, <strong class='reserved'>int</strong> res, <strong class='reserved'>int</strong> len,
-<a id='L65' name='L65'></a>
-<a id='L66' name='L66'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> dlci);
-<a id='L67' name='L67'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L362' title='Defined at 362 in ldpd/ldp_pdu_setup.c.'>setupGenLblTlv</a>(<a href='../S/401.html#L1132' title='Defined at 1132 in ldpd/ldp_nortel.h.'>mplsLdpGenLblTlv_t</a> * genLblTlv, <strong class='reserved'>int</strong> label);
-<a id='L68' name='L68'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L372' title='Defined at 372 in ldpd/ldp_pdu_setup.c.'>setupHopCountTlv</a>(<a href='../S/401.html#L1205' title='Defined at 1205 in ldpd/ldp_nortel.h.'>mplsLdpHopTlv_t</a> * hopCountTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> hopCount);
-<a id='L69' name='L69'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L382' title='Defined at 382 in ldpd/ldp_pdu_setup.c.'>setupPathTlv</a>(<a href='../S/401.html#L1229' title='Defined at 1229 in ldpd/ldp_nortel.h.'>mplsLdpPathTlv_t</a> * pathTlv);
-<a id='L70' name='L70'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L391' title='Defined at 391 in ldpd/ldp_pdu_setup.c.'>addLsrId2PathTlv</a>(<a href='../S/401.html#L1229' title='Defined at 1229 in ldpd/ldp_nortel.h.'>mplsLdpPathTlv_t</a> * pathTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> lsrId);
-<a id='L71' name='L71'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L400' title='Defined at 400 in ldpd/ldp_pdu_setup.c.'>setupAddrTlv</a>(<a href='../S/401.html#L944' title='Defined at 944 in ldpd/ldp_nortel.h.'>mplsLdpAdrTlv_t</a> * addrTlv);
-<a id='L72' name='L72'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L410' title='Defined at 410 in ldpd/ldp_pdu_setup.c.'>addAddrElem2AddrTlv</a>(<a href='../S/401.html#L944' title='Defined at 944 in ldpd/ldp_nortel.h.'>mplsLdpAdrTlv_t</a> * addrTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> addr);
-<a id='L73' name='L73'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L419' title='Defined at 419 in ldpd/ldp_pdu_setup.c.'>setupStatusTlv</a>(<a href='../S/401.html#L736' title='Defined at 736 in ldpd/ldp_nortel.h.'>mplsLdpStatusTlv_t</a> * statTlv, <strong class='reserved'>int</strong> fatal, <strong class='reserved'>int</strong> forward,
-<a id='L74' name='L74'></a>  <strong class='reserved'>int</strong> status, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> msgId, <strong class='reserved'>int</strong> msgType);
-<a id='L75' name='L75'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L434' title='Defined at 434 in ldpd/ldp_pdu_setup.c.'>setupExStatusTlv</a>(<a href='../S/401.html#L746' title='Defined at 746 in ldpd/ldp_nortel.h.'>mplsLdpExStatusTlv_t</a> * exStatus, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> value);
-<a id='L76' name='L76'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L444' title='Defined at 444 in ldpd/ldp_pdu_setup.c.'>setupRetPduTlv</a>(<a href='../S/401.html#L757' title='Defined at 757 in ldpd/ldp_nortel.h.'>mplsLdpRetPduTlv_t</a> * retPduTvl, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> len,
-<a id='L77' name='L77'></a>  <a href='../S/401.html#L413' title='Defined at 413 in ldpd/ldp_nortel.h.'>mplsLdpHeader_t</a> * hdr, <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
-<a id='L78' name='L78'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L456' title='Defined at 456 in ldpd/ldp_pdu_setup.c.'>setupRetMsgTlv</a>(<a href='../S/401.html#L769' title='Defined at 769 in ldpd/ldp_nortel.h.'>mplsLdpRetMsgTlv_t</a> * retMsgTlv, <strong class='reserved'>unsigned</strong> type, <strong class='reserved'>unsigned</strong> len,
-<a id='L79' name='L79'></a>
-<a id='L80' name='L80'></a>  <strong class='reserved'>void</strong> *<a href='../S/513.html#L41' title='Defined at 41 in isisd/dict.c.'>data</a>);
-<a id='L81' name='L81'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L469' title='Defined at 469 in ldpd/ldp_pdu_setup.c.'>setupLspidTlv</a>(<a href='../S/401.html#L791' title='Defined at 791 in ldpd/ldp_nortel.h.'>mplsLdpLspIdTlv_t</a> * lspidTlv, <strong class='reserved'>int</strong> res,
-<a id='L82' name='L82'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> localCrlspId, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> routerId);
-<a id='L83' name='L83'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L482' title='Defined at 482 in ldpd/ldp_pdu_setup.c.'>setupTrafficTlv</a>(<a href='../S/401.html#L1506' title='Defined at 1506 in ldpd/ldp_nortel.h.'>mplsLdpTrafficTlv_t</a> * trafficTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> freq,
-<a id='L84' name='L84'></a>  <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> res, <strong class='reserved'>unsigned</strong> <strong class='reserved'>char</strong> weight, <strong class='reserved'>float</strong> pdr, <strong class='reserved'>float</strong> pbs, <strong class='reserved'>float</strong> cdr,
-<a id='L85' name='L85'></a>  <strong class='reserved'>float</strong> cbs, <strong class='reserved'>float</strong> ebs);
-<a id='L86' name='L86'></a><strong class='reserved'>int</strong> <a href='../S/462.html#L508' title='Defined at 508 in ldpd/ldp_pdu_setup.c.'>setupLblMsgIdTlv</a>(<a href='../S/401.html#L1239' title='Defined at 1239 in ldpd/ldp_nortel.h.'>mplsLdpLblMsgIdTlv_t</a> * lblMsgIdTlv, <strong class='reserved'>unsigned</strong> <strong class='reserved'>int</strong> msgId);
-<a id='L87' name='L87'></a>
-<a id='L88' name='L88'></a>
-<a id='L89' name='L89'></a><em class='sharp'>#endif</em> <em class='comment'>/*  */</em>
-</pre>
-<hr />
-<a id='BOTTOM' name='BOTTOM'></a>
-<em class='comment'>/* [&lt;][&gt;][^][v]<a href='#TOP'>[top]</a>[bottom]<a href='../mains.html'>[index]</a><a href='../help.html'>[help]</a> */</em>
-</body>
-</html>
