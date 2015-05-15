@@ -587,7 +587,7 @@ isis_circuit_update_all_srmflags (struct isis_circuit *circuit, int is_set)
 }
 
 int
-isis_circuit_up (struct isis_circuit *circuit)
+isis_circuit_up (struct isis_circuit *circuit, int PE)
 {
   int retv, timer, precision;
 
@@ -657,30 +657,28 @@ trill_area_nickname(circuit->area, htons(circuit->area->trill->nick.name));
        */
 
       /* 8.4.1 a) commence sending of IIH PDUs */
+       if(!PE) {
+        if (circuit->is_type & IS_LEVEL_1) {
+            thread_add_event (master, send_lan_l1_hello, circuit, 0);
+            circuit->u.bc.lan_neighs[0] = list_new ();
+          }
 
-      if (circuit->is_type & IS_LEVEL_1)
-        {
-          thread_add_event (master, send_lan_l1_hello, circuit, 0);
-          circuit->u.bc.lan_neighs[0] = list_new ();
-        }
-
-      if (circuit->is_type & IS_LEVEL_2)
-        {
-          thread_add_event (master, send_lan_l2_hello, circuit, 0);
-          circuit->u.bc.lan_neighs[1] = list_new ();
-        }
-
+        if (circuit->is_type & IS_LEVEL_2) {
+            thread_add_event (master, send_lan_l2_hello, circuit, 0);
+            circuit->u.bc.lan_neighs[1] = list_new ();
+          }
       /* 8.4.1 b) FIXME: solicit ES - 8.4.6 */
       /* 8.4.1 c) FIXME: listen for ESH PDUs */
 
       /* 8.4.1 d) */
       /* dr election will commence in... */
-      if (circuit->is_type & IS_LEVEL_1)
-        THREAD_TIMER_ON (master, circuit->u.bc.t_run_dr[0], isis_run_dr_l1,
-            circuit, 2 * circuit->hello_interval[0]);
-      if (circuit->is_type & IS_LEVEL_2)
-        THREAD_TIMER_ON (master, circuit->u.bc.t_run_dr[1], isis_run_dr_l2,
-            circuit, 2 * circuit->hello_interval[1]);
+        if (circuit->is_type & IS_LEVEL_1)
+          THREAD_TIMER_ON (master, circuit->u.bc.t_run_dr[0], isis_run_dr_l1,
+              circuit, 2 * circuit->hello_interval[0]);
+        if (circuit->is_type & IS_LEVEL_2)
+          THREAD_TIMER_ON (master, circuit->u.bc.t_run_dr[1], isis_run_dr_l2,
+              circuit, 2 * circuit->hello_interval[1]);
+      }
     }
   else
     {
@@ -688,28 +686,31 @@ trill_area_nickname(circuit->area, htons(circuit->area->trill->nick.name));
        * for a ptp IF
        */
       circuit->u.p2p.neighbor = NULL;
-      thread_add_event (master, send_p2p_hello, circuit, 0);
+      if(!PE)
+        thread_add_event (master, send_p2p_hello, circuit, 0);
     }
 
-  /* initializing PSNP timers */
-  if (circuit->is_type & IS_LEVEL_1) {
-    timer = isis_jitter (circuit->psnp_interval[0], PSNP_JITTER, &precision);
-    if (precision == ISIS_S_PRECISION)
-      THREAD_TIMER_ON (master, circuit->t_send_psnp[0], send_l1_psnp, circuit,
-                     timer);
-    else
-      THREAD_TIMER_MSEC_ON (master, circuit->t_send_psnp[0], send_l1_psnp,
-			    circuit, timer);
+  if(!PE){
+    /* initializing PSNP timers */
+    if (circuit->is_type & IS_LEVEL_1) {
+      timer = isis_jitter (circuit->psnp_interval[0], PSNP_JITTER, &precision);
+      if (precision == ISIS_S_PRECISION)
+        THREAD_TIMER_ON (master, circuit->t_send_psnp[0], send_l1_psnp, circuit,
+                       timer);
+      else
+        THREAD_TIMER_MSEC_ON (master, circuit->t_send_psnp[0], send_l1_psnp,
+  			    circuit, timer);
 
-  }
-  if (circuit->is_type & IS_LEVEL_2) {
-    timer = isis_jitter (circuit->psnp_interval[1], PSNP_JITTER, &precision);
-    if (precision == ISIS_S_PRECISION)
-      THREAD_TIMER_ON (master, circuit->t_send_psnp[1], send_l2_psnp, circuit,
-                     timer);
-    else
-      THREAD_TIMER_MSEC_ON (master, circuit->t_send_psnp[1], send_l2_psnp,
-			    circuit, timer);
+    }
+    if (circuit->is_type & IS_LEVEL_2) {
+      timer = isis_jitter (circuit->psnp_interval[1], PSNP_JITTER, &precision);
+      if (precision == ISIS_S_PRECISION)
+        THREAD_TIMER_ON (master, circuit->t_send_psnp[1], send_l2_psnp, circuit,
+                       timer);
+      else
+        THREAD_TIMER_MSEC_ON (master, circuit->t_send_psnp[1], send_l2_psnp,
+  			    circuit, timer);
+    }
   }
   /* unified init for circuits; ignore warnings below this level */
   retv = isis_sock_init (circuit);
@@ -726,13 +727,15 @@ trill_area_nickname(circuit->area, htons(circuit->area->trill->nick.name));
   if (circuit->snd_stream == NULL)
     circuit->snd_stream = stream_new (ISO_MTU (circuit));
 
-#ifdef GNU_LINUX
-  THREAD_READ_ON (master, circuit->t_read, isis_receive, circuit,
-                  circuit->fd);
-#else
-  THREAD_TIMER_ON (master, circuit->t_read, isis_receive, circuit,
-                   circuit->fd);
-#endif
+  if(!PE){
+    #ifdef GNU_LINUX
+      THREAD_READ_ON (master, circuit->t_read, isis_receive, circuit,
+                      circuit->fd);
+    #else
+      THREAD_TIMER_ON (master, circuit->t_read, isis_receive, circuit,
+                       circuit->fd);
+    #endif
+  }
 
   circuit->lsp_queue = list_new ();
   circuit->lsp_queue_last_cleared = time (NULL);
@@ -1339,6 +1342,57 @@ DEFUN (trill_router_trill,
   vty->index = ifp;
   return CMD_SUCCESS;
 }
+
+DEFUN (trillpe_router_trill,
+       trillpe_router_trill_cmd,
+       "trillpe router trill WORD",
+       "Interface TRILLPE config commands\n"
+       "TRILLPE router interface commands\n"
+       "TRILLPE Routing\n"
+       "Routing process tag\n")
+{
+  struct isis_circuit *circuit;
+  struct interface *ifp;
+  struct isis_area *area;
+  ifp = (struct interface *) vty->index;
+  assert (ifp);
+  circuit = circuit_scan_by_ifp (ifp);
+  if (isis_area_get (vty, argv[0]) != CMD_SUCCESS)
+  {
+    vty_out (vty, "Can't find ISIS instance %s", VTY_NEWLINE);
+    return CMD_ERR_NO_MATCH;
+  }
+  area = vty->index;
+  circuit = isis_csm_state_change (ISIS_PE_ENABLE, circuit, area);
+  isis_circuit_if_bind (circuit, ifp);
+  circuit->priority[TRILL_ISIS_LEVEL - 1] = area->trill->nick.priority;
+  vty->node = INTERFACE_NODE;
+  vty->index = ifp;
+  return CMD_SUCCESS;
+}
+
+DEFUN (trillpe_lsp,
+       trillpe_lsp_cmd,
+       "trillpe lsp",
+       "Interface TRILLPE lsp commands\n"
+       "TRILLPE lsp commands\n"
+       "TRILLPE Routing\n"
+       "Routing process tag\n")
+{
+  struct isis_circuit *circuit;
+  struct interface *ifp;
+  struct isis_area *area;
+  ifp = (struct interface *) vty->index;
+  assert (ifp);
+  circuit = circuit_scan_by_ifp (ifp);
+
+  lsp_generate_pe (circuit, 1);
+
+  vty->node = INTERFACE_NODE;
+  vty->index = ifp;
+  return CMD_SUCCESS;
+}
+
 #endif
 #ifdef HAVE_IPV6
 DEFUN (ipv6_router_isis,
@@ -2804,6 +2858,8 @@ isis_circuit_init ()
 
 #ifdef HAVE_TRILL
   install_element (INTERFACE_NODE, &trill_router_trill_cmd);
+  install_element (INTERFACE_NODE, &trillpe_router_trill_cmd);
+  install_element (INTERFACE_NODE, &trillpe_lsp_cmd);
 #endif
   install_element (INTERFACE_NODE, &isis_passive_cmd);
   install_element (INTERFACE_NODE, &no_isis_passive_cmd);

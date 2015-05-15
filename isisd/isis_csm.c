@@ -75,7 +75,9 @@ struct isis_circuit *
 isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 {
   int old_state;
+  int PE;
 
+  PE = circuit ? circuit->PE : 0;
   old_state = circuit ? circuit->state : C_STATE_NA;
   if (isis->debugs & DEBUG_EVENTS)
     zlog_debug ("CSM_EVENT: %s", EVENT2STR (event));
@@ -91,6 +93,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	case ISIS_ENABLE:
 	  circuit = isis_circuit_new ();
 	  isis_circuit_configure (circuit, (struct isis_area *) arg);
+	  circuit->PE = 0;
 	  circuit->state = C_STATE_CONF;
 	  break;
 	case IF_UP_FROM_Z:
@@ -103,6 +106,12 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  break;
 	case IF_DOWN_FROM_Z:
 	  break;
+	case ISIS_PE_ENABLE:
+	  circuit = isis_circuit_new ();
+	  isis_circuit_configure (circuit, (struct isis_area *) arg);
+	  circuit->PE = 1;
+	  circuit->state = C_STATE_CONF;
+	  break;
 	}
       break;
     case C_STATE_INIT:
@@ -111,7 +120,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	{
 	case ISIS_ENABLE:
 	  isis_circuit_configure (circuit, (struct isis_area *) arg);
-	  if (isis_circuit_up (circuit) != ISIS_OK)
+	  if (isis_circuit_up (circuit, PE) != ISIS_OK)
 	    {
 	      isis_circuit_deconfigure (circuit, (struct isis_area *) arg);
 	      break;
@@ -142,7 +151,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  break;
 	case IF_UP_FROM_Z:
 	  isis_circuit_if_add (circuit, (struct interface *) arg);
-	  if (isis_circuit_up (circuit) != ISIS_OK)
+	  if (isis_circuit_up (circuit, PE) != ISIS_OK)
             {
               isis_circuit_if_del (circuit, (struct interface *) arg);
 	      break;

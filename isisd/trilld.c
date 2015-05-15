@@ -430,17 +430,10 @@ int tlv_add_trill_nickname(struct trill_nickname *nick_info,
   if (rc != ISIS_OK)
     return rc;
 
-  tflags = TRILL_FLAGS_V0;
-  rc = add_subtlv (RCSTLV_TRILL_FLAGS, sizeof (tflags),
-		   (u_char *)&tflags,
-		   tlvstart, stream);
-  if (rc != ISIS_OK)
-    return rc;
   tn.tn_priority = nick_info->priority;
+  tn.tn_trootpri = area->trill->root_priority;
   tn.tn_nickname = nick_info->name;
-  tn.tn_trootpri = htons(area->trill->root_priority);
-  /* FIXME */
-  tn.tn_treecount = htons(0);
+  printf("nickname: %d\n", tn.tn_nickname);
   rc = add_subtlv (RCSTLV_TRILL_NICKNAME,
 		   sizeof (struct trill_nickname_subtlv), (u_char *)&tn,
 		   tlvstart,
@@ -609,7 +602,7 @@ static int trill_parse_lsp (struct isis_lsp *lsp, nickinfo_t *recvd_nick)
 	      recvd_nick->nick.priority = tn->tn_priority;
 	      recvd_nick->nick.name = tn->tn_nickname;
 	      recvd_nick->root_priority = ntohs(tn->tn_trootpri);
-	      recvd_nick->root_count = ntohs(tn->tn_treecount);
+	      //recvd_nick->root_count = ntohs(tn->tn_treecount);
 	      nick_recvd = true;
 	    } else {
 	      if (nick_recvd)
@@ -701,6 +694,7 @@ static void trill_create_nickfwdtable(struct isis_area *area)
       firstnode = false;
       continue;
     }
+	printf("vertex->type: %d\n", vertex->type);
     if (
       vertex->type != VTYPE_NONPSEUDO_IS &&
       vertex->type != VTYPE_NONPSEUDO_TE_IS
@@ -965,6 +959,8 @@ static void trill_publish_nick(struct isis_area *area, int fd,
 
     printf("tni_nick: %x\n tni_adjsnpa: %x\n tni_linkid: %u\n tni_adjcount: %u\n tni_dtrootcount: %u\n", ni->tni_nick, ni->tni_adjsnpa, ni->tni_linkid, ni->tni_adjcount, ni->tni_dtrootcount);
 
+    printf("msg: %p\n", nlmsg_data(msg));
+
     nla_put(msg,TRILL_ATTR_BIN, new_ni_size, ni);
     trnlhdr->ifindex = port_id;
     trnlhdr->total_length = sizeof(msg);
@@ -1017,7 +1013,6 @@ static void trill_publish (struct isis_area *area)
   }
 
   if (area->trill->fwdtbl != NULL){
-    printf("area->trill->fwdtbl != NULL\n");
     printf("circuit->interface->ifindex = %p\n", circuit->interface->ifindex);
     for (ALL_LIST_ELEMENTS_RO (area->trill->fwdtbl, node, fwdnode))
       trill_publish_nick(area, circuit->fd, fwdnode->dest_nick,
@@ -1238,6 +1233,7 @@ static void trill_nickdb_update ( struct isis_area *area, nickinfo_t *newnick)
    * the dictionary nodes.
    */
   if (res == DUPLICATE || res == PRIORITY_CHANGE_ONLY) {
+    printf("trill_update_nickinfo (tnode, newnick);\n");
     trill_update_nickinfo (tnode, newnick);
     return;
   }
@@ -1246,6 +1242,8 @@ static void trill_nickdb_update ( struct isis_area *area, nickinfo_t *newnick)
    */
   if (res == NICK_CHANGED) {
     if (isis->debugs & DEBUG_TRILL_EVENTS)
+      printf("ISIS TRILL storing new nick:%d from sysID:%s",
+                 ntohs(tnode->info.nick.name), sysid_print(tnode->info.sysid));
       zlog_debug("ISIS TRILL storing new nick:%d from sysID:%s",
 		 ntohs(tnode->info.nick.name), sysid_print(tnode->info.sysid));
       /* Delete the current nick in from our database */
@@ -1306,9 +1304,6 @@ static void trill_nick_recv(struct isis_area *area, nickinfo_t *other_nick)
     zlog_info ("ISIS TRILL nick %d doesn't support V0 headers; flags %02X",
 	       ntohs (other_nick->nick.name),
 	       other_nick->flags);
-    printf("ISIS TRILL nick %d doesn't support V0 headers; flags %02X",
-	       ntohs (other_nick->nick.name),
-	       other_nick->flags);
     return;
   }
   /* Check for conflict with our own nickname */
@@ -1317,7 +1312,6 @@ static void trill_nick_recv(struct isis_area *area, nickinfo_t *other_nick)
      * system ID is lower, if not we keep our nickname
      */
     if (!(nickchange = trill_nick_conflict (&ournick, other_nick))){
-      printf("if (!(nickchange = trill_nick_conflict (&ournick, other_nick)))\n");
 	return;
 	}
   }
@@ -1416,11 +1410,11 @@ void trill_parse_router_capability_tlvs (struct isis_area *area,
   if (trill_parse_lsp (lsp, &recvd_nick)) {
       /* Parsed LSP correctly but process only if nick is not unknown */
       if (recvd_nick.nick.name != RBRIDGE_NICKNAME_NONE){
-	 printf("nick-name: %X\nnick-prio: %X\nnick-pad: %u\nsysid: %X\nflags: %u\ndt_roots: %p\nroot-prio: %u\nroot-count: %u\nvni_count: %u\nsupported_vni: %p\n",
+	 printf("nick-name: %X, nick-prio: %X, nick-pad: %u, sysid: %hhu, flags: %u, dt_roots: %p, root-prio: %u, root-count: %u, vni_count: %u, supported_vni: %p\n",
 		 recvd_nick.nick.name,
 		 recvd_nick.nick.priority,
 		 recvd_nick.nick.pad,
-		 recvd_nick.sysid[0],
+		 recvd_nick.sysid,
 		 recvd_nick.flags,
 		 recvd_nick.dt_roots,
 		 recvd_nick.root_priority,
@@ -1839,27 +1833,46 @@ DEFUN (add_remote_trill_nick,
 {
 	printf("add remote RB nickname init\n");
 	struct isis_area *area;
+	uint16_t nick;
+	struct listnode *node;
+	struct isis_circuit *circuit;
 	
 	area = vty->index;
 	assert (area);
 	assert (area->trill);
 	
+
+	for (ALL_LIST_ELEMENTS_RO(area->circuit_list, node, circuit)){
+		vty_out (vty, "%sInterface %s:%s", VTY_NEWLINE,
+             		circuit->interface->name, VTY_NEWLINE);
+		lsp_generate_pseudo2 (circuit, 1);
+	}
+
+	/*isis_new_adj (argv[2], ssnpa, 1, circuit);
+
+	VTY_GET_INTEGER_RANGE ("TRILL nickname", nick, argv[0],
+                         RBRIDGE_NICKNAME_MIN + 1, RBRIDGE_NICKNAME_MAX);
+	VTY_GET_INTEGER_RANGE ("TRILL nickname priority", prio, argv[1],
+                         MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
+	strncpy( (char*) rsysid, argv[2], 6);
+	printf("argv[0]:%s, argv[1]: %s, argv[2]: %s\n",argv[0],argv[1],argv[2]);
 	nickinfo_t remote_nick;
 	memset(&remote_nick, 0, sizeof(nickinfo_t));
-	memset(&remote_nick.sysid, 0, ISIS_SYS_ID_LEN);
+	memset(&remote_nick.sysid, rsysid, ISIS_SYS_ID_LEN);
 	
 	remote_nick.root_priority = TRILL_DFLT_ROOT_PRIORITY;
 	remote_nick.dt_roots = list_new();
 	remote_nick.supported_vni = list_new();
 	remote_nick.flags = 128;
 
-	remote_nick.nick.name = atoi(argv[0]);
-	remote_nick.nick.priority = atoi(argv[1]);
+	memset(&remote_nick.nick, 0, sizeof(struct trill_nickname));
+	remote_nick.nick.name = nick;
+	remote_nick.nick.priority = prio;
 	remote_nick.nick.pad = 0;
-	printf("trill_nick_recv init\n");
+
 	trill_nick_recv(area, &remote_nick);
-	trill_process_spf (area);
-	printf("trill_nick_recv_finish\n");
+	isis_spf_schedule (area, 1);*/
+	//trill_process_spf (area);
 	return CMD_SUCCESS;
 }
 

@@ -133,6 +133,8 @@ struct isis_circuit
   u_int32_t ctrl_pdus_txed;	/* controlPDUsSent */
   u_int32_t desig_changes[2];	/* lanLxDesignatedIntermediateSystemChanges */
   u_int32_t rej_adjacencies;	/* rejectedAdjacencies */
+
+  int PE;
 };
 
 void isis_circuit_init (void);
@@ -157,7 +159,7 @@ void isis_circuit_add_addr (struct isis_circuit *circuit,
 			    struct connected *conn);
 void isis_circuit_del_addr (struct isis_circuit *circuit,
 			    struct connected *conn);
-int isis_circuit_up (struct isis_circuit *circuit);
+int isis_circuit_up (struct isis_circuit *circuit, int PE);
 void isis_circuit_down (struct isis_circuit *);
 void circuit_update_nlpids (struct isis_circuit *circuit);
 void isis_circuit_print_vty (struct isis_circuit *circuit, struct vty *vty,

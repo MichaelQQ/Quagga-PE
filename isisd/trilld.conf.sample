@@ -4,14 +4,16 @@
 !
 hostname i7i7
 password foo
-log file /var/log/trill.log
+!log file /var/log/trill.log
 log syslog warnings
 log stdout
 
 router isis DEAD
-        net 00.0050.bae3.3b8e.00
+        net 00.0040.f454.dc82.00
 trill instance br0
-trill nickname 1001
-trill nickname priority 10
-!interface eth0
-!        trill router trill DEAD
+trill nickname 15
+trill nickname priority 15
+interface eth0
+        trill router trill DEAD
+interface mpls0
+	trillpe router trill DEAD

@@ -927,6 +927,7 @@ process_lan_hello (int level, struct isis_circuit *circuit, u_char * ssnpa)
   hdr.prio = stream_getc (circuit->rcv_stream);
   stream_get (hdr.lan_id, circuit->rcv_stream, ISIS_SYS_ID_LEN + 1);
 
+
   if (hdr.pdu_len < (ISIS_FIXED_HDR_LEN + ISIS_LANHELLO_HDRLEN) ||
       hdr.pdu_len > ISO_MTU(circuit) ||
       hdr.pdu_len > stream_get_endp (circuit->rcv_stream))
@@ -1201,6 +1202,8 @@ out:
 
   return retval;
 }
+
+
 
 /*
  * Process Level 1/2 Link State

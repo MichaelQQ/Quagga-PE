@@ -39,6 +39,7 @@
 #define IF_UP_FROM_Z   2
 #define ISIS_DISABLE   3
 #define IF_DOWN_FROM_Z 4
+#define ISIS_PE_ENABLE 5
 
 struct isis_circuit *isis_csm_state_change (int event,
 					    struct isis_circuit *circuit,

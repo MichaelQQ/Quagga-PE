@@ -527,9 +527,8 @@ struct port_capability_tlv
 struct trill_nickname_subtlv
 {
     uint8_t tn_priority;
-    uint16_t tn_nickname;
     uint16_t tn_trootpri;
-    uint16_t tn_treecount;
+    uint16_t tn_nickname;
 } __attribute__ ((packed));
 
 #ifdef __SUNPRO_C
