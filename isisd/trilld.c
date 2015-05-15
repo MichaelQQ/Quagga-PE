@@ -602,7 +602,6 @@ static int trill_parse_lsp (struct isis_lsp *lsp, nickinfo_t *recvd_nick)
 	      recvd_nick->nick.priority = tn->tn_priority;
 	      recvd_nick->nick.name = tn->tn_nickname;
 	      recvd_nick->root_priority = ntohs(tn->tn_trootpri);
-	      //recvd_nick->root_count = ntohs(tn->tn_treecount);
 	      nick_recvd = true;
 	    } else {
 	      if (nick_recvd)
@@ -1410,15 +1409,15 @@ void trill_parse_router_capability_tlvs (struct isis_area *area,
   if (trill_parse_lsp (lsp, &recvd_nick)) {
       /* Parsed LSP correctly but process only if nick is not unknown */
       if (recvd_nick.nick.name != RBRIDGE_NICKNAME_NONE){
-	 printf("nick-name: %X, nick-prio: %X, nick-pad: %u, sysid: %hhu, flags: %u, dt_roots: %p, root-prio: %u, root-count: %u, vni_count: %u, supported_vni: %p\n",
+	 printf("nick-name: %X, nick-prio: %X, nick-pad: %u, sysid: %hhu, flags: %u, dt_roots: %p, root_count: %x, root-prio: %u, vni_count: %u, supported_vni: %p\n",
 		 recvd_nick.nick.name,
 		 recvd_nick.nick.priority,
 		 recvd_nick.nick.pad,
 		 recvd_nick.sysid,
 		 recvd_nick.flags,
 		 recvd_nick.dt_roots,
+     recvd_nick.root_count,
 		 recvd_nick.root_priority,
-		 recvd_nick.root_count,
 		 recvd_nick.vni_count,
 		 recvd_nick.supported_vni);
          trill_nick_recv (area, &recvd_nick);
@@ -1826,56 +1825,6 @@ DEFUN (no_trill_rootcount,
 	return CMD_SUCCESS;
 }
 
-DEFUN (add_remote_trill_nick,
-	   add_remote_trill_nick_cmd,
-	   "add remote trill nick <1-65534> <1-127>",
-	   "add remote RB's nickname")
-{
-	printf("add remote RB nickname init\n");
-	struct isis_area *area;
-	uint16_t nick;
-	struct listnode *node;
-	struct isis_circuit *circuit;
-	
-	area = vty->index;
-	assert (area);
-	assert (area->trill);
-	
-
-	for (ALL_LIST_ELEMENTS_RO(area->circuit_list, node, circuit)){
-		vty_out (vty, "%sInterface %s:%s", VTY_NEWLINE,
-             		circuit->interface->name, VTY_NEWLINE);
-		lsp_generate_pseudo2 (circuit, 1);
-	}
-
-	/*isis_new_adj (argv[2], ssnpa, 1, circuit);
-
-	VTY_GET_INTEGER_RANGE ("TRILL nickname", nick, argv[0],
-                         RBRIDGE_NICKNAME_MIN + 1, RBRIDGE_NICKNAME_MAX);
-	VTY_GET_INTEGER_RANGE ("TRILL nickname priority", prio, argv[1],
-                         MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
-	strncpy( (char*) rsysid, argv[2], 6);
-	printf("argv[0]:%s, argv[1]: %s, argv[2]: %s\n",argv[0],argv[1],argv[2]);
-	nickinfo_t remote_nick;
-	memset(&remote_nick, 0, sizeof(nickinfo_t));
-	memset(&remote_nick.sysid, rsysid, ISIS_SYS_ID_LEN);
-	
-	remote_nick.root_priority = TRILL_DFLT_ROOT_PRIORITY;
-	remote_nick.dt_roots = list_new();
-	remote_nick.supported_vni = list_new();
-	remote_nick.flags = 128;
-
-	memset(&remote_nick.nick, 0, sizeof(struct trill_nickname));
-	remote_nick.nick.name = nick;
-	remote_nick.nick.priority = prio;
-	remote_nick.nick.pad = 0;
-
-	trill_nick_recv(area, &remote_nick);
-	isis_spf_schedule (area, 1);*/
-	//trill_process_spf (area);
-	return CMD_SUCCESS;
-}
-
 void trill_init()
 {
   install_element (ISIS_NODE, &trill_nickname_cmd);
@@ -1885,7 +1834,6 @@ void trill_init()
   install_element (ISIS_NODE, &trill_nickname_priority_cmd);
   install_element (ISIS_NODE, &no_trill_nickname_priority_cmd);
   install_element (ISIS_NODE, &trill_instance_cmd);
-  install_element (ISIS_NODE, &add_remote_trill_nick_cmd);
 
   install_element (VIEW_NODE, &show_trill_nickdatabase_cmd);
   install_element (VIEW_NODE, &show_trill_circuits_cmd);

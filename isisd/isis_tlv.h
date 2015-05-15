@@ -373,7 +373,7 @@
 #define TRILL_FLAGS_V2  0x20
 #define TRILL_FLAGS_V3  0x10
 
-#define TRILL_NICKNAME_SUBTLV_MIN_LEN 7          /* Len of TRILL nickname sub-TLV value field */
+#define TRILL_NICKNAME_SUBTLV_MIN_LEN 5          /* Len of TRILL nickname sub-TLV value field */
 #define TRILL_VLANSNBRIROOTS_SUBTLV_MIN_LEN 4    /* Len of variable len TRILL VLANs and Bridge Roots sub-TLV value field */
 #define PCSTLV_VLANS_LEN         4               /* Exact len of port capability VLANs sub-TLV */
 #define PCSTLV_VLANFWDERS_MIN_LEN 6              /* Min. len of each appointed forwarders sub-TLV */
