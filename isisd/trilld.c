@@ -1299,12 +1299,7 @@ static void trill_nick_recv(struct isis_area *area, nickinfo_t *other_nick)
 	      sysid_print(other_nick->sysid) );
     return;
   }
-  if (!(other_nick->flags & TRILL_FLAGS_V0)) {
-    zlog_info ("ISIS TRILL nick %d doesn't support V0 headers; flags %02X",
-	       ntohs (other_nick->nick.name),
-	       other_nick->flags);
-    return;
-  }
+
   /* Check for conflict with our own nickname */
   if (other_nick->nick.name == area->trill->nick.name) {
     /* Check if our nickname has lower priority or our
