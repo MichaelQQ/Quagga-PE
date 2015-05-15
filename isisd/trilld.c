@@ -956,9 +956,7 @@ static void trill_publish_nick(struct isis_area *area, int fd,
 			    TRILL_CMD_SET_NICKS_INFO, TRILL_NL_VERSION);
     }
 
-    printf("tni_nick: %x\n tni_adjsnpa: %x\n tni_linkid: %u\n tni_adjcount: %u\n tni_dtrootcount: %u\n", ni->tni_nick, ni->tni_adjsnpa, ni->tni_linkid, ni->tni_adjcount, ni->tni_dtrootcount);
-
-    printf("msg: %p\n", nlmsg_data(msg));
+    printf("tni_nick: %x, tni_adjsnpa: %x, tni_linkid: %u, tni_adjcount: %u, tni_dtrootcount: %u\n", ni->tni_nick, ni->tni_adjsnpa, ni->tni_linkid, ni->tni_adjcount, ni->tni_dtrootcount);
 
     nla_put(msg,TRILL_ATTR_BIN, new_ni_size, ni);
     trnlhdr->ifindex = port_id;
@@ -1232,7 +1230,6 @@ static void trill_nickdb_update ( struct isis_area *area, nickinfo_t *newnick)
    * the dictionary nodes.
    */
   if (res == DUPLICATE || res == PRIORITY_CHANGE_ONLY) {
-    printf("trill_update_nickinfo (tnode, newnick);\n");
     trill_update_nickinfo (tnode, newnick);
     return;
   }
@@ -1404,17 +1401,6 @@ void trill_parse_router_capability_tlvs (struct isis_area *area,
   if (trill_parse_lsp (lsp, &recvd_nick)) {
       /* Parsed LSP correctly but process only if nick is not unknown */
       if (recvd_nick.nick.name != RBRIDGE_NICKNAME_NONE){
-	 printf("nick-name: %X, nick-prio: %X, nick-pad: %u, sysid: %hhu, flags: %u, dt_roots: %p, root_count: %x, root-prio: %u, vni_count: %u, supported_vni: %p\n",
-		 recvd_nick.nick.name,
-		 recvd_nick.nick.priority,
-		 recvd_nick.nick.pad,
-		 recvd_nick.sysid,
-		 recvd_nick.flags,
-		 recvd_nick.dt_roots,
-     recvd_nick.root_count,
-		 recvd_nick.root_priority,
-		 recvd_nick.vni_count,
-		 recvd_nick.supported_vni);
          trill_nick_recv (area, &recvd_nick);
 	}
     } else {

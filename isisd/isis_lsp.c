@@ -2602,15 +2602,9 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   u_char lsp_id[ISIS_SYS_ID_LEN + 2];
   u_int16_t rem_lifetime, refresh_time;
 
-  /*if ((circuit->is_type & level) != level ||
-      (circuit->state != C_STATE_UP) ||
-      (circuit->circ_type != CIRCUIT_T_BROADCAST) ||
-      (circuit->u.bc.is_dr[level - 1] == 0))
-    return ISIS_ERROR;*/
-
   memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
   LSP_FRAGMENT (lsp_id) = 0;//pseudo_count++;
-  LSP_PSEUDO_ID (lsp_id) = circuit->circuit_id;
+  LSP_PSEUDO_ID (lsp_id) = 0;//circuit->circuit_id;
   pseudo_id[5]++;
 
   /*
@@ -2630,10 +2624,10 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   lsp_build_pe (lsp, circuit->area);
   lsp_seqnum_update (lsp);
 
-
   lsp_set_all_srmflags (lsp);
 
-  refresh_time = lsp_refresh_time (lsp, rem_lifetime);
+  trill_parse_router_capability_tlvs (circuit->area, lsp);
+  //refresh_time = lsp_refresh_time (lsp, rem_lifetime);
   /*THREAD_TIMER_OFF (circuit->u.bc.t_refresh_pseudo_lsp[level - 1]);
   circuit->lsp_regenerate_pending[level - 1] = 0;
   if (level == IS_LEVEL_1)
