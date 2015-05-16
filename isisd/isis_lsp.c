@@ -566,6 +566,69 @@ lsp_update_data (struct isis_lsp *lsp, struct stream *stream,
   return;
 }
 
+static void
+lsp_update_data_pe (struct isis_lsp *lsp,
+                 struct isis_area *area, int level)
+{
+  uint32_t expected = 0, found;
+  int retval;
+
+  /* free the old lsp data */
+  lsp_clear_data (lsp);
+
+  lsp->area = area;
+  lsp->level = level;
+  lsp->age_out = ZERO_AGE_LIFETIME;
+  lsp->installed = time (NULL);
+  /*
+   * Get LSP data i.e. TLVs
+   */
+  expected |= TLVFLAG_AUTH_INFO;
+  expected |= TLVFLAG_AREA_ADDRS;
+  expected |= TLVFLAG_IS_NEIGHS;
+  expected |= TLVFLAG_NLPID;
+  if (area->dynhostname)
+    expected |= TLVFLAG_DYN_HOSTNAME;
+  if (area->newmetric)
+    {
+      expected |= TLVFLAG_TE_IS_NEIGHS;
+      expected |= TLVFLAG_TE_IPV4_REACHABILITY;
+      expected |= TLVFLAG_TE_ROUTER_ID;
+    }
+  expected |= TLVFLAG_IPV4_ADDR;
+  expected |= TLVFLAG_IPV4_INT_REACHABILITY;
+  expected |= TLVFLAG_IPV4_EXT_REACHABILITY;
+#ifdef HAVE_IPV6
+  expected |= TLVFLAG_IPV6_ADDR;
+  expected |= TLVFLAG_IPV6_REACHABILITY;
+#endif /* HAVE_IPV6 */
+
+  retval = parse_tlvs (area->area_tag, STREAM_DATA (lsp->pdu) +
+                       ISIS_FIXED_HDR_LEN + ISIS_LSP_HDR_LEN,
+                       ntohs (lsp->lsp_header->pdu_len) -
+                       ISIS_FIXED_HDR_LEN - ISIS_LSP_HDR_LEN,
+                       &expected, &found, &lsp->tlv_data,
+                       NULL);
+  if (retval != ISIS_OK)
+    {
+      zlog_warn ("Could not parse LSP");
+      return;
+    }
+
+  if ((found & TLVFLAG_DYN_HOSTNAME) && (area->dynhostname))
+    {
+      isis_dynhn_insert (lsp->lsp_header->lsp_id, lsp->tlv_data.hostname,
+                         (lsp->lsp_header->lsp_bits & LSPBIT_IST) ==
+                          IS_LEVEL_1_AND_2 ? IS_LEVEL_2 : IS_LEVEL_1);
+    }
+#ifdef HAVE_TRILL
+  if (found & TLVFLAG_ROUTER_CAPABILITY)
+    trill_parse_router_capability_tlvs (area, lsp);
+#endif
+
+  return;
+}
+
 void
 lsp_update (struct isis_lsp *lsp, struct stream *stream,
             struct isis_area *area, int level)
@@ -1192,7 +1255,7 @@ lsp_next_frag (u_char frag_num, struct isis_lsp *lsp0, struct isis_area *area,
  * area->lsp_frag_threshold is exceeded.
  */
 static void
-lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area)
+lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
 {
   struct is_neigh *is_neigh;
   struct te_is_neigh *te_is_neigh;
@@ -1273,16 +1336,17 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area)
       lsp->tlv_data.hostname = XMALLOC (MTYPE_ISIS_TLV,
           sizeof (struct hostname));
 
-      memcpy (lsp->tlv_data.hostname->name, unix_hostname (),
-        strlen (unix_hostname ()));
-      lsp->tlv_data.hostname->namelen = strlen (unix_hostname ());
+      memcpy (lsp->tlv_data.hostname->name, hostname,
+        strlen (hostname));
+      lsp->tlv_data.hostname->namelen = strlen (hostname);
       tlv_add_dynamic_hostname (lsp->tlv_data.hostname, lsp->pdu);
     }
 #ifdef HAVE_TRILL
   struct trill_nickname nick;
   memset(&nick, 0, sizeof(struct trill_nickname));
-  nick.name = 30;
+  nick.name = (uint16_t)0x30;
   nick.priority = 30;
+
 
   if (CHECK_FLAG (area->trill->status, TRILL_NICK_SET))
    if (tlv_add_trill_nickname (&nick, lsp->pdu, area) != ISIS_OK )
@@ -1578,25 +1642,25 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area)
   while (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
     {
       if (lsp->tlv_data.is_neighs == NULL)
-  lsp->tlv_data.is_neighs = list_new ();
+        lsp->tlv_data.is_neighs = list_new ();
       lsp_tlv_fit (lsp, &tlv_data.is_neighs,
        &lsp->tlv_data.is_neighs,
        IS_NEIGHBOURS_LEN, area->lsp_frag_threshold,
        tlv_add_is_neighs);
       if (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
-  lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
+        lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
     }
 
   while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
     {
       if (lsp->tlv_data.te_is_neighs == NULL)
-  lsp->tlv_data.te_is_neighs = list_new ();
+        lsp->tlv_data.te_is_neighs = list_new ();
       lsp_tlv_fit (lsp, &tlv_data.te_is_neighs, &lsp->tlv_data.te_is_neighs,
        IS_NEIGHBOURS_LEN, area->lsp_frag_threshold,
        tlv_add_te_is_neighs);
       if (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
-  lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
+        lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
     }
   lsp->lsp_header->pdu_len = htons (stream_get_endp (lsp->pdu));
@@ -2601,17 +2665,13 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   struct isis_lsp *lsp;
   u_char lsp_id[ISIS_SYS_ID_LEN + 2];
   u_int16_t rem_lifetime, refresh_time;
+  char buffer [50];
 
   memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
   LSP_FRAGMENT (lsp_id) = 0;//pseudo_count++;
   LSP_PSEUDO_ID (lsp_id) = 0;//circuit->circuit_id;
+  sprintf (buffer, "pesudo%d", pseudo_id[5]);
   pseudo_id[5]++;
-
-  /*
-   * If for some reason have a pseudo LSP in the db already -> regenerate
-   */
-  //if (lsp_search (lsp_id, lspdb))
-  //  return lsp_regenerate_schedule_pseudo (circuit, level);
 
   rem_lifetime = lsp_rem_lifetime (circuit->area, level);
   /* RFC3787  section 4 SHOULD not set overload bit in pseudo LSPs */
@@ -2621,21 +2681,12 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   lsp->own_lsp = 0;
   lsp_insert (lsp, lspdb);
   //lsp_build_pseudo_pe (lsp, circuit, level);
-  lsp_build_pe (lsp, circuit->area);
+  lsp_build_pe (lsp, circuit->area, buffer);
   lsp_seqnum_update (lsp);
 
   lsp_set_all_srmflags (lsp);
-
-  trill_parse_router_capability_tlvs (circuit->area, lsp);
-  //refresh_time = lsp_refresh_time (lsp, rem_lifetime);
-  /*THREAD_TIMER_OFF (circuit->u.bc.t_refresh_pseudo_lsp[level - 1]);
-  circuit->lsp_regenerate_pending[level - 1] = 0;
-  if (level == IS_LEVEL_1)
-    THREAD_TIMER_ON (master, circuit->u.bc.t_refresh_pseudo_lsp[level - 1],
-                     lsp_l1_refresh_pseudo, circuit, refresh_time);
-  else if (level == IS_LEVEL_2)
-    THREAD_TIMER_ON (master, circuit->u.bc.t_refresh_pseudo_lsp[level - 1],
-                     lsp_l2_refresh_pseudo, circuit, refresh_time);*/
+  lsp_update_data_pe(lsp, circuit->area, 1);
+  //trill_parse_router_capability_tlvs (circuit->area, lsp);
 
   if (isis->debugs & DEBUG_UPDATE_PACKETS)
     {
