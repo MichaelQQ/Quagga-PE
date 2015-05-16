@@ -61,7 +61,7 @@
 /* staticly assigned vars for printing purposes */
 char lsp_bits_string[200];     /* FIXME: enough ? */
 uint16_t pseudo_count = 50;
-u_char pseudo_id[6] = {0};
+u_char pseudo_id[6] = {1};
 
 static int lsp_l1_refresh (struct thread *thread);
 static int lsp_l2_refresh (struct thread *thread);
@@ -1639,7 +1639,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
     }
 #endif /* HAVE_IPV6 */
 
-  while (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
+  /*while (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
     {
       if (lsp->tlv_data.is_neighs == NULL)
         lsp->tlv_data.is_neighs = list_new ();
@@ -1650,9 +1650,9 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       if (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
         lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }
+    }*/
 
-  while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
+  /*while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
     {
       if (lsp->tlv_data.te_is_neighs == NULL)
         lsp->tlv_data.te_is_neighs = list_new ();
@@ -1662,7 +1662,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       if (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
         lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }
+    }*/
   lsp->lsp_header->pdu_len = htons (stream_get_endp (lsp->pdu));
 
   free_tlvs (&tlv_data);
@@ -2667,6 +2667,7 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   u_int16_t rem_lifetime, refresh_time;
   char buffer [50];
 
+  process_lan_hello_pe (1, circuit, &lsp_id);
   memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
   LSP_FRAGMENT (lsp_id) = 0;//pseudo_count++;
   LSP_PSEUDO_ID (lsp_id) = 0;//circuit->circuit_id;

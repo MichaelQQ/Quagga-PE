@@ -98,7 +98,10 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  break;
 	case IF_UP_FROM_Z:
 	  circuit = isis_circuit_new ();
-	  isis_circuit_if_add (circuit, (struct interface *) arg);
+	  if(PE)
+	  	isis_circuit_if_add_pe (circuit, (struct interface *) arg);
+	  else
+	  	isis_circuit_if_add (circuit, (struct interface *) arg);
 	  listnode_add (isis->init_circ_list, circuit);
 	  circuit->state = C_STATE_INIT;
 	  break;
@@ -150,7 +153,10 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  zlog_warn ("circuit already enabled");
 	  break;
 	case IF_UP_FROM_Z:
-	  isis_circuit_if_add (circuit, (struct interface *) arg);
+	  if(PE)
+	  	isis_circuit_if_add_pe (circuit, (struct interface *) arg);
+	  else
+	  	isis_circuit_if_add (circuit, (struct interface *) arg);
 	  if (isis_circuit_up (circuit, PE) != ISIS_OK)
             {
               isis_circuit_if_del (circuit, (struct interface *) arg);

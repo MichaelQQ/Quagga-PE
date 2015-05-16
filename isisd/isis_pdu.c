@@ -849,6 +849,184 @@ process_p2p_hello (struct isis_circuit *circuit)
 
   return retval;
 }
+/*
+ * Process IS-IS LAN Level 1/2 Hello PDU
+ */
+int
+process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
+{
+  int retval = ISIS_OK;
+  struct isis_lan_hello_hdr hdr;
+  struct isis_adjacency *adj;
+  u_int32_t expected = 0, found = 0, auth_tlv_offset = 0;
+  struct tlvs tlvs;
+  u_char *snpa;
+  struct listnode *node;
+
+  hdr.circuit_t = circuit->is_type;
+  //stream_get (hdr.source_id, ssnpa, ISIS_SYS_ID_LEN);
+  memcpy(hdr.source_id, ssnpa, ISIS_SYS_ID_LEN);
+  hdr.hold_time = circuit->hello_multiplier[level - 1] *
+    circuit->hello_interval[level - 1];
+  //hdr.pdu_len = stream_getw (circuit->rcv_stream);
+  hdr.prio = circuit->priority[level - 1];
+  //stream_get (hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
+  memcpy(hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
+
+#ifndef HAVE_TRILL
+  /*
+   * check if it's own interface ip match iih ip addrs
+   */
+  /*if ((found & TLVFLAG_IPV4_ADDR) == 0 ||
+      ip_match (circuit->ip_addrs, tlvs.ipv4_addrs) == 0)
+    {
+      zlog_debug ("ISIS-Adj: No usable IP interface addresses "
+                  "in LAN IIH from %s\n", circuit->interface->name);
+      retval = ISIS_WARNING;
+      goto out;
+    }*/
+#endif
+  //adj = isis_adj_lookup (hdr.source_id, circuit->u.bc.adjdb[level - 1]);
+  if ((adj == NULL) || (memcmp(adj->snpa, ssnpa, ETH_ALEN)) ||
+      (adj->level != level))
+    {
+      if (!adj)
+        {
+          /*
+           * Do as in 8.4.2.5
+           */
+          adj = isis_new_adj (hdr.source_id, ssnpa, level, circuit);
+          if (adj == NULL)
+            {
+              retval = ISIS_ERROR;
+              goto out;
+            }
+        }
+      else
+        {
+          if (ssnpa) {
+            memcpy (adj->snpa, ssnpa, 6);
+          } else {
+            memset (adj->snpa, ' ', 6);
+          }
+          adj->level = level;
+        }
+      isis_adj_state_change (adj, ISIS_ADJ_INITIALIZING, NULL);
+
+      if (level == IS_LEVEL_1)
+          adj->sys_type = ISIS_SYSTYPE_L1_IS;
+      else
+          adj->sys_type = ISIS_SYSTYPE_L2_IS;
+      list_delete_all_node (circuit->u.bc.lan_neighs[level - 1]);
+      isis_adj_build_neigh_list (circuit->u.bc.adjdb[level - 1],
+                                 circuit->u.bc.lan_neighs[level - 1]);
+    }
+
+  if(adj->dis_record[level-1].dis==ISIS_IS_DIS)
+    switch (level)
+      {
+      case 1:
+  if (memcmp (circuit->u.bc.l1_desig_is, hdr.lan_id, ISIS_SYS_ID_LEN + 1))
+    {
+            //thread_add_event (master, isis_event_dis_status_change, circuit, 0);
+      memcpy (&circuit->u.bc.l1_desig_is, hdr.lan_id,
+        ISIS_SYS_ID_LEN + 1);
+    }
+  break;
+      case 2:
+  if (memcmp (circuit->u.bc.l2_desig_is, hdr.lan_id, ISIS_SYS_ID_LEN + 1))
+    {
+            //thread_add_event (master, isis_event_dis_status_change, circuit, 0);
+      memcpy (&circuit->u.bc.l2_desig_is, hdr.lan_id,
+        ISIS_SYS_ID_LEN + 1);
+    }
+  break;
+      }
+
+  adj->hold_time = hdr.hold_time;
+  adj->last_upd = time (NULL);
+  adj->prio[level - 1] = hdr.prio;
+
+  memcpy (adj->lanid, hdr.lan_id, ISIS_SYS_ID_LEN + 1);
+
+  /*tlvs_to_adj_area_addrs (&tlvs, adj);
+
+  /* which protocol are spoken ??? */
+  /*if (tlvs_to_adj_nlpids (&tlvs, adj))
+    {
+      retval = ISIS_WARNING;
+      goto out;
+    }*/
+
+  /* we need to copy addresses to the adj */
+  /*if (found & TLVFLAG_IPV4_ADDR)
+    tlvs_to_adj_ipv4_addrs (&tlvs, adj);
+#ifndef HAVE_TRILL
+#ifdef HAVE_IPV6
+  if (found & TLVFLAG_IPV6_ADDR)
+    tlvs_to_adj_ipv6_addrs (&tlvs, adj);*/
+//#endif /* HAVE_IPV6 */
+/*#endif
+  adj->circuit_t = hdr.circuit_t;*/
+
+  /* lets take care of the expiry */
+  /*THREAD_TIMER_OFF (adj->t_expire);
+  THREAD_TIMER_ON (master, adj->t_expire, isis_adj_expire, adj,
+                   (long) adj->hold_time);*/
+
+  /*
+   * If the snpa for this circuit is found from LAN Neighbours TLV
+   * we have two-way communication -> adjacency can be put to state "up"
+   */
+
+  if (found & TLVFLAG_LAN_NEIGHS)
+  {
+    if (adj->adj_state != ISIS_ADJ_UP)
+    {
+      for (ALL_LIST_ELEMENTS_RO (tlvs.lan_neighs, node, snpa))
+      {
+        if (!memcmp (snpa, circuit->u.bc.snpa, ETH_ALEN))
+        {
+          isis_adj_state_change (adj, ISIS_ADJ_UP,
+                                 "own SNPA found in LAN Neighbours TLV");
+        }
+      }
+    }
+    else
+    {
+      int found = 0;
+      for (ALL_LIST_ELEMENTS_RO (tlvs.lan_neighs, node, snpa))
+        if (!memcmp (snpa, circuit->u.bc.snpa, ETH_ALEN))
+        {
+          found = 1;
+          break;
+        }
+      if (found == 0)
+        isis_adj_state_change (adj, ISIS_ADJ_INITIALIZING,
+                               "own SNPA not found in LAN Neighbours TLV");
+    }
+  }
+  else if (adj->adj_state == ISIS_ADJ_UP)
+  {
+    isis_adj_state_change (adj, ISIS_ADJ_INITIALIZING,
+                           "no LAN Neighbours TLV found");
+  }
+
+out:
+  if (isis->debugs & DEBUG_ADJ_PACKETS)
+    {
+      zlog_debug ("ISIS-Adj (%s): Rcvd L%d LAN IIH from %s on %s, cirType %s, "
+      "cirID %u, length unknown",
+      circuit->area->area_tag,
+      level, snpa_print (ssnpa), circuit->interface->name,
+      circuit_t2string (circuit->is_type),
+      circuit->circuit_id);
+    }
+
+  //free_tlvs (&tlvs);
+
+  return retval;
+}
 
 /*
  * Process IS-IS LAN Level 1/2 Hello PDU

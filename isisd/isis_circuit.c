@@ -436,6 +436,32 @@ isis_circuit_id_gen (struct interface *ifp)
 }
 
 void
+isis_circuit_if_add_pe (struct isis_circuit *circuit, struct interface *ifp)
+{
+  struct listnode *node, *nnode;
+  struct connected *conn;
+
+  circuit->circuit_id = isis_circuit_id_gen (ifp);
+
+  isis_circuit_if_bind (circuit, ifp);
+  /*  isis_circuit_update_addrs (circuit, ifp); */
+
+  
+  circuit->circ_type = CIRCUIT_T_BROADCAST;
+
+  circuit->ip_addrs = list_new ();
+#ifdef HAVE_IPV6
+  circuit->ipv6_link = list_new ();
+  circuit->ipv6_non_link = list_new ();
+#endif /* HAVE_IPV6 */
+
+  for (ALL_LIST_ELEMENTS (ifp->connected, node, nnode, conn))
+    isis_circuit_add_addr (circuit, conn);
+
+  return;
+}
+
+void
 isis_circuit_if_add (struct isis_circuit *circuit, struct interface *ifp)
 {
   struct listnode *node, *nnode;
@@ -620,14 +646,14 @@ trill_area_nickname(circuit->area, htons(circuit->area->trill->nick.name));
        */
 #ifdef HAVE_STRUCT_SOCKADDR_DL
 #ifndef SUNOS_5
-      if (circuit->interface->sdl.sdl_alen != ETHER_ADDR_LEN)
+      if (circuit->interface->sdl.sdl_alen != ETHER_ADDR_LEN && !PE)
         zlog_warn ("unsupported link layer");
       else
         memcpy (circuit->u.bc.snpa, LLADDR (&circuit->interface->sdl),
                 ETH_ALEN);
 #endif
 #else
-      if (circuit->interface->hw_addr_len != ETH_ALEN)
+      if (circuit->interface->hw_addr_len != ETH_ALEN && !PE)
         {
           zlog_warn ("unsupported link layer");
         }
@@ -657,19 +683,23 @@ trill_area_nickname(circuit->area, htons(circuit->area->trill->nick.name));
        */
 
       /* 8.4.1 a) commence sending of IIH PDUs */
-       if(!PE) {
+       
         if (circuit->is_type & IS_LEVEL_1) {
-            thread_add_event (master, send_lan_l1_hello, circuit, 0);
+            if(!PE){
+              thread_add_event (master, send_lan_l1_hello, circuit, 0);
+            }
             circuit->u.bc.lan_neighs[0] = list_new ();
           }
 
         if (circuit->is_type & IS_LEVEL_2) {
-            thread_add_event (master, send_lan_l2_hello, circuit, 0);
+            if(!PE){
+              thread_add_event (master, send_lan_l2_hello, circuit, 0);
+            }
             circuit->u.bc.lan_neighs[1] = list_new ();
           }
       /* 8.4.1 b) FIXME: solicit ES - 8.4.6 */
       /* 8.4.1 c) FIXME: listen for ESH PDUs */
-
+    if(!PE) {
       /* 8.4.1 d) */
       /* dr election will commence in... */
         if (circuit->is_type & IS_LEVEL_1)
