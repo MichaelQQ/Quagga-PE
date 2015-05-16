@@ -926,21 +926,21 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
     switch (level)
       {
       case 1:
-  if (memcmp (circuit->u.bc.l1_desig_is, hdr.lan_id, ISIS_SYS_ID_LEN + 1))
-    {
-            //thread_add_event (master, isis_event_dis_status_change, circuit, 0);
-      memcpy (&circuit->u.bc.l1_desig_is, hdr.lan_id,
-        ISIS_SYS_ID_LEN + 1);
-    }
-  break;
-      case 2:
-  if (memcmp (circuit->u.bc.l2_desig_is, hdr.lan_id, ISIS_SYS_ID_LEN + 1))
-    {
-            //thread_add_event (master, isis_event_dis_status_change, circuit, 0);
-      memcpy (&circuit->u.bc.l2_desig_is, hdr.lan_id,
-        ISIS_SYS_ID_LEN + 1);
-    }
-  break;
+        if (memcmp (circuit->u.bc.l1_desig_is, hdr.lan_id, ISIS_SYS_ID_LEN + 1))
+          {
+                  //thread_add_event (master, isis_event_dis_status_change, circuit, 0);
+            memcpy (&circuit->u.bc.l1_desig_is, hdr.lan_id,
+              ISIS_SYS_ID_LEN + 1);
+          }
+        break;
+            case 2:
+        if (memcmp (circuit->u.bc.l2_desig_is, hdr.lan_id, ISIS_SYS_ID_LEN + 1))
+          {
+                  //thread_add_event (master, isis_event_dis_status_change, circuit, 0);
+            memcpy (&circuit->u.bc.l2_desig_is, hdr.lan_id,
+              ISIS_SYS_ID_LEN + 1);
+          }
+        break;
       }
 
   adj->hold_time = hdr.hold_time;
@@ -966,8 +966,8 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
   if (found & TLVFLAG_IPV6_ADDR)
     tlvs_to_adj_ipv6_addrs (&tlvs, adj);*/
 //#endif /* HAVE_IPV6 */
-/*#endif
-  adj->circuit_t = hdr.circuit_t;*/
+/*#endif*/
+  adj->circuit_t = hdr.circuit_t;
 
   /* lets take care of the expiry */
   /*THREAD_TIMER_OFF (adj->t_expire);

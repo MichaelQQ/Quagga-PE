@@ -992,178 +992,164 @@ isis_spf_preload_tent (struct isis_spftree *spftree, int level,
     return retval;
   }
 #endif
-  for (ALL_LIST_ELEMENTS_RO (spftree->area->circuit_list, cnode, circuit))
-    {
-      if (circuit->state != C_STATE_UP)
-	continue;
-      if (!(circuit->is_type & level))
-	continue;
-      if (family == AF_INET && !circuit->ip_router)
-	continue;
-#ifdef HAVE_IPV6
-      if (family == AF_INET6 && !circuit->ipv6_router)
-	continue;
-#endif /* HAVE_IPV6 */
-      /* 
-       * Add IP(v6) addresses of this circuit
-       */
-      if (family == AF_INET)
-	{
-	  prefix.family = AF_INET;
-          for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
-	    {
-	      prefix.u.prefix4 = ipv4->prefix;
-	      prefix.prefixlen = ipv4->prefixlen;
-              apply_mask (&prefix);
-	      isis_spf_add_local (spftree, VTYPE_IPREACH_INTERNAL, &prefix,
-				  NULL, 0, family, parent);
-	    }
-	}
-#ifdef HAVE_IPV6
-      if (family == AF_INET6)
-	{
-	  prefix.family = AF_INET6;
-	  for (ALL_LIST_ELEMENTS_RO (circuit->ipv6_non_link, ipnode, ipv6))
-	    {
-	      prefix.prefixlen = ipv6->prefixlen;
-	      prefix.u.prefix6 = ipv6->prefix;
-              apply_mask (&prefix);
-	      isis_spf_add_local (spftree, VTYPE_IP6REACH_INTERNAL,
-				  &prefix, NULL, 0, family, parent);
-	    }
-	}
-#endif /* HAVE_IPV6 */
-      if (circuit->circ_type == CIRCUIT_T_BROADCAST)
-	{
-	  /*
-	   * Add the adjacencies
-	   */
-	  adj_list = list_new ();
-	  adjdb = circuit->u.bc.adjdb[level - 1];
-	  isis_adj_build_up_list (adjdb, adj_list);
-	  if (listcount (adj_list) == 0)
-	    {
-	      list_delete (adj_list);
+  for (ALL_LIST_ELEMENTS_RO (spftree->area->circuit_list, cnode, circuit)){
+    printf("circuit->interface->name: %s, circuit->circ_type: %d, circuit->state: %d\n",
+           circuit->interface->name, circuit->circ_type, circuit->state);
+    if (circuit->state != C_STATE_UP)
+      continue;
+    if (!(circuit->is_type & level))
+      continue;
+    if (family == AF_INET && !circuit->ip_router)
+      continue;
+    #ifdef HAVE_IPV6
+    if (family == AF_INET6 && !circuit->ipv6_router)
+      continue;
+    #endif /* HAVE_IPV6 */
+    /* 
+     * Add IP(v6) addresses of this circuit
+     */
+    if (family == AF_INET) {
+      prefix.family = AF_INET;
+      for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4)) {
+        prefix.u.prefix4 = ipv4->prefix;
+        prefix.prefixlen = ipv4->prefixlen;
+        apply_mask (&prefix);
+        isis_spf_add_local (spftree, VTYPE_IPREACH_INTERNAL, &prefix,
+			    NULL, 0, family, parent);
+      }
+    }
+    #ifdef HAVE_IPV6
+    if (family == AF_INET6) {
+      prefix.family = AF_INET6;
+      for (ALL_LIST_ELEMENTS_RO (circuit->ipv6_non_link, ipnode, ipv6)) {
+        prefix.prefixlen = ipv6->prefixlen;
+        prefix.u.prefix6 = ipv6->prefix;
+        apply_mask (&prefix);
+        isis_spf_add_local (spftree, VTYPE_IP6REACH_INTERNAL,
+			    &prefix, NULL, 0, family, parent);
+      }
+    }
+    #endif /* HAVE_IPV6 */
+    if (circuit->circ_type == CIRCUIT_T_BROADCAST) {
+      /*
+      * Add the adjacencies
+      */
+      adj_list = list_new ();
+      adjdb = circuit->u.bc.adjdb[level - 1];
+      isis_adj_build_up_list (adjdb, adj_list);
+      if (listcount (adj_list) == 0) {
+        list_delete (adj_list);
 	      if (isis->debugs & DEBUG_SPF_EVENTS)
-		zlog_debug ("ISIS-Spf: no L%d adjacencies on circuit %s",
-			    level, circuit->interface->name);
-	      continue;
+		      zlog_debug ("ISIS-Spf: no L%d adjacencies on circuit %s",
+            level, circuit->interface->name);
+          continue;
 	    }
-          for (ALL_LIST_ELEMENTS_RO (adj_list, anode, adj))
-	    {
-	      if (!speaks (&adj->nlpids, family))
-		  continue;
-	      switch (adj->sys_type)
-		{
-		case ISIS_SYSTYPE_ES:
-		  isis_spf_add_local (spftree, VTYPE_ES, adj->sysid, adj,
+      for (ALL_LIST_ELEMENTS_RO (adj_list, anode, adj)) {
+        if (!speaks (&adj->nlpids, family))
+		      continue;
+	      switch (adj->sys_type) {
+		      case ISIS_SYSTYPE_ES:
+		        isis_spf_add_local (spftree, VTYPE_ES, adj->sysid, adj,
 				      circuit->te_metric[level - 1],
 				      family, parent);
-		  break;
-		case ISIS_SYSTYPE_IS:
-		case ISIS_SYSTYPE_L1_IS:
-		case ISIS_SYSTYPE_L2_IS:
-		  isis_spf_add_local (spftree,
+		        break;
+		      case ISIS_SYSTYPE_IS:
+		      case ISIS_SYSTYPE_L1_IS:
+		      case ISIS_SYSTYPE_L2_IS:
+		        isis_spf_add_local (spftree,
                                       spftree->area->oldmetric ?
                                       VTYPE_NONPSEUDO_IS :
                                       VTYPE_NONPSEUDO_TE_IS,
                                       adj->sysid, adj,
                                       circuit->te_metric[level - 1],
                                       family, parent);
-		  memcpy (lsp_id, adj->sysid, ISIS_SYS_ID_LEN);
-		  LSP_PSEUDO_ID (lsp_id) = 0;
-		  LSP_FRAGMENT (lsp_id) = 0;
-		  lsp = lsp_search (lsp_id, spftree->area->lspdb[level - 1]);
-                  if (lsp == NULL || lsp->lsp_header->rem_lifetime == 0)
-                    zlog_warn ("ISIS-Spf: No LSP %s found for IS adjacency "
+		        memcpy (lsp_id, adj->sysid, ISIS_SYS_ID_LEN);
+		        LSP_PSEUDO_ID (lsp_id) = 0;
+		        LSP_FRAGMENT (lsp_id) = 0;
+		        lsp = lsp_search (lsp_id, spftree->area->lspdb[level - 1]);
+            if (lsp == NULL || lsp->lsp_header->rem_lifetime == 0)
+              zlog_warn ("ISIS-Spf: No LSP %s found for IS adjacency "
                         "L%d on %s (ID %u)",
-			rawlspid_print (lsp_id), level,
-			circuit->interface->name, circuit->circuit_id);
-		  break;
-		case ISIS_SYSTYPE_UNKNOWN:
-		default:
-		  zlog_warn ("isis_spf_preload_tent unknow adj type");
-		}
+                        rawlspid_print (lsp_id), level,
+              circuit->interface->name, circuit->circuit_id);
+		        break;
+		      case ISIS_SYSTYPE_UNKNOWN:
+		      default:
+		        zlog_warn ("isis_spf_preload_tent unknow adj type");
+		    }
 	    }
-	  list_delete (adj_list);
-	  /*
-	   * Add the pseudonode 
-	   */
-	  if (level == 1)
-	    memcpy (lsp_id, circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
-	  else
-	    memcpy (lsp_id, circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
-	  /* can happen during DR reboot */
-	  if (memcmp (lsp_id, null_lsp_id, ISIS_SYS_ID_LEN + 1) == 0)
-	    {
+      list_delete (adj_list);
+      /*
+      * Add the pseudonode 
+      */
+      if (level == 1)
+        memcpy (lsp_id, circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
+      else
+        memcpy (lsp_id, circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
+      /* can happen during DR reboot */
+      if (memcmp (lsp_id, null_lsp_id, ISIS_SYS_ID_LEN + 1) == 0) {
 	      if (isis->debugs & DEBUG_SPF_EVENTS)
-		zlog_debug ("ISIS-Spf: No L%d DR on %s (ID %d)",
-		    level, circuit->interface->name, circuit->circuit_id);
+		      zlog_debug ("ISIS-Spf: No L%d DR on %s (ID %d)",
+		        level, circuit->interface->name, circuit->circuit_id);
 	      continue;
 	    }
-	  adj = isis_adj_lookup (lsp_id, adjdb);
-	  /* if no adj, we are the dis or error */
-	  if (!adj && !circuit->u.bc.is_dr[level - 1])
-	    {
-              zlog_warn ("ISIS-Spf: No adjacency found from root "
+      adj = isis_adj_lookup (lsp_id, adjdb);
+      /* if no adj, we are the dis or error */
+      if (!adj && !circuit->u.bc.is_dr[level - 1]) {
+        zlog_warn ("ISIS-Spf: No adjacency found from root "
                   "to L%d DR %s on %s (ID %d)",
-		  level, rawlspid_print (lsp_id),
-		  circuit->interface->name, circuit->circuit_id);
-              continue;
+		              level, rawlspid_print (lsp_id),
+		              circuit->interface->name, circuit->circuit_id);
+        continue;
 	    }
-	  lsp = lsp_search (lsp_id, spftree->area->lspdb[level - 1]);
-	  if (lsp == NULL || lsp->lsp_header->rem_lifetime == 0)
-	    {
+      lsp = lsp_search (lsp_id, spftree->area->lspdb[level - 1]);
+      if (lsp == NULL || lsp->lsp_header->rem_lifetime == 0){
 	      zlog_warn ("ISIS-Spf: No lsp (%p) found from root "
                   "to L%d DR %s on %s (ID %d)",
-		  lsp, level, rawlspid_print (lsp_id), 
-		  circuit->interface->name, circuit->circuit_id);
-              continue;
+		              lsp, level, rawlspid_print (lsp_id), 
+		              circuit->interface->name, circuit->circuit_id);
+        continue;
 	    }
-	  isis_spf_process_pseudo_lsp (spftree, lsp,
+      isis_spf_process_pseudo_lsp (spftree, lsp,
                                        circuit->te_metric[level - 1], 0,
                                        family, root_sysid, parent);
-	}
-      else if (circuit->circ_type == CIRCUIT_T_P2P)
-	{
-	  adj = circuit->u.p2p.neighbor;
-	  if (!adj)
-	    continue;
-	  switch (adj->sys_type)
-	    {
-	    case ISIS_SYSTYPE_ES:
-	      isis_spf_add_local (spftree, VTYPE_ES, adj->sysid, adj,
-				  circuit->te_metric[level - 1], family,
-				  parent);
-	      break;
-	    case ISIS_SYSTYPE_IS:
-	    case ISIS_SYSTYPE_L1_IS:
-	    case ISIS_SYSTYPE_L2_IS:
-	      if (speaks (&adj->nlpids, family))
-		isis_spf_add_local (spftree,
-				    spftree->area->oldmetric ?
-                                    VTYPE_NONPSEUDO_IS :
-				    VTYPE_NONPSEUDO_TE_IS,
-                                    adj->sysid,
-				    adj, circuit->te_metric[level - 1],
-				    family, parent);
-	      break;
-	    case ISIS_SYSTYPE_UNKNOWN:
-	    default:
-	      zlog_warn ("isis_spf_preload_tent unknown adj type");
-	      break;
-	    }
-	}
-      else if (circuit->circ_type == CIRCUIT_T_LOOPBACK)
-	{
-          continue;
-        }
-      else
-	{
-	  zlog_warn ("isis_spf_preload_tent unsupported media");
-	  retval = ISIS_WARNING;
-	}
     }
+    else if (circuit->circ_type == CIRCUIT_T_P2P){
+      adj = circuit->u.p2p.neighbor;
+      if (!adj)
+        continue;
+      switch (adj->sys_type){
+        case ISIS_SYSTYPE_ES:
+          isis_spf_add_local (spftree, VTYPE_ES, adj->sysid, adj,
+			    circuit->te_metric[level - 1], family,
+			    parent);
+          break;
+        case ISIS_SYSTYPE_IS:
+        case ISIS_SYSTYPE_L1_IS:
+        case ISIS_SYSTYPE_L2_IS:
+          if (speaks (&adj->nlpids, family))
+            isis_spf_add_local (spftree,
+			        spftree->area->oldmetric ?
+              VTYPE_NONPSEUDO_IS :
+			        VTYPE_NONPSEUDO_TE_IS,
+              adj->sysid,
+			        adj, circuit->te_metric[level - 1],
+			        family, parent);
+          break;
+        case ISIS_SYSTYPE_UNKNOWN:
+        default:
+          zlog_warn ("isis_spf_preload_tent unknown adj type");
+          break;
+      }
+    }
+    else if (circuit->circ_type == CIRCUIT_T_LOOPBACK){
+      continue;
+    }
+    else {
+      zlog_warn ("isis_spf_preload_tent unsupported media");
+      retval = ISIS_WARNING;
+    }
+  }
 
   return retval;
 }

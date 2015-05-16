@@ -1010,7 +1010,7 @@ static void trill_publish (struct isis_area *area)
   }
 
   if (area->trill->fwdtbl != NULL){
-    printf("circuit->interface->ifindex = %p\n", circuit->interface->ifindex);
+    //printf("circuit->interface->ifindex = %p\n", circuit->interface->ifindex);
     for (ALL_LIST_ELEMENTS_RO (area->trill->fwdtbl, node, fwdnode))
       trill_publish_nick(area, circuit->fd, fwdnode->dest_nick,
 			 fwdnode,circuit->interface->ifindex);

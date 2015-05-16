@@ -1396,6 +1396,8 @@ DEFUN (trillpe_router_trill,
   circuit = isis_csm_state_change (ISIS_PE_ENABLE, circuit, area);
   isis_circuit_if_bind (circuit, ifp);
   circuit->priority[TRILL_ISIS_LEVEL - 1] = area->trill->nick.priority;
+  //circuit = isis_csm_state_change (IF_UP_FROM_Z, circuit, area);
+
   vty->node = INTERFACE_NODE;
   vty->index = ifp;
   return CMD_SUCCESS;
