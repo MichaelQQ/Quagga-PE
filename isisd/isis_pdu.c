@@ -871,7 +871,9 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
   //hdr.pdu_len = stream_getw (circuit->rcv_stream);
   hdr.prio = circuit->priority[level - 1];
   //stream_get (hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
-  memcpy(hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
+  //memcpy(hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
+  memcpy (hdr.lan_id, circuit->u.bc.l1_desig_is,
+                  ISIS_SYS_ID_LEN + 1);
 
 #ifndef HAVE_TRILL
   /*
@@ -979,8 +981,8 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
    * we have two-way communication -> adjacency can be put to state "up"
    */
 
-  if (found & TLVFLAG_LAN_NEIGHS)
-  {
+  //if (found & TLVFLAG_LAN_NEIGHS)
+  //{
     if (adj->adj_state != ISIS_ADJ_UP)
     {
       for (ALL_LIST_ELEMENTS_RO (tlvs.lan_neighs, node, snpa))
@@ -1005,12 +1007,15 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
         isis_adj_state_change (adj, ISIS_ADJ_INITIALIZING,
                                "own SNPA not found in LAN Neighbours TLV");
     }
-  }
+  /*}
   else if (adj->adj_state == ISIS_ADJ_UP)
   {
     isis_adj_state_change (adj, ISIS_ADJ_INITIALIZING,
                            "no LAN Neighbours TLV found");
-  }
+  }*/
+
+  isis_adj_state_change (adj, ISIS_ADJ_UP,
+                                 "own SNPA found in LAN Neighbours TLV");
 
 out:
   if (isis->debugs & DEBUG_ADJ_PACKETS)

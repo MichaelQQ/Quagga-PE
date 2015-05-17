@@ -61,7 +61,7 @@
 /* staticly assigned vars for printing purposes */
 char lsp_bits_string[200];     /* FIXME: enough ? */
 uint16_t pseudo_count = 50;
-u_char pseudo_id[6] = {1};
+u_char pseudo_id[6] = {0x00,0x40,0xf4,0x52,0x00,0xae};
 
 static int lsp_l1_refresh (struct thread *thread);
 static int lsp_l2_refresh (struct thread *thread);
@@ -1262,17 +1262,17 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
   struct listnode *node, *ipnode;
   int level = lsp->level;
   struct isis_circuit *circuit;
-  struct prefix_ipv4 *ipv4;
-  struct ipv4_reachability *ipreach;
-  struct te_ipv4_reachability *te_ipreach;
+  //struct prefix_ipv4 *ipv4;
+  //struct ipv4_reachability *ipreach;
+  //struct te_ipv4_reachability *te_ipreach;
   struct isis_adjacency *nei;
 #ifdef HAVE_IPV6
-  struct prefix_ipv6 *ipv6, *ip6prefix;
-  struct ipv6_reachability *ip6reach;
+  //struct prefix_ipv6 *ipv6, *ip6prefix;
+  //struct ipv6_reachability *ip6reach;
 #endif /* HAVE_IPV6 */
   struct tlvs tlv_data;
   struct isis_lsp *lsp0 = lsp;
-  struct in_addr *routerid;
+  //struct in_addr *routerid;
   uint32_t expected = 0, found = 0;
   uint32_t metric;
   u_char zero_id[ISIS_SYS_ID_LEN + 1];
@@ -1344,7 +1344,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
 #ifdef HAVE_TRILL
   struct trill_nickname nick;
   memset(&nick, 0, sizeof(struct trill_nickname));
-  nick.name = (uint16_t)0x30;
+  nick.name = htons(177);
   nick.priority = 30;
 
 
@@ -1356,7 +1356,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
   /* IPv4 address and TE router ID TLVs. In case of the first one we don't
    * follow "C" vendor, but "J" vendor behavior - one IPv4 address is put into
    * LSP and this address is same as router id. */
-  if (isis->router_id != 0)
+  /*if (isis->router_id != 0)
     {
       if (lsp->tlv_data.ipv4_addrs == NULL)
   {
@@ -1367,11 +1367,11 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       routerid = XMALLOC (MTYPE_ISIS_TLV, sizeof (struct in_addr));
       routerid->s_addr = isis->router_id;
       listnode_add (lsp->tlv_data.ipv4_addrs, routerid);
-      tlv_add_in_addr (routerid, lsp->pdu, IPV4_ADDR);
+      tlv_add_in_addr (routerid, lsp->pdu, IPV4_ADDR);*/
 
       /* Exactly same data is put into TE router ID TLV, but only if new style
        * TLV's are in use. */
-      if (area->newmetric)
+      /*if (area->newmetric)
   {
     lsp->tlv_data.router_id = XMALLOC (MTYPE_ISIS_TLV,
                sizeof (struct in_addr));
@@ -1381,7 +1381,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
   }
     }
 
-  memset (&tlv_data, 0, sizeof (struct tlvs));
+  memset (&tlv_data, 0, sizeof (struct tlvs));*/
 
 #ifdef TOPOLOGY_GENERATE
   /* If topology exists (and we create topology for level 1 only), create
@@ -1417,7 +1417,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       /*
        * Add IPv4 internal reachability of this circuit
        */
-      if (circuit->ip_router && circuit->ip_addrs &&
+      /*if (circuit->ip_router && circuit->ip_addrs &&
     circuit->ip_addrs->count > 0)
   {
     if (area->oldmetric)
@@ -1446,9 +1446,9 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       tlv_data.te_ipv4_reachs->del = free_tlv;
     }
         for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
-    {
+    {*/
       /* FIXME All this assumes that we have no sub TLVs. */
-      te_ipreach = XCALLOC (MTYPE_ISIS_TLV,
+      /*te_ipreach = XCALLOC (MTYPE_ISIS_TLV,
           sizeof (struct te_ipv4_reachability) +
           ((ipv4->prefixlen + 7)/8) - 1);
 
@@ -1463,13 +1463,13 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       listnode_add (tlv_data.te_ipv4_reachs, te_ipreach);
     }
       }
-  }
+  }*/
 
 #ifdef HAVE_IPV6
       /*
        * Add IPv6 reachability of this circuit
        */
-      if (circuit->ipv6_router && circuit->ipv6_non_link &&
+      /*if (circuit->ipv6_router && circuit->ipv6_non_link &&
     circuit->ipv6_non_link->count > 0)
   {
 
@@ -1497,7 +1497,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
           sizeof (ip6reach->prefix));
         listnode_add (tlv_data.ipv6_reachs, ip6reach);
       }
-  }
+  }*/
 #endif /* HAVE_IPV6 */
 
       switch (circuit->circ_type)
@@ -1595,7 +1595,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
   }
     }
 
-  while (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
+  /*while (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
     {
       if (lsp->tlv_data.ipv4_int_reachs == NULL)
   lsp->tlv_data.ipv4_int_reachs = list_new ();
@@ -1606,12 +1606,12 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       if (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
   lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }
+    }*/
 
   /* FIXME: We pass maximum te_ipv4_reachability length to the lsp_tlv_fit()
    * for now. lsp_tlv_fit() needs to be fixed to deal with variable length
    * TLVs (sub TLVs!). */
-  while (tlv_data.te_ipv4_reachs && listcount (tlv_data.te_ipv4_reachs))
+  /*while (tlv_data.te_ipv4_reachs && listcount (tlv_data.te_ipv4_reachs))
     {
       if (lsp->tlv_data.te_ipv4_reachs == NULL)
   lsp->tlv_data.te_ipv4_reachs = list_new ();
@@ -1622,10 +1622,10 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       if (tlv_data.te_ipv4_reachs && listcount (tlv_data.te_ipv4_reachs))
   lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }
+    }*/
 
 #ifdef  HAVE_IPV6
-  while (tlv_data.ipv6_reachs && listcount (tlv_data.ipv6_reachs))
+  /*while (tlv_data.ipv6_reachs && listcount (tlv_data.ipv6_reachs))
     {
       if (lsp->tlv_data.ipv6_reachs == NULL)
   lsp->tlv_data.ipv6_reachs = list_new ();
@@ -1636,7 +1636,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
       if (tlv_data.ipv6_reachs && listcount (tlv_data.ipv6_reachs))
   lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }
+    }*/
 #endif /* HAVE_IPV6 */
 
   while (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
@@ -1665,7 +1665,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
     }
   lsp->lsp_header->pdu_len = htons (stream_get_endp (lsp->pdu));
 
-  free_tlvs (&tlv_data);
+  //free_tlvs (&tlv_data);
 
   /* Validate the LSP */
   retval = parse_tlvs (area->area_tag, STREAM_DATA (lsp->pdu) +
@@ -2667,12 +2667,14 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   u_int16_t rem_lifetime, refresh_time;
   char buffer [50];
 
-  process_lan_hello_pe (1, circuit, &lsp_id);
+  
   memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
   LSP_FRAGMENT (lsp_id) = 0;//pseudo_count++;
   LSP_PSEUDO_ID (lsp_id) = 0;//circuit->circuit_id;
   sprintf (buffer, "pesudo%d", pseudo_id[5]);
   pseudo_id[5]++;
+
+  process_lan_hello_pe (1, circuit, &lsp_id);
 
   rem_lifetime = lsp_rem_lifetime (circuit->area, level);
   /* RFC3787  section 4 SHOULD not set overload bit in pseudo LSPs */
@@ -2685,7 +2687,7 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   lsp_build_pe (lsp, circuit->area, buffer);
   lsp_seqnum_update (lsp);
   lsp_set_all_srmflags (lsp);
-  
+
   lsp_update_data_pe(lsp, circuit->area, 1);
   lsp_insert (lsp, circuit->area->lspdb[level - 1]);
   //trill_parse_router_capability_tlvs (circuit->area, lsp);
