@@ -405,6 +405,131 @@ add_subtlv (u_char tag, u_char len, u_char * value, size_t tlvpos,
  #endif /* EXTREME DEBUG */
   return ISIS_OK;
 }
+/*
+ * Add TLVs necessary to advertise TRILL nickname using router capabilities TLV
+ */
+int tlv_add_trill_nickname_pe(struct trill_nickname *nick_info,
+         struct stream *stream, struct isis_area *area)
+{
+  size_t tlvstart;
+  struct listnode *node;
+  struct router_capability_tlv rtcap;
+  u_char tflags;
+  struct trill_nickname_subtlv tn;
+  struct trill_vni_subtlv *vni_subtlv;
+  int vni_count, tlv_number, last_tlv, size, i;
+  uint32_t *pnt;
+  void * vni;
+  int rc;
+
+  tlvstart = stream_get_endp (stream);
+  (void) memset(&rtcap, 0, sizeof (rtcap));
+  rc = add_tlv(ROUTER_CAPABILITY, sizeof ( struct router_capability_tlv),
+         (u_char *)&rtcap, stream);
+  if (rc != ISIS_OK)
+    return rc;
+
+  tn.tn_priority = nick_info->priority;
+  tn.tn_trootpri = 0xffaa;
+  tn.tn_nickname = nick_info->name;
+  printf("nickname: %d\n", tn.tn_nickname);
+  rc = add_subtlv (RCSTLV_TRILL_NICKNAME,
+       sizeof (struct trill_nickname_subtlv), (u_char *)&tn,
+       tlvstart,
+       stream);
+  if (rc != ISIS_OK)
+    return rc;
+  /* Let's fill vni sub tlv */
+#ifdef NEW_KERNEL_RELEASE
+  vni_count = listcount(area->trill->supported_vni);
+  tlv_number = vni_count / MAX_VNI_PER_SUBTLV;
+  last_tlv = vni_count % MAX_VNI_PER_SUBTLV;
+  /* one subTLV needed */
+  if (!tlv_number){
+    if(vni_count){
+      size = sizeof(struct trill_vni_subtlv) + vni_count * sizeof(u_int32_t);
+      vni_subtlv = calloc(1, size);
+      vni_subtlv->length = vni_count;
+      /* go to vni list position */
+      pnt = (uint32_t *) (uint8_t *)(vni_subtlv + 1);
+      i = 0;
+      for (ALL_LIST_ELEMENTS_RO (area->trill->supported_vni, node, vni)) {
+  pnt[i] = (uint32_t) (u_long) vni;
+  i++;
+      }
+
+      tlvstart = stream_get_endp (stream);
+      (void) memset(&rtcap, 0, sizeof (rtcap));
+      rc = add_tlv(ROUTER_CAPABILITY,
+       sizeof ( struct router_capability_tlv),
+       (u_char *)&rtcap, stream);
+      if (rc != ISIS_OK)
+  return rc;
+      rc = add_subtlv (RCSTLV_TRILL_VLAN_GROUP, size,
+           (u_char *)vni_subtlv,
+           tlvstart, stream);
+      free(vni_subtlv);
+    }
+  /* multiple subTLV needed */
+  } else {
+      size = sizeof(struct trill_vni_subtlv) +
+        MAX_VNI_PER_SUBTLV * sizeof(uint32_t);
+      vni_subtlv = calloc(1, size);
+      vni_subtlv->length = MAX_VNI_PER_SUBTLV;
+      pnt = (uint32_t *) (uint8_t *)(vni_subtlv + 1);
+      for (ALL_LIST_ELEMENTS_RO (area->trill->supported_vni, node, vni)) {
+  pnt[i]= (uint32_t) (u_long) vni;
+  i++;
+  if (i >= MAX_VNI_PER_SUBTLV) {
+    i = 0;
+    tlvstart = stream_get_endp (stream);
+    (void) memset(&rtcap, 0, sizeof (rtcap));
+    rc = add_tlv(ROUTER_CAPABILITY,
+           sizeof ( struct router_capability_tlv),
+           (u_char *)&rtcap, stream);
+    if (rc != ISIS_OK)
+      return rc;
+    rc = add_subtlv (RCSTLV_TRILL_VLAN_GROUP, size,
+         (u_char *)vni_subtlv, tlvstart,stream);
+    free(vni_subtlv);
+    tlv_number --;
+    if(tlv_number)
+    {
+      size = sizeof(struct trill_vni_subtlv) +
+      MAX_VNI_PER_SUBTLV * sizeof(uint32_t);
+      vni_subtlv = calloc(1, size);
+      vni_subtlv->length = MAX_VNI_PER_SUBTLV;
+      pnt = (uint32_t *) (uint8_t *)(vni_subtlv + 1);
+    } else {
+      /* last tlv size eq max*/
+      if(last_tlv) {
+        size = sizeof(struct trill_vni_subtlv) +
+         last_tlv * sizeof(uint32_t);
+        vni_subtlv = calloc (1, size);
+        vni_subtlv->length = last_tlv;
+        pnt = (uint32_t *) (uint8_t *)(vni_subtlv + 1);
+      }
+    }
+  }
+      }
+      /* last tlv size less than max*/
+      if(last_tlv) {
+  tlvstart = stream_get_endp (stream);
+  (void) memset(&rtcap, 0, sizeof (rtcap));
+  rc = add_tlv(ROUTER_CAPABILITY,
+         sizeof ( struct router_capability_tlv),
+         (u_char *)&rtcap, stream);
+  if (rc != ISIS_OK)
+    return rc;
+  rc = add_subtlv (RCSTLV_TRILL_VLAN_GROUP, size,
+       (u_char *)vni_subtlv,
+       tlvstart, stream);
+  free(vni_subtlv);
+    }
+  }
+#endif
+  return rc;
+}
 
 /*
  * Add TLVs necessary to advertise TRILL nickname using router capabilities TLV
