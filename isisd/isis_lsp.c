@@ -60,8 +60,6 @@
 
 /* staticly assigned vars for printing purposes */
 char lsp_bits_string[200];     /* FIXME: enough ? */
-uint16_t pseudo_count = 50;
-u_char pseudo_id[6] = {0x00,0x40,0xf4,0x52,0x00,0xae};
 
 static int lsp_l1_refresh (struct thread *thread);
 static int lsp_l2_refresh (struct thread *thread);
@@ -1255,7 +1253,7 @@ lsp_next_frag (u_char frag_num, struct isis_lsp *lsp0, struct isis_area *area,
  * area->lsp_frag_threshold is exceeded.
  */
 static void
-lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
+lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint16_t name, uint8_t priority)
 {
   struct is_neigh *is_neigh;
   struct te_is_neigh *te_is_neigh;
@@ -1344,8 +1342,8 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname)
 #ifdef HAVE_TRILL
   struct trill_nickname nick;
   memset(&nick, 0, sizeof(struct trill_nickname));
-  nick.name = htons(177);
-  nick.priority = 30;
+  nick.name = htons(name);
+  nick.priority = priority;
 
 
   if (CHECK_FLAG (area->trill->status, TRILL_NICK_SET))
@@ -2498,6 +2496,9 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
   return;
 }
 
+u_char pseudo_id[6] = {0x00,0x40,0xf4,0x52,0x00,0xae};
+u_char pseudo_count = 1;
+
 int
 lsp_generate_pe (struct isis_circuit *circuit, int level)
 {
@@ -2507,30 +2508,34 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   u_int16_t rem_lifetime, refresh_time;
   char buffer [50];
 
+  sprintf (buffer, "%04d_Pesudo", pseudo_count);
   
-  memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
-  LSP_FRAGMENT (lsp_id) = 0;//pseudo_count++;
-  LSP_PSEUDO_ID (lsp_id) = 0;//circuit->circuit_id;
-  sprintf (buffer, "pesudo%d", pseudo_id[5]);
-  pseudo_id[5]++;
+  //memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
+  memcpy (lsp_id, buffer, ISIS_SYS_ID_LEN);
+  LSP_FRAGMENT (lsp_id) = 0;
+  LSP_PSEUDO_ID (lsp_id) = 0;
 
-  process_lan_hello_pe (1, circuit, &lsp_id);
+  //level, circuit, spna, source_id
+  //process_lan_hello_pe (1, circuit, &lsp_id, &buffer);
+  process_lan_hello_pe (1, circuit, &pseudo_id, &buffer);
 
   rem_lifetime = lsp_rem_lifetime (circuit->area, level);
   /* RFC3787  section 4 SHOULD not set overload bit in pseudo LSPs */
+  //lsp = lsp_new (lsp_id, rem_lifetime, 1, circuit->area->is_type, 0, level);
   lsp = lsp_new (lsp_id, rem_lifetime, 1, circuit->area->is_type, 0, level);
   lsp->area = circuit->area;
 
   lsp->own_lsp = 0;
   //lsp_insert (lsp, lspdb);
   //lsp_build_pseudo_pe (lsp, circuit, level);
-  lsp_build_pe (lsp, circuit->area, buffer);
+  lsp_build_pe (lsp, circuit->area, buffer, pseudo_count, pseudo_count);
   lsp_seqnum_update (lsp);
   lsp_set_all_srmflags (lsp);
 
   lsp_update_data_pe(lsp, circuit->area, 1);
   lsp_insert (lsp, circuit->area->lspdb[level - 1]);
-  //trill_parse_router_capability_tlvs (circuit->area, lsp);
+
+  pseudo_count++;
 
   if (isis->debugs & DEBUG_UPDATE_PACKETS)
     {

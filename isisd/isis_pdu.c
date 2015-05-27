@@ -853,7 +853,7 @@ process_p2p_hello (struct isis_circuit *circuit)
  * Process IS-IS LAN Level 1/2 Hello PDU
  */
 int
-process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
+process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa, u_char *source_id)
 {
   int retval = ISIS_OK;
   struct isis_lan_hello_hdr hdr;
@@ -864,31 +864,15 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
   struct listnode *node;
 
   hdr.circuit_t = circuit->is_type;
-  //stream_get (hdr.source_id, ssnpa, ISIS_SYS_ID_LEN);
-  memcpy(hdr.source_id, ssnpa, ISIS_SYS_ID_LEN);
+  //memcpy(hdr.source_id, ssnpa, ISIS_SYS_ID_LEN);
+  memcpy(hdr.source_id, source_id, ISIS_SYS_ID_LEN);
   hdr.hold_time = circuit->hello_multiplier[level - 1] *
     circuit->hello_interval[level - 1];
-  //hdr.pdu_len = stream_getw (circuit->rcv_stream);
   hdr.prio = circuit->priority[level - 1];
-  //stream_get (hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
-  //memcpy(hdr.lan_id, ssnpa, ISIS_SYS_ID_LEN + 1);
   memcpy (hdr.lan_id, circuit->u.bc.l1_desig_is,
                   ISIS_SYS_ID_LEN + 1);
 
-#ifndef HAVE_TRILL
-  /*
-   * check if it's own interface ip match iih ip addrs
-   */
-  /*if ((found & TLVFLAG_IPV4_ADDR) == 0 ||
-      ip_match (circuit->ip_addrs, tlvs.ipv4_addrs) == 0)
-    {
-      zlog_debug ("ISIS-Adj: No usable IP interface addresses "
-                  "in LAN IIH from %s\n", circuit->interface->name);
-      retval = ISIS_WARNING;
-      goto out;
-    }*/
-#endif
-  //adj = isis_adj_lookup (hdr.source_id, circuit->u.bc.adjdb[level - 1]);
+  adj = isis_adj_lookup (hdr.source_id, circuit->u.bc.adjdb[level - 1]);
   if ((adj == NULL) || (memcmp(adj->snpa, ssnpa, ETH_ALEN)) ||
       (adj->level != level))
     {
@@ -962,13 +946,7 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa)
 
   /* we need to copy addresses to the adj */
   /*if (found & TLVFLAG_IPV4_ADDR)
-    tlvs_to_adj_ipv4_addrs (&tlvs, adj);
-#ifndef HAVE_TRILL
-#ifdef HAVE_IPV6
-  if (found & TLVFLAG_IPV6_ADDR)
-    tlvs_to_adj_ipv6_addrs (&tlvs, adj);*/
-//#endif /* HAVE_IPV6 */
-/*#endif*/
+    tlvs_to_adj_ipv4_addrs (&tlvs, adj);*/
   adj->circuit_t = hdr.circuit_t;
 
   /* lets take care of the expiry */
