@@ -13,11 +13,12 @@ Quagga is free software. See the file COPYING for copying conditions.
 ------------------------------------------------------------------------
 INSTALL
 
+sudo apt-get install libreadline-dev texlive-latex-base texlive-generic-recommended libcap-dev texinfo imagemagick ghostscript groff autotools-dev hardening-wrapper libpcre3-dev gawk chrpath libsnmp30 libsnmp-dev libtool libpam0g-dev libnl-genl-3-dev
 ./update-autotools
 ./bootstrap.sh
-./configure --localstatedir=/var/run/quagga --enable-isisd --enable-trilld \
- --disable-babeld --disable-bgpd
+./configure --localstatedir=/var/run/quagga --enable-user= --enable-group= --enable-isisd --disable-bgpd --enable-trilld
 make
+sudo make install
 
 ------------------------------------------------------------------------
 TO-DO
