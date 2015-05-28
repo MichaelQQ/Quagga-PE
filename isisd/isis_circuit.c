@@ -1421,8 +1421,8 @@ DEFUN (trillpe_lsp,
   circuit = circuit_scan_by_ifp (ifp);
   assert (circuit);
 
-  VTY_GET_INTEGER_RANGE ("TRILL nickname priority", nickname, argv[0],
-                         MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
+  VTY_GET_INTEGER_RANGE ("TRILL nickname", nickname, argv[0],
+                         RBRIDGE_NICKNAME_MIN + 1, RBRIDGE_NICKNAME_MAX);
   VTY_GET_INTEGER_RANGE ("TRILL nickname priority", priority, argv[1],
                          MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
 

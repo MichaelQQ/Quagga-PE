@@ -1378,8 +1378,8 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
                            TE_ROUTER_ID);
   }
     }
-
-  memset (&tlv_data, 0, sizeof (struct tlvs));*/
+  */
+  memset (&tlv_data, 0, sizeof (struct tlvs));
 
 #ifdef TOPOLOGY_GENERATE
   /* If topology exists (and we create topology for level 1 only), create
@@ -1387,10 +1387,10 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
   if (area->topology && level == IS_LEVEL_1)
     {
       if (tlv_data.is_neighs == NULL)
-  {
-    tlv_data.is_neighs = list_new ();
-    tlv_data.is_neighs->del = free_tlv;
-  }
+      {
+        tlv_data.is_neighs = list_new ();
+        tlv_data.is_neighs->del = free_tlv;
+      }
       is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
 
       memcpy (&is_neigh->neigh_id, area->topology_baseis, ISIS_SYS_ID_LEN);
@@ -1408,60 +1408,60 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
    * Then build lists of tlvs related to circuits
    */
   for (ALL_LIST_ELEMENTS_RO (area->circuit_list, node, circuit))
-    {
+  {
       if (circuit->state != C_STATE_UP)
-  continue;
+        continue;
 
       /*
        * Add IPv4 internal reachability of this circuit
        */
       /*if (circuit->ip_router && circuit->ip_addrs &&
-    circuit->ip_addrs->count > 0)
-  {
-    if (area->oldmetric)
+            circuit->ip_addrs->count > 0)
       {
-        if (tlv_data.ipv4_int_reachs == NULL)
-    {
-      tlv_data.ipv4_int_reachs = list_new ();
-      tlv_data.ipv4_int_reachs->del = free_tlv;
-    }
-        for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
-    {
-      ipreach =
-        XMALLOC (MTYPE_ISIS_TLV, sizeof (struct ipv4_reachability));
-      ipreach->metrics = circuit->metrics[level - 1];
-      masklen2ip (ipv4->prefixlen, &ipreach->mask);
-      ipreach->prefix.s_addr = ((ipreach->mask.s_addr) &
-              (ipv4->prefix.s_addr));
-      listnode_add (tlv_data.ipv4_int_reachs, ipreach);
-    }
-      }
-    if (area->newmetric)
-      {
-        if (tlv_data.te_ipv4_reachs == NULL)
-    {
-      tlv_data.te_ipv4_reachs = list_new ();
-      tlv_data.te_ipv4_reachs->del = free_tlv;
-    }
-        for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
-    {*/
-      /* FIXME All this assumes that we have no sub TLVs. */
-      /*te_ipreach = XCALLOC (MTYPE_ISIS_TLV,
-          sizeof (struct te_ipv4_reachability) +
-          ((ipv4->prefixlen + 7)/8) - 1);
+        if (area->oldmetric)
+        {
+          if (tlv_data.ipv4_int_reachs == NULL)
+          {
+            tlv_data.ipv4_int_reachs = list_new ();
+            tlv_data.ipv4_int_reachs->del = free_tlv;
+          }
+          for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
+          {
+            ipreach =
+              XMALLOC (MTYPE_ISIS_TLV, sizeof (struct ipv4_reachability));
+            ipreach->metrics = circuit->metrics[level - 1];
+            masklen2ip (ipv4->prefixlen, &ipreach->mask);
+            ipreach->prefix.s_addr = ((ipreach->mask.s_addr) &
+                    (ipv4->prefix.s_addr));
+            listnode_add (tlv_data.ipv4_int_reachs, ipreach);
+          }
+        }
+        if (area->newmetric)
+        {
+          if (tlv_data.te_ipv4_reachs == NULL)
+          {
+            tlv_data.te_ipv4_reachs = list_new ();
+            tlv_data.te_ipv4_reachs->del = free_tlv;
+          }
+          for (ALL_LIST_ELEMENTS_RO (circuit->ip_addrs, ipnode, ipv4))
+          {*/
+          /* FIXME All this assumes that we have no sub TLVs. */
+          /*te_ipreach = XCALLOC (MTYPE_ISIS_TLV,
+              sizeof (struct te_ipv4_reachability) +
+              ((ipv4->prefixlen + 7)/8) - 1);
 
-      if (area->oldmetric)
-        te_ipreach->te_metric = htonl (circuit->metrics[level - 1].metric_default);
-      else
-        te_ipreach->te_metric = htonl (circuit->te_metric[level - 1]);
+            if (area->oldmetric)
+              te_ipreach->te_metric = htonl (circuit->metrics[level - 1].metric_default);
+            else
+              te_ipreach->te_metric = htonl (circuit->te_metric[level - 1]);
 
-      te_ipreach->control = (ipv4->prefixlen & 0x3F);
-      memcpy (&te_ipreach->prefix_start, &ipv4->prefix.s_addr,
-        (ipv4->prefixlen + 7)/8);
-      listnode_add (tlv_data.te_ipv4_reachs, te_ipreach);
-    }
-      }
-  }*/
+            te_ipreach->control = (ipv4->prefixlen & 0x3F);
+            memcpy (&te_ipreach->prefix_start, &ipv4->prefix.s_addr,
+              (ipv4->prefixlen + 7)/8);
+            listnode_add (tlv_data.te_ipv4_reachs, te_ipreach);
+          }
+        }
+      }*/
 
 #ifdef HAVE_IPV6
       /*
@@ -1498,100 +1498,89 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
   }*/
 #endif /* HAVE_IPV6 */
 
-      switch (circuit->circ_type)
-  {
-  case CIRCUIT_T_BROADCAST:
-    if (level & circuit->is_type)
-      {
-        if (area->oldmetric)
-    {
-      if (tlv_data.is_neighs == NULL)
-        {
-          tlv_data.is_neighs = list_new ();
-          tlv_data.is_neighs->del = free_tlv;
+    switch (circuit->circ_type){
+      case CIRCUIT_T_BROADCAST:
+        if (level & circuit->is_type){
+          if (area->oldmetric){
+            if (tlv_data.is_neighs == NULL){
+              tlv_data.is_neighs = list_new ();
+              tlv_data.is_neighs->del = free_tlv;
+            }
+            is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
+            if (level == IS_LEVEL_1)
+              memcpy (is_neigh->neigh_id,
+                circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
+            else
+              memcpy (is_neigh->neigh_id,
+                circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
+            is_neigh->metrics = circuit->metrics[level - 1];
+            if (!memcmp (is_neigh->neigh_id, zero_id,
+                  ISIS_SYS_ID_LEN + 1))
+              XFREE (MTYPE_ISIS_TLV, is_neigh);
+            else
+              listnode_add (tlv_data.is_neighs, is_neigh);
+          }
+          if (area->newmetric){
+            if (tlv_data.te_is_neighs == NULL){
+              tlv_data.te_is_neighs = list_new ();
+              tlv_data.te_is_neighs->del = free_tlv;
+            }
+            te_is_neigh = XCALLOC (MTYPE_ISIS_TLV,
+              sizeof (struct te_is_neigh));
+            if (level == IS_LEVEL_1)
+              memcpy (te_is_neigh->neigh_id,
+                circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
+            else
+              memcpy (te_is_neigh->neigh_id,
+                circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
+            if (area->oldmetric)
+              metric = circuit->metrics[level - 1].metric_default;
+            else
+              metric = circuit->te_metric[level - 1];
+            SET_TE_METRIC(te_is_neigh, metric);
+            if (!memcmp (te_is_neigh->neigh_id, zero_id,
+                  ISIS_SYS_ID_LEN + 1))
+              XFREE (MTYPE_ISIS_TLV, te_is_neigh);
+            else
+              listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+          }
         }
-      is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
-      if (level == IS_LEVEL_1)
-        memcpy (is_neigh->neigh_id,
-          circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
-      else
-        memcpy (is_neigh->neigh_id,
-          circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
-      is_neigh->metrics = circuit->metrics[level - 1];
-                  if (!memcmp (is_neigh->neigh_id, zero_id,
-                               ISIS_SYS_ID_LEN + 1))
-                    XFREE (MTYPE_ISIS_TLV, is_neigh);
-                  else
-                    listnode_add (tlv_data.is_neighs, is_neigh);
-    }
-        if (area->newmetric)
-    {
-      if (tlv_data.te_is_neighs == NULL)
-        {
-          tlv_data.te_is_neighs = list_new ();
-          tlv_data.te_is_neighs->del = free_tlv;
-        }
-      te_is_neigh = XCALLOC (MTYPE_ISIS_TLV,
-           sizeof (struct te_is_neigh));
-      if (level == IS_LEVEL_1)
-        memcpy (te_is_neigh->neigh_id,
-          circuit->u.bc.l1_desig_is, ISIS_SYS_ID_LEN + 1);
-      else
-        memcpy (te_is_neigh->neigh_id,
-          circuit->u.bc.l2_desig_is, ISIS_SYS_ID_LEN + 1);
-      if (area->oldmetric)
-        metric = circuit->metrics[level - 1].metric_default;
-      else
-        metric = circuit->te_metric[level - 1];
-      SET_TE_METRIC(te_is_neigh, metric);
-                  if (!memcmp (te_is_neigh->neigh_id, zero_id,
-                               ISIS_SYS_ID_LEN + 1))
-                    XFREE (MTYPE_ISIS_TLV, te_is_neigh);
-                  else
-                    listnode_add (tlv_data.te_is_neighs, te_is_neigh);
-    }
-      }
-    break;
-  case CIRCUIT_T_P2P:
-    nei = circuit->u.p2p.neighbor;
-    if (nei && (level & nei->circuit_t))
-      {
-        if (area->oldmetric)
-    {
-      if (tlv_data.is_neighs == NULL)
-        {
-          tlv_data.is_neighs = list_new ();
-          tlv_data.is_neighs->del = free_tlv;
-        }
-      is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
-      memcpy (is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
-      is_neigh->metrics = circuit->metrics[level - 1];
-      listnode_add (tlv_data.is_neighs, is_neigh);
-    }
-        if (area->newmetric)
-    {
-      uint32_t metric;
+        break;
+      case CIRCUIT_T_P2P:
+        nei = circuit->u.p2p.neighbor;
+        if (nei && (level & nei->circuit_t)){
+          if (area->oldmetric){
+            if (tlv_data.is_neighs == NULL){
+              tlv_data.is_neighs = list_new ();
+              tlv_data.is_neighs->del = free_tlv;
+            }
+            is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
+            memcpy (is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
+            is_neigh->metrics = circuit->metrics[level - 1];
+            listnode_add (tlv_data.is_neighs, is_neigh);
+          }
+          if (area->newmetric){
+            uint32_t metric;
 
-      if (tlv_data.te_is_neighs == NULL)
-        {
-          tlv_data.te_is_neighs = list_new ();
-          tlv_data.te_is_neighs->del = free_tlv;
+            if (tlv_data.te_is_neighs == NULL){
+              tlv_data.te_is_neighs = list_new ();
+              tlv_data.te_is_neighs->del = free_tlv;
+            }
+            te_is_neigh = XCALLOC (MTYPE_ISIS_TLV,
+              sizeof (struct te_is_neigh));
+            memcpy (te_is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
+            metric = circuit->te_metric[level - 1];
+            SET_TE_METRIC(te_is_neigh, metric);
+            listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+          }
         }
-      te_is_neigh = XCALLOC (MTYPE_ISIS_TLV,
-           sizeof (struct te_is_neigh));
-      memcpy (te_is_neigh->neigh_id, nei->sysid, ISIS_SYS_ID_LEN);
-      metric = circuit->te_metric[level - 1];
-      SET_TE_METRIC(te_is_neigh, metric);
-      listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+        break;
+      case CIRCUIT_T_LOOPBACK:
+        break;
+      default:
+        zlog_warn ("lsp_area_create: unknown circuit type");
     }
-      }
-    break;
-  case CIRCUIT_T_LOOPBACK:
-          break;
-  default:
-    zlog_warn ("lsp_area_create: unknown circuit type");
   }
-    }
 
   /*while (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
     {

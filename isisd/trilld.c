@@ -432,7 +432,7 @@ int tlv_add_trill_nickname_pe(struct trill_nickname *nick_info,
   tn.tn_priority = nick_info->priority;
   tn.tn_trootpri = area->trill->root_priority;
   tn.tn_nickname = nick_info->name;
-  printf("nickname: %d\n", tn.tn_nickname);
+  printf("nickname: %d\n", htons(tn.tn_nickname));
   rc = add_subtlv (RCSTLV_TRILL_NICKNAME,
        sizeof (struct trill_nickname_subtlv), (u_char *)&tn,
        tlvstart,
@@ -558,7 +558,7 @@ int tlv_add_trill_nickname(struct trill_nickname *nick_info,
   tn.tn_priority = nick_info->priority;
   tn.tn_trootpri = area->trill->root_priority;
   tn.tn_nickname = nick_info->name;
-  printf("nickname: %d\n", tn.tn_nickname);
+  printf("nickname: %d\n", htons(tn.tn_nickname));
   rc = add_subtlv (RCSTLV_TRILL_NICKNAME,
 		   sizeof (struct trill_nickname_subtlv), (u_char *)&tn,
 		   tlvstart,
