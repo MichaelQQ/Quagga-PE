@@ -430,7 +430,7 @@ int tlv_add_trill_nickname_pe(struct trill_nickname *nick_info,
     return rc;
 
   tn.tn_priority = nick_info->priority;
-  tn.tn_trootpri = 0xffaa;
+  tn.tn_trootpri = area->trill->root_priority;
   tn.tn_nickname = nick_info->name;
   printf("nickname: %d\n", tn.tn_nickname);
   rc = add_subtlv (RCSTLV_TRILL_NICKNAME,
@@ -818,7 +818,6 @@ static void trill_create_nickfwdtable(struct isis_area *area)
       firstnode = false;
       continue;
     }
-	printf("vertex->type: %d\n", vertex->type);
     if (
       vertex->type != VTYPE_NONPSEUDO_IS &&
       vertex->type != VTYPE_NONPSEUDO_TE_IS
@@ -1135,7 +1134,6 @@ static void trill_publish (struct isis_area *area)
   }
 
   if (area->trill->fwdtbl != NULL){
-    //printf("circuit->interface->ifindex = %p\n", circuit->interface->ifindex);
     for (ALL_LIST_ELEMENTS_RO (area->trill->fwdtbl, node, fwdnode))
       trill_publish_nick(area, circuit->fd, fwdnode->dest_nick,
 			 fwdnode,circuit->interface->ifindex);
@@ -1363,8 +1361,6 @@ static void trill_nickdb_update ( struct isis_area *area, nickinfo_t *newnick)
    */
   if (res == NICK_CHANGED) {
     if (isis->debugs & DEBUG_TRILL_EVENTS)
-      printf("ISIS TRILL storing new nick:%d from sysID:%s",
-                 ntohs(tnode->info.nick.name), sysid_print(tnode->info.sysid));
       zlog_debug("ISIS TRILL storing new nick:%d from sysID:%s",
 		 ntohs(tnode->info.nick.name), sysid_print(tnode->info.sysid));
       /* Delete the current nick in from our database */
@@ -1414,9 +1410,6 @@ static void trill_nick_recv(struct isis_area *area, nickinfo_t *other_nick)
   if ((other_nick->nick.name == RBRIDGE_NICKNAME_NONE) ||
     (other_nick->nick.name == RBRIDGE_NICKNAME_UNUSED)) {
     zlog_warn("ISIS TRILL received reserved nickname:%d from sysID:%s",
-	      ntohs (other_nick->nick.name),
-	      sysid_print(other_nick->sysid) );
-    printf("ISIS TRILL received reserved nickname:%d from sysID:%s",
 	      ntohs (other_nick->nick.name),
 	      sysid_print(other_nick->sysid) );
     return;

@@ -1650,7 +1650,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
            lsp0, area, level);
     }
 
-  while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
+  /*while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
     {
       if (lsp->tlv_data.te_is_neighs == NULL)
         lsp->tlv_data.te_is_neighs = list_new ();
@@ -1660,7 +1660,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
       if (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
         lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }
+    }*/
   lsp->lsp_header->pdu_len = htons (stream_get_endp (lsp->pdu));
 
   //free_tlvs (&tlv_data);

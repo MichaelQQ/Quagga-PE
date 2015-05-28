@@ -1426,7 +1426,14 @@ DEFUN (trillpe_lsp,
   VTY_GET_INTEGER_RANGE ("TRILL nickname priority", priority, argv[1],
                          MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
 
-  lsp_generate_pe (circuit, 1, nickname, priority);
+  /* this check will avoid generating an LSP on trill start */
+  if (CHECK_FLAG(circuit->area->trill->status, TRILL_SPF_COMPUTED)) {
+    lsp_generate_pe (circuit, 1, nickname, priority);
+  }
+  else {
+    vty_out (vty, "TRILL SPF hasn't computed!!%s", VTY_NEWLINE);
+  }
+
 
   vty->node = INTERFACE_NODE;
   vty->index = ifp;
