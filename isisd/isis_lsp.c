@@ -1343,7 +1343,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
   struct trill_nickname nick;
   memset(&nick, 0, sizeof(struct trill_nickname));
   nick.name = htons(name);
-  nick.priority = priority;
+  nick.priority = priority | 0x80;
 
 
   if (CHECK_FLAG (area->trill->status, TRILL_NICK_SET))
@@ -2485,7 +2485,7 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
   return;
 }
 
-u_char pseudo_id[6] = {0x00,0x40,0xf4,0x52,0x00,0xae};
+u_char pseudo_id[6] = {0x5a,0xd4,0xf6,0x82,0x36,0x83};
 u_char pseudo_count = 1;
 
 int
