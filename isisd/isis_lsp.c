@@ -2500,7 +2500,7 @@ u_char pseudo_id[6] = {0x00,0x40,0xf4,0x52,0x00,0xae};
 u_char pseudo_count = 1;
 
 int
-lsp_generate_pe (struct isis_circuit *circuit, int level)
+lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, uint8_t nick_prio)
 {
   dict_t *lspdb = circuit->area->lspdb[level - 1];
   struct isis_lsp *lsp;
@@ -2528,7 +2528,8 @@ lsp_generate_pe (struct isis_circuit *circuit, int level)
   lsp->own_lsp = 0;
   //lsp_insert (lsp, lspdb);
   //lsp_build_pseudo_pe (lsp, circuit, level);
-  lsp_build_pe (lsp, circuit->area, buffer, pseudo_count, pseudo_count);
+  //lsp_build_pe (lsp, circuit->area, buffer, pseudo_count, pseudo_count);
+  lsp_build_pe (lsp, circuit->area, buffer, nick_name, nick_prio);
   lsp_seqnum_update (lsp);
   lsp_set_all_srmflags (lsp);
 

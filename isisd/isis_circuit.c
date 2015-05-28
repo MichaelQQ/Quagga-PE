@@ -1405,20 +1405,28 @@ DEFUN (trillpe_router_trill,
 
 DEFUN (trillpe_lsp,
        trillpe_lsp_cmd,
-       "trillpe lsp",
+       "trillpe lsp WORD WORD",
        "Interface TRILLPE lsp commands\n"
        "TRILLPE lsp commands\n"
-       "TRILLPE Routing\n"
-       "Routing process tag\n")
+       "nickname:<1-65534>\n"
+       "priority:<1-127>\n")
 {
   struct isis_circuit *circuit;
   struct interface *ifp;
-  struct isis_area *area;
+  uint16_t nickname;
+  uint8_t priority;
+
   ifp = (struct interface *) vty->index;
   assert (ifp);
   circuit = circuit_scan_by_ifp (ifp);
+  assert (circuit);
 
-  lsp_generate_pe (circuit, 1);
+  VTY_GET_INTEGER_RANGE ("TRILL nickname priority", nickname, argv[0],
+                         MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
+  VTY_GET_INTEGER_RANGE ("TRILL nickname priority", priority, argv[1],
+                         MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
+
+  lsp_generate_pe (circuit, 1, nickname, priority);
 
   vty->node = INTERFACE_NODE;
   vty->index = ifp;
