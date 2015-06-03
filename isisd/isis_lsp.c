@@ -50,6 +50,7 @@
 #include "isisd/isis_csm.h"
 #include "isisd/isis_adjacency.h"
 #include "isisd/isis_spf.h"
+#include "isisd/isis_events.h"
 #ifdef HAVE_TRILL
 #include "isisd/trilld.h"
 #endif
@@ -1253,13 +1254,14 @@ lsp_next_frag (u_char frag_num, struct isis_lsp *lsp0, struct isis_area *area,
  * area->lsp_frag_threshold is exceeded.
  */
 static void
-lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint16_t name, uint8_t priority)
+lsp_build_pe (struct isis_lsp *lsp, struct isis_circuit *circuit, char* hostname, uint16_t name, uint8_t priority)
 {
   struct is_neigh *is_neigh;
   struct te_is_neigh *te_is_neigh;
   struct listnode *node, *ipnode;
   int level = lsp->level;
-  struct isis_circuit *circuit;
+  //struct isis_circuit *circuit;
+  struct isis_area *area;
   //struct prefix_ipv4 *ipv4;
   //struct ipv4_reachability *ipreach;
   //struct te_ipv4_reachability *te_ipreach;
@@ -1275,6 +1277,8 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
   uint32_t metric;
   u_char zero_id[ISIS_SYS_ID_LEN + 1];
   int retval = ISIS_OK;
+
+  area = circuit->area;
 
   /*
    * Building the zero lsp
@@ -1498,7 +1502,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
   }*/
 #endif /* HAVE_IPV6 */
 
-    switch (circuit->circ_type){
+    /*switch (circuit->circ_type){
       case CIRCUIT_T_BROADCAST:
         if (level & circuit->is_type){
           if (area->oldmetric){
@@ -1579,7 +1583,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
         break;
       default:
         zlog_warn ("lsp_area_create: unknown circuit type");
-    }
+    }*/
   }
 
   /*while (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
@@ -1626,6 +1630,37 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
     }*/
 #endif /* HAVE_IPV6 */
 
+  /*
+   * add self to IS neighbours 
+   */
+  if (area->oldmetric)
+    {
+      if (tlv_data.is_neighs == NULL)
+        {
+          tlv_data.is_neighs = list_new ();
+          tlv_data.is_neighs->del = free_tlv;
+        }
+      is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
+
+      memcpy (&is_neigh->neigh_id, isis->sysid, ISIS_SYS_ID_LEN);
+      //is_neigh->metrics = DEFAULT_CIRCUIT_METRIC;
+      listnode_add (tlv_data.is_neighs, is_neigh);
+    }
+  if (area->newmetric)
+    {
+      if (tlv_data.te_is_neighs == NULL)
+        {
+          tlv_data.te_is_neighs = list_new ();
+          tlv_data.te_is_neighs->del = free_tlv;
+        }
+      te_is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct te_is_neigh));
+
+      memcpy (&te_is_neigh->neigh_id, isis->sysid, ISIS_SYS_ID_LEN);
+      //metric = DEFAULT_CIRCUIT_METRIC;
+      //SET_TE_METRIC(te_is_neigh, metric);
+      listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+    }
+
   while (tlv_data.is_neighs && listcount (tlv_data.is_neighs))
     {
       if (lsp->tlv_data.is_neighs == NULL)
@@ -1639,7 +1674,7 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
            lsp0, area, level);
     }
 
-  /*while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
+  while (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
     {
       if (lsp->tlv_data.te_is_neighs == NULL)
         lsp->tlv_data.te_is_neighs = list_new ();
@@ -1649,10 +1684,10 @@ lsp_build_pe (struct isis_lsp *lsp, struct isis_area *area, char* hostname, uint
       if (tlv_data.te_is_neighs && listcount (tlv_data.te_is_neighs))
         lsp = lsp_next_frag (LSP_FRAGMENT (lsp->lsp_header->lsp_id) + 1,
            lsp0, area, level);
-    }*/
+    }
   lsp->lsp_header->pdu_len = htons (stream_get_endp (lsp->pdu));
 
-  //free_tlvs (&tlv_data);
+  free_tlvs (&tlv_data);
 
   /* Validate the LSP */
   retval = parse_tlvs (area->area_tag, STREAM_DATA (lsp->pdu) +
@@ -1908,7 +1943,6 @@ lsp_build (struct isis_lsp *lsp, struct isis_area *area)
 	    }
 	}
 #endif /* HAVE_IPV6 */
-
       switch (circuit->circ_type)
 	{
 	case CIRCUIT_T_BROADCAST:
@@ -2002,6 +2036,43 @@ lsp_build (struct isis_lsp *lsp, struct isis_area *area)
 	default:
 	  zlog_warn ("lsp_area_create: unknown circuit type");
 	}
+
+  struct list *adj_list;
+  struct isis_adjacency *adj;
+
+  if(strcmp(circuit->interface->name, "mpls0") == 0) {
+    adj_list = list_new ();
+    isis_adj_build_up_list (circuit->u.bc.adjdb[level - 1], adj_list);
+
+    for (ALL_LIST_ELEMENTS_RO (adj_list, node, adj))
+      {
+        if (adj->level & level)
+          {
+            if ((level == IS_LEVEL_1 && adj->sys_type == ISIS_SYSTYPE_L1_IS) ||
+                (level == IS_LEVEL_1 && adj->sys_type == ISIS_SYSTYPE_L2_IS &&
+                adj->adj_usage == ISIS_ADJ_LEVEL1AND2) ||
+                (level == IS_LEVEL_2 && adj->sys_type == ISIS_SYSTYPE_L2_IS))
+              {
+                /* an IS neighbour -> add it */
+                if (circuit->area->oldmetric)
+                  {
+                    is_neigh = XCALLOC (MTYPE_ISIS_TLV, sizeof (struct is_neigh));
+
+                    memcpy (&is_neigh->neigh_id, adj->sysid, ISIS_SYS_ID_LEN);
+                    listnode_add (tlv_data.is_neighs, is_neigh);
+                  }
+                if (circuit->area->newmetric)
+                  {
+                    te_is_neigh = XCALLOC (MTYPE_ISIS_TLV,
+                                           sizeof (struct te_is_neigh));
+                    memcpy (&te_is_neigh->neigh_id, adj->sysid, ISIS_SYS_ID_LEN);
+                    listnode_add (tlv_data.te_is_neighs, te_is_neigh);
+                  }
+              }
+          }
+      }
+  }
+
     }
 
   while (tlv_data.ipv4_int_reachs && listcount (tlv_data.ipv4_int_reachs))
@@ -2485,7 +2556,7 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
   return;
 }
 
-u_char pseudo_id[6] = {0x5a,0xd4,0xf6,0x82,0x36,0x83};
+u_char pseudo_id[6] = {0xc6,0xc2,0xf0,0xfd,0xa5,0x14};
 u_char pseudo_count = 1;
 
 int
@@ -2518,7 +2589,7 @@ lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, ui
   //lsp_insert (lsp, lspdb);
   //lsp_build_pseudo_pe (lsp, circuit, level);
   //lsp_build_pe (lsp, circuit->area, buffer, pseudo_count, pseudo_count);
-  lsp_build_pe (lsp, circuit->area, buffer, nick_name, nick_prio);
+  lsp_build_pe (lsp, circuit, buffer, nick_name, nick_prio);
   lsp_seqnum_update (lsp);
   lsp_set_all_srmflags (lsp);
 
@@ -2539,6 +2610,8 @@ lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, ui
                   ntohs (lsp->lsp_header->rem_lifetime),
                   refresh_time);
     }
+
+  thread_add_event (master, isis_event_dis_status_change, circuit, 0);
 
   return ISIS_OK;
 }
@@ -2845,6 +2918,11 @@ lsp_tick (struct thread *thread)
 
               if (lsp->age_out == 0)
                 {
+                  printf("ISIS-Upd (%s): L%u LSP %s seq 0x%08x aged out",
+                              area->area_tag,
+                              lsp->level,
+                              rawlspid_print (lsp->lsp_header->lsp_id),
+                              ntohl (lsp->lsp_header->seq_num));
                   zlog_debug ("ISIS-Upd (%s): L%u LSP %s seq 0x%08x aged out",
                               area->area_tag,
                               lsp->level,

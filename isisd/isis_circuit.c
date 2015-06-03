@@ -448,6 +448,7 @@ isis_circuit_if_add_pe (struct isis_circuit *circuit, struct interface *ifp)
 
   
   circuit->circ_type = CIRCUIT_T_BROADCAST;
+  //circuit->circ_type = CIRCUIT_T_P2P;
 
   circuit->ip_addrs = list_new ();
 #ifdef HAVE_IPV6
