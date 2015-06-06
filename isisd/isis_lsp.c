@@ -2040,7 +2040,7 @@ lsp_build (struct isis_lsp *lsp, struct isis_area *area)
   struct list *adj_list;
   struct isis_adjacency *adj;
 
-  if(strcmp(circuit->interface->name, "mpls0") == 0) {
+  if(strncmp(circuit->interface->name, "mpls", 4) == 0) {
     adj_list = list_new ();
     isis_adj_build_up_list (circuit->u.bc.adjdb[level - 1], adj_list);
 
