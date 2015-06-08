@@ -2556,11 +2556,11 @@ lsp_build_pseudo (struct isis_lsp *lsp, struct isis_circuit *circuit,
   return;
 }
 
-u_char pseudo_id[6] = {0xc6,0xc2,0xf0,0xfd,0xa5,0x14};
+//u_char pseudo_id[6] = {0xc6,0xc2,0xf0,0xfd,0xa5,0x14};
 u_char pseudo_count = 1;
 
 int
-lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, uint8_t nick_prio)
+lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, uint8_t nick_prio, u_char* pseudo_id)
 {
   dict_t *lspdb = circuit->area->lspdb[level - 1];
   struct isis_lsp *lsp;
@@ -2577,7 +2577,7 @@ lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, ui
 
   //level, circuit, spna, source_id
   //process_lan_hello_pe (1, circuit, &lsp_id, &buffer);
-  process_lan_hello_pe (1, circuit, &pseudo_id, &buffer);
+  process_lan_hello_pe (1, circuit, pseudo_id, &buffer);
 
   rem_lifetime = lsp_rem_lifetime (circuit->area, level);
   /* RFC3787  section 4 SHOULD not set overload bit in pseudo LSPs */

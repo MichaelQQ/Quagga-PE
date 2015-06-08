@@ -2,18 +2,16 @@
 !
 ! ISISd sample configuration file
 !
-hostname PE2
+hostname RB5
 password foo
 !log file /var/log/trill.log
 log syslog warnings
 log stdout
 
 router isis DEAD
-        net 00.0040.f454.dc82.00
+        net 00.0018.e717.3a62.00
 trill instance br0
-trill nickname 25
-trill nickname priority 25
+trill nickname 50
+trill nickname priority 50
 interface eth0
         trill router trill DEAD
-interface mpls0
-	trillpe router trill DEAD

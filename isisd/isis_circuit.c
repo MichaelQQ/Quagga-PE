@@ -1406,30 +1406,45 @@ DEFUN (trillpe_router_trill,
 
 DEFUN (trillpe_lsp,
        trillpe_lsp_cmd,
-       "trillpe lsp WORD WORD",
+       "trillpe lsp WORD WORD WORD",
        "Interface TRILLPE lsp commands\n"
        "TRILLPE lsp commands\n"
        "nickname:<1-65534>\n"
-       "priority:<1-127>\n")
+       "priority:<1-127>\n"
+       "remote mpls interface MAC\n")
 {
   struct isis_circuit *circuit;
   struct interface *ifp;
   uint16_t nickname;
   uint8_t priority;
+  char mac[12];
+  char hexbyte[3] = {0};
+  u_char octets[6];
+  int d = 0;
 
   ifp = (struct interface *) vty->index;
   assert (ifp);
   circuit = circuit_scan_by_ifp (ifp);
   assert (circuit);
 
+
   VTY_GET_INTEGER_RANGE ("TRILL nickname", nickname, argv[0],
                          RBRIDGE_NICKNAME_MIN + 1, RBRIDGE_NICKNAME_MAX);
   VTY_GET_INTEGER_RANGE ("TRILL nickname priority", priority, argv[1],
                          MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
+  strncpy(mac, argv[2], 12);
+
+  for(d = 0; d < 12; d += 2 ){
+      // Assemble a digit pair into the hexbyte string
+      hexbyte[0] = mac[d];
+      hexbyte[1] = mac[d+1];
+      // Convert the hex pair to an integer
+      sscanf( hexbyte, "%X", &octets[d/2] );
+  }
 
   /* this check will avoid generating an LSP on trill start */
   if (CHECK_FLAG(circuit->area->trill->status, TRILL_SPF_COMPUTED)) {
-    lsp_generate_pe (circuit, 1, nickname, priority);
+    lsp_generate_pe (circuit, 1, nickname, priority, octets);
   }
   else {
     vty_out (vty, "TRILL SPF hasn't computed!!%s", VTY_NEWLINE);
