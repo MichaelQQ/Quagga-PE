@@ -1828,12 +1828,12 @@ DEFUN (show_trill_circuits,
   if (isis->area_list->count == 0)
     return CMD_SUCCESS;
 
-  assert (isis->area_list->count == 1);
+  //assert (isis->area_list->count == 1);
 
   for (ALL_LIST_ELEMENTS_RO (isis->area_list, node, area))
     {
-      vty_out (vty, "IS-IS TRILL circuits:%s%s",
-		      VTY_NEWLINE, VTY_NEWLINE);
+      vty_out (vty, "Area %s IS-IS TRILL circuits:%s%s",
+		      area->area_tag ? area->area_tag : "null", VTY_NEWLINE, VTY_NEWLINE);
       trill_circuits_print_all (vty, area);
     }
   vty_out (vty, "%s%s", VTY_NEWLINE, VTY_NEWLINE);
@@ -1850,10 +1850,11 @@ DEFUN (show_trill_fwdtable,
 
   if (isis->area_list->count == 0)
     return CMD_SUCCESS;
-  assert (isis->area_list->count == 1);
+  //assert (isis->area_list->count == 1);
 
   for (ALL_LIST_ELEMENTS_RO (isis->area_list, node, area)) {
-    vty_out (vty, "IS-IS TRILL forwarding table:%s", VTY_NEWLINE);
+    vty_out (vty, "Area %s IS-IS TRILL forwarding table:%s",
+      area->area_tag ? area->area_tag : "null", VTY_NEWLINE);
     trill_fwdtbl_print (vty, area);
   }
   vty_out (vty, "%s%s", VTY_NEWLINE, VTY_NEWLINE);
@@ -1867,9 +1868,18 @@ DEFUN (show_trill_topology,
        "IS-IS TRILL topology\n")
 {
   struct isis_area *area;
-  area = listgetdata(listhead (isis->area_list));
-  vty_out (vty, "IS-IS paths to RBridges that speak TRILL%s", VTY_NEWLINE);
-  trill_print_paths (vty, area);
+  struct listnode *node;
+
+  //area = listgetdata(listhead (isis->area_list));
+
+  for (ALL_LIST_ELEMENTS_RO (isis->area_list, node, area)) {
+    vty_out (vty, "Area %s IS-IS paths to RBridges that speak TRILL%s",
+      area->area_tag ? area->area_tag : "null", VTY_NEWLINE);
+    trill_print_paths (vty, area);
+  }
+
+  vty_out (vty, "%s%s", VTY_NEWLINE, VTY_NEWLINE);
+  return CMD_SUCCESS;
 }
 DEFUN (show_trill_adjtable,
        show_trill_adjtable_cmd,
@@ -1883,11 +1893,14 @@ DEFUN (show_trill_adjtable,
   if (isis->area_list->count == 0)
     return CMD_SUCCESS;
 
-  area = listgetdata(listhead (isis->area_list));
+  //area = listgetdata(listhead (isis->area_list));
 
-  vty_out (vty, "IS-IS TRILL adjacencies in all distribution trees:%s%s",
-	     VTY_NEWLINE, VTY_NEWLINE);
-  trill_adjtbl_print_all (vty, area);
+  for (ALL_LIST_ELEMENTS_RO (isis->area_list, node, area)) {
+    vty_out (vty, "Area %s IS-IS TRILL adjacencies in all distribution trees:%s%s",
+      area->area_tag ? area->area_tag : "null", VTY_NEWLINE, VTY_NEWLINE);
+    trill_adjtbl_print_all (vty, area);
+  }
+
   vty_out (vty, "%s%s", VTY_NEWLINE, VTY_NEWLINE);
   return CMD_SUCCESS;
 }

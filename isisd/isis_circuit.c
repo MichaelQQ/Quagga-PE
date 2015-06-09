@@ -1374,12 +1374,12 @@ DEFUN (trill_router_trill,
   return CMD_SUCCESS;
 }
 
-DEFUN (trillpe_router_trill,
-       trillpe_router_trill_cmd,
-       "trillpe router trill WORD",
-       "Interface TRILLPE config commands\n"
-       "TRILLPE router interface commands\n"
-       "TRILLPE Routing\n"
+DEFUN (pe_router_trill,
+       pe_router_trill_cmd,
+       "pe router trill WORD",
+       "Interface PE config commands\n"
+       "PE router interface commands\n"
+       "PE Routing\n"
        "Routing process tag\n")
 {
   struct isis_circuit *circuit;
@@ -1404,14 +1404,14 @@ DEFUN (trillpe_router_trill,
   return CMD_SUCCESS;
 }
 
-DEFUN (trillpe_lsp,
-       trillpe_lsp_cmd,
-       "trillpe lsp WORD WORD WORD",
-       "Interface TRILLPE lsp commands\n"
-       "TRILLPE lsp commands\n"
-       "nickname:<1-65534>\n"
-       "priority:<1-127>\n"
-       "remote mpls interface MAC\n")
+DEFUN (pe_lsp,
+       pe_lsp_cmd,
+       "pe lsp WORD WORD WORD",
+       "Interface PE lsp commands\n"
+       "PE lsp commands\n"
+       "nickname: <1-65534>\n"
+       "priority: <1-127>\n"
+       "remote mpls interface MAC (ex. 001122334455)\n")
 {
   struct isis_circuit *circuit;
   struct interface *ifp;
@@ -2921,8 +2921,8 @@ isis_circuit_init ()
 
 #ifdef HAVE_TRILL
   install_element (INTERFACE_NODE, &trill_router_trill_cmd);
-  install_element (INTERFACE_NODE, &trillpe_router_trill_cmd);
-  install_element (INTERFACE_NODE, &trillpe_lsp_cmd);
+  install_element (INTERFACE_NODE, &pe_router_trill_cmd);
+  install_element (INTERFACE_NODE, &pe_lsp_cmd);
 #endif
   install_element (INTERFACE_NODE, &isis_passive_cmd);
   install_element (INTERFACE_NODE, &no_isis_passive_cmd);
