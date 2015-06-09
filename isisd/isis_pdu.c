@@ -853,7 +853,8 @@ process_p2p_hello (struct isis_circuit *circuit)
  * Process IS-IS LAN Level 1/2 Hello PDU
  */
 int
-process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa, u_char *source_id)
+process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa,
+ u_char *source_id, u_int16_t rem_lifetime)
 {
   int retval = ISIS_OK;
   struct isis_lan_hello_hdr hdr;
@@ -866,8 +867,9 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa, u
   hdr.circuit_t = circuit->is_type;
   //memcpy(hdr.source_id, ssnpa, ISIS_SYS_ID_LEN);
   memcpy(hdr.source_id, source_id, ISIS_SYS_ID_LEN);
-  hdr.hold_time = circuit->hello_multiplier[level - 1] *
-    circuit->hello_interval[level - 1];
+  //hdr.hold_time = circuit->hello_multiplier[level - 1] *
+  //  circuit->hello_interval[level - 1];
+  hdr.hold_time = rem_lifetime;
   hdr.prio = circuit->priority[level - 1];
   memcpy (hdr.lan_id, circuit->u.bc.l1_desig_is,
                   ISIS_SYS_ID_LEN + 1);

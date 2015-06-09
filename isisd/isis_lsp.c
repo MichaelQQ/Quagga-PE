@@ -2568,27 +2568,22 @@ lsp_generate_pe (struct isis_circuit *circuit, int level, uint16_t nick_name, ui
   u_int16_t rem_lifetime, refresh_time;
   char buffer [50];
 
+  rem_lifetime = 1200; //set rem_lifetime: 1200s
   sprintf (buffer, "%04d_Pesudo", pseudo_count);
   
-  //memcpy (lsp_id, pseudo_id, ISIS_SYS_ID_LEN);
   memcpy (lsp_id, buffer, ISIS_SYS_ID_LEN);
   LSP_FRAGMENT (lsp_id) = 0;
   LSP_PSEUDO_ID (lsp_id) = 0;
 
   //level, circuit, spna, source_id
-  //process_lan_hello_pe (1, circuit, &lsp_id, &buffer);
-  process_lan_hello_pe (1, circuit, pseudo_id, &buffer);
+  process_lan_hello_pe (1, circuit, pseudo_id, &buffer, rem_lifetime);
 
-  rem_lifetime = lsp_rem_lifetime (circuit->area, level);
+  //rem_lifetime = lsp_rem_lifetime (circuit->area, level);
   /* RFC3787  section 4 SHOULD not set overload bit in pseudo LSPs */
-  //lsp = lsp_new (lsp_id, rem_lifetime, 1, circuit->area->is_type, 0, level);
   lsp = lsp_new (lsp_id, rem_lifetime, 1, circuit->area->is_type, 0, level);
   lsp->area = circuit->area;
 
   lsp->own_lsp = 0;
-  //lsp_insert (lsp, lspdb);
-  //lsp_build_pseudo_pe (lsp, circuit, level);
-  //lsp_build_pe (lsp, circuit->area, buffer, pseudo_count, pseudo_count);
   lsp_build_pe (lsp, circuit, buffer, nick_name, nick_prio);
   lsp_seqnum_update (lsp);
   lsp_set_all_srmflags (lsp);
