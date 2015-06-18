@@ -1406,20 +1406,20 @@ DEFUN (pe_router_trill,
 
 DEFUN (pe_lsp,
        pe_lsp_cmd,
-       "pe lsp WORD WORD WORD",
+       "pe lsp WORD WORD",
        "Interface PE lsp commands\n"
        "PE lsp commands\n"
        "nickname: <1-65534>\n"
-       "priority: <1-127>\n"
-       "remote mpls interface MAC (ex. 001122334455)\n")
+       "priority: <1-127>\n")
+       //"remote mpls interface MAC (ex. 001122334455)\n")
 {
   struct isis_circuit *circuit;
   struct interface *ifp;
   uint16_t nickname;
   uint8_t priority;
-  char mac[12];
-  char hexbyte[3] = {0};
-  u_char octets[6];
+  //char mac[12];
+  //char hexbyte[3] = {0};
+  u_char octets[6] = {0x12,0x34,0x56,0x78,0x91,0x23};
   int d = 0;
 
   ifp = (struct interface *) vty->index;
@@ -1432,7 +1432,7 @@ DEFUN (pe_lsp,
                          RBRIDGE_NICKNAME_MIN + 1, RBRIDGE_NICKNAME_MAX);
   VTY_GET_INTEGER_RANGE ("TRILL nickname priority", priority, argv[1],
                          MIN_RBRIDGE_PRIORITY, MAX_RBRIDGE_PRIORITY);
-  strncpy(mac, argv[2], 12);
+  /*strncpy(mac, argv[2], 12);
 
   for(d = 0; d < 12; d += 2 ){
       // Assemble a digit pair into the hexbyte string
@@ -1440,7 +1440,7 @@ DEFUN (pe_lsp,
       hexbyte[1] = mac[d+1];
       // Convert the hex pair to an integer
       sscanf( hexbyte, "%X", &octets[d/2] );
-  }
+  }*/
 
   /* this check will avoid generating an LSP on trill start */
   if (CHECK_FLAG(circuit->area->trill->status, TRILL_SPF_COMPUTED)) {
