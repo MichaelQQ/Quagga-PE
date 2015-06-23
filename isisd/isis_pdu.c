@@ -952,9 +952,9 @@ process_lan_hello_pe (int level, struct isis_circuit *circuit, u_char * ssnpa,
   adj->circuit_t = hdr.circuit_t;
 
   /* lets take care of the expiry */
-  /*THREAD_TIMER_OFF (adj->t_expire);
+  THREAD_TIMER_OFF (adj->t_expire);
   THREAD_TIMER_ON (master, adj->t_expire, isis_adj_expire, adj,
-                   (long) adj->hold_time);*/
+                   (long) adj->hold_time);
 
   /*
    * If the snpa for this circuit is found from LAN Neighbours TLV

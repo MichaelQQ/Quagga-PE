@@ -1,0 +1,31 @@
+! -*- trill -*-
+!
+! ISISd sample configuration file
+!
+hostname PE2
+password foo
+!log file /var/log/trill.log
+log syslog warnings
+log stdout
+
+router isis A
+        net 00.0040.f454.dc82.00
+trill instance br10
+trill nickname 25
+trill nickname priority 25
+interface eth2.10
+        trill router trill A
+	no isis hello padding
+interface mpls10
+	pe router trill A
+
+router isis B
+        net 00.0040.f454.dc82.00
+trill instance br20
+trill nickname 25
+trill nickname priority 25
+interface eth0.20
+        trill router trill B
+	no isis hello padding
+interface mpls20
+	pe router trill B

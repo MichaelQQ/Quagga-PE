@@ -405,8 +405,8 @@ snpa_print (u_char * from)
   pos += 2;
   *(pos) = '\0';
 
-  if(strncmp(pos, "1234.5678.9123", 14)){
-    return "Remote_RB";
+  if(strncmp(snpa, "1234.5678.9123", 14) == 0){
+    return " ";
   }
 
   return snpa;
