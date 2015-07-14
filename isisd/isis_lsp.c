@@ -1709,7 +1709,7 @@ lsp_build (struct isis_lsp *lsp, struct isis_area *area)
 {
   struct is_neigh *is_neigh;
   struct te_is_neigh *te_is_neigh;
-  struct listnode *node, *ipnode;
+  struct listnode *node, *ipnode, *mnode;
   int level = lsp->level;
   struct isis_circuit *circuit;
   struct prefix_ipv4 *ipv4;
@@ -2044,7 +2044,7 @@ lsp_build (struct isis_lsp *lsp, struct isis_area *area)
     adj_list = list_new ();
     isis_adj_build_up_list (circuit->u.bc.adjdb[level - 1], adj_list);
 
-    for (ALL_LIST_ELEMENTS_RO (adj_list, node, adj))
+    for (ALL_LIST_ELEMENTS_RO (adj_list, mnode, adj))
       {
         if (adj->level & level)
           {
